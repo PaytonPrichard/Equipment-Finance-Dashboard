@@ -1,0 +1,187 @@
+/* ---- Scrollbars ---- */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #334155 transparent;
+}
+*::-webkit-scrollbar { width: 6px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb { background-color: #334155; border-radius: 3px; }
+
+/* ---- Number input spinners ---- */
+input[type='number']::-webkit-inner-spin-button,
+input[type='number']::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type='number'] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+/* ---- Background ---- */
+body {
+  background: #0b1120;
+  background-image:
+    radial-gradient(ellipse 80% 60% at 50% -20%, rgba(56,130,246,0.08) 0%, transparent 70%),
+    radial-gradient(ellipse 60% 50% at 80% 50%, rgba(99,102,241,0.04) 0%, transparent 60%);
+  min-height: 100vh;
+}
+
+/* ---- Glass card base ---- */
+.glass-card {
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(148, 163, 184, 0.08);
+  box-shadow:
+    0 0 0 1px rgba(148,163,184,0.04),
+    0 4px 24px rgba(0,0,0,0.25);
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+.glass-card:hover {
+  border-color: rgba(148,163,184,0.12);
+}
+
+/* ---- Inputs ---- */
+.form-input {
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px solid rgba(148, 163, 184, 0.1);
+  border-radius: 10px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  padding-right: 16px;
+  padding-left: 16px;
+  font-size: 14px;
+  color: #e2e8f0;
+  outline: none;
+  transition: all 0.2s ease;
+  width: 100%;
+}
+.form-input::placeholder {
+  color: #475569;
+}
+.form-input:focus {
+  border-color: rgba(59, 130, 246, 0.5);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1), 0 0 20px rgba(59, 130, 246, 0.05);
+}
+
+.form-select {
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px solid rgba(148, 163, 184, 0.1);
+  border-radius: 10px;
+  padding: 10px 16px;
+  font-size: 14px;
+  color: #e2e8f0;
+  outline: none;
+  transition: all 0.2s ease;
+  width: 100%;
+  appearance: none;
+  cursor: pointer;
+}
+.form-select:focus {
+  border-color: rgba(59, 130, 246, 0.5);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* ---- Animations ---- */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in-up {
+  animation: fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; max-height: 0; }
+  to { opacity: 1; max-height: 600px; }
+}
+.animate-slide-down {
+  animation: slideDown 0.3s ease-out;
+  overflow: hidden;
+}
+
+/* ---- Metric cards ---- */
+.metric-card {
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.metric-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+}
+
+/* ---- Glow accents ---- */
+.glow-blue {
+  box-shadow: 0 0 30px rgba(59, 130, 246, 0.1), 0 0 60px rgba(59, 130, 246, 0.05);
+}
+
+.glow-score-strong { box-shadow: 0 0 40px rgba(16,185,129,0.1); }
+.glow-score-moderate { box-shadow: 0 0 40px rgba(132,204,22,0.1); }
+.glow-score-borderline { box-shadow: 0 0 40px rgba(245,158,11,0.1); }
+.glow-score-weak { box-shadow: 0 0 40px rgba(239,68,68,0.1); }
+
+/* ---- Company search dropdown ---- */
+.company-dropdown {
+  background: rgba(15, 23, 42, 0.95);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(148,163,184,0.12);
+  box-shadow: 0 16px 48px rgba(0,0,0,0.4), 0 0 0 1px rgba(148,163,184,0.04);
+}
+
+/* ---- Toggle switch ---- */
+.toggle-track {
+  transition: background-color 0.2s ease;
+}
+.toggle-thumb {
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ---- Pill buttons ---- */
+.pill-btn {
+  transition: all 0.2s ease;
+  border: 1px solid rgba(148,163,184,0.08);
+}
+.pill-btn:hover:not(.pill-btn-active):not(:disabled) {
+  border-color: rgba(148,163,184,0.16);
+  background: rgba(30,41,59,0.6);
+}
+.pill-btn-active {
+  background: rgba(59,130,246,0.12);
+  border-color: rgba(59,130,246,0.3);
+  color: #93c5fd;
+}
+
+/* ---- What-If Sliders ---- */
+.what-if-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #3b82f6;
+  border: 2px solid #1e40af;
+  cursor: pointer;
+  box-shadow: 0 0 8px rgba(59, 130, 246, 0.4);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.what-if-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+  box-shadow: 0 0 12px rgba(59, 130, 246, 0.6);
+}
+.what-if-slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #3b82f6;
+  border: 2px solid #1e40af;
+  cursor: pointer;
+  box-shadow: 0 0 8px rgba(59, 130, 246, 0.4);
+}
