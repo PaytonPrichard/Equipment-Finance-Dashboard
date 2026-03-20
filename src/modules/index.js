@@ -8,9 +8,13 @@
 // ============================================================
 
 import * as equipmentFinance from './equipment-finance';
+import * as accountsReceivable from './accounts-receivable';
+import * as inventoryFinance from './inventory-finance';
 
 const MODULES = {
   equipment_finance: equipmentFinance,
+  accounts_receivable: accountsReceivable,
+  inventory_finance: inventoryFinance,
 };
 
 /**

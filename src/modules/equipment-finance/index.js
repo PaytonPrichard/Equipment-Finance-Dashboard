@@ -9,6 +9,7 @@ export const META = {
   icon: 'briefcase',
 };
 
-// Re-export everything from constants and scoring
+// Re-export everything from constants, scoring, and schema
 export * from './constants';
 export * from './scoring';
+export { FORM_SCHEMA } from './schema';

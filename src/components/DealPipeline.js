@@ -76,6 +76,7 @@ export default function DealPipeline({ onLoadDeal, currentInputs, currentScore, 
     if (error) addToast('Failed to load pipeline', 'error');
     setDeals(data || []);
     setLoading(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orgId]);
 
   useEffect(() => { loadDeals(); }, [loadDeals]);

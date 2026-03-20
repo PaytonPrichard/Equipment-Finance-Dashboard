@@ -34,6 +34,7 @@ export default function SavedDeals({ currentInputs, currentScore, onLoadDeal, on
     setDeals(list);
     if (onDealsChange) onDealsChange(list);
     setLoading(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [orgId, onDealsChange]);
 
   useEffect(() => { loadDeals(); }, [loadDeals]);
