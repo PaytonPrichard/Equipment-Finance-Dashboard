@@ -10,11 +10,6 @@
 
 const { supabaseAdmin } = require('./lib/supabaseAdmin');
 
-// Vercel raw body helper — webhook verification needs the raw body
-module.exports.config = {
-  api: { bodyParser: false },
-};
-
 function getRawBody(req) {
   return new Promise((resolve, reject) => {
     const chunks = [];
@@ -24,7 +19,7 @@ function getRawBody(req) {
   });
 }
 
-module.exports = async function handler(req, res) {
+async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -90,4 +85,7 @@ module.exports = async function handler(req, res) {
   }
 
   return res.status(200).json({ received: true });
-};
+}
+
+module.exports = handler;
+module.exports.config = { api: { bodyParser: false } };
