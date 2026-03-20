@@ -42,6 +42,11 @@ export default function TeamManagement() {
   const [discountCode, setDiscountCode] = useState('');
   const [redeemingCode, setRedeemingCode] = useState(false);
 
+  // Transfer admin state
+  const [transferTarget, setTransferTarget] = useState(null);
+  const [transferConfirmText, setTransferConfirmText] = useState('');
+  const [transferring, setTransferring] = useState(false);
+
   const orgId = profile?.org_id;
 
   const fetchData = useCallback(async () => {
@@ -136,6 +141,28 @@ export default function TeamManagement() {
       addToast('Member removed from organization.', 'success');
       setMembers((prev) => prev.filter((m) => m.id !== userId));
     }
+  };
+
+  const handleTransferAdmin = async () => {
+    if (!transferTarget) return;
+    setTransferring(true);
+
+    const { data, error } = await supabase.rpc('transfer_admin', {
+      p_new_admin_id: transferTarget.id,
+    });
+
+    if (error) {
+      addToast('Failed to transfer admin: ' + error.message, 'error');
+    } else if (data?.error) {
+      addToast(data.error, 'error');
+    } else {
+      addToast(`Admin transferred to ${transferTarget.full_name || transferTarget.email}.`, 'success');
+      setTransferTarget(null);
+      setTransferConfirmText('');
+      refreshProfile();
+      fetchData();
+    }
+    setTransferring(false);
   };
 
   const handleCreateInvite = async (e) => {
@@ -380,6 +407,84 @@ export default function TeamManagement() {
           </>
         )}
       </div>
+
+      {/* Transfer Admin */}
+      {members.filter((m) => m.id !== user?.id).length > 0 && (
+        <div className="glass-card rounded-2xl p-5">
+          <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">
+            Transfer Admin
+          </h3>
+          <p className="text-[11px] text-slate-600 mb-4">
+            Permanently hand off admin rights to another team member. You will be demoted to Senior Analyst.
+          </p>
+
+          {!transferTarget ? (
+            <div className="flex items-center gap-3 flex-wrap">
+              <select
+                onChange={(e) => {
+                  const m = members.find((m) => m.id === e.target.value);
+                  if (m) setTransferTarget(m);
+                }}
+                defaultValue=""
+                className="bg-white/[0.04] border border-white/[0.08] rounded-xl px-3.5 py-2.5 text-white text-sm focus:outline-none focus:ring-1 focus:ring-gold-500/30 focus:border-gold-500/20 appearance-none cursor-pointer"
+                style={{
+                  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23475569' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E")`,
+                  backgroundRepeat: 'no-repeat',
+                  backgroundPosition: 'right 10px center',
+                  paddingRight: '32px',
+                }}
+              >
+                <option value="" disabled>Select a team member...</option>
+                {members
+                  .filter((m) => m.id !== user?.id)
+                  .map((m) => (
+                    <option key={m.id} value={m.id}>
+                      {m.full_name || m.email} ({ROLE_LABELS[m.role] || m.role})
+                    </option>
+                  ))}
+              </select>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <div className="p-3 rounded-xl bg-amber-500/[0.06] border border-amber-500/15">
+                <p className="text-[12px] text-amber-300 font-medium mb-1">
+                  Are you sure you want to transfer admin to {transferTarget.full_name || transferTarget.email}?
+                </p>
+                <p className="text-[11px] text-amber-400/70">
+                  This action is immediate. You will lose admin access and be set to Senior Analyst.
+                </p>
+              </div>
+              <div>
+                <label className="text-[10px] font-semibold text-slate-600 uppercase tracking-widest block mb-1.5">
+                  Type TRANSFER to confirm
+                </label>
+                <input
+                  type="text"
+                  value={transferConfirmText}
+                  onChange={(e) => setTransferConfirmText(e.target.value)}
+                  placeholder="TRANSFER"
+                  className="bg-white/[0.04] border border-white/[0.08] rounded-xl px-3.5 py-2.5 text-white text-sm placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-gold-500/30 focus:border-gold-500/20 transition-all w-48 font-mono uppercase tracking-wider"
+                />
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleTransferAdmin}
+                  disabled={transferConfirmText !== 'TRANSFER' || transferring}
+                  className="pill-btn px-4 py-2 rounded-xl text-[12px] font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/30 hover:bg-amber-500/30 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                >
+                  {transferring ? 'Transferring...' : 'Confirm Transfer'}
+                </button>
+                <button
+                  onClick={() => { setTransferTarget(null); setTransferConfirmText(''); }}
+                  className="pill-btn px-4 py-2 rounded-xl text-[12px] font-medium text-slate-500"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Create Invite */}
       <div className="glass-card rounded-2xl p-5">
