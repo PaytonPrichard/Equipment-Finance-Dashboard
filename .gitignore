@@ -26,8 +26,7 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Tailwind compiled output (regenerated on build)
-src/tailwind-compiled.css
+# Tailwind compiled output — committed for Vercel build compatibility
 
 # Claude Code
 .claude/
