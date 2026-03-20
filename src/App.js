@@ -1,5 +1,11 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
+import { useAuth } from './contexts/AuthContext';
+import LoginPage from './components/LoginPage';
+import OrgSetup from './components/OrgSetup';
 import useSofrRate from './hooks/useSofrRate';
+import { useIdleTimeout } from './hooks/useIdleTimeout';
+import { useOrgPlan } from './hooks/useOrgPlan';
+import PlanBanner from './components/PlanBanner';
 import Header from './components/Header';
 import DealInputForm from './components/DealInputForm';
 import RiskScoreGauge from './components/RiskScoreGauge';
@@ -25,6 +31,10 @@ import SensitivityChart from './components/SensitivityChart';
 import ScoringWeights from './components/ScoringWeights';
 import DealPipeline from './components/DealPipeline';
 import BatchScreening from './components/BatchScreening';
+import AuditLogViewer from './components/AuditLogViewer';
+import TeamManagement from './components/TeamManagement';
+import { fetchSavedDeals } from './lib/deals';
+import { fetchPreferences, upsertPreferences } from './lib/preferences';
 import exampleDeals from './data/exampleDeals';
 import historicalDeals from './data/historicalDeals';
 import {
@@ -41,26 +51,8 @@ import {
   formatCurrencyFull,
   formatCurrency,
   FINANCING_TYPES,
+  INITIAL_INPUTS,
 } from './utils/calculations';
-
-const INITIAL_INPUTS = {
-  companyName: '',
-  yearsInBusiness: 0,
-  annualRevenue: 0,
-  ebitda: 0,
-  totalExistingDebt: 0,
-  actualAnnualDebtService: 0,
-  industrySector: 'Manufacturing',
-  creditRating: 'Adequate',
-  equipmentType: 'Heavy Machinery',
-  equipmentCondition: 'New',
-  equipmentCost: 0,
-  downPayment: 0,
-  financingType: 'EFA',
-  usefulLife: 0,
-  loanTerm: 0,
-  essentialUse: true,
-};
 
 function getDscrStatus(d) {
   if (d > 2.0) return 'excellent';
@@ -98,38 +90,91 @@ function getScoreGlow(score) {
 }
 
 export default function App() {
-  const [inputs, setInputs] = useState(() => {
-    try {
-      const saved = localStorage.getItem('efd_draft_inputs');
-      return saved ? { ...INITIAL_INPUTS, ...JSON.parse(saved) } : INITIAL_INPUTS;
-    } catch { return INITIAL_INPUTS; }
+  const { session, user, profile, loading: authLoading, refreshProfile, passwordRecovery, signOut } = useAuth();
+
+  // Auto sign-out after 30 minutes of inactivity
+  useIdleTimeout(() => {
+    if (session) signOut();
   });
-  const [activeDeal, setActiveDeal] = useState(() => {
-    try {
-      const saved = localStorage.getItem('efd_draft_activeDeal');
-      return saved ? JSON.parse(saved) : null;
-    } catch { return null; }
-  });
+
+  // Show login page if not authenticated
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-slate-500 text-sm">Loading...</div>
+      </div>
+    );
+  }
+
+  // Password recovery flow — show update password form
+  if (passwordRecovery) {
+    return <LoginPage passwordRecovery />;
+  }
+
+  if (!session) {
+    return <LoginPage />;
+  }
+
+  // Show org onboarding if user has no organization
+  if (profile && !profile.org_id) {
+    return <OrgSetup profile={profile} onComplete={refreshProfile} />;
+  }
+
+  return <AuthenticatedApp profile={profile} user={user} />;
+}
+
+function AuthenticatedApp({ profile, user }) {
+  const userId = user?.id;
+  const draftSaveTimer = useRef(null);
+  const { plan, isExpired, isExpiringSoon, daysRemaining } = useOrgPlan();
+
+  const [savedDealsList, setSavedDealsList] = useState([]);
+
+  // Fetch saved deals from Supabase for DealComparison and other consumers
+  useEffect(() => {
+    if (profile?.org_id) {
+      fetchSavedDeals(profile.org_id).then(({ data }) => {
+        if (data) setSavedDealsList(data);
+      });
+    }
+  }, [profile?.org_id]);
+
+  const [inputs, setInputs] = useState(INITIAL_INPUTS);
+  const [activeDeal, setActiveDeal] = useState(null);
   const [activeTab, setActiveTab] = useState('screening');
   const [importedDeals, setImportedDeals] = useState([]);
   const [guideOpen, setGuideOpen] = useState(false);
-  const [recentDeals, setRecentDeals] = useState(() => {
-    try {
-      return JSON.parse(localStorage.getItem('efd_recent_deals') || '[]');
-    } catch { return []; }
-  });
+  const [recentDeals, setRecentDeals] = useState([]);
   const [sofrAlert, setSofrAlert] = useState(false);
   const [lastAcknowledgedSofr, setLastAcknowledgedSofr] = useState(null);
 
   const { sofr, sofrDate, sofrSource } = useSofrRate();
 
+  // Load draft state from Supabase on mount
   useEffect(() => {
-    localStorage.setItem('efd_draft_inputs', JSON.stringify(inputs));
-  }, [inputs]);
+    if (!userId) return;
+    fetchPreferences(userId).then(({ data }) => {
+      if (data?.draft_inputs) {
+        const draft = data.draft_inputs;
+        if (draft.inputs) setInputs((prev) => ({ ...INITIAL_INPUTS, ...draft.inputs }));
+        if (draft.activeDeal !== undefined) setActiveDeal(draft.activeDeal);
+        if (Array.isArray(draft.recentDeals)) setRecentDeals(draft.recentDeals);
+      }
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId]);
 
+  // Debounced save draft state to Supabase (2s delay)
   useEffect(() => {
-    localStorage.setItem('efd_draft_activeDeal', JSON.stringify(activeDeal));
-  }, [activeDeal]);
+    if (!userId) return;
+    if (draftSaveTimer.current) clearTimeout(draftSaveTimer.current);
+    draftSaveTimer.current = setTimeout(() => {
+      upsertPreferences(userId, {
+        draft_inputs: { inputs, activeDeal, recentDeals },
+      });
+    }, 2000);
+    return () => { if (draftSaveTimer.current) clearTimeout(draftSaveTimer.current); };
+  }, [inputs, activeDeal, recentDeals, userId]);
 
   // SOFR change notification — compare current rate against last acknowledged rate
   useEffect(() => {
@@ -169,7 +214,7 @@ export default function App() {
     [inputs, metrics, riskScore, recommendation, commentary, structure, valid, sofr]
   );
 
-  // Track recently screened deals in localStorage
+  // Track recently screened deals
   useEffect(() => {
     if (valid && inputs.companyName) {
       const entry = {
@@ -184,9 +229,7 @@ export default function App() {
         const deduped = prev.filter(
           (d) => d.name.toLowerCase() !== inputs.companyName.toLowerCase()
         );
-        const updated = [entry, ...deduped].slice(0, 5);
-        try { localStorage.setItem('efd_recent_deals', JSON.stringify(updated)); } catch {}
-        return updated;
+        return [entry, ...deduped].slice(0, 5);
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -223,8 +266,6 @@ export default function App() {
   const clearForm = () => {
     setInputs(INITIAL_INPUTS);
     setActiveDeal(null);
-    localStorage.removeItem('efd_draft_inputs');
-    localStorage.removeItem('efd_draft_activeDeal');
   };
 
   const loadRecentDeal = (deal) => {
@@ -245,6 +286,13 @@ export default function App() {
     <div className="min-h-screen">
       <Header activeTab={activeTab} onTabChange={setActiveTab} onOpenGuide={() => setGuideOpen(true)} />
       <InfoGuide isOpen={guideOpen} onClose={() => setGuideOpen(false)} />
+      <PlanBanner
+        plan={plan}
+        isExpired={isExpired}
+        isExpiringSoon={isExpiringSoon}
+        daysRemaining={daysRemaining}
+        onManagePlan={() => setActiveTab('team')}
+      />
 
       {/* SOFR Rate Indicator */}
       <div className="bg-[#0b1120]/80 border-b border-white/[0.04]">
@@ -339,7 +387,10 @@ export default function App() {
                   {valid && <ExportPanel summaryText={summaryText} inputs={inputs} />}
                   <SavedDeals
                     currentInputs={valid ? inputs : null}
+                    currentScore={valid ? riskScore.composite : null}
                     onLoadDeal={(dealInputs) => { setInputs(dealInputs); setActiveDeal(null); }}
+                    onDealsChange={setSavedDealsList}
+                    readOnly={isExpired}
                   />
                   <button
                     onClick={clearForm}
@@ -645,17 +696,22 @@ export default function App() {
             currentInputs={valid ? inputs : null}
             currentScore={valid ? riskScore.composite : null}
             onLoadDeal={(dealInputs) => { setInputs(dealInputs); setActiveDeal(null); setActiveTab('screening'); }}
+            readOnly={isExpired}
           />
         ) : activeTab === 'batch' ? (
           <BatchScreening
             sofr={sofr}
             onLoadDeal={(dealInputs) => { setInputs(dealInputs); setActiveDeal(null); setActiveTab('screening'); }}
           />
+        ) : activeTab === 'audit' ? (
+          <AuditLogViewer />
+        ) : activeTab === 'team' ? (
+          <TeamManagement />
         ) : (
           /* Compare tab */
           <DealComparison
             exampleDeals={exampleDeals}
-            savedDeals={(() => { try { return JSON.parse(localStorage.getItem('efd_saved_deals') || '[]'); } catch { return []; } })()}
+            savedDeals={savedDealsList}
             historicalDeals={historicalDeals}
             sofr={sofr}
           />

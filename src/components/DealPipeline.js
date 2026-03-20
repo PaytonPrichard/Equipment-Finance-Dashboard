@@ -1,6 +1,15 @@
-import React, { useState, useEffect, useRef } from 'react';
-
-const STORAGE_KEY = 'efd_pipeline_deals';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useAuth } from '../contexts/AuthContext';
+import { useRole } from '../hooks/useRole';
+import { useToast } from '../contexts/ToastContext';
+import {
+  fetchPipelineDeals,
+  createPipelineDeal,
+  updatePipelineStage,
+  updatePipelineNotes,
+  deletePipelineDeal,
+} from '../lib/pipeline';
+import { SkeletonPipeline } from './SkeletonCard';
 
 const STAGES = [
   { key: 'Screening', color: 'blue' },
@@ -17,15 +26,6 @@ const STAGE_STYLES = {
   Funded:         { bg: 'bg-teal-500/[0.08]',     border: 'border-teal-500/20',    text: 'text-teal-400',    dot: 'bg-teal-400' },
   Declined:       { bg: 'bg-rose-500/[0.08]',     border: 'border-rose-500/20',    text: 'text-rose-400',    dot: 'bg-rose-400' },
 };
-
-function getDeals() {
-  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
-  catch { return []; }
-}
-
-function persistDeals(deals) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(deals));
-}
 
 function scoreBg(s) {
   if (s >= 75) return 'bg-emerald-500/[0.08] border-emerald-500/15';
@@ -52,8 +52,12 @@ function fmtDate(iso) {
   catch { return ''; }
 }
 
-export default function DealPipeline({ onLoadDeal, currentInputs, currentScore }) {
-  const [deals, setDealsState] = useState(getDeals);
+export default function DealPipeline({ onLoadDeal, currentInputs, currentScore, readOnly }) {
+  const { user, profile } = useAuth();
+  const { can } = useRole();
+  const { addToast } = useToast();
+  const [deals, setDeals] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [addingName, setAddingName] = useState('');
   const [isAdding, setIsAdding] = useState(false);
   const [editingNoteId, setEditingNoteId] = useState(null);
@@ -61,7 +65,20 @@ export default function DealPipeline({ onLoadDeal, currentInputs, currentScore }
   const addInputRef = useRef();
   const noteInputRef = useRef();
 
-  const sync = (next) => { setDealsState(next); persistDeals(next); };
+  const orgId = profile?.org_id;
+  const userId = user?.id;
+
+  // Fetch pipeline deals from Supabase
+  const loadDeals = useCallback(async () => {
+    if (!orgId) { setLoading(false); return; }
+    setLoading(true);
+    const { data, error } = await fetchPipelineDeals(orgId);
+    if (error) addToast('Failed to load pipeline', 'error');
+    setDeals(data || []);
+    setLoading(false);
+  }, [orgId]);
+
+  useEffect(() => { loadDeals(); }, [loadDeals]);
 
   // Focus the add-deal input when it appears
   useEffect(() => {
@@ -76,42 +93,103 @@ export default function DealPipeline({ onLoadDeal, currentInputs, currentScore }
   /* --- Actions --- */
 
   const handleStartAdd = () => {
+    if (readOnly) { addToast('Plan expired — upgrade to add deals', 'warning'); return; }
     setAddingName(currentInputs?.companyName || '');
     setIsAdding(true);
   };
 
-  const handleConfirmAdd = () => {
+  const handleConfirmAdd = async () => {
     const name = addingName.trim();
-    if (!name) return;
+    if (!name || !userId || !orgId) return;
+
     const now = new Date().toISOString();
-    const entry = {
-      id: Date.now(),
+    const tempId = `temp_${Date.now()}`;
+    const optimistic = {
+      id: tempId,
       name,
       stage: 'Screening',
       inputs: currentInputs ? { ...currentInputs } : {},
       score: currentScore ?? null,
-      dateAdded: now,
-      dateUpdated: now,
+      created_at: now,
+      updated_at: now,
       notes: '',
     };
-    sync([entry, ...deals]);
+    setDeals((prev) => [optimistic, ...prev]);
     setIsAdding(false);
     setAddingName('');
+
+    const { data, error } = await createPipelineDeal(userId, orgId, name, currentInputs || {}, currentScore ?? null);
+    if (error) {
+      addToast('Failed to add deal to pipeline', 'error');
+      setDeals((prev) => prev.filter((d) => d.id !== tempId));
+    } else if (data) {
+      setDeals((prev) => prev.map((d) => (d.id === tempId ? data : d)));
+    }
   };
 
-  const handleDelete = (id) => {
-    sync(deals.filter((d) => d.id !== id));
+  const handleDelete = async (id) => {
+    if (!userId || !orgId) return;
+    const removed = deals.find((d) => d.id === id);
+    if (removed && !canDeleteDeal(removed)) return;
+    setDeals((prev) => prev.filter((d) => d.id !== id));
+
+    const { error } = await deletePipelineDeal(id, userId, orgId);
+    if (error) {
+      addToast('Failed to delete deal', 'error');
+      if (removed) setDeals((prev) => [...prev, removed]);
+    }
   };
 
-  const handleMove = (id, direction) => {
+  // Permission key for each target stage
+  const STAGE_PERMISSION = {
+    'Under Review': 'pipeline.move_review',
+    Approved: 'pipeline.move_approved',
+    Funded: 'pipeline.move_funded',
+    Declined: 'pipeline.move_declined',
+  };
+
+  const canMoveToStage = (stageName) => {
+    const perm = STAGE_PERMISSION[stageName];
+    return !perm || can(perm); // Screening has no gate
+  };
+
+  const canDeleteDeal = (deal) => {
+    if (can('pipeline.delete_any')) return true;
+    if (can('pipeline.delete_own') && deal.user_id === userId) return true;
+    return false;
+  };
+
+  const handleMove = async (id, direction) => {
+    if (!userId || !orgId) return;
     const stageKeys = STAGES.map((s) => s.key);
-    sync(deals.map((d) => {
-      if (d.id !== id) return d;
-      const idx = stageKeys.indexOf(d.stage);
-      const nextIdx = idx + direction;
-      if (nextIdx < 0 || nextIdx >= stageKeys.length) return d;
-      return { ...d, stage: stageKeys[nextIdx], dateUpdated: new Date().toISOString() };
-    }));
+    const deal = deals.find((d) => d.id === id);
+    if (!deal) return;
+
+    const idx = stageKeys.indexOf(deal.stage);
+    const nextIdx = idx + direction;
+    if (nextIdx < 0 || nextIdx >= stageKeys.length) return;
+
+    const newStage = stageKeys[nextIdx];
+
+    // Check permission for target stage
+    if (!canMoveToStage(newStage)) return;
+
+    // Optimistic update
+    setDeals((prev) =>
+      prev.map((d) =>
+        d.id === id ? { ...d, stage: newStage, updated_at: new Date().toISOString() } : d
+      )
+    );
+
+    const { error } = await updatePipelineStage(id, newStage, userId, orgId);
+    if (error) {
+      addToast('Failed to move deal', 'error');
+      setDeals((prev) =>
+        prev.map((d) =>
+          d.id === id ? { ...d, stage: deal.stage, updated_at: deal.updated_at } : d
+        )
+      );
+    }
   };
 
   const handleLoadDeal = (deal) => {
@@ -123,14 +201,31 @@ export default function DealPipeline({ onLoadDeal, currentInputs, currentScore }
     setNoteText(deal.notes || '');
   };
 
-  const handleSaveNote = () => {
-    sync(deals.map((d) =>
-      d.id === editingNoteId
-        ? { ...d, notes: noteText.trim(), dateUpdated: new Date().toISOString() }
-        : d
-    ));
+  const handleSaveNote = async () => {
+    const trimmed = noteText.trim();
+    const dealId = editingNoteId;
+    const prevDeal = deals.find((d) => d.id === dealId);
+
+    // Optimistic
+    setDeals((prev) =>
+      prev.map((d) =>
+        d.id === dealId ? { ...d, notes: trimmed, updated_at: new Date().toISOString() } : d
+      )
+    );
     setEditingNoteId(null);
     setNoteText('');
+
+    const { error } = await updatePipelineNotes(dealId, trimmed);
+    if (error) {
+      addToast('Failed to save note', 'error');
+      if (prevDeal) {
+        setDeals((prev) =>
+          prev.map((d) =>
+            d.id === dealId ? { ...d, notes: prevDeal.notes, updated_at: prevDeal.updated_at } : d
+          )
+        );
+      }
+    }
   };
 
   /* --- Grouping --- */
@@ -142,6 +237,10 @@ export default function DealPipeline({ onLoadDeal, currentInputs, currentScore }
   });
 
   const stageKeys = STAGES.map((s) => s.key);
+
+  if (loading) {
+    return <SkeletonPipeline />;
+  }
 
   return (
     <div className="space-y-5 animate-fade-in-up">
@@ -224,8 +323,9 @@ export default function DealPipeline({ onLoadDeal, currentInputs, currentScore }
 
                 {columnDeals.map((deal) => {
                   const stageIdx = stageKeys.indexOf(deal.stage);
-                  const canMoveBack = stageIdx > 0;
-                  const canMoveForward = stageIdx < stageKeys.length - 1;
+                  const canMoveBack = stageIdx > 0 && canMoveToStage(stageKeys[stageIdx - 1]);
+                  const canMoveForward = stageIdx < stageKeys.length - 1 && canMoveToStage(stageKeys[stageIdx + 1]);
+                  const showDelete = canDeleteDeal(deal);
 
                   return (
                     <div
@@ -241,13 +341,15 @@ export default function DealPipeline({ onLoadDeal, currentInputs, currentScore }
                         >
                           {deal.name}
                         </button>
-                        <button
-                          className="text-slate-700 hover:text-rose-400 text-sm leading-none opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 mt-0.5"
-                          title="Remove from pipeline"
-                          onClick={() => handleDelete(deal.id)}
-                        >
-                          &times;
-                        </button>
+                        {showDelete && (
+                          <button
+                            className="text-slate-700 hover:text-rose-400 text-sm leading-none opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 mt-0.5"
+                            title="Remove from pipeline"
+                            onClick={() => handleDelete(deal.id)}
+                          >
+                            &times;
+                          </button>
+                        )}
                       </div>
 
                       {/* Score + industry + cost */}
@@ -273,7 +375,7 @@ export default function DealPipeline({ onLoadDeal, currentInputs, currentScore }
 
                       {/* Date added */}
                       <div className="text-[10px] text-slate-600 mb-2">
-                        Added {fmtDate(deal.dateAdded)}
+                        Added {fmtDate(deal.created_at)}
                       </div>
 
                       {/* Notes */}

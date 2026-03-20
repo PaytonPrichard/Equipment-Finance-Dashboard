@@ -1,6 +1,11 @@
 import React from 'react';
+import { useAuth } from '../contexts/AuthContext';
+import { useRole } from '../hooks/useRole';
+import { ROLE_LABELS } from '../lib/permissions';
 
 export default function Header({ activeTab, onTabChange, onOpenGuide }) {
+  const { profile, signOut } = useAuth();
+  const { can } = useRole();
   return (
     <header className="border-b border-white/[0.04] bg-[#0b1120]/80 backdrop-blur-xl sticky top-0 z-50">
       <div className="max-w-[1600px] mx-auto px-6 py-3.5 flex items-center justify-between">
@@ -57,6 +62,23 @@ export default function Header({ activeTab, onTabChange, onOpenGuide }) {
                   <line x1="6" y1="20" x2="6" y2="14" />
                 </svg>
               )},
+              ...(can('audit.view') ? [{
+                id: 'audit', label: 'Audit Log', icon: (
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                  </svg>
+                ),
+              }] : []),
+              ...(can('org.manage_users') ? [{
+                id: 'team', label: 'Team', icon: (
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                    <circle cx="9" cy="7" r="4" />
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                  </svg>
+                ),
+              }] : []),
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -84,12 +106,22 @@ export default function Header({ activeTab, onTabChange, onOpenGuide }) {
           </button>
         </div>
 
-        {/* Right info */}
+        {/* User info */}
         <div className="hidden lg:flex items-center gap-3 text-[11px] text-slate-500">
-          <span className="px-2 py-1 rounded-md bg-white/[0.03] border border-white/[0.04] font-mono text-[10px]">
-            v2.0
-          </span>
-          <span className="text-slate-600">Screening Only</span>
+          {profile && (
+            <>
+              <div className="text-right">
+                <span className="text-slate-300 font-medium block">{profile.full_name || profile.email}</span>
+                <span className="text-[10px] text-slate-600 uppercase tracking-wider">{ROLE_LABELS[profile.role] || profile.role}</span>
+              </div>
+              <button
+                onClick={signOut}
+                className="px-2.5 py-1.5 rounded-lg text-[10px] font-medium text-slate-500 hover:text-slate-300 bg-white/[0.03] border border-white/[0.04] hover:border-white/[0.08] transition-all"
+              >
+                Sign Out
+              </button>
+            </>
+          )}
         </div>
       </div>
     </header>

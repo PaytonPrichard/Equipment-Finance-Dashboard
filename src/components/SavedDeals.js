@@ -1,26 +1,44 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useAuth } from '../contexts/AuthContext';
+import { useToast } from '../contexts/ToastContext';
+import { fetchSavedDeals, createSavedDeal, deleteSavedDeal } from '../lib/deals';
 
-const STORAGE_KEY = 'efd_saved_deals';
-
-function getDeals() {
-  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
-  catch { return []; }
-}
-
-function setDeals(deals) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(deals));
-}
-
-export default function SavedDeals({ currentInputs, onLoadDeal }) {
-  const [deals, setDealsState] = useState(getDeals);
+export default function SavedDeals({ currentInputs, currentScore, onLoadDeal, onDealsChange, readOnly }) {
+  const { user, profile } = useAuth();
+  const { addToast } = useToast();
+  const [deals, setDeals] = useState([]);
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveName, setSaveName] = useState('');
+  const [loading, setLoading] = useState(true);
   const ref = useRef();
   const inputRef = useRef();
 
-  const sync = (next) => { setDealsState(next); setDeals(next); };
+  const orgId = profile?.org_id;
+  const userId = user?.id;
 
+  // Update parent whenever deals change
+  const updateDeals = useCallback((next) => {
+    const list = typeof next === 'function' ? next(deals) : next;
+    setDeals(next);
+    if (onDealsChange) onDealsChange(list);
+  }, [onDealsChange, deals]);
+
+  // Fetch deals from Supabase on mount
+  const loadDeals = useCallback(async () => {
+    if (!orgId) { setLoading(false); return; }
+    setLoading(true);
+    const { data, error } = await fetchSavedDeals(orgId);
+    if (error) addToast('Failed to load saved deals', 'error');
+    const list = data || [];
+    setDeals(list);
+    if (onDealsChange) onDealsChange(list);
+    setLoading(false);
+  }, [orgId, onDealsChange]);
+
+  useEffect(() => { loadDeals(); }, [loadDeals]);
+
+  // Click outside to close
   useEffect(() => {
     const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) { setOpen(false); setSaving(false); } };
     document.addEventListener('mousedown', handler);
@@ -32,6 +50,7 @@ export default function SavedDeals({ currentInputs, onLoadDeal }) {
   }, [saving]);
 
   const handleSaveClick = () => {
+    if (readOnly) { addToast('Plan expired — upgrade to save deals', 'warning'); return; }
     if (!saving) {
       setSaveName(currentInputs?.companyName || '');
       setSaving(true);
@@ -39,18 +58,38 @@ export default function SavedDeals({ currentInputs, onLoadDeal }) {
     }
   };
 
-  const handleConfirmSave = () => {
+  const handleConfirmSave = async () => {
     const name = saveName.trim();
-    if (!name) return;
-    const entry = { id: Date.now(), name, date: new Date().toISOString(), inputs: { ...currentInputs } };
-    sync([entry, ...deals]);
+    if (!name || !userId || !orgId) return;
+
+    // Optimistic add
+    const tempId = `temp_${Date.now()}`;
+    const optimistic = { id: tempId, name, created_at: new Date().toISOString(), inputs: { ...currentInputs }, score: currentScore ?? null };
+    updateDeals((prev) => [optimistic, ...prev]);
     setSaving(false);
     setSaveName('');
+
+    const { data, error } = await createSavedDeal(userId, orgId, name, currentInputs, currentScore ?? null);
+    if (error) {
+      addToast('Failed to save deal', 'error');
+      updateDeals((prev) => prev.filter((d) => d.id !== tempId));
+    } else if (data) {
+      updateDeals((prev) => prev.map((d) => (d.id === tempId ? data : d)));
+    }
   };
 
-  const handleDelete = (e, id) => {
+  const handleDelete = async (e, id) => {
     e.stopPropagation();
-    sync(deals.filter((d) => d.id !== id));
+    if (!userId || !orgId) return;
+
+    const removed = deals.find((d) => d.id === id);
+    updateDeals((prev) => prev.filter((d) => d.id !== id));
+
+    const { error } = await deleteSavedDeal(id, userId, orgId);
+    if (error) {
+      addToast('Failed to delete deal', 'error');
+      if (removed) updateDeals((prev) => [removed, ...prev]);
+    }
   };
 
   const handleLoad = (inputs) => {
@@ -110,7 +149,9 @@ export default function SavedDeals({ currentInputs, onLoadDeal }) {
           </div>
 
           {/* Deal list */}
-          {deals.length === 0 ? (
+          {loading ? (
+            <div className="px-3 py-4 text-center text-slate-600 text-[11px]">Loading...</div>
+          ) : deals.length === 0 ? (
             <div className="px-3 py-4 text-center text-slate-600 text-[11px]">No saved deals yet</div>
           ) : (
             deals.map((deal) => (
@@ -122,7 +163,7 @@ export default function SavedDeals({ currentInputs, onLoadDeal }) {
                 <div className="min-w-0">
                   <div className="text-sm text-slate-200 truncate">{deal.name}</div>
                   <div className="text-[11px] text-slate-500">
-                    {fmt(deal.date)}
+                    {fmt(deal.created_at)}
                     {deal.inputs?.industry && <span> &middot; {deal.inputs.industry}</span>}
                     {fmtCost(deal.inputs?.equipmentCost) && <span> &middot; {fmtCost(deal.inputs.equipmentCost)}</span>}
                   </div>

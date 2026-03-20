@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react';
 import { DEFAULT_SOFR } from '../utils/calculations';
 
-const FRED_API_KEY = process.env.REACT_APP_FRED_API_KEY;
-const SOFR_SERIES = 'SOFR';
 const CACHE_KEY = 'efd_sofr_cache';
 const CACHE_MAX_AGE_MS = 4 * 60 * 60 * 1000; // 4 hours
 
@@ -37,8 +35,6 @@ export default function useSofrRate() {
   });
 
   useEffect(() => {
-    if (!FRED_API_KEY) return;
-
     const cached = getCached();
     if (cached) {
       setSofr(cached.rate);
@@ -47,22 +43,17 @@ export default function useSofrRate() {
       return;
     }
 
-    const url = `https://api.stlouisfed.org/fred/series/observations?series_id=${SOFR_SERIES}&api_key=${FRED_API_KEY}&file_type=json&sort_order=desc&limit=5`;
-
-    fetch(url)
+    fetch('/api/sofr')
       .then((res) => {
-        if (!res.ok) throw new Error(`FRED API ${res.status}`);
+        if (!res.ok) throw new Error(`Proxy API ${res.status}`);
         return res.json();
       })
       .then((data) => {
-        const obs = data.observations?.find((o) => o.value !== '.');
-        if (!obs) return;
-        const rate = parseFloat(obs.value) / 100;
-        if (isNaN(rate) || rate <= 0 || rate > 0.20) return; // sanity check
-        setSofr(rate);
-        setSofrDate(obs.date);
+        if (data.rate == null) return;
+        setSofr(data.rate);
+        setSofrDate(data.date);
         setSofrSource('FRED (live)');
-        setCache({ rate, date: obs.date });
+        setCache({ rate: data.rate, date: data.date });
       })
       .catch(() => {
         // Silently fall back to default

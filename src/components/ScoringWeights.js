@@ -1,6 +1,6 @@
-import React, { useState, useMemo, useCallback, useEffect } from 'react';
-
-const STORAGE_KEY = 'efd_custom_weights';
+import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
+import { useAuth } from '../contexts/AuthContext';
+import { fetchPreferences, upsertPreferences } from '../lib/preferences';
 
 const DEFAULT_WEIGHTS = {
   dscr: 25,
@@ -22,21 +22,12 @@ const FACTOR_LABELS = {
   termCoverage: 'Term Coverage',
 };
 
-function loadSavedWeights() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      // Validate shape — every default key must be present and numeric
-      const valid = Object.keys(DEFAULT_WEIGHTS).every(
-        (k) => typeof parsed[k] === 'number' && parsed[k] >= 0 && parsed[k] <= 40
-      );
-      if (valid) return parsed;
-    }
-  } catch {
-    // corrupted — fall through to defaults
-  }
-  return null;
+function validateWeights(obj) {
+  if (!obj) return null;
+  const valid = Object.keys(DEFAULT_WEIGHTS).every(
+    (k) => typeof obj[k] === 'number' && obj[k] >= 0 && obj[k] <= 40
+  );
+  return valid ? obj : null;
 }
 
 function WeightSlider({ factorKey, label, value, onChange }) {
@@ -94,28 +85,37 @@ function ScorePreview({ score, baseScore }) {
 }
 
 export default function ScoringWeights({ inputs, metrics, riskScore, onWeightsChange }) {
+  const { user } = useAuth();
+  const userId = user?.id;
   const [isOpen, setIsOpen] = useState(false);
-  const [weights, setWeights] = useState(() => loadSavedWeights() || { ...DEFAULT_WEIGHTS });
+  const [weights, setWeights] = useState({ ...DEFAULT_WEIGHTS });
+  const saveTimerRef = useRef(null);
 
-  // Load saved weights on mount and notify parent
+  // Load weights from Supabase on mount
   useEffect(() => {
-    const saved = loadSavedWeights();
-    if (saved) {
-      setWeights(saved);
-      if (onWeightsChange) onWeightsChange(saved);
-    }
+    if (!userId) return;
+    fetchPreferences(userId).then(({ data }) => {
+      const saved = validateWeights(data?.scoring_weights);
+      if (saved) {
+        setWeights(saved);
+        if (onWeightsChange) onWeightsChange(saved);
+      }
+    });
     // Only run on mount
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [userId]);
 
-  // Persist to localStorage whenever weights change
+  // Debounced save to Supabase whenever weights change
   useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(weights));
-    } catch {
-      // storage full or unavailable — silently ignore
-    }
-  }, [weights]);
+    if (!userId) return;
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = setTimeout(() => {
+      upsertPreferences(userId, { scoring_weights: weights }).catch((err) =>
+        console.error('Error saving weights:', err)
+      );
+    }, 1000);
+    return () => { if (saveTimerRef.current) clearTimeout(saveTimerRef.current); };
+  }, [weights, userId]);
 
   const total = useMemo(
     () => Object.values(weights).reduce((sum, v) => sum + v, 0),
