@@ -70,9 +70,9 @@ const ACTION_BADGE_STYLES = {
     text: 'text-emerald-400',
   },
   update: {
-    bg: 'bg-blue-500/[0.08]',
-    border: 'border-blue-500/15',
-    text: 'text-blue-400',
+    bg: 'bg-gold-500/[0.08]',
+    border: 'border-gold-500/15',
+    text: 'text-gold-400',
   },
   delete: {
     bg: 'bg-rose-500/[0.08]',
@@ -220,7 +220,7 @@ export default function AuditLogViewer() {
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="bg-white/[0.03] border border-white/[0.06] rounded-lg px-3 py-2 text-[12px] text-slate-300 focus:outline-none focus:ring-1 focus:ring-blue-500/30 focus:border-blue-500/20 appearance-none cursor-pointer"
+        className="bg-white/[0.03] border border-white/[0.06] rounded-lg px-3 py-2 text-[12px] text-slate-300 focus:outline-none focus:ring-1 focus:ring-gold-500/30 focus:border-gold-500/20 appearance-none cursor-pointer"
         style={{
           backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23475569' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E")`,
           backgroundRepeat: 'no-repeat',
@@ -311,7 +311,7 @@ export default function AuditLogViewer() {
       {loading && (
         <div className="glass-card rounded-2xl p-12 flex items-center justify-center">
           <div className="flex items-center gap-3">
-            <div className="w-4 h-4 border-2 border-blue-500/30 border-t-blue-400 rounded-full animate-spin" />
+            <div className="w-4 h-4 border-2 border-gold-500/30 border-t-gold-400 rounded-full animate-spin" />
             <span className="text-[12px] text-slate-500">Loading audit logs...</span>
           </div>
         </div>
@@ -464,7 +464,7 @@ export default function AuditLogViewer() {
               >
                 {loadingMore ? (
                   <span className="flex items-center gap-2">
-                    <span className="w-3 h-3 border-2 border-blue-500/30 border-t-blue-400 rounded-full animate-spin" />
+                    <span className="w-3 h-3 border-2 border-gold-500/30 border-t-gold-400 rounded-full animate-spin" />
                     Loading...
                   </span>
                 ) : (

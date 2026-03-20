@@ -20,7 +20,7 @@ const CREDIT_OPTIONS = ['Strong', 'Adequate', 'Weak', 'Not Rated'];
 function Tip({ text }) {
   return (
     <span className="relative group ml-1.5 inline-flex align-middle">
-      <span className="w-4 h-4 rounded-full bg-slate-700/60 text-slate-500 text-[10px] font-bold inline-flex items-center justify-center cursor-help hover:text-blue-400 hover:bg-blue-500/10 transition-colors">
+      <span className="w-4 h-4 rounded-full bg-slate-700/60 text-slate-500 text-[10px] font-bold inline-flex items-center justify-center cursor-help hover:text-gold-400 hover:bg-gold-500/10 transition-colors">
         ?
       </span>
       <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2.5 rounded-xl bg-slate-800 border border-slate-700/50 text-xs text-slate-300 w-60 text-left leading-relaxed shadow-2xl opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity duration-200 z-50">
@@ -36,7 +36,7 @@ function Label({ children, required, tip }) {
   return (
     <label className="flex items-center gap-0 text-[11px] font-semibold text-slate-500 mb-2 uppercase tracking-wider">
       {children}
-      {required && <span className="text-blue-400 ml-0.5">*</span>}
+      {required && <span className="text-gold-400 ml-0.5">*</span>}
       {tip && <Tip text={tip} />}
     </label>
   );
@@ -142,7 +142,7 @@ function CompanySearch({ value, onSelect, onManualChange }) {
       {/* Source badge */}
       {selectedSource && (
         <div className="mt-1.5 flex items-center gap-1.5 animate-fade-in">
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-500/10 border border-blue-500/20 text-[10px] text-blue-400 font-medium">
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-gold-500/10 border border-gold-500/20 text-[10px] text-gold-400 font-medium">
             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
               <polyline points="20 6 9 17 4 12" />
             </svg>
@@ -297,14 +297,14 @@ export default function DealInputForm({ inputs, onChange }) {
     <div className="space-y-5">
       {/* Required note */}
       <p className="text-[10px] text-slate-600 uppercase tracking-wider">
-        <span className="text-blue-400">*</span> Required for screening
+        <span className="text-gold-400">*</span> Required for screening
       </p>
 
       {/* ---- Borrower Profile ---- */}
       <div className="glass-card rounded-2xl p-6">
         <div className="flex items-center gap-2.5 mb-6">
-          <div className="w-7 h-7 rounded-lg bg-blue-500/10 flex items-center justify-center">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-blue-400" strokeWidth="2">
+          <div className="w-7 h-7 rounded-lg bg-gold-500/10 flex items-center justify-center">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-gold-400" strokeWidth="2">
               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
               <circle cx="12" cy="7" r="4" />
             </svg>
@@ -394,8 +394,8 @@ export default function DealInputForm({ inputs, onChange }) {
       {/* ---- Equipment & Deal ---- */}
       <div className="glass-card rounded-2xl p-6">
         <div className="flex items-center gap-2.5 mb-6">
-          <div className="w-7 h-7 rounded-lg bg-blue-500/10 flex items-center justify-center">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-blue-400" strokeWidth="2">
+          <div className="w-7 h-7 rounded-lg bg-gold-500/10 flex items-center justify-center">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-gold-400" strokeWidth="2">
               <circle cx="12" cy="12" r="3" />
               <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
             </svg>
@@ -418,7 +418,7 @@ export default function DealInputForm({ inputs, onChange }) {
                 <p className="text-[10px] text-slate-600 mt-1 pl-1">
                   Typical life: {EQUIPMENT_DEFAULTS[inputs.equipmentType].usefulLifeRange[0]}–{EQUIPMENT_DEFAULTS[inputs.equipmentType].usefulLifeRange[1]} yrs
                   {EQUIPMENT_DEFAULTS[inputs.equipmentType].suggestedType !== (inputs.financingType || 'EFA') && (
-                    <span className="text-blue-400 ml-1">
+                    <span className="text-gold-400 ml-1">
                       &middot; Common: {EQUIPMENT_DEFAULTS[inputs.equipmentType].suggestedType}
                     </span>
                   )}
@@ -534,10 +534,10 @@ export default function DealInputForm({ inputs, onChange }) {
               onClick={() => onChange({ ...inputs, essentialUse: !inputs.essentialUse })}
               className="flex items-center gap-3"
             >
-              <div className={`toggle-track relative w-11 h-6 rounded-full ${inputs.essentialUse ? 'bg-blue-600' : 'bg-slate-700'}`}>
+              <div className={`toggle-track relative w-11 h-6 rounded-full ${inputs.essentialUse ? 'bg-gold-500' : 'bg-slate-700'}`}>
                 <div className={`toggle-thumb absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-md ${inputs.essentialUse ? 'translate-x-[22px]' : 'translate-x-0.5'}`} />
               </div>
-              <span className={`text-sm font-medium ${inputs.essentialUse ? 'text-blue-300' : 'text-slate-500'}`}>
+              <span className={`text-sm font-medium ${inputs.essentialUse ? 'text-gold-300' : 'text-slate-500'}`}>
                 {inputs.essentialUse ? 'Yes — Core Operations' : 'No'}
               </span>
             </button>

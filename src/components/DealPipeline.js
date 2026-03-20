@@ -12,7 +12,7 @@ import {
 import { SkeletonPipeline } from './SkeletonCard';
 
 const STAGES = [
-  { key: 'Screening', color: 'blue' },
+  { key: 'Screening', color: 'gold' },
   { key: 'Under Review', color: 'amber' },
   { key: 'Approved', color: 'emerald' },
   { key: 'Funded', color: 'teal' },
@@ -20,7 +20,7 @@ const STAGES = [
 ];
 
 const STAGE_STYLES = {
-  Screening:      { bg: 'bg-blue-500/[0.08]',    border: 'border-blue-500/20',    text: 'text-blue-400',    dot: 'bg-blue-400' },
+  Screening:      { bg: 'bg-gold-500/[0.08]',    border: 'border-gold-500/20',    text: 'text-gold-400',    dot: 'bg-gold-400' },
   'Under Review': { bg: 'bg-amber-500/[0.08]',   border: 'border-amber-500/20',   text: 'text-amber-400',   dot: 'bg-amber-400' },
   Approved:       { bg: 'bg-emerald-500/[0.08]',  border: 'border-emerald-500/20', text: 'text-emerald-400', dot: 'bg-emerald-400' },
   Funded:         { bg: 'bg-teal-500/[0.08]',     border: 'border-teal-500/20',    text: 'text-teal-400',    dot: 'bg-teal-400' },
@@ -259,7 +259,7 @@ export default function DealPipeline({ onLoadDeal, currentInputs, currentScore, 
             <div className="flex gap-1.5 items-center">
               <input
                 ref={addInputRef}
-                className="bg-white/5 rounded-lg px-3 py-1.5 text-sm text-slate-200 outline-none placeholder-slate-600 border border-white/[0.06] focus:border-blue-500/30 transition-colors w-48"
+                className="bg-white/5 rounded-lg px-3 py-1.5 text-sm text-slate-200 outline-none placeholder-slate-600 border border-white/[0.06] focus:border-gold-500/30 transition-colors w-48"
                 placeholder="Deal name..."
                 value={addingName}
                 onChange={(e) => setAddingName(e.target.value)}
@@ -269,7 +269,7 @@ export default function DealPipeline({ onLoadDeal, currentInputs, currentScore, 
                 }}
               />
               <button
-                className="pill-btn px-3 py-1.5 rounded-lg text-[11px] font-medium text-blue-400"
+                className="pill-btn px-3 py-1.5 rounded-lg text-[11px] font-medium text-gold-400"
                 onClick={handleConfirmAdd}
               >
                 Add
@@ -283,7 +283,7 @@ export default function DealPipeline({ onLoadDeal, currentInputs, currentScore, 
             </div>
           ) : (
             <button
-              className="pill-btn px-3 py-1.5 rounded-lg text-[11px] font-medium text-blue-400"
+              className="pill-btn px-3 py-1.5 rounded-lg text-[11px] font-medium text-gold-400"
               onClick={handleStartAdd}
             >
               + Add Current Deal
@@ -336,7 +336,7 @@ export default function DealPipeline({ onLoadDeal, currentInputs, currentScore, 
                       {/* Company name + delete */}
                       <div className="flex items-start justify-between gap-1 mb-1.5">
                         <button
-                          className="text-sm font-semibold text-slate-200 truncate text-left hover:text-blue-400 transition-colors leading-tight"
+                          className="text-sm font-semibold text-slate-200 truncate text-left hover:text-gold-400 transition-colors leading-tight"
                           title="Load deal into screening form"
                           onClick={() => handleLoadDeal(deal)}
                         >
@@ -384,7 +384,7 @@ export default function DealPipeline({ onLoadDeal, currentInputs, currentScore, 
                         <div className="mb-2">
                           <textarea
                             ref={noteInputRef}
-                            className="w-full bg-white/5 rounded-lg px-2 py-1.5 text-[11px] text-slate-300 outline-none placeholder-slate-600 border border-white/[0.06] focus:border-blue-500/30 transition-colors resize-none"
+                            className="w-full bg-white/5 rounded-lg px-2 py-1.5 text-[11px] text-slate-300 outline-none placeholder-slate-600 border border-white/[0.06] focus:border-gold-500/30 transition-colors resize-none"
                             rows={2}
                             placeholder="Add a note..."
                             value={noteText}
@@ -396,7 +396,7 @@ export default function DealPipeline({ onLoadDeal, currentInputs, currentScore, 
                           />
                           <div className="flex gap-1 mt-1">
                             <button
-                              className="text-[10px] text-blue-400 hover:text-blue-300"
+                              className="text-[10px] text-gold-400 hover:text-gold-300"
                               onClick={handleSaveNote}
                             >
                               Save

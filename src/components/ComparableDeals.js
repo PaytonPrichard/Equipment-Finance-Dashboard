@@ -48,7 +48,7 @@ function scoreSimilarity(current, candidate) {
 
 const OUTCOME_STYLES = {
   Performing: { bg: 'bg-emerald-500/10', text: 'text-emerald-400', border: 'border-emerald-500/20' },
-  'Paid Off': { bg: 'bg-blue-500/10', text: 'text-blue-400', border: 'border-blue-500/20' },
+  'Paid Off': { bg: 'bg-gold-500/10', text: 'text-gold-400', border: 'border-gold-500/20' },
   Watchlist: { bg: 'bg-amber-500/10', text: 'text-amber-400', border: 'border-amber-500/20' },
   Defaulted: { bg: 'bg-rose-500/10', text: 'text-rose-400', border: 'border-rose-500/20' },
 };
@@ -99,17 +99,17 @@ export default function ComparableDeals({ inputs, metrics, riskScore, sofr = DEF
           ? 'bg-emerald-500/[0.06] border border-emerald-500/15'
           : troubledCount > performingCount
           ? 'bg-amber-500/[0.06] border border-amber-500/15'
-          : 'bg-blue-500/[0.06] border border-blue-500/15'
+          : 'bg-gold-500/[0.06] border border-gold-500/15'
       }`}>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-          className={performingCount > troubledCount ? 'text-emerald-400' : troubledCount > performingCount ? 'text-amber-400' : 'text-blue-400'}
+          className={performingCount > troubledCount ? 'text-emerald-400' : troubledCount > performingCount ? 'text-amber-400' : 'text-gold-400'}
           strokeWidth="2"
         >
           <circle cx="12" cy="12" r="10" />
           <path d="M12 16v-4M12 8h.01" />
         </svg>
         <p className={`text-[12px] leading-relaxed ${
-          performingCount > troubledCount ? 'text-emerald-300' : troubledCount > performingCount ? 'text-amber-300' : 'text-blue-300'
+          performingCount > troubledCount ? 'text-emerald-300' : troubledCount > performingCount ? 'text-amber-300' : 'text-gold-300'
         }`}>
           {performingCount > troubledCount
             ? `${performingCount} of ${comparables.length} comparable deals are performing or paid off — favorable precedent for this profile.`

@@ -68,11 +68,11 @@ export default function OrgSetup({ profile, onComplete }) {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0f1a] flex items-center justify-center px-4">
+    <div className="min-h-screen bg-[#111116] flex items-center justify-center px-4">
       <div className="w-full max-w-md">
         {/* Logo and App Title */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 shadow-lg shadow-blue-500/20 mb-4">
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-gold-500 to-gold-600 shadow-lg shadow-gold-500/20 mb-4">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
               <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
@@ -100,7 +100,7 @@ export default function OrgSetup({ profile, onComplete }) {
               <div className="space-y-3">
                 <button
                   onClick={() => setMode('create')}
-                  className="w-full py-2.5 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 text-white text-sm font-semibold shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30 hover:from-blue-400 hover:to-blue-500 transition-all"
+                  className="w-full py-2.5 rounded-xl bg-gradient-to-r from-gold-500 to-gold-600 text-white text-sm font-semibold shadow-lg shadow-gold-500/20 hover:shadow-gold-500/30 hover:from-gold-400 hover:to-gold-500 transition-all"
                 >
                   Create Organization
                 </button>
@@ -141,14 +141,14 @@ export default function OrgSetup({ profile, onComplete }) {
                     onChange={(e) => setOrgName(e.target.value)}
                     placeholder="Acme Capital Partners"
                     required
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-sm placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500/40 transition-all"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-sm placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-gold-500/40 focus:border-gold-500/40 transition-all"
                   />
                 </div>
 
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full py-2.5 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 text-white text-sm font-semibold shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30 hover:from-blue-400 hover:to-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+                  className="w-full py-2.5 rounded-xl bg-gradient-to-r from-gold-500 to-gold-600 text-white text-sm font-semibold shadow-lg shadow-gold-500/20 hover:shadow-gold-500/30 hover:from-gold-400 hover:to-gold-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
                 >
                   {loading ? (
                     <>
@@ -167,7 +167,7 @@ export default function OrgSetup({ profile, onComplete }) {
               <div className="mt-4 text-center">
                 <button
                   onClick={() => { setMode(null); setError(''); }}
-                  className="text-sm text-blue-400 hover:text-blue-300 font-medium transition-colors"
+                  className="text-sm text-gold-400 hover:text-gold-300 font-medium transition-colors"
                 >
                   Back
                 </button>
@@ -232,14 +232,14 @@ export default function OrgSetup({ profile, onComplete }) {
                     onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
                     placeholder="e.g. A1B2C3D4"
                     required
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-sm placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500/40 transition-all font-mono tracking-wider"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-sm placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-gold-500/40 focus:border-gold-500/40 transition-all font-mono tracking-wider"
                   />
                 </div>
 
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full py-2.5 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 text-white text-sm font-semibold shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30 hover:from-blue-400 hover:to-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+                  className="w-full py-2.5 rounded-xl bg-gradient-to-r from-gold-500 to-gold-600 text-white text-sm font-semibold shadow-lg shadow-gold-500/20 hover:shadow-gold-500/30 hover:from-gold-400 hover:to-gold-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
                 >
                   {loading ? (
                     <>
@@ -264,7 +264,7 @@ export default function OrgSetup({ profile, onComplete }) {
               <div className="mt-4 text-center">
                 <button
                   onClick={() => { setMode(null); setError(''); setJoinSuccess(false); }}
-                  className="text-sm text-blue-400 hover:text-blue-300 font-medium transition-colors"
+                  className="text-sm text-gold-400 hover:text-gold-300 font-medium transition-colors"
                 >
                   Back
                 </button>

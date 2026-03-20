@@ -29,7 +29,7 @@ function SliderRow({ label, value, min, max, step, formatFn, onChange, originalV
       <div className="flex items-center justify-between">
         <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">{label}</span>
         <div className="flex items-center gap-2">
-          <span className={`text-sm font-mono font-semibold ${changed ? 'text-blue-400' : 'text-slate-300'}`}>
+          <span className={`text-sm font-mono font-semibold ${changed ? 'text-gold-400' : 'text-slate-300'}`}>
             {formatFn(value)}
           </span>
           {changed && (

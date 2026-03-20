@@ -3,7 +3,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 
 const OUTCOME_COLORS = {
   Performing: '#10b981',
-  'Paid Off': '#3b82f6',
+  'Paid Off': '#d4a843',
   Watchlist: '#f59e0b',
   Defaulted: '#ef4444',
 };
@@ -189,7 +189,7 @@ export default function PortfolioAnalytics({ scoredDeals }) {
                   <div className="text-[10px] text-slate-500 mt-1">False Negative / Over-Conservative</div>
                 </td>
                 <td className="p-3">
-                  <span className="inline-block bg-blue-500/10 text-blue-400 rounded-lg px-3 py-1.5 font-bold">
+                  <span className="inline-block bg-gold-500/10 text-gold-400 rounded-lg px-3 py-1.5 font-bold">
                     {tn}
                   </span>
                   <div className="text-[10px] text-slate-500 mt-1">True Negative</div>

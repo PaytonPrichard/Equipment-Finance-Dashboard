@@ -334,13 +334,13 @@ export default function InfoGuide({ isOpen, onClose }) {
 
       {/* Modal */}
       <div className="relative w-full max-w-4xl max-h-[85vh] mx-4 rounded-2xl border border-white/[0.08] overflow-hidden animate-fade-in-up"
-        style={{ background: 'rgba(11, 17, 32, 0.97)' }}
+        style={{ background: 'rgba(17, 17, 22, 0.97)' }}
       >
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-white/[0.06]">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-xl bg-blue-500/10 flex items-center justify-center">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-blue-400" strokeWidth="2">
+            <div className="w-8 h-8 rounded-xl bg-gold-500/10 flex items-center justify-center">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-gold-400" strokeWidth="2">
                 <circle cx="12" cy="12" r="10" />
                 <path d="M12 16v-4M12 8h.01" />
               </svg>
@@ -371,11 +371,11 @@ export default function InfoGuide({ isOpen, onClose }) {
                 onClick={() => setActiveSection(section.id)}
                 className={`w-full flex items-center gap-2.5 px-4 py-2.5 text-left transition-all ${
                   activeSection === section.id
-                    ? 'bg-blue-500/10 text-blue-300 border-r-2 border-blue-400'
+                    ? 'bg-gold-500/10 text-gold-300 border-r-2 border-gold-400'
                     : 'text-slate-500 hover:text-slate-300 hover:bg-white/[0.03]'
                 }`}
               >
-                <span className={activeSection === section.id ? 'text-blue-400' : 'text-slate-600'}>
+                <span className={activeSection === section.id ? 'text-gold-400' : 'text-slate-600'}>
                   {section.icon}
                 </span>
                 <span className="text-[12px] font-semibold">{section.title}</span>
@@ -386,7 +386,7 @@ export default function InfoGuide({ isOpen, onClose }) {
           {/* Content */}
           <div className="flex-1 overflow-y-auto px-8 py-6">
             <div className="flex items-center gap-3 mb-6">
-              <span className="text-blue-400">{currentSection.icon}</span>
+              <span className="text-gold-400">{currentSection.icon}</span>
               <h3 className="text-lg font-bold text-white">{currentSection.title}</h3>
             </div>
 
@@ -394,7 +394,7 @@ export default function InfoGuide({ isOpen, onClose }) {
               {currentSection.content.map((block, i) => (
                 <div key={i}>
                   <h4 className="text-sm font-semibold text-slate-200 mb-2 flex items-center gap-2">
-                    <span className="w-1 h-1 rounded-full bg-blue-400 flex-shrink-0" />
+                    <span className="w-1 h-1 rounded-full bg-gold-400 flex-shrink-0" />
                     {block.heading}
                   </h4>
                   <p className="text-[13px] text-slate-400 leading-relaxed pl-3 whitespace-pre-line">

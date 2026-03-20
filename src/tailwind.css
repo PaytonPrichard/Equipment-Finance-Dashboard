@@ -3,4 +3,10 @@
 @theme {
   --font-sans: 'Inter', 'system-ui', '-apple-system', 'sans-serif';
   --font-mono: 'JetBrains Mono', 'Fira Code', 'monospace';
+
+  --color-gold-300: #E8C96A;
+  --color-gold-400: #D4A843;
+  --color-gold-500: #B8923A;
+  --color-gold-600: #9A7B31;
+  --color-gold-700: #7D6428;
 }

@@ -182,7 +182,7 @@ export default function BatchScreening({ sofr = DEFAULT_SOFR, onLoadDeal }) {
 
           <button
             type="button"
-            className="pill-btn px-3 py-1.5 rounded-lg text-[11px] font-medium text-blue-400 hover:text-blue-300 flex items-center gap-1.5"
+            className="pill-btn px-3 py-1.5 rounded-lg text-[11px] font-medium text-gold-400 hover:text-gold-300 flex items-center gap-1.5"
             onClick={downloadTemplate}
           >
             <svg

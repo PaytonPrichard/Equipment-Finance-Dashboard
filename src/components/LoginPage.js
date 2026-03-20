@@ -114,11 +114,11 @@ export default function LoginPage({ passwordRecovery }) {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0f1a] flex items-center justify-center px-4">
+    <div className="min-h-screen bg-[#111116] flex items-center justify-center px-4">
       <div className="w-full max-w-md">
         {/* Logo and App Title */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 shadow-lg shadow-blue-500/20 mb-4">
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-gold-500 to-gold-600 shadow-lg shadow-gold-500/20 mb-4">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
               <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
@@ -171,7 +171,7 @@ export default function LoginPage({ passwordRecovery }) {
                   onChange={(e) => setFullName(e.target.value)}
                   placeholder="Jane Doe"
                   required
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-sm placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500/40 transition-all"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-sm placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-gold-500/40 focus:border-gold-500/40 transition-all"
                 />
               </div>
             )}
@@ -189,7 +189,7 @@ export default function LoginPage({ passwordRecovery }) {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@company.com"
                   required
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-sm placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500/40 transition-all"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-sm placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-gold-500/40 focus:border-gold-500/40 transition-all"
                 />
               </div>
             )}
@@ -207,7 +207,7 @@ export default function LoginPage({ passwordRecovery }) {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder={mode === 'signin' ? 'Enter your password' : 'Min 10 chars, upper, lower, number, special'}
                   required
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-sm placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500/40 transition-all"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-sm placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-gold-500/40 focus:border-gold-500/40 transition-all"
                 />
                 {(mode === 'signup' || mode === 'update_password') && password.length > 0 && (
                   <div className="mt-2 space-y-1">
@@ -238,7 +238,7 @@ export default function LoginPage({ passwordRecovery }) {
                 <button
                   type="button"
                   onClick={() => switchMode('forgot')}
-                  className="text-[12px] text-blue-400/70 hover:text-blue-300 transition-colors"
+                  className="text-[12px] text-gold-400/70 hover:text-gold-300 transition-colors"
                 >
                   Forgot password?
                 </button>
@@ -249,7 +249,7 @@ export default function LoginPage({ passwordRecovery }) {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-2.5 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 text-white text-sm font-semibold shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30 hover:from-blue-400 hover:to-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+              className="w-full py-2.5 rounded-xl bg-gradient-to-r from-gold-500 to-gold-600 text-white text-sm font-semibold shadow-lg shadow-gold-500/20 hover:shadow-gold-500/30 hover:from-gold-400 hover:to-gold-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
             >
               {loading ? (
                 <>
@@ -270,7 +270,7 @@ export default function LoginPage({ passwordRecovery }) {
             {mode === 'signin' && (
               <div>
                 <span className="text-sm text-slate-500">Don't have an account? </span>
-                <button onClick={() => switchMode('signup')} className="text-sm text-blue-400 hover:text-blue-300 font-medium transition-colors">
+                <button onClick={() => switchMode('signup')} className="text-sm text-gold-400 hover:text-gold-300 font-medium transition-colors">
                   Sign Up
                 </button>
               </div>
@@ -278,13 +278,13 @@ export default function LoginPage({ passwordRecovery }) {
             {mode === 'signup' && (
               <div>
                 <span className="text-sm text-slate-500">Already have an account? </span>
-                <button onClick={() => switchMode('signin')} className="text-sm text-blue-400 hover:text-blue-300 font-medium transition-colors">
+                <button onClick={() => switchMode('signin')} className="text-sm text-gold-400 hover:text-gold-300 font-medium transition-colors">
                   Sign In
                 </button>
               </div>
             )}
             {(mode === 'forgot' || mode === 'update_password') && (
-              <button onClick={() => switchMode('signin')} className="text-sm text-blue-400 hover:text-blue-300 font-medium transition-colors">
+              <button onClick={() => switchMode('signin')} className="text-sm text-gold-400 hover:text-gold-300 font-medium transition-colors">
                 Back to Sign In
               </button>
             )}

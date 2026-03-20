@@ -36,7 +36,7 @@ function CustomTooltip({ active, payload }) {
     <div className="bg-slate-800 border border-slate-700/50 rounded-xl px-3 py-2.5 shadow-2xl">
       <p className="text-xs font-semibold text-slate-200">{data.label}</p>
       <p className="text-xs text-slate-400 mt-0.5">
-        Score: <span className="text-blue-400 font-mono font-medium">{data.score}</span>/100
+        Score: <span className="text-gold-400 font-mono font-medium">{data.score}</span>/100
       </p>
       <p className="text-[10px] text-slate-500">Weight: {data.weight}</p>
     </div>
@@ -70,11 +70,11 @@ export default function RiskRadarChart({ factors }) {
         <Radar
           name="Score"
           dataKey="score"
-          stroke="#3b82f6"
-          fill="#3b82f6"
+          stroke="#d4a843"
+          fill="#d4a843"
           fillOpacity={0.1}
           strokeWidth={2}
-          dot={{ r: 3, fill: '#3b82f6', strokeWidth: 0 }}
+          dot={{ r: 3, fill: '#d4a843', strokeWidth: 0 }}
         />
         <Tooltip content={<CustomTooltip />} />
       </RadarChart>

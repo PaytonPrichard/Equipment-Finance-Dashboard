@@ -26,7 +26,7 @@ export function ToastProvider({ children }) {
   const STYLES = {
     error: 'bg-rose-500/15 border-rose-500/25 text-rose-300',
     success: 'bg-emerald-500/15 border-emerald-500/25 text-emerald-300',
-    info: 'bg-blue-500/15 border-blue-500/25 text-blue-300',
+    info: 'bg-gold-500/15 border-gold-500/25 text-gold-300',
     warning: 'bg-amber-500/15 border-amber-500/25 text-amber-300',
   };
 

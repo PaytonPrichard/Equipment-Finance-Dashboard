@@ -171,7 +171,7 @@ export default function DealComparison({ exampleDeals, savedDeals, historicalDea
                     <button
                       key={d.cid}
                       onClick={() => { onChange(d.cid); setQuery(''); setOpen(false); }}
-                      className={`w-full px-3 py-2 text-left hover:bg-slate-800/60 transition-colors flex items-center gap-3 ${value === d.cid ? 'bg-blue-500/10' : ''}`}
+                      className={`w-full px-3 py-2 text-left hover:bg-slate-800/60 transition-colors flex items-center gap-3 ${value === d.cid ? 'bg-gold-500/10' : ''}`}
                     >
                       <div className="flex-1 min-w-0">
                         <p className="text-sm text-slate-200 font-medium truncate">{d.name}</p>

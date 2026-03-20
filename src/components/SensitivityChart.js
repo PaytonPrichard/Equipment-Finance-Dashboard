@@ -91,7 +91,7 @@ function CustomTooltip({ active, payload, variable }) {
         {variable.label}: {formatAdjustedValue(variable, data.adjustedValue)}
       </p>
       <p className="text-xs text-slate-400 mt-0.5">
-        Adjustment: <span className="text-blue-400 font-mono font-medium">{data.label}</span>
+        Adjustment: <span className="text-gold-400 font-mono font-medium">{data.label}</span>
       </p>
       <p className="text-xs text-slate-400 mt-0.5">
         Risk Score:{' '}
@@ -184,7 +184,7 @@ export default function SensitivityChart({ inputs, sofr = DEFAULT_SOFR }) {
             onClick={() => setSelectedVar(v.key)}
             className={`px-3 py-1.5 rounded-lg text-[11px] font-medium transition-all ${
               selectedVar === v.key
-                ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                ? 'bg-gold-500/20 text-gold-400 border border-gold-500/30'
                 : 'bg-white/[0.03] text-slate-500 border border-transparent hover:bg-white/[0.05] hover:text-slate-400'
             }`}
           >
@@ -198,8 +198,8 @@ export default function SensitivityChart({ inputs, sofr = DEFAULT_SOFR }) {
         <LineChart data={data} margin={{ top: 10, right: 20, left: 0, bottom: 5 }}>
           <defs>
             <linearGradient id="scoreLineGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.8} />
-              <stop offset="100%" stopColor="#3b82f6" stopOpacity={0.2} />
+              <stop offset="0%" stopColor="#d4a843" stopOpacity={0.8} />
+              <stop offset="100%" stopColor="#d4a843" stopOpacity={0.2} />
             </linearGradient>
           </defs>
 
@@ -241,13 +241,13 @@ export default function SensitivityChart({ inputs, sofr = DEFAULT_SOFR }) {
           {/* Base case reference line */}
           <ReferenceLine
             y={baseScore}
-            stroke="#3b82f6"
+            stroke="#d4a843"
             strokeDasharray="6 3"
             strokeOpacity={0.5}
             label={{
               value: `Base: ${baseScore}`,
               position: 'left',
-              fill: '#3b82f6',
+              fill: '#d4a843',
               fontSize: 10,
               fontWeight: 600,
             }}
@@ -276,11 +276,11 @@ export default function SensitivityChart({ inputs, sofr = DEFAULT_SOFR }) {
           <Line
             type="monotone"
             dataKey="score"
-            stroke="#3b82f6"
+            stroke="#d4a843"
             strokeWidth={2.5}
             dot={(props) => {
               const { cx, cy, payload } = props;
-              const color = payload.isBase ? '#3b82f6' : getScoreColor(payload.score);
+              const color = payload.isBase ? '#d4a843' : getScoreColor(payload.score);
               const r = payload.isBase ? 5 : 3;
               return (
                 <circle
@@ -289,15 +289,15 @@ export default function SensitivityChart({ inputs, sofr = DEFAULT_SOFR }) {
                   cy={cy}
                   r={r}
                   fill={color}
-                  stroke={payload.isBase ? '#1e3a5f' : 'none'}
+                  stroke={payload.isBase ? '#5c4a1a' : 'none'}
                   strokeWidth={payload.isBase ? 2 : 0}
                 />
               );
             }}
             activeDot={{
               r: 5,
-              fill: '#3b82f6',
-              stroke: '#1e3a5f',
+              fill: '#d4a843',
+              stroke: '#5c4a1a',
               strokeWidth: 2,
             }}
           />
@@ -312,7 +312,7 @@ export default function SensitivityChart({ inputs, sofr = DEFAULT_SOFR }) {
               Most sensitive to {sensitivity.variable.label}:
             </span>{' '}
             score drops from{' '}
-            <span className="font-mono font-semibold text-blue-400">
+            <span className="font-mono font-semibold text-gold-400">
               {sensitivity.baseScore}
             </span>{' '}
             to{' '}

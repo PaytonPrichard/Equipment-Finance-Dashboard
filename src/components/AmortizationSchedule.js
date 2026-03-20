@@ -23,8 +23,8 @@ export default function AmortizationSchedule({ principal, annualRate, termMonths
         className="w-full px-5 py-4 flex items-center justify-between hover:bg-white/[0.02] transition-colors"
       >
         <div className="flex items-center gap-3">
-          <div className="w-7 h-7 rounded-lg bg-blue-500/10 flex items-center justify-center">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-blue-400" strokeWidth="2">
+          <div className="w-7 h-7 rounded-lg bg-gold-500/10 flex items-center justify-center">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-gold-400" strokeWidth="2">
               <rect x="3" y="3" width="18" height="18" rx="2" />
               <line x1="3" y1="9" x2="21" y2="9" />
               <line x1="9" y1="21" x2="9" y2="9" />
@@ -99,7 +99,7 @@ export default function AmortizationSchedule({ principal, annualRate, termMonths
                           {/* Mini principal/interest ratio bar */}
                           <div className="h-1 mt-1 rounded-full bg-white/[0.04] overflow-hidden">
                             <div
-                              className="h-full bg-blue-500/40 rounded-full"
+                              className="h-full bg-gold-500/40 rounded-full"
                               style={{ width: `${principalPct}%` }}
                             />
                           </div>
@@ -118,7 +118,7 @@ export default function AmortizationSchedule({ principal, annualRate, termMonths
           {/* Legend */}
           <div className="flex items-center gap-4 mt-3 text-[10px] text-slate-600">
             <span className="flex items-center gap-1.5">
-              <span className="w-3 h-1 rounded-full bg-blue-500/40" /> Principal portion
+              <span className="w-3 h-1 rounded-full bg-gold-500/40" /> Principal portion
             </span>
             <span className="flex items-center gap-1.5">
               <span className="w-3 h-1 rounded-full bg-white/[0.04]" /> Interest portion

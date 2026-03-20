@@ -214,7 +214,7 @@ function generateChecklist(inputs, metrics, riskScore) {
 }
 
 const PRIORITY_STYLES = {
-  required: { label: 'Required', bg: 'bg-blue-500/10', border: 'border-blue-500/20', text: 'text-blue-400' },
+  required: { label: 'Required', bg: 'bg-gold-500/10', border: 'border-gold-500/20', text: 'text-gold-400' },
   high: { label: 'High', bg: 'bg-rose-500/10', border: 'border-rose-500/20', text: 'text-rose-400' },
   medium: { label: 'Medium', bg: 'bg-amber-500/10', border: 'border-amber-500/20', text: 'text-amber-400' },
   low: { label: 'Low', bg: 'bg-slate-500/10', border: 'border-slate-500/20', text: 'text-slate-400' },

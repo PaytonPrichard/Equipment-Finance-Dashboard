@@ -231,7 +231,7 @@ export default function TeamManagement() {
     return (
       <div className="glass-card rounded-2xl p-12 flex items-center justify-center">
         <div className="flex items-center gap-3">
-          <div className="w-4 h-4 border-2 border-blue-500/30 border-t-blue-400 rounded-full animate-spin" />
+          <div className="w-4 h-4 border-2 border-gold-500/30 border-t-gold-400 rounded-full animate-spin" />
           <span className="text-[12px] text-slate-500">Loading team data...</span>
         </div>
       </div>
@@ -339,7 +339,7 @@ export default function TeamManagement() {
                         value={member.role || 'analyst'}
                         onChange={(e) => handleChangeRole(member.id, e.target.value)}
                         disabled={isSelf}
-                        className="bg-white/[0.03] border border-white/[0.06] rounded-lg px-2.5 py-1.5 text-[11px] text-slate-300 focus:outline-none focus:ring-1 focus:ring-blue-500/30 focus:border-blue-500/20 appearance-none cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed w-full"
+                        className="bg-white/[0.03] border border-white/[0.06] rounded-lg px-2.5 py-1.5 text-[11px] text-slate-300 focus:outline-none focus:ring-1 focus:ring-gold-500/30 focus:border-gold-500/20 appearance-none cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed w-full"
                         style={{
                           backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23475569' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E")`,
                           backgroundRepeat: 'no-repeat',
@@ -396,7 +396,7 @@ export default function TeamManagement() {
               value={inviteEmail}
               onChange={(e) => setInviteEmail(e.target.value)}
               placeholder="user@example.com"
-              className="bg-white/[0.04] border border-white/[0.08] rounded-xl px-3.5 py-2.5 text-white text-sm placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-blue-500/30 focus:border-blue-500/20 transition-all"
+              className="bg-white/[0.04] border border-white/[0.08] rounded-xl px-3.5 py-2.5 text-white text-sm placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-gold-500/30 focus:border-gold-500/20 transition-all"
             />
           </div>
 
@@ -407,7 +407,7 @@ export default function TeamManagement() {
             <select
               value={inviteRole}
               onChange={(e) => setInviteRole(e.target.value)}
-              className="bg-white/[0.04] border border-white/[0.08] rounded-xl px-3.5 py-2.5 text-white text-sm focus:outline-none focus:ring-1 focus:ring-blue-500/30 focus:border-blue-500/20 appearance-none cursor-pointer"
+              className="bg-white/[0.04] border border-white/[0.08] rounded-xl px-3.5 py-2.5 text-white text-sm focus:outline-none focus:ring-1 focus:ring-gold-500/30 focus:border-gold-500/20 appearance-none cursor-pointer"
               style={{
                 backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23475569' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E")`,
                 backgroundRepeat: 'no-repeat',
@@ -426,7 +426,7 @@ export default function TeamManagement() {
           <button
             type="submit"
             disabled={creatingInvite}
-            className="pill-btn px-4 py-2.5 rounded-xl text-[12px] font-semibold bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30 hover:from-blue-400 hover:to-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            className="pill-btn px-4 py-2.5 rounded-xl text-[12px] font-semibold bg-gradient-to-r from-gold-500 to-gold-600 text-white shadow-lg shadow-gold-500/20 hover:shadow-gold-500/30 hover:from-gold-400 hover:to-gold-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           >
             {creatingInvite ? 'Creating...' : 'Generate Invite'}
           </button>
@@ -467,7 +467,7 @@ export default function TeamManagement() {
                   className="grid grid-cols-[120px_1fr_120px_120px_140px] gap-2 px-5 py-3 items-center"
                 >
                   {/* Code */}
-                  <div className="text-[12px] text-blue-400 font-mono font-bold tracking-wider">
+                  <div className="text-[12px] text-gold-400 font-mono font-bold tracking-wider">
                     {invite.invite_code}
                   </div>
 
@@ -526,7 +526,7 @@ export default function TeamManagement() {
               value={discountCode}
               onChange={(e) => setDiscountCode(e.target.value)}
               placeholder="PILOT-XXXX"
-              className="bg-white/[0.04] border border-white/[0.08] rounded-xl px-3.5 py-2.5 text-white text-sm placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-blue-500/30 focus:border-blue-500/20 transition-all font-mono uppercase tracking-wider"
+              className="bg-white/[0.04] border border-white/[0.08] rounded-xl px-3.5 py-2.5 text-white text-sm placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-gold-500/30 focus:border-gold-500/20 transition-all font-mono uppercase tracking-wider"
             />
           </div>
 

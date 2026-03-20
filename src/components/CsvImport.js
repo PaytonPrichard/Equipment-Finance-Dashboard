@@ -98,7 +98,7 @@ export default function CsvImport({ onImport }) {
         <span
           role="button"
           tabIndex={0}
-          className="text-blue-400 hover:text-blue-300 text-[11px] underline cursor-pointer"
+          className="text-gold-400 hover:text-gold-300 text-[11px] underline cursor-pointer"
           onClick={downloadTemplate}
           onKeyDown={(e) => e.key === 'Enter' && downloadTemplate()}
         >

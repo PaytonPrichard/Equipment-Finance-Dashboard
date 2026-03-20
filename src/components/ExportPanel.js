@@ -129,7 +129,7 @@ function parseSummaryToPdfHtml(summaryText, inputs) {
         return '';
       }).join('');
       return `<div style="margin-bottom:20px">
-        <h3 style="font-size:13px;font-weight:700;color:#1e293b;text-transform:uppercase;letter-spacing:0.05em;margin:0 0 8px 0;padding-bottom:6px;border-bottom:2px solid #3b82f6">${title}</h3>
+        <h3 style="font-size:13px;font-weight:700;color:#1e293b;text-transform:uppercase;letter-spacing:0.05em;margin:0 0 8px 0;padding-bottom:6px;border-bottom:2px solid #d4a843">${title}</h3>
         <table style="width:100%;border-collapse:collapse">${rows}</table>
       </div>`;
     }
@@ -156,7 +156,7 @@ function parseSummaryToPdfHtml(summaryText, inputs) {
         return '';
       }).join('');
       return `<div style="margin-bottom:20px">
-        <h3 style="font-size:13px;font-weight:700;color:#1e293b;text-transform:uppercase;letter-spacing:0.05em;margin:0 0 8px 0;padding-bottom:6px;border-bottom:2px solid #3b82f6">${title}</h3>
+        <h3 style="font-size:13px;font-weight:700;color:#1e293b;text-transform:uppercase;letter-spacing:0.05em;margin:0 0 8px 0;padding-bottom:6px;border-bottom:2px solid #d4a843">${title}</h3>
         <table style="width:100%;border-collapse:collapse">
           <thead><tr>
             <th style="padding:6px 12px 6px 0;font-size:11px;color:#64748b;text-align:left;border-bottom:2px solid #e2e8f0">Scenario</th>
@@ -176,7 +176,7 @@ function parseSummaryToPdfHtml(summaryText, inputs) {
         return '';
       }).join('');
       return `<div style="margin-bottom:20px">
-        <h3 style="font-size:13px;font-weight:700;color:#1e293b;text-transform:uppercase;letter-spacing:0.05em;margin:0 0 8px 0;padding-bottom:6px;border-bottom:2px solid #3b82f6">${title}</h3>
+        <h3 style="font-size:13px;font-weight:700;color:#1e293b;text-transform:uppercase;letter-spacing:0.05em;margin:0 0 8px 0;padding-bottom:6px;border-bottom:2px solid #d4a843">${title}</h3>
         <ol style="margin:0;padding-left:20px">${items}</ol>
       </div>`;
     }
@@ -190,7 +190,7 @@ function parseSummaryToPdfHtml(summaryText, inputs) {
       }).join('');
       if (!items) return '';
       return `<div style="margin-bottom:20px">
-        <h3 style="font-size:13px;font-weight:700;color:#1e293b;text-transform:uppercase;letter-spacing:0.05em;margin:0 0 8px 0;padding-bottom:6px;border-bottom:2px solid #3b82f6">${title}</h3>
+        <h3 style="font-size:13px;font-weight:700;color:#1e293b;text-transform:uppercase;letter-spacing:0.05em;margin:0 0 8px 0;padding-bottom:6px;border-bottom:2px solid #d4a843">${title}</h3>
         <ul style="margin:0;padding-left:20px">${items}</ul>
       </div>`;
     }
@@ -198,7 +198,7 @@ function parseSummaryToPdfHtml(summaryText, inputs) {
     // Default: render lines as paragraphs
     const content = section.lines.map(l => `<p style="margin:2px 0;font-size:12px;color:#334155">${esc(l)}</p>`).join('');
     return `<div style="margin-bottom:20px">
-      <h3 style="font-size:13px;font-weight:700;color:#1e293b;text-transform:uppercase;letter-spacing:0.05em;margin:0 0 8px 0;padding-bottom:6px;border-bottom:2px solid #3b82f6">${title}</h3>
+      <h3 style="font-size:13px;font-weight:700;color:#1e293b;text-transform:uppercase;letter-spacing:0.05em;margin:0 0 8px 0;padding-bottom:6px;border-bottom:2px solid #d4a843">${title}</h3>
       ${content}
     </div>`;
   }
@@ -246,7 +246,7 @@ function parseSummaryToPdfHtml(summaryText, inputs) {
     padding: 20px 0;
   }
   .header {
-    border-bottom: 3px solid #1e40af;
+    border-bottom: 3px solid #d4a843;
     padding-bottom: 16px;
     margin-bottom: 20px;
   }
@@ -385,7 +385,7 @@ export default function ExportPanel({ summaryText, inputs }) {
   const btnBase = 'px-3 py-1.5 rounded-lg text-[11px] font-medium border transition-all flex items-center gap-1.5';
   const btnDefault = 'bg-white/[0.03] border-white/[0.04] text-slate-400 hover:text-slate-200 hover:border-white/[0.08]';
   const btnCopied = 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400';
-  const btnPdf = 'bg-blue-500/[0.07] border-blue-500/20 text-blue-400 hover:text-blue-300 hover:border-blue-500/40';
+  const btnPdf = 'bg-gold-500/[0.07] border-gold-500/20 text-gold-400 hover:text-gold-300 hover:border-gold-500/40';
 
   return (
     <div className="flex items-center gap-2">

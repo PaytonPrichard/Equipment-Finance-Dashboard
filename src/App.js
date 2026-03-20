@@ -118,7 +118,7 @@ export default function App() {
   // Block unverified email users
   if (session && !emailVerified) {
     return (
-      <div className="min-h-screen bg-[#0a0f1a] flex items-center justify-center px-4">
+      <div className="min-h-screen bg-[#111116] flex items-center justify-center px-4">
         <div className="w-full max-w-md text-center">
           <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/20 mb-4">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-amber-400" strokeWidth="2">
@@ -133,7 +133,7 @@ export default function App() {
           </p>
           <button
             onClick={signOut}
-            className="text-sm text-blue-400 hover:text-blue-300 font-medium transition-colors"
+            className="text-sm text-gold-400 hover:text-gold-300 font-medium transition-colors"
           >
             Sign out
           </button>
@@ -322,13 +322,13 @@ function AuthenticatedApp({ profile, user }) {
       />
 
       {/* SOFR Rate Indicator */}
-      <div className="bg-[#0b1120]/80 border-b border-white/[0.04]">
+      <div className="bg-[#111116]/80 border-b border-white/[0.04]">
         <div className="max-w-[1600px] mx-auto px-6 py-1.5 flex items-center gap-3">
           <span className="text-[10px] text-slate-600 uppercase tracking-wider font-semibold">SOFR</span>
-          <span className="font-mono text-[11px] text-blue-400 font-semibold">{(sofr * 100).toFixed(2)}%</span>
+          <span className="font-mono text-[11px] text-gold-400 font-semibold">{(sofr * 100).toFixed(2)}%</span>
           <span className={`text-[9px] px-1.5 py-0.5 rounded font-medium ${
             sofrSource.includes('live') ? 'bg-emerald-500/10 text-emerald-400' :
-            sofrSource.includes('cached') ? 'bg-blue-500/10 text-blue-400' :
+            sofrSource.includes('cached') ? 'bg-gold-500/10 text-gold-400' :
             'bg-amber-500/10 text-amber-400'
           }`}>
             {sofrSource}
@@ -378,7 +378,7 @@ function AuthenticatedApp({ profile, user }) {
       )}
 
       {/* Toolbar bar */}
-      <div className="border-b border-white/[0.04] bg-[#0b1120]/60 backdrop-blur-sm">
+      <div className="border-b border-white/[0.04] bg-[#111116]/60 backdrop-blur-sm">
         <div className="max-w-[1600px] mx-auto px-6 py-2.5">
           <div className="flex flex-wrap items-center gap-2">
             {activeTab === 'screening' && (
@@ -406,7 +406,7 @@ function AuthenticatedApp({ profile, user }) {
                 })}
                 <button
                   onClick={() => setActiveTab('historical')}
-                  className="pill-btn px-3 py-1.5 rounded-lg text-[11px] font-medium text-blue-400 hover:text-blue-300 border border-blue-500/20 hover:border-blue-500/40 transition-colors"
+                  className="pill-btn px-3 py-1.5 rounded-lg text-[11px] font-medium text-gold-400 hover:text-gold-300 border border-gold-500/20 hover:border-gold-500/40 transition-colors"
                 >
                   View History &rarr;
                 </button>
@@ -483,8 +483,8 @@ function AuthenticatedApp({ profile, user }) {
                       { n: '3', t: 'Review Assessment', d: 'Score, metrics, stress test' },
                     ].map((s) => (
                       <div key={s.n} className="glass-card rounded-xl p-4 text-center">
-                        <div className="w-7 h-7 rounded-lg bg-blue-500/10 flex items-center justify-center mx-auto mb-2.5">
-                          <span className="text-xs font-bold text-blue-400">{s.n}</span>
+                        <div className="w-7 h-7 rounded-lg bg-gold-500/10 flex items-center justify-center mx-auto mb-2.5">
+                          <span className="text-xs font-bold text-gold-400">{s.n}</span>
                         </div>
                         <p className="text-xs text-slate-300 font-semibold mb-0.5">{s.t}</p>
                         <p className="text-[10px] text-slate-600">{s.d}</p>
@@ -645,7 +645,7 @@ function AuthenticatedApp({ profile, user }) {
                     <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4">
                       Debt Service Summary
                       {ft !== 'EFA' && (
-                        <span className="ml-2 text-blue-400 normal-case font-medium text-[11px]">
+                        <span className="ml-2 text-gold-400 normal-case font-medium text-[11px]">
                           {ftLabel} &middot; {formatCurrency(metrics.residualValue)} residual
                         </span>
                       )}

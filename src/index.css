@@ -18,18 +18,23 @@ input[type='number'] {
   appearance: textfield;
 }
 
-/* ---- Background ---- */
+/* ---- Background (warm charcoal, not blue-tinted) ---- */
 body {
-  background: #0b1120;
+  background: #111116;
   background-image:
-    radial-gradient(ellipse 80% 60% at 50% -20%, rgba(56,130,246,0.08) 0%, transparent 70%),
-    radial-gradient(ellipse 60% 50% at 80% 50%, rgba(99,102,241,0.04) 0%, transparent 60%);
+    radial-gradient(ellipse 80% 60% at 50% -20%, rgba(212,168,67,0.06) 0%, transparent 70%),
+    radial-gradient(ellipse 60% 50% at 80% 50%, rgba(184,146,58,0.03) 0%, transparent 60%);
   min-height: 100vh;
+}
+
+/* ---- Tabular nums for financial figures ---- */
+.font-mono {
+  font-variant-numeric: tabular-nums;
 }
 
 /* ---- Glass card base ---- */
 .glass-card {
-  background: rgba(15, 23, 42, 0.6);
+  background: rgba(20, 20, 28, 0.6);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(148, 163, 184, 0.08);
@@ -44,7 +49,7 @@ body {
 
 /* ---- Inputs ---- */
 .form-input {
-  background: rgba(15, 23, 42, 0.5);
+  background: rgba(20, 20, 28, 0.5);
   border: 1px solid rgba(148, 163, 184, 0.1);
   border-radius: 10px;
   padding-top: 10px;
@@ -58,15 +63,15 @@ body {
   width: 100%;
 }
 .form-input::placeholder {
-  color: #475569;
+  color: #64748b;
 }
 .form-input:focus {
-  border-color: rgba(59, 130, 246, 0.5);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1), 0 0 20px rgba(59, 130, 246, 0.05);
+  border-color: rgba(212, 168, 67, 0.5);
+  box-shadow: 0 0 0 3px rgba(212, 168, 67, 0.1), 0 0 20px rgba(212, 168, 67, 0.05);
 }
 
 .form-select {
-  background: rgba(15, 23, 42, 0.5);
+  background: rgba(20, 20, 28, 0.5);
   border: 1px solid rgba(148, 163, 184, 0.1);
   border-radius: 10px;
   padding: 10px 16px;
@@ -79,8 +84,8 @@ body {
   cursor: pointer;
 }
 .form-select:focus {
-  border-color: rgba(59, 130, 246, 0.5);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  border-color: rgba(212, 168, 67, 0.5);
+  box-shadow: 0 0 0 3px rgba(212, 168, 67, 0.1);
 }
 
 /* ---- Animations ---- */
@@ -118,9 +123,9 @@ body {
   box-shadow: 0 8px 30px rgba(0,0,0,0.3);
 }
 
-/* ---- Glow accents ---- */
+/* ---- Glow accents (gold) ---- */
 .glow-blue {
-  box-shadow: 0 0 30px rgba(59, 130, 246, 0.1), 0 0 60px rgba(59, 130, 246, 0.05);
+  box-shadow: 0 0 30px rgba(212, 168, 67, 0.1), 0 0 60px rgba(212, 168, 67, 0.05);
 }
 
 .glow-score-strong { box-shadow: 0 0 40px rgba(16,185,129,0.1); }
@@ -130,7 +135,7 @@ body {
 
 /* ---- Company search dropdown ---- */
 .company-dropdown {
-  background: rgba(15, 23, 42, 0.95);
+  background: rgba(20, 20, 28, 0.95);
   backdrop-filter: blur(16px);
   border: 1px solid rgba(148,163,184,0.12);
   box-shadow: 0 16px 48px rgba(0,0,0,0.4), 0 0 0 1px rgba(148,163,184,0.04);
@@ -144,44 +149,64 @@ body {
   transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* ---- Pill buttons ---- */
+/* ---- Pill buttons (gold accent) ---- */
 .pill-btn {
   transition: all 0.2s ease;
   border: 1px solid rgba(148,163,184,0.08);
 }
 .pill-btn:hover:not(.pill-btn-active):not(:disabled) {
   border-color: rgba(148,163,184,0.16);
-  background: rgba(30,41,59,0.6);
+  background: rgba(30,30,38,0.6);
 }
 .pill-btn-active {
-  background: rgba(59,130,246,0.12);
-  border-color: rgba(59,130,246,0.3);
-  color: #93c5fd;
+  background: rgba(212,168,67,0.12);
+  border-color: rgba(212,168,67,0.3);
+  color: #E8C96A;
 }
 
-/* ---- What-If Sliders ---- */
+/* ---- What-If Sliders (gold) ---- */
 .what-if-slider::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background: #3b82f6;
-  border: 2px solid #1e40af;
+  background: #D4A843;
+  border: 2px solid #9A7B31;
   cursor: pointer;
-  box-shadow: 0 0 8px rgba(59, 130, 246, 0.4);
+  box-shadow: 0 0 8px rgba(212, 168, 67, 0.4);
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 .what-if-slider::-webkit-slider-thumb:hover {
   transform: scale(1.2);
-  box-shadow: 0 0 12px rgba(59, 130, 246, 0.6);
+  box-shadow: 0 0 12px rgba(212, 168, 67, 0.6);
 }
 .what-if-slider::-moz-range-thumb {
   width: 16px;
   height: 16px;
   border-radius: 50%;
-  background: #3b82f6;
-  border: 2px solid #1e40af;
+  background: #D4A843;
+  border: 2px solid #9A7B31;
   cursor: pointer;
-  box-shadow: 0 0 8px rgba(59, 130, 246, 0.4);
+  box-shadow: 0 0 8px rgba(212, 168, 67, 0.4);
+}
+
+/* ---- Scoring weight slider (gold) ---- */
+.scoring-weight-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #D4A843;
+  border: 2px solid #9A7B31;
+  cursor: pointer;
+}
+.scoring-weight-slider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #D4A843;
+  border: 2px solid #9A7B31;
+  cursor: pointer;
 }
