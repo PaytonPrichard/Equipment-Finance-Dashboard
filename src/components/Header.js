@@ -7,7 +7,7 @@ export default function Header({ activeTab, onTabChange, onOpenGuide }) {
   const { profile, signOut } = useAuth();
   const { can } = useRole();
   return (
-    <header className="border-b border-white/[0.04] bg-[#111116]/80 backdrop-blur-xl sticky top-0 z-50">
+    <header className="border-b border-white/[0.04] bg-[#141210]/80 backdrop-blur-xl sticky top-0 z-50">
       <div className="max-w-[1600px] mx-auto px-6 py-3.5 flex items-center justify-between">
         {/* Logo */}
         <div className="flex items-center gap-3">

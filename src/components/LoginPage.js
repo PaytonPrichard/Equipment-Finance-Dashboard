@@ -114,7 +114,7 @@ export default function LoginPage({ passwordRecovery }) {
   };
 
   return (
-    <div className="min-h-screen bg-[#111116] flex items-center justify-center px-4">
+    <div className="min-h-screen bg-[#141210] flex items-center justify-center px-4">
       <div className="w-full max-w-md">
         {/* Logo and App Title */}
         <div className="text-center mb-8">

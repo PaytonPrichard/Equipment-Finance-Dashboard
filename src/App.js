@@ -118,7 +118,7 @@ export default function App() {
   // Block unverified email users
   if (session && !emailVerified) {
     return (
-      <div className="min-h-screen bg-[#111116] flex items-center justify-center px-4">
+      <div className="min-h-screen bg-[#141210] flex items-center justify-center px-4">
         <div className="w-full max-w-md text-center">
           <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/20 mb-4">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-amber-400" strokeWidth="2">
@@ -322,7 +322,7 @@ function AuthenticatedApp({ profile, user }) {
       />
 
       {/* SOFR Rate Indicator */}
-      <div className="bg-[#111116]/80 border-b border-white/[0.04]">
+      <div className="bg-[#141210]/80 border-b border-white/[0.04]">
         <div className="max-w-[1600px] mx-auto px-6 py-1.5 flex items-center gap-3">
           <span className="text-[10px] text-slate-600 uppercase tracking-wider font-semibold">SOFR</span>
           <span className="font-mono text-[11px] text-gold-400 font-semibold">{(sofr * 100).toFixed(2)}%</span>
@@ -378,7 +378,7 @@ function AuthenticatedApp({ profile, user }) {
       )}
 
       {/* Toolbar bar */}
-      <div className="border-b border-white/[0.04] bg-[#111116]/60 backdrop-blur-sm">
+      <div className="border-b border-white/[0.04] bg-[#141210]/60 backdrop-blur-sm">
         <div className="max-w-[1600px] mx-auto px-6 py-2.5">
           <div className="flex flex-wrap items-center gap-2">
             {activeTab === 'screening' && (
