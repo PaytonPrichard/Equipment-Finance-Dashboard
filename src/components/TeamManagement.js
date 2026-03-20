@@ -8,7 +8,9 @@ import { ROLE_LABELS } from '../lib/permissions';
 const ROLES = ['analyst', 'senior_analyst', 'credit_committee', 'admin'];
 
 function generateInviteCode() {
-  return Math.random().toString(36).slice(2, 10).toUpperCase();
+  const arr = new Uint8Array(16);
+  crypto.getRandomValues(arr);
+  return Array.from(arr, (b) => b.toString(36).padStart(2, '0')).join('').slice(0, 20).toUpperCase();
 }
 
 function formatDate(isoString) {

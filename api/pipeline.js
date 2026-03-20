@@ -7,6 +7,7 @@ const { supabaseAdmin } = require('./lib/supabaseAdmin');
 const { validateDealInputs } = require('./lib/validate');
 const { handlePreflight } = require('./lib/cors');
 const { checkRateLimit } = require('./lib/rateLimit');
+const { checkPlanStatus } = require('./lib/planCheck');
 
 // Roles permitted to move deals into certain pipeline stages
 const STAGE_ROLE_REQUIREMENTS = {
@@ -82,6 +83,14 @@ module.exports = async function handler(req, res) {
   }
 
   const userRole = await getUserRole(user.id);
+
+  // ---- Plan expiry check (blocks writes on expired plans) ----
+  if (['POST', 'PATCH', 'DELETE'].includes(req.method)) {
+    const planStatus = await checkPlanStatus(user.id);
+    if (planStatus.expired) {
+      return res.status(403).json({ error: planStatus.message });
+    }
+  }
 
   // ===================== POST — Create a pipeline deal =====================
   if (req.method === 'POST') {

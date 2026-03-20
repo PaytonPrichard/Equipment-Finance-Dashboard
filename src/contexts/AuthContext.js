@@ -32,6 +32,7 @@ export function AuthProvider({ children }) {
   const [permissions, setPermissions] = useState(null);
   const [loading, setLoading] = useState(!!supabase);
   const [passwordRecovery, setPasswordRecovery] = useState(false);
+  const [emailVerified, setEmailVerified] = useState(false);
 
   // Fetch profile and permissions for a given user
   const fetchProfileAndPermissions = useCallback(async (authUser) => {
@@ -100,11 +101,13 @@ export function AuthProvider({ children }) {
         }
 
         if (mounted) {
+          const authUser = currentSession?.user ?? null;
           setSession(currentSession);
-          setUser(currentSession?.user ?? null);
+          setUser(authUser);
+          setEmailVerified(!!authUser?.email_confirmed_at);
 
-          if (currentSession?.user) {
-            await fetchProfileAndPermissions(currentSession.user);
+          if (authUser && authUser.email_confirmed_at) {
+            await fetchProfileAndPermissions(authUser);
           }
 
           setLoading(false);
@@ -127,11 +130,13 @@ export function AuthProvider({ children }) {
           setPasswordRecovery(true);
         }
 
+        const authUser = newSession?.user ?? null;
         setSession(newSession);
-        setUser(newSession?.user ?? null);
+        setUser(authUser);
+        setEmailVerified(!!authUser?.email_confirmed_at);
 
-        if (newSession?.user) {
-          await fetchProfileAndPermissions(newSession.user);
+        if (authUser && authUser.email_confirmed_at) {
+          await fetchProfileAndPermissions(authUser);
         } else {
           setProfile(null);
           setPermissions(null);
@@ -200,6 +205,7 @@ export function AuthProvider({ children }) {
     permissions,
     loading,
     passwordRecovery,
+    emailVerified,
     signIn,
     signUp,
     signOut,

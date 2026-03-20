@@ -7,6 +7,7 @@ const { supabaseAdmin } = require('./lib/supabaseAdmin');
 const { validateDealInputs } = require('./lib/validate');
 const { handlePreflight } = require('./lib/cors');
 const { checkRateLimit } = require('./lib/rateLimit');
+const { checkPlanStatus } = require('./lib/planCheck');
 
 /**
  * Extract and verify the Supabase JWT from the Authorization header.
@@ -35,6 +36,14 @@ module.exports = async function handler(req, res) {
   const user = await authenticateRequest(req);
   if (!user) {
     return res.status(401).json({ error: 'Authentication required' });
+  }
+
+  // ---- Plan expiry check (blocks writes on expired plans) ----
+  if (['POST', 'DELETE'].includes(req.method)) {
+    const planStatus = await checkPlanStatus(user.id);
+    if (planStatus.expired) {
+      return res.status(403).json({ error: planStatus.message });
+    }
   }
 
   // ===================== POST — Create / Save a deal =====================

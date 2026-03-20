@@ -90,7 +90,7 @@ function getScoreGlow(score) {
 }
 
 export default function App() {
-  const { session, user, profile, loading: authLoading, refreshProfile, passwordRecovery, signOut } = useAuth();
+  const { session, user, profile, loading: authLoading, refreshProfile, passwordRecovery, emailVerified, signOut } = useAuth();
 
   // Auto sign-out after 30 minutes of inactivity
   useIdleTimeout(() => {
@@ -113,6 +113,33 @@ export default function App() {
 
   if (!session) {
     return <LoginPage />;
+  }
+
+  // Block unverified email users
+  if (session && !emailVerified) {
+    return (
+      <div className="min-h-screen bg-[#0a0f1a] flex items-center justify-center px-4">
+        <div className="w-full max-w-md text-center">
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/20 mb-4">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-amber-400" strokeWidth="2">
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+              <polyline points="22,6 12,13 2,6" />
+            </svg>
+          </div>
+          <h2 className="text-lg font-semibold text-white mb-2">Verify your email</h2>
+          <p className="text-sm text-slate-400 mb-6">
+            We sent a verification link to <span className="text-white font-medium">{user?.email}</span>.
+            Please check your inbox and click the link to continue.
+          </p>
+          <button
+            onClick={signOut}
+            className="text-sm text-blue-400 hover:text-blue-300 font-medium transition-colors"
+          >
+            Sign out
+          </button>
+        </div>
+      </div>
+    );
   }
 
   // Show org onboarding if user has no organization
