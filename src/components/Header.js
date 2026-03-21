@@ -114,13 +114,15 @@ export default function Header({ activeTab, onTabChange, onOpenGuide }) {
             <span className="relative">
               <button
                 onClick={onOpenGuide}
-                className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-500 hover:text-gold-400 hover:bg-gold-500/10 border border-white/[0.06] hover:border-gold-500/20 transition-all"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-slate-500 hover:text-gold-400 hover:bg-gold-500/10 border border-white/[0.06] hover:border-gold-500/20 transition-all"
                 title="Guide & Reference"
               >
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <circle cx="12" cy="12" r="10" />
-                  <path d="M12 16v-4M12 8h.01" />
+                  <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+                  <line x1="12" y1="17" x2="12.01" y2="17" />
                 </svg>
+                <span className="text-[10px] font-semibold hidden lg:inline">Help</span>
               </button>
               <span className="absolute -top-1 -right-1">
                 <TutorialBeacon id="guide" title="Full Guide" description="Tap here anytime for help on every feature." position="bottom" />
