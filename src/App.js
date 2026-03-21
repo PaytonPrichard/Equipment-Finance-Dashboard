@@ -22,6 +22,7 @@ import SavedDeals from './components/SavedDeals';
 import CsvImport from './components/CsvImport';
 import ExecutiveSummary from './components/ExecutiveSummary';
 import { fetchSavedDeals } from './lib/deals';
+import { updatePipelineDeal } from './lib/pipeline';
 import { fetchPreferences, upsertPreferences } from './lib/preferences';
 import exampleDeals from './data/exampleDeals';
 import historicalDeals from './data/historicalDeals';
@@ -212,6 +213,7 @@ function AuthenticatedApp({ profile, user }) {
 
   const [inputs, setInputs] = useState(EQ_INITIAL_INPUTS_CONST);
   const [activeDeal, setActiveDeal] = useState(null);
+  const [activePipelineDealId, setActivePipelineDealId] = useState(null);
   const [activeTab, setActiveTab] = useState('screening');
   const [importedDeals, setImportedDeals] = useState([]);
   const [guideOpen, setGuideOpen] = useState(false);
@@ -354,6 +356,7 @@ function AuthenticatedApp({ profile, user }) {
   const clearForm = () => {
     setInputs(mod.INITIAL_INPUTS);
     setActiveDeal(null);
+    setActivePipelineDealId(null);
   };
 
   const loadRecentDeal = (deal) => {
@@ -362,6 +365,7 @@ function AuthenticatedApp({ profile, user }) {
     }
     setInputs(deal.inputs);
     setActiveDeal(null);
+    setActivePipelineDealId(null);
     setActiveTab('screening');
   };
 
@@ -490,6 +494,21 @@ function AuthenticatedApp({ profile, user }) {
                     onDealsChange={setSavedDealsList}
                     readOnly={isExpired}
                   />
+                  {activePipelineDealId && valid && (
+                    <button
+                      onClick={async () => {
+                        const { error } = await updatePipelineDeal(activePipelineDealId, inputs, riskScore.composite, user?.id, profile?.org_id);
+                        if (!error) {
+                          const btn = document.getElementById('update-pipeline-btn');
+                          if (btn) { btn.textContent = 'Updated'; setTimeout(() => { btn.textContent = 'Update in Pipeline'; }, 2000); }
+                        }
+                      }}
+                      id="update-pipeline-btn"
+                      className="pill-btn px-3 py-1.5 rounded-lg text-[11px] font-medium text-gold-400 hover:text-gold-300 border border-gold-500/20 hover:border-gold-500/40 transition-colors"
+                    >
+                      Update in Pipeline
+                    </button>
+                  )}
                   <button
                     onClick={clearForm}
                     className="pill-btn px-3 py-1.5 rounded-lg text-[11px] font-medium text-slate-600 hover:text-slate-400"
@@ -965,7 +984,7 @@ function AuthenticatedApp({ profile, user }) {
               <DealPipeline
                 currentInputs={valid ? inputs : null}
                 currentScore={valid ? riskScore.composite : null}
-                onLoadDeal={(dealInputs) => { setInputs(dealInputs); setActiveDeal(null); setActiveTab('screening'); }}
+                onLoadDeal={(dealInputs, dealId) => { setInputs(dealInputs); setActiveDeal(null); setActivePipelineDealId(dealId || null); setActiveTab('screening'); }}
                 readOnly={isExpired}
               />
             ) : activeTab === 'dashboard' ? (

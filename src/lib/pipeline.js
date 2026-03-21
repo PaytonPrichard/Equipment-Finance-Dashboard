@@ -92,6 +92,26 @@ export async function updatePipelineNotes(dealId, notes) {
 }
 
 /**
+ * Update inputs and score on a pipeline deal (e.g. after re-screening).
+ */
+export async function updatePipelineDeal(dealId, inputs, score, userId, orgId) {
+  if (!supabase) return { data: null, error: null };
+
+  const { data, error } = await supabase
+    .from('pipeline_deals')
+    .update({ inputs, score, updated_at: new Date().toISOString() })
+    .eq('id', dealId)
+    .select()
+    .single();
+
+  if (!error && data) {
+    logAudit(userId, orgId, 'update_inputs', 'pipeline_deal', dealId, null, { score });
+  }
+
+  return { data, error };
+}
+
+/**
  * Delete a pipeline deal by ID.
  */
 export async function deletePipelineDeal(dealId, userId, orgId) {

@@ -49,9 +49,23 @@ function fmtCost(v) {
   return n >= 1e6 ? `$${(n / 1e6).toFixed(1)}M` : `$${(n / 1e3).toFixed(0)}K`;
 }
 
-function fmtDate(iso) {
-  try { return new Date(iso).toLocaleDateString(); }
-  catch { return ''; }
+function getDealValue(inputs) {
+  if (!inputs) return null;
+  return fmtCost(inputs.equipmentCost || inputs.totalAROutstanding || inputs.totalInventory);
+}
+
+
+function daysInStage(updatedAt) {
+  if (!updatedAt) return 0;
+  const diff = Date.now() - new Date(updatedAt).getTime();
+  return Math.max(0, Math.floor(diff / (1000 * 60 * 60 * 24)));
+}
+
+function getVerdict(score) {
+  if (score == null) return null;
+  if (score >= 75) return { label: 'PASS', cls: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30' };
+  if (score >= 35) return { label: 'FLAG', cls: 'bg-amber-500/15 text-amber-400 border-amber-500/30' };
+  return { label: 'FAIL', cls: 'bg-rose-500/15 text-rose-400 border-rose-500/30' };
 }
 
 export default function DealPipeline({ onLoadDeal, currentInputs, currentScore, readOnly }) {
@@ -201,7 +215,7 @@ export default function DealPipeline({ onLoadDeal, currentInputs, currentScore, 
   };
 
   const handleLoadDeal = (deal) => {
-    if (onLoadDeal) onLoadDeal(deal.inputs);
+    if (onLoadDeal) onLoadDeal(deal.inputs, deal.id);
   };
 
   const handleStartNote = (deal) => {
@@ -375,30 +389,39 @@ export default function DealPipeline({ onLoadDeal, currentInputs, currentScore, 
                         )}
                       </div>
 
-                      {/* Score + industry + cost */}
-                      <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                      {/* Score + verdict + industry */}
+                      <div className="flex items-center gap-1.5 mb-1.5 flex-wrap">
                         {deal.score != null && (
                           <span className={`inline-flex items-center px-1.5 py-0.5 rounded-md border text-[11px] font-bold font-mono ${scoreBg(deal.score)} ${scoreColor(deal.score)}`}>
                             {Math.round(deal.score)}
                           </span>
                         )}
-                        {deal.inputs?.industry && (
-                          <span className="text-[10px] text-slate-500 truncate">{deal.inputs.industry}</span>
-                        )}
-                        {deal.inputs?.industrySector && !deal.inputs?.industry && (
-                          <span className="text-[10px] text-slate-500 truncate">{deal.inputs.industrySector}</span>
-                        )}
+                        {(() => {
+                          const v = getVerdict(deal.score);
+                          return v ? (
+                            <span className={`inline-flex items-center px-1.5 py-0.5 rounded-md border text-[9px] font-bold tracking-wider ${v.cls}`}>
+                              {v.label}
+                            </span>
+                          ) : null;
+                        })()}
+                        <span className="text-[10px] text-slate-500 truncate">
+                          {deal.inputs?.industrySector || deal.inputs?.industry || ''}
+                        </span>
                       </div>
 
-                      {fmtCost(deal.inputs?.equipmentCost) && (
-                        <div className="text-[10px] text-slate-500 mb-1.5">
-                          {fmtCost(deal.inputs.equipmentCost)}
-                        </div>
-                      )}
-
-                      {/* Date added */}
-                      <div className="text-[10px] text-slate-600 mb-2">
-                        Added {fmtDate(deal.created_at)}
+                      {/* Deal value + days in stage */}
+                      <div className="flex items-center justify-between mb-1.5">
+                        {getDealValue(deal.inputs) && (
+                          <span className="text-[10px] text-slate-500">{getDealValue(deal.inputs)}</span>
+                        )}
+                        {(() => {
+                          const days = daysInStage(deal.updated_at);
+                          return (
+                            <span className={`text-[9px] font-medium ${days > 14 ? 'text-amber-400' : days > 7 ? 'text-slate-400' : 'text-slate-600'}`}>
+                              {days === 0 ? 'Today' : days === 1 ? '1 day' : `${days} days`}
+                            </span>
+                          );
+                        })()}
                       </div>
 
                       {/* Notes */}
