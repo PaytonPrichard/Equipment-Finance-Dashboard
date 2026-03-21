@@ -37,17 +37,17 @@ export default function Header({ activeTab, onTabChange, onOpenGuide }) {
                   <polyline points="14 2 14 8 20 8" />
                 </svg>
               )},
-              { id: 'historical', label: 'Model Performance', icon: (
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
-                </svg>
-              )},
               { id: 'pipeline', label: 'Pipeline', icon: (
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <rect x="3" y="3" width="7" height="7" rx="1" />
                   <rect x="14" y="3" width="7" height="7" rx="1" />
                   <rect x="3" y="14" width="7" height="7" rx="1" />
                   <rect x="14" y="14" width="7" height="7" rx="1" />
+                </svg>
+              )},
+              { id: 'dashboard', label: 'Dashboard', icon: (
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
                 </svg>
               )},
               { id: 'batch', label: 'Batch', icon: (
@@ -60,6 +60,11 @@ export default function Header({ activeTab, onTabChange, onOpenGuide }) {
                   <line x1="18" y1="20" x2="18" y2="10" />
                   <line x1="12" y1="20" x2="12" y2="4" />
                   <line x1="6" y1="20" x2="6" y2="14" />
+                </svg>
+              )},
+              { id: 'historical', label: 'Model Performance', icon: (
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
                 </svg>
               )},
               ...(can('audit.view') ? [{

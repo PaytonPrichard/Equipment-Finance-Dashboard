@@ -35,15 +35,35 @@ export function AuthProvider({ children }) {
   const [emailVerified, setEmailVerified] = useState(false);
 
   // Fetch profile and permissions for a given user
-  const fetchProfileAndPermissions = useCallback(async (authUser) => {
+  // Uses localStorage cache for instant load, refreshes from Supabase in background
+  const fetchProfileAndPermissions = useCallback(async (authUser, backgroundRefresh = false) => {
     if (!supabase || !authUser) {
       setProfile(null);
       setPermissions(null);
       return;
     }
 
+    const cacheKey = 'efd_profile_cache';
+
+    // On initial load, try cache first for instant availability
+    if (!backgroundRefresh) {
+      try {
+        const cached = localStorage.getItem(cacheKey);
+        if (cached) {
+          const cachedProfile = JSON.parse(cached);
+          if (cachedProfile?.id === authUser.id && cachedProfile?.org_id) {
+            setProfile(cachedProfile);
+            const role = cachedProfile.role || 'analyst';
+            setPermissions(resolvePermissions(role, []));
+            // Refresh from network in background
+            fetchProfileAndPermissions(authUser, true).catch(() => {});
+            return;
+          }
+        }
+      } catch (e) { /* ignore cache errors */ }
+    }
+
     try {
-      // Fetch user profile from public.profiles
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('*')
@@ -52,12 +72,19 @@ export function AuthProvider({ children }) {
 
       if (profileError) {
         console.error('Error fetching profile:', profileError.message);
-        setProfile(null);
-        setPermissions(null);
+        if (!backgroundRefresh) {
+          setProfile(null);
+          setPermissions(null);
+        }
         return;
       }
 
       setProfile(profileData);
+
+      // Cache for next load
+      try {
+        localStorage.setItem(cacheKey, JSON.stringify(profileData));
+      } catch (e) { /* ignore */ }
 
       // Fetch org-level permission overrides
       let orgOverrides = [];
@@ -74,14 +101,15 @@ export function AuthProvider({ children }) {
         }
       }
 
-      // Resolve effective permissions using role + org overrides
       const role = profileData?.role || 'analyst';
       const resolved = resolvePermissions(role, orgOverrides);
       setPermissions(resolved);
     } catch (err) {
       console.error('Unexpected error fetching profile/permissions:', err);
-      setProfile(null);
-      setPermissions(null);
+      if (!backgroundRefresh) {
+        setProfile(null);
+        setPermissions(null);
+      }
     }
   }, []);
 
@@ -91,31 +119,55 @@ export function AuthProvider({ children }) {
 
     let mounted = true;
 
-    // Get existing session
-    const initSession = async () => {
+    // Read session from localStorage (instant), stop loading immediately,
+    // then fetch profile and refresh token in the background
+    const initSession = () => {
       try {
-        const { data: { session: currentSession }, error } = await supabase.auth.getSession();
+        const storageKey = `sb-${new URL(process.env.REACT_APP_SUPABASE_URL).hostname.split('.')[0]}-auth-token`;
+        const stored = localStorage.getItem(storageKey);
 
-        if (error) {
-          console.error('Error getting session:', error.message);
-        }
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          const authUser = parsed?.user ?? null;
 
-        if (mounted) {
-          const authUser = currentSession?.user ?? null;
-          setSession(currentSession);
-          setUser(authUser);
-          setEmailVerified(!!authUser?.email_confirmed_at);
+          if (mounted && authUser) {
+            setSession(parsed);
+            setUser(authUser);
+            setEmailVerified(!!authUser.email_confirmed_at);
+            setLoading(false);
 
-          if (authUser && authUser.email_confirmed_at) {
-            await fetchProfileAndPermissions(authUser);
+            // Fetch profile in background (non-blocking)
+            if (authUser.email_confirmed_at) {
+              fetchProfileAndPermissions(authUser).catch(console.error);
+            }
+
+            // Refresh token in background
+            supabase.auth.getSession().catch(() => {});
+            return;
           }
-
-          setLoading(false);
         }
       } catch (err) {
-        console.error('Unexpected error initializing session:', err);
-        if (mounted) setLoading(false);
+        console.error('Error reading stored session:', err);
       }
+
+      // No stored session — fall back to getSession
+      supabase.auth.getSession().then(({ data: { session: currentSession }, error }) => {
+        if (error) console.error('Error getting session:', error.message);
+        if (!mounted) return;
+
+        const authUser = currentSession?.user ?? null;
+        setSession(currentSession);
+        setUser(authUser);
+        setEmailVerified(!!authUser?.email_confirmed_at);
+        setLoading(false);
+
+        if (authUser?.email_confirmed_at) {
+          fetchProfileAndPermissions(authUser).catch(console.error);
+        }
+      }).catch((err) => {
+        console.error('getSession failed:', err);
+        if (mounted) setLoading(false);
+      });
     };
 
     initSession();

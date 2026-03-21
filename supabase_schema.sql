@@ -208,6 +208,8 @@ CREATE POLICY "org_select" ON public.organizations
   FOR SELECT USING (
     id = (SELECT org_id FROM public.profiles WHERE id = auth.uid())
   );
+CREATE POLICY "org_insert" ON public.organizations
+  FOR INSERT WITH CHECK (auth.role() = 'authenticated');
 CREATE POLICY "org_update" ON public.organizations
   FOR UPDATE USING (
     EXISTS (

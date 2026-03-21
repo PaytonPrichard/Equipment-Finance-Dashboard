@@ -10,6 +10,8 @@ import {
   deletePipelineDeal,
 } from '../lib/pipeline';
 import { SkeletonPipeline } from './SkeletonCard';
+import { exportPipelineCsv } from '../utils/csvExport';
+import DealAttachments from './DealAttachments';
 
 const STAGES = [
   { key: 'Screening', color: 'gold' },
@@ -101,7 +103,11 @@ export default function DealPipeline({ onLoadDeal, currentInputs, currentScore, 
 
   const handleConfirmAdd = async () => {
     const name = addingName.trim();
-    if (!name || !userId || !orgId) return;
+    if (!name) return;
+    if (!userId || !orgId) {
+      addToast('Your profile is still loading. Please try again shortly.', 'warning');
+      return;
+    }
 
     const now = new Date().toISOString();
     const tempId = `temp_${Date.now()}`;
@@ -260,7 +266,7 @@ export default function DealPipeline({ onLoadDeal, currentInputs, currentScore, 
               <input
                 ref={addInputRef}
                 className="bg-white/5 rounded-lg px-3 py-1.5 text-sm text-slate-200 outline-none placeholder-slate-600 border border-white/[0.06] focus:border-gold-500/30 transition-colors w-48"
-                placeholder="Deal name..."
+                placeholder="Name this deal..."
                 value={addingName}
                 onChange={(e) => setAddingName(e.target.value)}
                 onKeyDown={(e) => {
@@ -282,12 +288,27 @@ export default function DealPipeline({ onLoadDeal, currentInputs, currentScore, 
               </button>
             </div>
           ) : (
-            <button
-              className="pill-btn px-3 py-1.5 rounded-lg text-[11px] font-medium text-gold-400"
-              onClick={handleStartAdd}
-            >
-              + Add Current Deal
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                className="pill-btn px-3 py-1.5 rounded-lg text-[11px] font-medium text-gold-400"
+                onClick={handleStartAdd}
+              >
+                + Add Current Deal
+              </button>
+              {deals.length > 0 && (
+                <button
+                  className="pill-btn px-3 py-1.5 rounded-lg text-[11px] font-medium text-slate-400 hover:text-slate-200 flex items-center gap-1.5"
+                  onClick={() => exportPipelineCsv(deals)}
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="7 10 12 15 17 10"/>
+                    <line x1="12" y1="15" x2="12" y2="3"/>
+                  </svg>
+                  Export CSV
+                </button>
+              )}
+            </div>
           )}
         </div>
       </div>
@@ -426,8 +447,11 @@ export default function DealPipeline({ onLoadDeal, currentInputs, currentScore, 
                         </button>
                       )}
 
+                      {/* Document attachments */}
+                      <DealAttachments dealId={deal.id} dealType="pipeline" />
+
                       {/* Move buttons */}
-                      <div className="flex items-center justify-between border-t border-white/[0.04] pt-2">
+                      <div className="flex items-center justify-between border-t border-white/[0.04] pt-2 mt-2">
                         <button
                           className={`text-[10px] px-2 py-1 rounded-md transition-colors ${
                             canMoveBack

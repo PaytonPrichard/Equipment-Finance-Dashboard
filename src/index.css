@@ -114,6 +114,15 @@ body {
   overflow: hidden;
 }
 
+@keyframes loadingBar {
+  0% { transform: translateX(-100%); }
+  50% { transform: translateX(0%); }
+  100% { transform: translateX(200%); }
+}
+.animate-loading-bar {
+  animation: loadingBar 1.5s ease-in-out infinite;
+}
+
 /* ---- Metric cards ---- */
 .metric-card {
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);

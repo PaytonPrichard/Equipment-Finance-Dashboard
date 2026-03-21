@@ -7,6 +7,7 @@ import {
   formatCurrency,
   DEFAULT_SOFR,
 } from '../utils/calculations';
+import { exportBatchCsv } from '../utils/csvExport';
 
 // ── CSV Template ──────────────────────────────────────────────
 const TEMPLATE_HEADERS =
@@ -197,6 +198,25 @@ export default function BatchScreening({ sofr = DEFAULT_SOFR, onLoadDeal }) {
             </svg>
             Download Template
           </button>
+
+          {scoredDeals.length > 0 && (
+            <button
+              className="pill-btn px-3 py-1.5 rounded-lg text-[11px] font-medium text-slate-400 hover:text-slate-200 flex items-center gap-1.5"
+              onClick={() => exportBatchCsv(scoredDeals.map(d => ({
+                ...d,
+                score: d.riskScore.composite,
+                recommendation: d.rec,
+                metrics: d.metrics,
+              })))}
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+              Export Results CSV
+            </button>
+          )}
 
           {status?.type === 'success' && (
             <span className="text-emerald-400 text-[11px]">{status.message}</span>

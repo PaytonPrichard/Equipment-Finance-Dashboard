@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useMemo, useEffect, useRef, lazy, Suspense } from 'react';
 import { useAuth } from './contexts/AuthContext';
 import LoginPage from './components/LoginPage';
 import OrgSetup from './components/OrgSetup';
@@ -13,46 +13,62 @@ import RiskRadarChart from './components/RiskRadarChart';
 import MetricCard from './components/MetricCard';
 import DealRecommendation from './components/DealRecommendation';
 import SuggestedStructure from './components/SuggestedStructure';
+import ScreeningVerdict from './components/ScreeningVerdict';
+import ScreeningCriteria from './components/ScreeningCriteria';
+import { DEFAULT_CRITERIA, evaluateScreening } from './lib/screeningCriteria';
 import StressTestPanel from './components/StressTestPanel';
 import ExportPanel from './components/ExportPanel';
 import SavedDeals from './components/SavedDeals';
-import HistoricalDealsTable from './components/HistoricalDealsTable';
-import PortfolioAnalytics from './components/PortfolioAnalytics';
 import CsvImport from './components/CsvImport';
-import DealComparison from './components/DealComparison';
-import DueDiligenceChecklist from './components/DueDiligenceChecklist';
-import ComparableDeals from './components/ComparableDeals';
-import WhatIfPanel from './components/WhatIfPanel';
-import InfoGuide from './components/InfoGuide';
 import ExecutiveSummary from './components/ExecutiveSummary';
-import AmortizationSchedule from './components/AmortizationSchedule';
-import IndustryBenchmarks from './components/IndustryBenchmarks';
-import SensitivityChart from './components/SensitivityChart';
-import ScoringWeights from './components/ScoringWeights';
-import DealPipeline from './components/DealPipeline';
-import BatchScreening from './components/BatchScreening';
-import AuditLogViewer from './components/AuditLogViewer';
-import TeamManagement from './components/TeamManagement';
 import { fetchSavedDeals } from './lib/deals';
 import { fetchPreferences, upsertPreferences } from './lib/preferences';
 import exampleDeals from './data/exampleDeals';
 import historicalDeals from './data/historicalDeals';
 import {
-  calculateMetrics,
-  calculateRiskScore,
-  getRecommendation,
-  generateCommentary,
-  getSuggestedStructure,
-  generateExportSummary,
-  runStressTest,
-  isInputValid,
   formatRatio,
   formatPercent,
   formatCurrencyFull,
   formatCurrency,
-  FINANCING_TYPES,
-  INITIAL_INPUTS,
-} from './utils/calculations';
+} from './utils/format';
+import { getModule, getAvailableModules, DEFAULT_MODULE } from './modules';
+import { FINANCING_TYPES } from './modules/equipment-finance/constants';
+import {
+  calculateMetrics as eqCalculateMetrics,
+  calculateRiskScore as eqCalculateRiskScore,
+  getRecommendation as eqGetRecommendation,
+} from './modules/equipment-finance/scoring';
+import { INITIAL_INPUTS as EQ_INITIAL_INPUTS_CONST } from './modules/equipment-finance/constants';
+
+// Lazy-loaded components — only fetched when their tab/section is active
+const HistoricalDealsTable = lazy(() => import('./components/HistoricalDealsTable'));
+const PortfolioAnalytics = lazy(() => import('./components/PortfolioAnalytics'));
+const DealComparison = lazy(() => import('./components/DealComparison'));
+const DealPipeline = lazy(() => import('./components/DealPipeline'));
+const BatchScreening = lazy(() => import('./components/BatchScreening'));
+const AuditLogViewer = lazy(() => import('./components/AuditLogViewer'));
+const TeamManagement = lazy(() => import('./components/TeamManagement'));
+const PipelineDashboard = lazy(() => import('./components/PipelineDashboard'));
+const InfoGuide = lazy(() => import('./components/InfoGuide'));
+const DueDiligenceChecklist = lazy(() => import('./components/DueDiligenceChecklist'));
+const ComparableDeals = lazy(() => import('./components/ComparableDeals'));
+const WhatIfPanel = lazy(() => import('./components/WhatIfPanel'));
+const AmortizationSchedule = lazy(() => import('./components/AmortizationSchedule'));
+const IndustryBenchmarks = lazy(() => import('./components/IndustryBenchmarks'));
+const SensitivityChart = lazy(() => import('./components/SensitivityChart'));
+const ScoringWeights = lazy(() => import('./components/ScoringWeights'));
+
+// Fallback for lazy-loaded components
+function LazyFallback() {
+  return (
+    <div className="flex items-center justify-center py-20">
+      <div className="flex items-center gap-3">
+        <div className="w-5 h-5 border-2 border-gold-500/30 border-t-gold-500 rounded-full animate-spin" />
+        <span className="text-sm text-slate-500">Loading...</span>
+      </div>
+    </div>
+  );
+}
 
 function getDscrStatus(d) {
   if (d > 2.0) return 'excellent';
@@ -97,11 +113,20 @@ export default function App() {
     if (session) signOut();
   });
 
-  // Show login page if not authenticated
+  // Show loading screen while auth initializes
   if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-slate-500 text-sm">Loading...</div>
+      <div className="min-h-screen bg-[#141210] flex flex-col items-center justify-center">
+        <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-gold-500 to-gold-600 shadow-lg shadow-gold-500/20 mb-6">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
+            <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
+          </svg>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="w-5 h-5 border-2 border-gold-500/30 border-t-gold-500 rounded-full animate-spin" />
+          <span className="text-sm text-slate-400 font-medium">Connecting...</span>
+        </div>
       </div>
     );
   }
@@ -166,7 +191,26 @@ function AuthenticatedApp({ profile, user }) {
     }
   }, [profile?.org_id]);
 
-  const [inputs, setInputs] = useState(INITIAL_INPUTS);
+  // ---- Module system ----
+  const [activeModule, setActiveModule] = useState(DEFAULT_MODULE);
+  const mod = useMemo(() => getModule(activeModule), [activeModule]);
+  const modules = useMemo(() => getAvailableModules(), []);
+  const isEquipment = activeModule === 'equipment_finance';
+
+  const handleModuleChange = (newModuleKey) => {
+    if (newModuleKey === activeModule) return;
+    const newMod = getModule(newModuleKey);
+    // Preserve shared borrower fields across asset class switches
+    const sharedFields = ['companyName', 'yearsInBusiness', 'annualRevenue', 'ebitda',
+      'totalExistingDebt', 'actualAnnualDebtService', 'industrySector', 'creditRating'];
+    const preserved = {};
+    sharedFields.forEach(f => { if (inputs[f] !== undefined && inputs[f] !== 0 && inputs[f] !== '') preserved[f] = inputs[f]; });
+    setInputs({ ...newMod.INITIAL_INPUTS, ...preserved });
+    setActiveModule(newModuleKey);
+    setActiveDeal(null);
+  };
+
+  const [inputs, setInputs] = useState(EQ_INITIAL_INPUTS_CONST);
   const [activeDeal, setActiveDeal] = useState(null);
   const [activeTab, setActiveTab] = useState('screening');
   const [importedDeals, setImportedDeals] = useState([]);
@@ -183,7 +227,11 @@ function AuthenticatedApp({ profile, user }) {
     fetchPreferences(userId).then(({ data }) => {
       if (data?.draft_inputs) {
         const draft = data.draft_inputs;
-        if (draft.inputs) setInputs((prev) => ({ ...INITIAL_INPUTS, ...draft.inputs }));
+        if (draft.activeModule) {
+          setActiveModule(draft.activeModule);
+        }
+        const loadMod = getModule(draft.activeModule || DEFAULT_MODULE);
+        if (draft.inputs) setInputs((prev) => ({ ...loadMod.INITIAL_INPUTS, ...draft.inputs }));
         if (draft.activeDeal !== undefined) setActiveDeal(draft.activeDeal);
         if (Array.isArray(draft.recentDeals)) setRecentDeals(draft.recentDeals);
       }
@@ -197,11 +245,11 @@ function AuthenticatedApp({ profile, user }) {
     if (draftSaveTimer.current) clearTimeout(draftSaveTimer.current);
     draftSaveTimer.current = setTimeout(() => {
       upsertPreferences(userId, {
-        draft_inputs: { inputs, activeDeal, recentDeals },
+        draft_inputs: { inputs, activeDeal, recentDeals, activeModule },
       });
     }, 2000);
     return () => { if (draftSaveTimer.current) clearTimeout(draftSaveTimer.current); };
-  }, [inputs, activeDeal, recentDeals, userId]);
+  }, [inputs, activeDeal, recentDeals, activeModule, userId]);
 
   // SOFR change notification — compare current rate against last acknowledged rate
   useEffect(() => {
@@ -228,17 +276,25 @@ function AuthenticatedApp({ profile, user }) {
     } catch { /* ignore */ }
   };
 
-  const valid = isInputValid(inputs);
+  const valid = mod.isInputValid(inputs);
 
-  const metrics = useMemo(() => calculateMetrics(inputs, sofr), [inputs, sofr]);
-  const riskScore = useMemo(() => calculateRiskScore(inputs, metrics), [inputs, metrics]);
-  const recommendation = useMemo(() => getRecommendation(riskScore.composite), [riskScore.composite]);
-  const commentary = useMemo(() => generateCommentary(inputs, metrics, riskScore), [inputs, metrics, riskScore]);
-  const structure = useMemo(() => getSuggestedStructure(inputs, metrics, riskScore.composite, sofr), [inputs, metrics, riskScore.composite, sofr]);
-  const stressResults = useMemo(() => valid ? runStressTest(inputs, sofr) : [], [inputs, valid, sofr]);
+  // Dynamic module calculations
+  const metrics = useMemo(() => mod.calculateMetrics(inputs, sofr), [inputs, sofr, mod]);
+  const riskScore = useMemo(() => mod.calculateRiskScore(inputs, metrics), [inputs, metrics, mod]);
+  const recommendation = useMemo(() => mod.getRecommendation(riskScore.composite), [riskScore.composite, mod]);
+  const commentary = useMemo(() => mod.generateCommentary(inputs, metrics, riskScore), [inputs, metrics, riskScore, mod]);
+  const structure = useMemo(() => mod.getSuggestedStructure(inputs, metrics, riskScore.composite, sofr), [inputs, metrics, riskScore.composite, sofr, mod]);
+  const stressResults = useMemo(() => valid ? mod.runStressTest(inputs, sofr) : [], [inputs, valid, sofr, mod]);
   const summaryText = useMemo(
-    () => valid ? generateExportSummary(inputs, metrics, riskScore, recommendation, commentary, structure, sofr) : '',
-    [inputs, metrics, riskScore, recommendation, commentary, structure, valid, sofr]
+    () => valid ? mod.generateExportSummary(inputs, metrics, riskScore, recommendation, commentary, structure, sofr) : '',
+    [inputs, metrics, riskScore, recommendation, commentary, structure, valid, sofr, mod]
+  );
+
+  // Screening criteria (pass/flag/fail)
+  const [screeningCriteria, setScreeningCriteria] = useState({ ...DEFAULT_CRITERIA });
+  const screeningResult = useMemo(
+    () => valid ? evaluateScreening(screeningCriteria, metrics, riskScore, inputs, activeModule) : null,
+    [screeningCriteria, metrics, riskScore, inputs, activeModule, valid]
   );
 
   // Track recently screened deals
@@ -249,6 +305,7 @@ function AuthenticatedApp({ profile, user }) {
         name: inputs.companyName,
         score: riskScore.composite,
         industry: inputs.industrySector,
+        module: activeModule,
         timestamp: Date.now(),
         inputs: { ...inputs },
       };
@@ -262,40 +319,47 @@ function AuthenticatedApp({ profile, user }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [valid, inputs.companyName, riskScore.composite]);
 
-  // Score historical + imported deals for the analytics
+  // Score historical + imported deals for analytics (always equipment-finance)
   const allHistorical = useMemo(() => {
     const base = historicalDeals.map((d) => {
-      const m = calculateMetrics(d.inputs, sofr);
-      const rs = calculateRiskScore(d.inputs, m);
-      const rec = getRecommendation(rs.composite);
+      const m = eqCalculateMetrics(d.inputs, sofr);
+      const rs = eqCalculateRiskScore(d.inputs, m);
+      const rec = eqGetRecommendation(rs.composite);
       return { ...d, m, rs, rec };
     });
     return base;
   }, [sofr]);
 
-  // Precompute scores for example deal buttons
+  // Precompute scores for example deal buttons (equipment-finance)
   const exampleScores = useMemo(() => {
     const map = {};
     exampleDeals.forEach((deal) => {
-      const m = calculateMetrics(deal.inputs, sofr);
-      const rs = calculateRiskScore(deal.inputs, m);
+      const m = eqCalculateMetrics(deal.inputs, sofr);
+      const rs = eqCalculateRiskScore(deal.inputs, m);
       map[deal.id] = rs.composite;
     });
     return map;
   }, [sofr]);
 
   const loadExample = (deal) => {
+    // Example deals are equipment-finance, ensure module matches
+    if (activeModule !== 'equipment_finance') {
+      setActiveModule('equipment_finance');
+    }
     setInputs(deal.inputs);
     setActiveDeal(deal.id);
     setActiveTab('screening');
   };
 
   const clearForm = () => {
-    setInputs(INITIAL_INPUTS);
+    setInputs(mod.INITIAL_INPUTS);
     setActiveDeal(null);
   };
 
   const loadRecentDeal = (deal) => {
+    if (deal.module && deal.module !== activeModule) {
+      setActiveModule(deal.module);
+    }
     setInputs(deal.inputs);
     setActiveDeal(null);
     setActiveTab('screening');
@@ -308,11 +372,14 @@ function AuthenticatedApp({ profile, user }) {
 
   const ft = inputs.financingType || 'EFA';
   const ftLabel = FINANCING_TYPES[ft]?.label || 'EFA';
+  const moduleLabel = mod.META?.name || 'Equipment Finance';
 
   return (
     <div className="min-h-screen">
       <Header activeTab={activeTab} onTabChange={setActiveTab} onOpenGuide={() => setGuideOpen(true)} />
-      <InfoGuide isOpen={guideOpen} onClose={() => setGuideOpen(false)} />
+      <Suspense fallback={null}>
+        <InfoGuide isOpen={guideOpen} onClose={() => setGuideOpen(false)} />
+      </Suspense>
       <PlanBanner
         plan={plan}
         isExpired={isExpired}
@@ -411,7 +478,7 @@ function AuthenticatedApp({ profile, user }) {
                   View History &rarr;
                 </button>
                 <div className="ml-auto flex items-center gap-2">
-                  {valid && <ExportPanel summaryText={summaryText} inputs={inputs} />}
+                  {valid && <ExportPanel summaryText={summaryText} inputs={inputs} metrics={metrics} riskScore={riskScore} recommendation={recommendation} screeningResult={screeningResult} />}
                   <SavedDeals
                     currentInputs={valid ? inputs : null}
                     currentScore={valid ? riskScore.composite : null}
@@ -453,16 +520,21 @@ function AuthenticatedApp({ profile, user }) {
       {/* Main */}
       <div className="max-w-[1600px] mx-auto px-6 py-8">
         {activeTab === 'screening' ? (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            {/* Left: Form */}
-            <div className="lg:col-span-5 xl:col-span-4">
-              <div className="sticky top-16">
-                <DealInputForm inputs={inputs} onChange={setInputs} />
-              </div>
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8" style={{ height: 'calc(100vh - 160px)' }}>
+            {/* Left: Form — independent scroll */}
+            <div className="lg:col-span-5 xl:col-span-4 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 160px)', scrollbarWidth: 'none' }}>
+              <DealInputForm
+                inputs={inputs}
+                onChange={setInputs}
+                schema={mod.FORM_SCHEMA}
+                modules={modules}
+                activeModule={activeModule}
+                onModuleChange={handleModuleChange}
+              />
             </div>
 
-            {/* Right: Results */}
-            <div className="lg:col-span-7 xl:col-span-8">
+            {/* Right: Results — independent scroll */}
+            <div className="lg:col-span-7 xl:col-span-8 overflow-y-auto pl-2" style={{ maxHeight: 'calc(100vh - 160px)' }}>
               {!valid ? (
                 <div className="flex flex-col items-center justify-center min-h-[520px] text-center">
                   <div className="w-16 h-16 rounded-2xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-center mb-5">
@@ -474,12 +546,12 @@ function AuthenticatedApp({ profile, user }) {
                   </div>
                   <h3 className="text-lg font-semibold text-slate-300 mb-2">Enter Deal Parameters</h3>
                   <p className="text-sm text-slate-500 max-w-md mb-8">
-                    Fill in borrower and equipment details, or load an example deal above.
+                    Fill in borrower and {isEquipment ? 'equipment' : activeModule === 'accounts_receivable' ? 'receivables' : 'inventory'} details{isEquipment ? ', or load a deal above' : ''}.
                   </p>
                   <div className="grid grid-cols-3 gap-4 max-w-lg w-full">
                     {[
                       { n: '1', t: 'Borrower Financials', d: 'Revenue, EBITDA, debt' },
-                      { n: '2', t: 'Equipment Details', d: 'Cost, type, term, structure' },
+                      { n: '2', t: mod.FORM_SCHEMA.sections[1]?.title || 'Collateral Details', d: isEquipment ? 'Cost, type, term, structure' : activeModule === 'accounts_receivable' ? 'AR aging, concentration, dilution' : 'Composition, turnover, NOLV' },
                       { n: '3', t: 'Review Assessment', d: 'Score, metrics, stress test' },
                     ].map((s) => (
                       <div key={s.n} className="glass-card rounded-xl p-4 text-center">
@@ -533,17 +605,19 @@ function AuthenticatedApp({ profile, user }) {
                       { id: 'sec-summary', label: 'Summary' },
                       { id: 'sec-score', label: 'Score' },
                       { id: 'sec-metrics', label: 'Metrics' },
-                      { id: 'sec-debt', label: 'Debt Service' },
+                      isEquipment && { id: 'sec-debt', label: 'Debt Service' },
+                      !isEquipment && { id: 'sec-facility', label: 'Facility' },
                       { id: 'sec-stress', label: 'Stress Test' },
                       { id: 'sec-recommendation', label: 'Recommendation' },
                       { id: 'sec-structure', label: 'Structure' },
-                      { id: 'sec-whatif', label: 'What-If' },
-                      { id: 'sec-comps', label: 'Comps' },
-                      { id: 'sec-benchmarks', label: 'Benchmarks' },
-                      { id: 'sec-sensitivity', label: 'Sensitivity' },
+                      isEquipment && { id: 'sec-whatif', label: 'What-If' },
+                      isEquipment && { id: 'sec-comps', label: 'Comps' },
+                      isEquipment && { id: 'sec-benchmarks', label: 'Benchmarks' },
+                      isEquipment && { id: 'sec-sensitivity', label: 'Sensitivity' },
                       { id: 'sec-weights', label: 'Weights' },
-                      { id: 'sec-checklist', label: 'Checklist' },
-                    ].map((s) => (
+                      { id: 'sec-policy', label: 'Policy' },
+                      isEquipment && { id: 'sec-checklist', label: 'Checklist' },
+                    ].filter(Boolean).map((s) => (
                       <button
                         key={s.id}
                         onClick={() => document.getElementById(s.id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
@@ -561,17 +635,45 @@ function AuthenticatedApp({ profile, user }) {
                         <h2 className="text-xl font-bold text-white">{inputs.companyName}</h2>
                       )}
                       <p className="text-sm text-slate-500 mt-0.5">
-                        {inputs.industrySector} &middot; {inputs.equipmentType} &middot; {inputs.equipmentCondition} &middot; {ftLabel}
+                        {inputs.industrySector}
+                        {isEquipment && <> &middot; {inputs.equipmentType} &middot; {inputs.equipmentCondition} &middot; {ftLabel}</>}
+                        {!isEquipment && <> &middot; {moduleLabel}</>}
                       </p>
                       {/* Financial context badges */}
                       <div className="flex items-center gap-3 mt-2">
-                        <span className="text-[11px] text-slate-500">
-                          EBITDA Margin <span className="font-mono font-semibold text-slate-300">{formatPercent(metrics.ebitdaMargin)}</span>
-                        </span>
-                        <span className="text-slate-700">&middot;</span>
-                        <span className="text-[11px] text-slate-500">
-                          Debt Yield <span className="font-mono font-semibold text-slate-300">{formatPercent(metrics.debtYield)}</span>
-                        </span>
+                        {isEquipment && metrics.ebitdaMargin !== undefined && (
+                          <>
+                            <span className="text-[11px] text-slate-500">
+                              EBITDA Margin <span className="font-mono font-semibold text-slate-300">{formatPercent(metrics.ebitdaMargin)}</span>
+                            </span>
+                            <span className="text-slate-700">&middot;</span>
+                            <span className="text-[11px] text-slate-500">
+                              Debt Yield <span className="font-mono font-semibold text-slate-300">{formatPercent(metrics.debtYield)}</span>
+                            </span>
+                          </>
+                        )}
+                        {activeModule === 'accounts_receivable' && metrics.dso !== undefined && (
+                          <>
+                            <span className="text-[11px] text-slate-500">
+                              DSO <span className="font-mono font-semibold text-slate-300">{Math.round(metrics.dso)} days</span>
+                            </span>
+                            <span className="text-slate-700">&middot;</span>
+                            <span className="text-[11px] text-slate-500">
+                              Advance Rate <span className="font-mono font-semibold text-slate-300">{formatPercent(metrics.advanceRate * 100)}</span>
+                            </span>
+                          </>
+                        )}
+                        {activeModule === 'inventory_finance' && metrics.turnoverRatio !== undefined && (
+                          <>
+                            <span className="text-[11px] text-slate-500">
+                              Turnover <span className="font-mono font-semibold text-slate-300">{metrics.turnoverRatio.toFixed(1)}x</span>
+                            </span>
+                            <span className="text-slate-700">&middot;</span>
+                            <span className="text-[11px] text-slate-500">
+                              Days on Hand <span className="font-mono font-semibold text-slate-300">{Math.round(metrics.daysOnHand)}</span>
+                            </span>
+                          </>
+                        )}
                         {inputs.yearsInBusiness > 0 && (
                           <>
                             <span className="text-slate-700">&middot;</span>
@@ -587,8 +689,13 @@ function AuthenticatedApp({ profile, user }) {
                     </div>
                   </div>
 
-                  {/* Executive Summary */}
-                  <ExecutiveSummary inputs={inputs} metrics={metrics} riskScore={riskScore} recommendation={recommendation} />
+                  {/* Screening Verdict */}
+                  {screeningResult && (
+                    <ScreeningVerdict verdict={screeningResult.verdict} reasons={screeningResult.reasons} />
+                  )}
+
+                  {/* Executive Summary — equipment only (uses equipment-specific metrics) */}
+                  {isEquipment && <ExecutiveSummary inputs={inputs} metrics={metrics} riskScore={riskScore} recommendation={recommendation} />}
 
                   {/* Gauge + Radar */}
                   <div id="sec-score" className="grid grid-cols-1 md:grid-cols-2 gap-6 scroll-mt-20">
@@ -601,8 +708,9 @@ function AuthenticatedApp({ profile, user }) {
                     </div>
                   </div>
 
-                  {/* Metrics */}
+                  {/* Metrics — module-specific cards */}
                   <div id="sec-metrics" className="grid grid-cols-2 xl:grid-cols-5 gap-3 scroll-mt-20">
+                    {/* DSCR & Leverage — shared across all modules */}
                     <MetricCard
                       title="DSCR" value={formatRatio(metrics.dscr)}
                       subtitle={`${formatCurrency(inputs.ebitda)} / ${formatCurrency(metrics.existingDebtService + metrics.newAnnualDebtService)} DS`}
@@ -617,66 +725,158 @@ function AuthenticatedApp({ profile, user }) {
                       threshold="Target < 3.5x · Max 5.0x"
                       flag={metrics.leverage > 5.0 ? 'Elevated' : null}
                     />
-                    <MetricCard
-                      title="LTV" value={formatPercent(metrics.ltv * 100)}
-                      subtitle={(inputs.downPayment || 0) > 0 ? `${formatCurrency(inputs.downPayment)} equity` : 'Financed / value'}
-                      status={getLtvStatus(metrics.ltv)}
-                      threshold="Target < 85% · Max 100%"
-                      flag={metrics.ltv > 1.0 ? 'Over 100%' : null}
-                    />
-                    <MetricCard
-                      title="Term / Life" value={formatPercent(metrics.termCoverage)}
-                      subtitle={`${(inputs.loanTerm / 12).toFixed(1)}yr / ${inputs.usefulLife}yr`}
-                      status={getTermStatus(metrics.termCoverage)}
-                      threshold="Target < 60% · Max 80%"
-                      flag={metrics.termCoverage > 80 ? 'Exceeds 80%' : null}
-                    />
-                    <MetricCard
-                      title="Rev. Conc." value={formatPercent(metrics.revenueConcentration)}
-                      subtitle="Equip Cost / Revenue"
-                      status={getRevConcStatus(metrics.revenueConcentration)}
-                      threshold="Target < 15% · Watch > 25%"
-                      flag={metrics.revenueConcentration > 25 ? 'High' : null}
-                    />
+
+                    {/* Equipment-specific */}
+                    {isEquipment && (
+                      <>
+                        <MetricCard
+                          title="LTV" value={formatPercent(metrics.ltv * 100)}
+                          subtitle={(inputs.downPayment || 0) > 0 ? `${formatCurrency(inputs.downPayment)} equity` : 'Financed / value'}
+                          status={getLtvStatus(metrics.ltv)}
+                          threshold="Target < 85% · Max 100%"
+                          flag={metrics.ltv > 1.0 ? 'Over 100%' : null}
+                        />
+                        <MetricCard
+                          title="Term / Life" value={formatPercent(metrics.termCoverage)}
+                          subtitle={`${(inputs.loanTerm / 12).toFixed(1)}yr / ${inputs.usefulLife}yr`}
+                          status={getTermStatus(metrics.termCoverage)}
+                          threshold="Target < 60% · Max 80%"
+                          flag={metrics.termCoverage > 80 ? 'Exceeds 80%' : null}
+                        />
+                        <MetricCard
+                          title="Rev. Conc." value={formatPercent(metrics.revenueConcentration)}
+                          subtitle="Equip Cost / Revenue"
+                          status={getRevConcStatus(metrics.revenueConcentration)}
+                          threshold="Target < 15% · Watch > 25%"
+                          flag={metrics.revenueConcentration > 25 ? 'High' : null}
+                        />
+                      </>
+                    )}
+
+                    {/* AR-specific */}
+                    {activeModule === 'accounts_receivable' && (
+                      <>
+                        <MetricCard
+                          title="Borrowing Base" value={formatCurrency(metrics.borrowingBase)}
+                          subtitle={`${formatPercent((metrics.advanceRate || 0) * 100)} of eligible AR`}
+                          status={metrics.borrowingBase > 0 ? 'good' : 'weak'}
+                          threshold={`Eligible AR: ${formatCurrency(metrics.eligibleAR)}`}
+                        />
+                        <MetricCard
+                          title="DSO" value={`${Math.round(metrics.dso || 0)} days`}
+                          subtitle="Days Sales Outstanding"
+                          status={metrics.dso < 45 ? 'excellent' : metrics.dso <= 60 ? 'good' : metrics.dso <= 75 ? 'adequate' : 'weak'}
+                          threshold="Target < 45 · Watch > 75"
+                          flag={metrics.dso > 75 ? 'Elevated' : null}
+                        />
+                        <MetricCard
+                          title="Concentration" value={formatPercent((metrics.concentrationRisk || 0) * 100)}
+                          subtitle="Top customer % of AR"
+                          status={(metrics.concentrationRisk || 0) < 0.15 ? 'excellent' : metrics.concentrationRisk <= 0.25 ? 'good' : 'weak'}
+                          threshold="Target < 15% · Max 25%"
+                          flag={metrics.concentrationRisk > 0.25 ? 'High' : null}
+                        />
+                      </>
+                    )}
+
+                    {/* Inventory-specific */}
+                    {activeModule === 'inventory_finance' && (
+                      <>
+                        <MetricCard
+                          title="Borrowing Base" value={formatCurrency(metrics.borrowingBase)}
+                          subtitle={`${formatPercent((metrics.appliedAdvanceRate || 0) * 100)} blended rate`}
+                          status={metrics.borrowingBase > 0 ? 'good' : 'weak'}
+                          threshold={`Eligible: ${formatCurrency(metrics.eligibleInventory)}`}
+                        />
+                        <MetricCard
+                          title="Turnover" value={`${(metrics.turnoverRatio || 0).toFixed(1)}x`}
+                          subtitle={`${Math.round(metrics.daysOnHand || 0)} days on hand`}
+                          status={metrics.turnoverRatio >= 8 ? 'excellent' : metrics.turnoverRatio >= 4 ? 'good' : metrics.turnoverRatio >= 2 ? 'adequate' : 'weak'}
+                          threshold="Min 4.0x · Target 6.0x+"
+                          flag={metrics.turnoverRatio < 4 ? 'Below min' : null}
+                        />
+                        <MetricCard
+                          title="Obsolescence" value={formatPercent((metrics.obsolescenceRate || 0) * 100)}
+                          subtitle="Obsolete / Total Inventory"
+                          status={(metrics.obsolescenceRate || 0) < 0.05 ? 'excellent' : metrics.obsolescenceRate <= 0.10 ? 'good' : 'weak'}
+                          threshold="Target < 5% · Max 10%"
+                          flag={metrics.obsolescenceRate > 0.10 ? 'High' : null}
+                        />
+                      </>
+                    )}
                   </div>
 
-                  {/* Debt Service */}
-                  <div id="sec-debt" className="glass-card rounded-2xl p-5 scroll-mt-20">
-                    <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4">
-                      Debt Service Summary
-                      {ft !== 'EFA' && (
-                        <span className="ml-2 text-gold-400 normal-case font-medium text-[11px]">
-                          {ftLabel} &middot; {formatCurrency(metrics.residualValue)} residual
-                        </span>
-                      )}
-                      {!metrics.debtServiceEstimated && (
-                        <span className="ml-2 text-emerald-400 normal-case font-medium text-[11px]">
-                          Actual DS provided
-                        </span>
-                      )}
-                    </h3>
-                    <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                      {[
-                        { label: 'Screening Rate', value: `${(metrics.rate * 100).toFixed(2)}%` },
-                        { label: 'Net Financed', value: formatCurrencyFull(metrics.netFinanced) },
-                        { label: 'Monthly Payment', value: formatCurrencyFull(metrics.monthlyPayment) },
-                        { label: 'Annual DS (New)', value: formatCurrencyFull(metrics.newAnnualDebtService) },
-                        { label: `Annual DS (Existing)${!metrics.debtServiceEstimated ? '' : ' est.'}`, value: formatCurrencyFull(metrics.existingDebtService) },
-                      ].map((item) => (
-                        <div key={item.label}>
-                          <span className="text-[10px] text-slate-600">{item.label}</span>
-                          <p className="text-sm text-slate-200 font-mono font-semibold mt-0.5">{item.value}</p>
-                        </div>
-                      ))}
+                  {/* Debt Service — Equipment only */}
+                  {isEquipment && (
+                    <div id="sec-debt" className="glass-card rounded-2xl p-5 scroll-mt-20">
+                      <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4">
+                        Debt Service Summary
+                        {ft !== 'EFA' && (
+                          <span className="ml-2 text-gold-400 normal-case font-medium text-[11px]">
+                            {ftLabel} &middot; {formatCurrency(metrics.residualValue)} residual
+                          </span>
+                        )}
+                        {!metrics.debtServiceEstimated && (
+                          <span className="ml-2 text-emerald-400 normal-case font-medium text-[11px]">
+                            Actual DS provided
+                          </span>
+                        )}
+                      </h3>
+                      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                        {[
+                          { label: 'Screening Rate', value: `${(metrics.rate * 100).toFixed(2)}%` },
+                          { label: 'Net Financed', value: formatCurrencyFull(metrics.netFinanced) },
+                          { label: 'Monthly Payment', value: formatCurrencyFull(metrics.monthlyPayment) },
+                          { label: 'Annual DS (New)', value: formatCurrencyFull(metrics.newAnnualDebtService) },
+                          { label: `Annual DS (Existing)${!metrics.debtServiceEstimated ? '' : ' est.'}`, value: formatCurrencyFull(metrics.existingDebtService) },
+                        ].map((item) => (
+                          <div key={item.label}>
+                            <span className="text-[10px] text-slate-600">{item.label}</span>
+                            <p className="text-sm text-slate-200 font-mono font-semibold mt-0.5">{item.value}</p>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  </div>
+                  )}
 
-                  {/* Amortization Schedule */}
-                  <AmortizationSchedule
-                    principal={metrics.financedPrincipal}
-                    annualRate={metrics.rate}
-                    termMonths={inputs.loanTerm}
-                  />
+                  {/* Facility Summary — AR & Inventory */}
+                  {!isEquipment && (
+                    <div id="sec-facility" className="glass-card rounded-2xl p-5 scroll-mt-20">
+                      <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4">
+                        Revolving Facility Summary
+                        {!metrics.debtServiceEstimated && (
+                          <span className="ml-2 text-emerald-400 normal-case font-medium text-[11px]">
+                            Actual DS provided
+                          </span>
+                        )}
+                      </h3>
+                      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                        {[
+                          { label: 'Screening Rate', value: `${((metrics.effectiveRate || metrics.rate || 0) * 100).toFixed(2)}%` },
+                          { label: activeModule === 'accounts_receivable' ? 'Eligible AR' : 'Eligible Inventory', value: formatCurrencyFull(metrics.eligibleAR || metrics.eligibleInventory || 0) },
+                          { label: 'Borrowing Base', value: formatCurrencyFull(metrics.borrowingBase || 0) },
+                          { label: 'Annual DS (Facility)', value: formatCurrencyFull(metrics.newAnnualDebtService || 0) },
+                          { label: `Annual DS (Existing)${!metrics.debtServiceEstimated ? '' : ' est.'}`, value: formatCurrencyFull(metrics.existingDebtService || 0) },
+                        ].map((item) => (
+                          <div key={item.label}>
+                            <span className="text-[10px] text-slate-600">{item.label}</span>
+                            <p className="text-sm text-slate-200 font-mono font-semibold mt-0.5">{item.value}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Amortization Schedule — Equipment only */}
+                  {isEquipment && (
+                    <Suspense fallback={<LazyFallback />}>
+                      <AmortizationSchedule
+                        principal={metrics.financedPrincipal}
+                        annualRate={metrics.rate}
+                        termMonths={inputs.loanTerm}
+                      />
+                    </Suspense>
+                  )}
 
                   {/* Stress Test */}
                   <div id="sec-stress" className="scroll-mt-20">
@@ -690,58 +890,83 @@ function AuthenticatedApp({ profile, user }) {
                     <SuggestedStructure structure={structure} sofr={sofr} sofrDate={sofrDate} sofrSource={sofrSource} />
                   </div>
 
-                  {/* Interactive Tools */}
-                  <div id="sec-whatif" className="scroll-mt-20">
-                    <WhatIfPanel inputs={inputs} metrics={metrics} riskScore={riskScore} sofr={sofr} />
+                  {/* Interactive Tools — Equipment only (lazy-loaded) */}
+                  <Suspense fallback={<LazyFallback />}>
+                    {isEquipment && (
+                      <>
+                        <div id="sec-whatif" className="scroll-mt-20">
+                          <WhatIfPanel inputs={inputs} metrics={metrics} riskScore={riskScore} sofr={sofr} />
+                        </div>
+                        <div id="sec-comps" className="scroll-mt-20">
+                          <ComparableDeals inputs={inputs} metrics={metrics} riskScore={riskScore} sofr={sofr} />
+                        </div>
+                        <div id="sec-benchmarks" className="scroll-mt-20">
+                          <IndustryBenchmarks inputs={inputs} metrics={metrics} riskScore={riskScore} sofr={sofr} />
+                        </div>
+                        <div id="sec-sensitivity" className="scroll-mt-20">
+                          <SensitivityChart inputs={inputs} sofr={sofr} />
+                        </div>
+                      </>
+                    )}
+
+                    <div id="sec-weights" className="scroll-mt-20">
+                      <ScoringWeights inputs={inputs} metrics={metrics} riskScore={riskScore} />
+                    </div>
+                  </Suspense>
+
+                  <div id="sec-policy" className="scroll-mt-20">
+                    <ScreeningCriteria
+                      activeModule={activeModule}
+                      onCriteriaChange={setScreeningCriteria}
+                    />
                   </div>
-                  <div id="sec-comps" className="scroll-mt-20">
-                    <ComparableDeals inputs={inputs} metrics={metrics} riskScore={riskScore} sofr={sofr} />
-                  </div>
-                  <div id="sec-benchmarks" className="scroll-mt-20">
-                    <IndustryBenchmarks inputs={inputs} metrics={metrics} riskScore={riskScore} sofr={sofr} />
-                  </div>
-                  <div id="sec-sensitivity" className="scroll-mt-20">
-                    <SensitivityChart inputs={inputs} sofr={sofr} />
-                  </div>
-                  <div id="sec-weights" className="scroll-mt-20">
-                    <ScoringWeights inputs={inputs} metrics={metrics} riskScore={riskScore} />
-                  </div>
-                  <div id="sec-checklist" className="scroll-mt-20">
-                    <DueDiligenceChecklist inputs={inputs} metrics={metrics} riskScore={riskScore} />
-                  </div>
+
+                  {isEquipment && (
+                    <Suspense fallback={<LazyFallback />}>
+                      <div id="sec-checklist" className="scroll-mt-20">
+                        <DueDiligenceChecklist inputs={inputs} metrics={metrics} riskScore={riskScore} />
+                      </div>
+                    </Suspense>
+                  )}
                 </div>
               )}
             </div>
           </div>
-        ) : activeTab === 'historical' ? (
-          <div className="space-y-8">
-            <PortfolioAnalytics scoredDeals={allHistorical} />
-            <HistoricalDealsTable deals={[...historicalDeals, ...importedDeals]} sofr={sofr} />
-          </div>
-        ) : activeTab === 'pipeline' ? (
-          <DealPipeline
-            currentInputs={valid ? inputs : null}
-            currentScore={valid ? riskScore.composite : null}
-            onLoadDeal={(dealInputs) => { setInputs(dealInputs); setActiveDeal(null); setActiveTab('screening'); }}
-            readOnly={isExpired}
-          />
-        ) : activeTab === 'batch' ? (
-          <BatchScreening
-            sofr={sofr}
-            onLoadDeal={(dealInputs) => { setInputs(dealInputs); setActiveDeal(null); setActiveTab('screening'); }}
-          />
-        ) : activeTab === 'audit' ? (
-          <AuditLogViewer />
-        ) : activeTab === 'team' ? (
-          <TeamManagement />
         ) : (
-          /* Compare tab */
-          <DealComparison
-            exampleDeals={exampleDeals}
-            savedDeals={savedDealsList}
-            historicalDeals={historicalDeals}
-            sofr={sofr}
-          />
+          <Suspense fallback={<LazyFallback />}>
+            {activeTab === 'historical' ? (
+              <div className="space-y-8">
+                <PortfolioAnalytics scoredDeals={allHistorical} />
+                <HistoricalDealsTable deals={[...historicalDeals, ...importedDeals]} sofr={sofr} />
+              </div>
+            ) : activeTab === 'pipeline' ? (
+              <DealPipeline
+                currentInputs={valid ? inputs : null}
+                currentScore={valid ? riskScore.composite : null}
+                onLoadDeal={(dealInputs) => { setInputs(dealInputs); setActiveDeal(null); setActiveTab('screening'); }}
+                readOnly={isExpired}
+              />
+            ) : activeTab === 'dashboard' ? (
+              <PipelineDashboard />
+            ) : activeTab === 'batch' ? (
+              <BatchScreening
+                sofr={sofr}
+                onLoadDeal={(dealInputs) => { setInputs(dealInputs); setActiveDeal(null); setActiveTab('screening'); }}
+              />
+            ) : activeTab === 'audit' ? (
+              <AuditLogViewer />
+            ) : activeTab === 'team' ? (
+              <TeamManagement />
+            ) : (
+              /* Compare tab */
+              <DealComparison
+                exampleDeals={exampleDeals}
+                savedDeals={savedDealsList}
+                historicalDeals={historicalDeals}
+                sofr={sofr}
+              />
+            )}
+          </Suspense>
         )}
       </div>
     </div>

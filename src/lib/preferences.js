@@ -10,9 +10,9 @@ export async function fetchPreferences(userId) {
     .from('user_preferences')
     .select('*')
     .eq('user_id', userId)
-    .single();
+    .maybeSingle();
 
-  return { data, error };
+  return { data: data || null, error: error?.code === 'PGRST116' ? null : error };
 }
 
 /**

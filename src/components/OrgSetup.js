@@ -30,28 +30,20 @@ export default function OrgSetup({ profile, onComplete }) {
     setLoading(true);
 
     try {
-      // Insert new organization
       const slug = generateSlug(trimmedName);
-      const { data: orgData, error: orgError } = await supabase
-        .from('organizations')
-        .insert({ name: trimmedName, slug })
-        .select()
-        .single();
+      const { data, error: rpcError } = await supabase.rpc('create_org', {
+        p_name: trimmedName,
+        p_slug: slug,
+      });
 
-      if (orgError) {
-        setError(orgError.message);
+      if (rpcError) {
+        setError(rpcError.message);
         setLoading(false);
         return;
       }
 
-      // Update user profile with the new org_id and admin role
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update({ org_id: orgData.id, role: 'admin' })
-        .eq('id', profile.id);
-
-      if (profileError) {
-        setError(profileError.message);
+      if (data?.error) {
+        setError(data.error);
         setLoading(false);
         return;
       }
