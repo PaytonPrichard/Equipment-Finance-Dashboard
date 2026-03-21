@@ -223,7 +223,7 @@ function getInputWarnings(inputs, pipelineDeals) {
   if (inputs.ebitda > 0 && inputs.annualRevenue > 0 && inputs.ebitda > inputs.annualRevenue) {
     warnings.push({
       id: 'ebitda-revenue', severity: 'error',
-      text: 'EBITDA exceeds revenue — this is unusual. Verify both figures.',
+      text: 'EBITDA exceeds revenue. This is unusual. Verify both figures.',
     });
   }
 
@@ -240,7 +240,7 @@ function getInputWarnings(inputs, pipelineDeals) {
   if (inputs.downPayment > 0 && inputs.equipmentCost > 0 && inputs.downPayment >= inputs.equipmentCost) {
     warnings.push({
       id: 'down-exceeds', severity: 'error',
-      text: 'Down payment meets or exceeds equipment cost — no financing needed.',
+      text: 'Down payment meets or exceeds equipment cost. No financing needed.',
     });
   }
 
@@ -254,21 +254,21 @@ function getInputWarnings(inputs, pipelineDeals) {
   if (inputs.totalExistingDebt > 0 && inputs.ebitda > 0 && inputs.totalExistingDebt > inputs.ebitda * 8) {
     warnings.push({
       id: 'extreme-leverage', severity: 'warn',
-      text: `Existing debt is ${(inputs.totalExistingDebt / inputs.ebitda).toFixed(1)}x EBITDA — verify debt figure.`,
+      text: `Existing debt is ${(inputs.totalExistingDebt / inputs.ebitda).toFixed(1)}x EBITDA. Verify debt figure.`,
     });
   }
 
   if (inputs.actualAnnualDebtService > 0 && inputs.ebitda > 0 && inputs.actualAnnualDebtService > inputs.ebitda) {
     warnings.push({
       id: 'ds-exceeds-ebitda', severity: 'warn',
-      text: 'Existing debt service exceeds EBITDA — borrower cannot cover current obligations from operations.',
+      text: 'Existing debt service exceeds EBITDA. Borrower cannot cover current obligations from operations.',
     });
   }
 
   if (inputs.equipmentCost > 0 && inputs.annualRevenue > 0 && inputs.equipmentCost > inputs.annualRevenue) {
     warnings.push({
       id: 'cost-exceeds-rev', severity: 'warn',
-      text: 'Equipment cost exceeds annual revenue — very large transaction relative to borrower size.',
+      text: 'Equipment cost exceeds annual revenue. Very large transaction relative to borrower size.',
     });
   }
 

@@ -106,7 +106,7 @@ export default function BillingPage() {
                 <span className="text-[11px] text-slate-500">{daysRemaining} days remaining</span>
               )}
               {isExpired && (
-                <span className="text-[11px] text-rose-400 font-medium">Expired — upgrade to continue</span>
+                <span className="text-[11px] text-rose-400 font-medium">Expired. Upgrade to continue.</span>
               )}
             </div>
           </div>

@@ -110,7 +110,7 @@ export default function DealPipeline({ onLoadDeal, currentInputs, currentScore, 
   /* --- Actions --- */
 
   const handleStartAdd = () => {
-    if (readOnly) { addToast('Plan expired — upgrade to add deals', 'warning'); return; }
+    if (readOnly) { addToast('Plan expired. Upgrade to add deals.', 'warning'); return; }
     setAddingName(currentInputs?.companyName || '');
     setIsAdding(true);
   };

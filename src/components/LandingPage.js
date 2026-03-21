@@ -139,7 +139,7 @@ export default function LandingPage({ onGetStarted, onSignIn }) {
         </div>
         <h1 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-white leading-tight mb-4 tracking-tight">
           Screen equipment, AR, and inventory<br />
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-gold-400 to-gold-600">deals in 2 minutes — not 2 hours.</span>
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-gold-400 to-gold-600">deals in 2 minutes, not 2 hours.</span>
         </h1>
         <p className="text-base text-slate-400 max-w-2xl mx-auto mb-6 leading-relaxed">
           Automated risk scoring, configurable credit policy, and branded screening memos.
@@ -164,7 +164,7 @@ export default function LandingPage({ onGetStarted, onSignIn }) {
               { value: '2 min', label: 'Average screening time' },
               { value: '3', label: 'Asset classes supported' },
               { value: '94%', label: 'Faster than spreadsheets' },
-              { value: '100%', label: 'Self-serve — no consultants' },
+              { value: '100%', label: 'Self-serve, no consultants' },
             ].map((stat) => (
               <div key={stat.label} className="text-center">
                 <p className="text-xl font-bold font-mono text-gold-400">{stat.value}</p>
