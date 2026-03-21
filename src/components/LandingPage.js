@@ -86,7 +86,7 @@ const PRICING = [
       'CSV & PDF export',
       'Up to 50 active deals',
     ],
-    cta: 'Start Free Trial',
+    cta: 'Start 14-Day Free Trial',
     highlight: false,
   },
   {
@@ -104,7 +104,7 @@ const PRICING = [
       'Custom scoring weights',
       'Priority support',
     ],
-    cta: 'Start Free Trial',
+    cta: 'Start 14-Day Free Trial',
     highlight: true,
   },
   {

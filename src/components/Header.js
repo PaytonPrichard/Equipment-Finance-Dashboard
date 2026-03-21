@@ -129,7 +129,7 @@ export default function Header({ activeTab, onTabChange, onOpenGuide }) {
               </div>
               <button
                 onClick={signOut}
-                className="px-3 py-1.5 rounded-lg text-[11px] font-medium text-slate-400 hover:text-slate-200 bg-white/[0.04] border border-white/[0.06] hover:border-white/[0.10] transition-all"
+                className="px-3 py-1.5 rounded-lg text-[11px] font-medium text-slate-400 hover:text-rose-400 bg-white/[0.04] border border-white/[0.06] hover:border-rose-500/20 transition-all"
               >
                 Sign Out
               </button>

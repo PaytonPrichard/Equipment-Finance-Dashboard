@@ -528,9 +528,11 @@ export default function DealInputForm({ inputs, onChange, schema, modules, activ
   return (
     <div className="space-y-5">
       {/* Quick instruction */}
-      <p className="text-[11px] text-slate-500 leading-relaxed">
-        Select an asset class, fill in required fields (<span className="text-gold-400">*</span>), and scroll down to view screening results.
-      </p>
+      <div className="bg-gold-500/[0.04] border border-gold-500/10 rounded-xl px-4 py-3">
+        <p className="text-[12px] text-slate-300 leading-relaxed">
+          Select an asset class, fill in required fields (<span className="text-gold-400 font-semibold">*</span>), and results will appear as you type.
+        </p>
+      </div>
 
       {/* Asset Class Selector */}
       {modules && modules.length > 1 && (

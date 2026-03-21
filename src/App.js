@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect, useRef, lazy, Suspense } from 'react';
 import { useAuth } from './contexts/AuthContext';
+import { supabase } from './lib/supabase';
 import LoginPage from './components/LoginPage';
 import LandingPage from './components/LandingPage';
 import OrgSetup from './components/OrgSetup';
@@ -153,23 +154,49 @@ export default function App() {
     return (
       <div className="min-h-screen bg-[#141210] flex items-center justify-center px-4">
         <div className="w-full max-w-md text-center">
+          {/* Progress */}
+          <div className="flex items-center justify-center gap-2 mb-8">
+            <div className="w-2 h-2 rounded-full bg-gold-500" />
+            <div className="w-8 h-0.5 bg-gold-500" />
+            <div className="w-2 h-2 rounded-full bg-gold-500 animate-pulse" />
+            <div className="w-8 h-0.5 bg-slate-700" />
+            <div className="w-2 h-2 rounded-full bg-slate-700" />
+            <span className="text-[10px] text-slate-600 ml-2">Step 2 of 3</span>
+          </div>
           <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/20 mb-4">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-amber-400" strokeWidth="2">
               <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
               <polyline points="22,6 12,13 2,6" />
             </svg>
           </div>
-          <h2 className="text-lg font-semibold text-white mb-2">Verify your email</h2>
-          <p className="text-sm text-slate-400 mb-6">
+          <h2 className="text-lg font-semibold text-white mb-2">Check your inbox</h2>
+          <p className="text-sm text-slate-400 mb-2">
             We sent a verification link to <span className="text-white font-medium">{user?.email}</span>.
-            Please check your inbox and click the link to continue.
           </p>
-          <button
-            onClick={signOut}
-            className="text-sm text-gold-400 hover:text-gold-300 font-medium transition-colors"
-          >
-            Sign out
-          </button>
+          <p className="text-[11px] text-slate-500 mb-6">
+            Check your spam folder if you don't see it. Usually arrives within 1–2 minutes.
+          </p>
+          <div className="flex items-center justify-center gap-4">
+            <button
+              onClick={async () => {
+                if (supabase) {
+                  await supabase.auth.resend({ type: 'signup', email: user?.email });
+                  const btn = document.getElementById('resend-btn');
+                  if (btn) { btn.textContent = 'Sent!'; btn.disabled = true; setTimeout(() => { btn.textContent = 'Resend email'; btn.disabled = false; }, 60000); }
+                }
+              }}
+              id="resend-btn"
+              className="px-4 py-2 rounded-xl bg-white/[0.04] border border-white/[0.08] text-sm text-white font-medium hover:bg-white/[0.08] transition-all"
+            >
+              Resend email
+            </button>
+            <button
+              onClick={signOut}
+              className="text-sm text-slate-500 hover:text-slate-300 font-medium transition-colors"
+            >
+              Sign out
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -593,6 +620,15 @@ function AuthenticatedApp({ profile, user }) {
                       </div>
                     ))}
                   </div>
+                  {/* Try Example button */}
+                  {isEquipment && exampleDeals.length > 0 && (
+                    <button
+                      onClick={() => loadExample(exampleDeals[0])}
+                      className="mt-6 px-5 py-2.5 rounded-xl bg-gold-500/[0.08] border border-gold-500/20 text-sm text-gold-400 font-medium hover:bg-gold-500/[0.12] hover:border-gold-500/30 transition-all"
+                    >
+                      Load an example deal to explore
+                    </button>
+                  )}
                   {/* Recently Screened Deals */}
                   {recentDeals.length > 0 && (
                     <div className="mt-8 max-w-lg w-full">
