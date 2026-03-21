@@ -797,23 +797,28 @@ function AuthenticatedApp({ profile, user }) {
                     </div>
                   </div>
 
-                  {/* Metrics — module-specific cards */}
-                  <div id="sec-metrics" className="grid grid-cols-2 xl:grid-cols-5 gap-3 scroll-mt-20">
-                    {/* DSCR & Leverage — shared across all modules */}
-                    <MetricCard
-                      title="DSCR" value={formatRatio(metrics.dscr)}
-                      subtitle={`${formatCurrency(inputs.ebitda)} / ${formatCurrency(metrics.existingDebtService + metrics.newAnnualDebtService)} DS`}
-                      status={getDscrStatus(metrics.dscr)}
-                      threshold="Min 1.25x · Target 1.50x+"
-                      flag={metrics.dscr < 1.25 ? 'Below threshold' : null}
-                    />
-                    <MetricCard
-                      title="Leverage" value={formatRatio(metrics.leverage)}
-                      subtitle="Total Debt / EBITDA"
-                      status={getLeverageStatus(metrics.leverage)}
-                      threshold="Target < 3.5x · Max 5.0x"
-                      flag={metrics.leverage > 5.0 ? 'Elevated' : null}
-                    />
+                  {/* Metrics */}
+                  <div id="sec-metrics" className="space-y-3 scroll-mt-20">
+                    {/* Primary metrics: DSCR & Leverage (always prominent) */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <MetricCard
+                        title="DSCR" value={formatRatio(metrics.dscr)}
+                        subtitle={`${formatCurrency(inputs.ebitda)} / ${formatCurrency(metrics.existingDebtService + metrics.newAnnualDebtService)} DS`}
+                        status={getDscrStatus(metrics.dscr)}
+                        threshold="Min 1.25x · Target 1.50x+"
+                        flag={metrics.dscr < 1.25 ? 'Below threshold' : null}
+                      />
+                      <MetricCard
+                        title="Leverage" value={formatRatio(metrics.leverage)}
+                        subtitle="Total Debt / EBITDA"
+                        status={getLeverageStatus(metrics.leverage)}
+                        threshold="Target < 3.5x · Max 5.0x"
+                        flag={metrics.leverage > 5.0 ? 'Elevated' : null}
+                      />
+                    </div>
+
+                    {/* Secondary metrics: module-specific */}
+                    <div className="grid grid-cols-3 gap-3">
 
                     {/* Equipment-specific */}
                     {isEquipment && (
@@ -893,6 +898,7 @@ function AuthenticatedApp({ profile, user }) {
                         />
                       </>
                     )}
+                    </div>
                   </div>
 
                   {/* Debt Service — Equipment only */}

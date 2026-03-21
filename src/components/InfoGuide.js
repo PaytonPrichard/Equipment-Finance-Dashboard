@@ -13,7 +13,7 @@ const SECTIONS = [
     content: [
       {
         heading: 'What is this tool?',
-        body: 'The Equipment Finance Deal Screening Tool is a preliminary assessment platform for equipment lending and leasing transactions. It helps originators and credit analysts quickly evaluate whether a deal is worth advancing to full underwriting — before investing significant time and resources.',
+        body: 'ABL Screening is a pre-origination deal screening platform for asset-based lending. It helps credit analysts quickly evaluate whether a deal is worth advancing to full underwriting, before investing significant time and resources. It supports equipment finance, accounts receivable, and inventory finance asset classes.',
       },
       {
         heading: 'What it does',
@@ -36,16 +36,20 @@ const SECTIONS = [
     ),
     content: [
       {
+        heading: 'Asset Class Selection',
+        body: 'At the top of the form, select your asset class: Equipment Finance, Accounts Receivable, or Inventory Finance. The form fields change based on your selection. Shared borrower fields (company name, revenue, EBITDA, debt) are preserved when you switch, so you can screen the same borrower across different asset classes.',
+      },
+      {
         heading: 'Borrower Profile',
-        body: 'Enter the borrower\'s company name, years in business, annual revenue, EBITDA, existing debt, industry, and credit rating. The Company Name field has a searchable database — type 2+ characters to see matches and auto-populate financials. You can also enter "Actual Annual DS" if you have the borrower\'s real debt service figure; otherwise the tool estimates it at 8% of total debt.',
+        body: 'Enter the borrower\'s company name, years in business, annual revenue, EBITDA, existing debt, industry, and credit rating. The Company Name field searches your pipeline deals and a sample database. Type 2+ characters to see matches and auto-populate financials. Enter "Actual Annual DS" if you have the borrower\'s real debt service figure; otherwise the tool estimates it at 8% of total debt.',
       },
       {
-        heading: 'Equipment & Deal',
-        body: 'Specify the equipment type, condition (New/Used), cost, and optional down payment. Choose a financing structure: EFA (borrower owns, fully amortizing), FMV Lease (return option, lower payments), or TRAC Lease (guaranteed residual, vehicles/rail only). Set the useful life and loan term in months. The Essential-Use toggle indicates whether the equipment is critical to the borrower\'s operations — this affects risk scoring.',
+        heading: 'Collateral Details',
+        body: 'For Equipment: specify type, condition, cost, down payment, financing structure (EFA/FMV/TRAC), useful life, and term. For AR: enter total AR outstanding, aging buckets (0-30, 31-60, 61-90, 90+ days), concentration, dilution rate, and advance rate. For Inventory: enter total inventory, composition (raw/WIP/finished/obsolete), turnover, days on hand, and NOLV.',
       },
       {
-        heading: 'Quick Start Examples',
-        body: 'The toolbar at the top offers 5 pre-built example deals spanning the credit spectrum — from a strong healthcare deal to a weak startup. Use these to see how the tool responds to different profiles, or as a starting point for your own analysis.',
+        heading: 'Pass / Flag / Fail Verdict',
+        body: 'Every screening produces a verdict: PASS (meets all criteria), FLAG (needs review), or FAIL (does not meet thresholds). The verdict is based on your configurable screening policy, which includes score thresholds and metric limits for DSCR, leverage, and module-specific factors. Configure your policy in the Screening Policy panel.',
       },
       {
         heading: 'Executive Summary',
@@ -53,19 +57,19 @@ const SECTIONS = [
       },
       {
         heading: 'EBITDA Margin & Debt Yield',
-        body: 'Displayed below the company name as contextual financial health indicators. EBITDA Margin (EBITDA / Revenue) shows operating profitability — margins below 10% indicate thin cushion. Debt Yield (EBITDA / Net Financed) measures how quickly the asset could "pay for itself" — higher is better.',
+        body: 'Displayed below the company name as contextual financial health indicators. EBITDA Margin (EBITDA / Revenue) shows operating profitability. margins below 10% indicate thin cushion. Debt Yield (EBITDA / Net Financed) measures how quickly the asset could "pay for itself". higher is better.',
       },
       {
         heading: 'Risk Score Gauge',
-        body: 'The circular gauge shows the composite risk score from 0 to 100. The scoring model uses linear interpolation within breakpoint ranges for each factor, producing granular scores that reflect small changes in inputs. Scoring bands: 75+ (Strong/Green) — recommend advancing. 55–74 (Moderate/Yellow) — pursue with mitigants. 35–54 (Borderline/Orange) — additional diligence needed. Below 35 (Weak/Red) — likely does not meet thresholds.',
+        body: 'The circular gauge shows the composite risk score from 0 to 100. The scoring model uses linear interpolation within breakpoint ranges for each factor, producing granular scores that reflect small changes in inputs. Scoring bands: 75+ (Strong/Green). recommend advancing. 55–74 (Moderate/Yellow). pursue with mitigants. 35–54 (Borderline/Orange). additional diligence needed. Below 35 (Weak/Red). likely does not meet thresholds.',
       },
       {
         heading: 'Risk Factor Radar',
-        body: 'The radar chart breaks down the score into 7 weighted factors: DSCR (25%), Leverage (20%), Industry Risk (15%), Essentiality (10%), Equipment/LTV (10%), Years in Business (10%), and Term Coverage (10%). Each factor is scored using continuous interpolation between breakpoints, so the chart shows exactly which factors are driving the score up or down — and by how much.',
+        body: 'The radar chart breaks down the score into 7 weighted factors: DSCR (25%), Leverage (20%), Industry Risk (15%), Essentiality (10%), Equipment/LTV (10%), Years in Business (10%), and Term Coverage (10%). Each factor is scored using continuous interpolation between breakpoints, so the chart shows exactly which factors are driving the score up or down. and by how much.',
       },
       {
         heading: 'Key Metrics Cards',
-        body: 'Five metric cards show the core credit ratios with color-coded health indicators:\n\n• DSCR — Earnings / Total Debt Service. Minimum 1.25x, target 1.50x+.\n• Leverage — Total Debt / EBITDA. Target below 3.5x, maximum 5.0x.\n• LTV — Loan-to-Value. Net financed amount vs. equipment value. Target below 85%.\n• Term / Life — What percentage of the equipment\'s useful life the loan term covers. Target below 60%.\n• Revenue Concentration — Equipment cost as a % of annual revenue. Target below 15%.',
+        body: 'Five metric cards show the core credit ratios with color-coded health indicators:\n\n• DSCR. Earnings / Total Debt Service. Minimum 1.25x, target 1.50x+.\n• Leverage. Total Debt / EBITDA. Target below 3.5x, maximum 5.0x.\n• LTV. Loan-to-Value. Net financed amount vs. equipment value. Target below 85%.\n• Term / Life. What percentage of the equipment\'s useful life the loan term covers. Target below 60%.\n• Revenue Concentration. Equipment cost as a % of annual revenue. Target below 15%.',
       },
       {
         heading: 'Debt Service Summary',
@@ -77,7 +81,7 @@ const SECTIONS = [
       },
       {
         heading: 'Sensitivity Analysis (Stress Test)',
-        body: 'Runs four EBITDA decline scenarios — Base Case, -10%, -20%, and -30% — while holding debt service constant. Shows how DSCR, leverage, and the overall score deteriorate under stress. The bar chart highlights the 1.0x DSCR threshold (inability to service debt). This helps you understand how much cushion exists before the deal breaks.',
+        body: 'Runs four EBITDA decline scenarios. Base Case, -10%, -20%, and -30%. while holding debt service constant. Shows how DSCR, leverage, and the overall score deteriorate under stress. The bar chart highlights the 1.0x DSCR threshold (inability to service debt). This helps you understand how much cushion exists before the deal breaks.',
       },
       {
         heading: 'Screening Result & Assessment Notes',
@@ -105,15 +109,15 @@ const SECTIONS = [
     content: [
       {
         heading: 'What-If Scenarios',
-        body: 'An expandable panel with interactive sliders that let you adjust three key parameters — down payment, loan term, and EBITDA — and instantly see how the risk score and metrics change. The panel shows a side-by-side comparison of your current score vs. the adjusted score, with color-coded metric deltas (green = improved, red = worsened). Use this to quickly test questions like "What if we required 15% down?" or "What happens if we shorten the term to 60 months?"',
+        body: 'An expandable panel with interactive sliders that let you adjust three key parameters. down payment, loan term, and EBITDA. and instantly see how the risk score and metrics change. The panel shows a side-by-side comparison of your current score vs. the adjusted score, with color-coded metric deltas (green = improved, red = worsened). Use this to quickly test questions like "What if we required 15% down?" or "What happens if we shorten the term to 60 months?"',
       },
       {
         heading: 'Comparable Historical Deals',
-        body: 'Automatically identifies the most similar deals from your portfolio history based on industry, equipment type, deal size, credit rating, and revenue scale. Each comparable shows its actual outcome (Performing, Paid Off, Watchlist, or Defaulted), its risk score relative to your current deal, and key metrics. A summary banner tells you whether similar deals have generally performed well or poorly — giving you real precedent data to inform your decision.',
+        body: 'Automatically identifies the most similar deals from your portfolio history based on industry, equipment type, deal size, credit rating, and revenue scale. Each comparable shows its actual outcome (Performing, Paid Off, Watchlist, or Defaulted), its risk score relative to your current deal, and key metrics. A summary banner tells you whether similar deals have generally performed well or poorly. giving you real precedent data to inform your decision.',
       },
       {
         heading: 'Due Diligence Checklist',
-        body: 'A dynamic, deal-specific checklist of probing questions and information requests generated from the deal\'s risk profile. Items are prioritized (Required / High / Medium / Low) and categorized (Financial, Collateral, Credit, Operational, Structure). Each item has an expandable "Why this matters" rationale. You can check items off as you gather information, with a progress bar tracking completion. The checklist adapts to the deal — a highly leveraged borrower generates debt schedule requests; used equipment triggers appraisal requirements; young companies prompt personal financial statement requests.',
+        body: 'A dynamic, deal-specific checklist of probing questions and information requests generated from the deal\'s risk profile. Items are prioritized (Required / High / Medium / Low) and categorized (Financial, Collateral, Credit, Operational, Structure). Each item has an expandable "Why this matters" rationale. You can check items off as you gather information, with a progress bar tracking completion. The checklist adapts to the deal. a highly leveraged borrower generates debt schedule requests; used equipment triggers appraisal requirements; young companies prompt personal financial statement requests.',
       },
     ],
   },
@@ -128,7 +132,7 @@ const SECTIONS = [
     content: [
       {
         heading: 'Portfolio Analytics',
-        body: 'Shows aggregate performance metrics across all historical deals. A bar chart displays the average risk score by outcome status (Performing, Paid Off, Watchlist, Defaulted) — validating whether the scoring model correctly separates good deals from bad. A confusion matrix shows true positives, true negatives, false positives, and false negatives, along with the model\'s overall accuracy percentage.',
+        body: 'Shows aggregate performance metrics across all historical deals. A bar chart displays the average risk score by outcome status (Performing, Paid Off, Watchlist, Defaulted). validating whether the scoring model correctly separates good deals from bad. A confusion matrix shows true positives, true negatives, false positives, and false negatives, along with the model\'s overall accuracy percentage.',
       },
       {
         heading: 'Historical Deals Table',
@@ -153,7 +157,7 @@ const SECTIONS = [
     content: [
       {
         heading: 'Side-by-Side Comparison',
-        body: 'Select any two deals — from the example deals, your saved deals, or historical portfolio — and compare them across 11+ metrics. Each metric row highlights which deal is "better" using color coding. This is useful for evaluating competing opportunities, comparing a current deal against a historical benchmark, or assessing how different borrower profiles stack up.',
+        body: 'Select any two deals. from the example deals, your saved deals, or historical portfolio. and compare them across 11+ metrics. Each metric row highlights which deal is "better" using color coding. This is useful for evaluating competing opportunities, comparing a current deal against a historical benchmark, or assessing how different borrower profiles stack up.',
       },
     ],
   },
@@ -169,16 +173,28 @@ const SECTIONS = [
     ),
     content: [
       {
-        heading: 'Save Deals',
-        body: 'Once you\'ve filled in a valid deal, use the Save button in the toolbar to store it in your browser\'s local storage with a custom name. Saved deals persist across sessions and can be reloaded from the dropdown at any time. They\'re also available in the Compare tab for benchmarking.',
+        heading: 'Pipeline',
+        body: 'Add screened deals to your pipeline from the Pipeline tab. Each deal tracks through stages: Screening, Under Review, Approved, Funded, or Declined. You can attach documents (term sheets, financials, appraisals), add notes, search deals, and export the full pipeline to CSV.',
+      },
+      {
+        heading: 'Dashboard',
+        body: 'The Dashboard tab shows live pipeline metrics: total deals, active pipeline value, pass rate, average score, and recent activity. Charts break down deals by stage and score distribution.',
+      },
+      {
+        heading: 'PDF Export',
+        body: 'Download a branded screening memo as PDF. The memo includes the risk score, verdict, key metrics, assessment notes, and structure recommendations. Admins can customize the memo with firm logo, accent color, and footer text in My Team settings.',
+      },
+      {
+        heading: 'CSV Export',
+        body: 'Export screening results, pipeline deals, or batch results to CSV. Each export includes all relevant fields, metrics, scores, and verdict reasons.',
+      },
+      {
+        heading: 'Document Attachments',
+        body: 'Attach files to any pipeline deal. Supports PDF, Word, Excel, CSV, and images up to 25 MB. Files are stored securely and accessible to your team.',
       },
       {
         heading: 'Copy Summary',
-        body: 'The "Copy Summary" button generates a plain-text screening report and copies it to your clipboard. The report includes all deal parameters, key metrics, assessment notes, and stress test results — formatted for pasting into emails, credit memos, or deal tracking systems.',
-      },
-      {
-        heading: 'Print Report',
-        body: 'The "Print Report" button opens a clean, print-formatted version of the screening summary in a new window. Use your browser\'s print dialog to save as PDF or send to a printer.',
+        body: 'Copy a plain-text screening report to your clipboard for pasting into emails, credit memos, or deal tracking systems.',
       },
     ],
   },
@@ -202,7 +218,7 @@ const SECTIONS = [
       },
       {
         heading: 'LTV (Loan-to-Value)',
-        body: 'Net financed amount (after down payment) divided by equipment value. Used equipment is discounted 15% from purchase price for valuation. An LTV above 100% means the loan exceeds the collateral value — significant risk. Target is below 85%. Down payments directly reduce LTV.',
+        body: 'Net financed amount (after down payment) divided by equipment value. Used equipment is discounted 15% from purchase price for valuation. An LTV above 100% means the loan exceeds the collateral value. significant risk. Target is below 85%. Down payments directly reduce LTV.',
       },
       {
         heading: 'Term / Useful Life Coverage',
@@ -210,15 +226,15 @@ const SECTIONS = [
       },
       {
         heading: 'Revenue Concentration',
-        body: 'Equipment cost as a percentage of the borrower\'s annual revenue. A high ratio means the single equipment purchase is very large relative to the borrower\'s overall operations — concentrating risk. Below 15% is ideal; above 25% warrants additional scrutiny.',
+        body: 'Equipment cost as a percentage of the borrower\'s annual revenue. A high ratio means the single equipment purchase is very large relative to the borrower\'s overall operations. concentrating risk. Below 15% is ideal; above 25% warrants additional scrutiny.',
       },
       {
         heading: 'EFA (Equipment Finance Agreement)',
-        body: 'A secured loan where the borrower takes ownership of the equipment. Payments are fully amortizing (no residual/balloon). This is the most common structure and the simplest from a risk perspective — the lender has a first-priority lien on the equipment.',
+        body: 'A secured loan where the borrower takes ownership of the equipment. Payments are fully amortizing (no residual/balloon). This is the most common structure and the simplest from a risk perspective. the lender has a first-priority lien on the equipment.',
       },
       {
         heading: 'FMV Lease (Fair Market Value)',
-        body: 'An operating lease where the lessee has the option to purchase the equipment at fair market value at term end, return it, or renew the lease. Monthly payments are lower because a residual value is assumed. The lessor bears residual value risk — if the equipment can\'t be remarketed at the assumed value, there\'s a loss.',
+        body: 'An operating lease where the lessee has the option to purchase the equipment at fair market value at term end, return it, or renew the lease. Monthly payments are lower because a residual value is assumed. The lessor bears residual value risk. if the equipment can\'t be remarketed at the assumed value, there\'s a loss.',
       },
       {
         heading: 'TRAC Lease (Terminal Rental Adjustment Clause)',

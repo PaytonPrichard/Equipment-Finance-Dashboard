@@ -42,12 +42,21 @@ export default function TeamManagement() {
   const [discountCode, setDiscountCode] = useState('');
   const [redeemingCode, setRedeemingCode] = useState(false);
 
+  // Org settings state (credit policy defaults)
+  const [orgSettings, setOrgSettings] = useState({});
+  const [savingSettings, setSavingSettings] = useState(false);
+
   // Branding state
   const [brandingLogoUrl, setBrandingLogoUrl] = useState('');
   const [brandingAccentColor, setBrandingAccentColor] = useState('#d4a843');
   const [brandingFooterText, setBrandingFooterText] = useState('');
   const [brandingMemoTitle, setBrandingMemoTitle] = useState('');
   const [savingBranding, setSavingBranding] = useState(false);
+
+  // Plan management state
+  const [planType, setPlanType] = useState('pilot');
+  const [planExpiry, setPlanExpiry] = useState('');
+  const [savingPlan, setSavingPlan] = useState(false);
 
   // Transfer admin state
   const [transferTarget, setTransferTarget] = useState(null);
@@ -96,6 +105,10 @@ export default function TeamManagement() {
         addToast('Failed to load organization: ' + orgRes.error.message, 'error');
       } else {
         setOrg(orgRes.data);
+        // Load plan settings
+        setPlanType(orgRes.data?.plan || 'pilot');
+        setPlanExpiry(orgRes.data?.plan_expires_at ? orgRes.data.plan_expires_at.slice(0, 10) : '');
+        setOrgSettings(orgRes.data?.org_settings || {});
         // Load branding settings
         const b = orgRes.data?.branding || {};
         setBrandingLogoUrl(b.logoUrl || '');
@@ -657,6 +670,157 @@ export default function TeamManagement() {
           </button>
         </form>
       </div>
+
+      {/* Plan Management */}
+      {can('org.manage_users') && (
+        <div className="glass-card rounded-2xl p-6">
+          <div className="flex items-center gap-2.5 mb-5">
+            <div className="w-7 h-7 rounded-lg bg-gold-500/10 flex items-center justify-center">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-gold-400" strokeWidth="2">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                <line x1="16" y1="2" x2="16" y2="6" />
+                <line x1="8" y1="2" x2="8" y2="6" />
+                <line x1="3" y1="10" x2="21" y2="10" />
+              </svg>
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-slate-200">Plan Management</h3>
+              <p className="text-[10px] text-slate-500">Set plan type and expiry for this organization</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4 mb-4">
+            <div>
+              <label className="block text-[11px] font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">Plan Type</label>
+              <select
+                value={planType}
+                onChange={(e) => setPlanType(e.target.value)}
+                className="w-full px-3.5 py-3 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-sm focus:outline-none focus:ring-2 focus:ring-gold-500/40 transition-all"
+              >
+                <option value="free">Free</option>
+                <option value="pilot">Pilot</option>
+                <option value="analyst">Analyst</option>
+                <option value="team">Team</option>
+                <option value="enterprise">Enterprise</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-[11px] font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">Expiry Date</label>
+              <input
+                type="date"
+                value={planExpiry}
+                onChange={(e) => setPlanExpiry(e.target.value)}
+                className="w-full px-3.5 py-3 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-sm focus:outline-none focus:ring-2 focus:ring-gold-500/40 transition-all"
+              />
+            </div>
+          </div>
+
+          <button
+            onClick={async () => {
+              if (!supabase || !orgId) return;
+              setSavingPlan(true);
+              const { error } = await supabase
+                .from('organizations')
+                .update({
+                  plan: planType,
+                  plan_expires_at: planExpiry ? new Date(planExpiry + 'T23:59:59Z').toISOString() : null,
+                  updated_at: new Date().toISOString(),
+                })
+                .eq('id', orgId);
+              setSavingPlan(false);
+              if (error) addToast('Failed to update plan: ' + error.message, 'error');
+              else addToast('Plan updated', 'success');
+            }}
+            disabled={savingPlan}
+            className="px-4 py-2.5 rounded-xl text-[12px] font-semibold bg-gradient-to-r from-gold-500 to-gold-600 text-white shadow-lg shadow-gold-500/20 hover:shadow-gold-500/30 disabled:opacity-50 transition-all"
+          >
+            {savingPlan ? 'Saving...' : 'Save Plan'}
+          </button>
+        </div>
+      )}
+
+      {/* Credit Policy Defaults */}
+      {can('org.manage_users') && (
+        <div className="glass-card rounded-2xl p-6">
+          <div className="flex items-center gap-2.5 mb-5">
+            <div className="w-7 h-7 rounded-lg bg-gold-500/10 flex items-center justify-center">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-gold-400" strokeWidth="2">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+              </svg>
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-slate-200">Credit Policy Defaults</h3>
+              <p className="text-[10px] text-slate-500">Set your firm's standard underwriting assumptions</p>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-[11px] font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">Base Spread (bps)</label>
+                <input
+                  type="number"
+                  value={orgSettings.baseSpreadBps ?? 200}
+                  onChange={(e) => setOrgSettings(s => ({ ...s, baseSpreadBps: parseInt(e.target.value) || 0 }))}
+                  className="w-full px-3.5 py-3 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-sm focus:outline-none focus:ring-2 focus:ring-gold-500/40 transition-all"
+                />
+                <p className="text-[9px] text-slate-600 mt-1">Default: 200 bps for equipment, 250 for AR, 275 for inventory</p>
+              </div>
+              <div>
+                <label className="block text-[11px] font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">Strong Credit Adj (bps)</label>
+                <input
+                  type="number"
+                  value={orgSettings.creditSpreadStrong ?? -75}
+                  onChange={(e) => setOrgSettings(s => ({ ...s, creditSpreadStrong: parseInt(e.target.value) || 0 }))}
+                  className="w-full px-3.5 py-3 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-sm focus:outline-none focus:ring-2 focus:ring-gold-500/40 transition-all"
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-[11px] font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">Weak Credit Adj (bps)</label>
+                <input
+                  type="number"
+                  value={orgSettings.creditSpreadWeak ?? 200}
+                  onChange={(e) => setOrgSettings(s => ({ ...s, creditSpreadWeak: parseInt(e.target.value) || 0 }))}
+                  className="w-full px-3.5 py-3 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-sm focus:outline-none focus:ring-2 focus:ring-gold-500/40 transition-all"
+                />
+              </div>
+              <div>
+                <label className="block text-[11px] font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">Max AR Advance Rate (%)</label>
+                <input
+                  type="number"
+                  value={orgSettings.maxAdvanceRateAR ?? 85}
+                  onChange={(e) => setOrgSettings(s => ({ ...s, maxAdvanceRateAR: parseInt(e.target.value) || 0 }))}
+                  className="w-full px-3.5 py-3 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-sm focus:outline-none focus:ring-2 focus:ring-gold-500/40 transition-all"
+                  max="100"
+                />
+              </div>
+            </div>
+
+            <button
+              onClick={async () => {
+                if (!supabase || !orgId) return;
+                setSavingSettings(true);
+                const { error } = await supabase
+                  .from('organizations')
+                  .update({ org_settings: orgSettings, updated_at: new Date().toISOString() })
+                  .eq('id', orgId);
+                setSavingSettings(false);
+                if (error) addToast('Failed to save settings: ' + error.message, 'error');
+                else {
+                  addToast('Credit policy saved', 'success');
+                  try { localStorage.removeItem('efd_profile_cache'); } catch (e) { /* ignore */ }
+                }
+              }}
+              disabled={savingSettings}
+              className="px-4 py-2.5 rounded-xl text-[12px] font-semibold bg-gradient-to-r from-gold-500 to-gold-600 text-white shadow-lg shadow-gold-500/20 hover:shadow-gold-500/30 disabled:opacity-50 transition-all"
+            >
+              {savingSettings ? 'Saving...' : 'Save Credit Policy'}
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Memo Branding Settings */}
       {can('org.manage_users') && (
