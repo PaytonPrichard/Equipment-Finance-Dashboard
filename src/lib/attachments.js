@@ -32,6 +32,24 @@ export function validateFile(file) {
     return `File type "${ext}" is not supported. Allowed: ${ALLOWED_EXTENSIONS.join(', ')}`;
   }
 
+  // Validate MIME type matches extension (prevents disguised files)
+  const MIME_MAP = {
+    '.pdf': ['application/pdf'],
+    '.doc': ['application/msword'],
+    '.docx': ['application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
+    '.xls': ['application/vnd.ms-excel'],
+    '.xlsx': ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'],
+    '.csv': ['text/csv', 'application/vnd.ms-excel', 'text/plain'],
+    '.png': ['image/png'],
+    '.jpg': ['image/jpeg'],
+    '.jpeg': ['image/jpeg'],
+    '.webp': ['image/webp'],
+  };
+  const allowedMimes = MIME_MAP[ext];
+  if (allowedMimes && file.type && !allowedMimes.includes(file.type)) {
+    return `File content doesn't match its extension (${ext}). Please verify the file.`;
+  }
+
   return null;
 }
 

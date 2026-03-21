@@ -110,6 +110,27 @@ export default function BillingPage() {
               )}
             </div>
           </div>
+          {currentPlan !== 'free' && (
+            <button
+              onClick={async () => {
+                try {
+                  const { data: { session } } = await supabase.auth.getSession();
+                  const token = session?.access_token;
+                  if (!token) return;
+                  const res = await fetch('/api/customer-portal', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` },
+                  });
+                  const data = await res.json();
+                  if (data.url) window.location.href = data.url;
+                  else setError(data.message || data.error || 'Unable to open billing portal');
+                } catch { setError('Unable to open billing portal'); }
+              }}
+              className="px-4 py-2 rounded-xl bg-white/[0.04] border border-white/[0.08] text-sm text-white font-medium hover:bg-white/[0.08] transition-all"
+            >
+              Manage Subscription
+            </button>
+          )}
         </div>
       </div>
 

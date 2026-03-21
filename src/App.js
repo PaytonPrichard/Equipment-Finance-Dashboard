@@ -75,6 +75,42 @@ function LazyFallback() {
   );
 }
 
+// Error boundary for lazy-loaded components
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+  componentDidCatch(error, info) {
+    console.error('Component error:', error, info);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="flex flex-col items-center justify-center py-20 text-center">
+          <div className="w-12 h-12 rounded-2xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center mb-4">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-rose-400" strokeWidth="2">
+              <circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" />
+            </svg>
+          </div>
+          <p className="text-sm text-slate-300 mb-1">Something went wrong</p>
+          <p className="text-[11px] text-slate-500 mb-4">This section failed to load.</p>
+          <button
+            onClick={() => this.setState({ hasError: false })}
+            className="px-4 py-2 rounded-xl bg-white/[0.04] border border-white/[0.08] text-sm text-white hover:bg-white/[0.08] transition-all"
+          >
+            Try again
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 function getDscrStatus(d) {
   if (d > 2.0) return 'excellent';
   if (d >= 1.5) return 'good';
@@ -960,13 +996,13 @@ function AuthenticatedApp({ profile, user }) {
 
                   {/* Amortization Schedule — Equipment only */}
                   {isEquipment && (
-                    <Suspense fallback={<LazyFallback />}>
+                    <ErrorBoundary><Suspense fallback={<LazyFallback />}>
                       <AmortizationSchedule
                         principal={metrics.financedPrincipal}
                         annualRate={metrics.rate}
                         termMonths={inputs.loanTerm}
                       />
-                    </Suspense>
+                    </Suspense></ErrorBoundary>
                   )}
 
                   {/* Stress Test */}
@@ -982,7 +1018,7 @@ function AuthenticatedApp({ profile, user }) {
                   </div>
 
                   {/* Interactive Tools — Equipment only (lazy-loaded) */}
-                  <Suspense fallback={<LazyFallback />}>
+                  <ErrorBoundary><Suspense fallback={<LazyFallback />}>
                     {isEquipment && (
                       <>
                         <div id="sec-whatif" className="scroll-mt-20">
@@ -1003,7 +1039,7 @@ function AuthenticatedApp({ profile, user }) {
                     <div id="sec-weights" className="scroll-mt-20">
                       <ScoringWeights inputs={inputs} metrics={metrics} riskScore={riskScore} />
                     </div>
-                  </Suspense>
+                  </Suspense></ErrorBoundary>
 
                   <div id="sec-policy" className="scroll-mt-20">
                     <ScreeningCriteria
@@ -1013,18 +1049,18 @@ function AuthenticatedApp({ profile, user }) {
                   </div>
 
                   {isEquipment && (
-                    <Suspense fallback={<LazyFallback />}>
+                    <ErrorBoundary><Suspense fallback={<LazyFallback />}>
                       <div id="sec-checklist" className="scroll-mt-20">
                         <DueDiligenceChecklist inputs={inputs} metrics={metrics} riskScore={riskScore} />
                       </div>
-                    </Suspense>
+                    </Suspense></ErrorBoundary>
                   )}
                 </div>
               )}
             </div>
           </div>
         ) : (
-          <Suspense fallback={<LazyFallback />}>
+          <ErrorBoundary><Suspense fallback={<LazyFallback />}>
             {activeTab === 'historical' ? (
               <div className="space-y-8">
                 <PortfolioAnalytics scoredDeals={allHistorical} />
@@ -1059,7 +1095,7 @@ function AuthenticatedApp({ profile, user }) {
                 sofr={sofr}
               />
             )}
-          </Suspense>
+          </Suspense></ErrorBoundary>
         )}
       </div>
     </div>

@@ -253,6 +253,8 @@ export default function DealPipeline({ onLoadDeal, currentInputs, currentScore, 
   /* --- Search & Grouping --- */
 
   const [searchQuery, setSearchQuery] = useState('');
+  const [expandedStages, setExpandedStages] = useState({});
+  const DEALS_PER_STAGE = 20;
 
   const filteredDeals = searchQuery.trim()
     ? deals.filter(d => {
@@ -371,7 +373,10 @@ export default function DealPipeline({ onLoadDeal, currentInputs, currentScore, 
       <div className="flex gap-3 overflow-x-auto pb-2" style={{ minHeight: 320 }}>
         {STAGES.map((stage) => {
           const ss = STAGE_STYLES[stage.key];
-          const columnDeals = grouped[stage.key];
+          const allColumnDeals = grouped[stage.key];
+          const isExpanded = expandedStages[stage.key];
+          const columnDeals = isExpanded ? allColumnDeals : allColumnDeals.slice(0, DEALS_PER_STAGE);
+          const hasMore = allColumnDeals.length > DEALS_PER_STAGE && !isExpanded;
 
           return (
             <div
@@ -550,6 +555,14 @@ export default function DealPipeline({ onLoadDeal, currentInputs, currentScore, 
                     </div>
                   );
                 })}
+                {hasMore && (
+                  <button
+                    onClick={() => setExpandedStages(prev => ({ ...prev, [stage.key]: true }))}
+                    className="w-full py-2 text-[10px] text-slate-500 hover:text-slate-300 transition-colors text-center"
+                  >
+                    Show {allColumnDeals.length - DEALS_PER_STAGE} more...
+                  </button>
+                )}
               </div>
             </div>
           );
