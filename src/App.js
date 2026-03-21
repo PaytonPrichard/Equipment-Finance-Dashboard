@@ -52,6 +52,7 @@ const AuditLogViewer = lazy(() => import('./components/AuditLogViewer'));
 const TeamManagement = lazy(() => import('./components/TeamManagement'));
 const PipelineDashboard = lazy(() => import('./components/PipelineDashboard'));
 const InfoGuide = lazy(() => import('./components/InfoGuide'));
+const BillingPage = lazy(() => import('./components/BillingPage'));
 const DueDiligenceChecklist = lazy(() => import('./components/DueDiligenceChecklist'));
 const ComparableDeals = lazy(() => import('./components/ComparableDeals'));
 const WhatIfPanel = lazy(() => import('./components/WhatIfPanel'));
@@ -1003,6 +1004,8 @@ function AuthenticatedApp({ profile, user }) {
               <AuditLogViewer />
             ) : activeTab === 'team' ? (
               <TeamManagement />
+            ) : activeTab === 'billing' ? (
+              <BillingPage />
             ) : (
               /* Compare tab */
               <DealComparison
