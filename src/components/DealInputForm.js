@@ -211,7 +211,7 @@ function CompanySearch({ value, onSelect, onManualChange, tip, pipelineDeals }) 
 }
 
 // ---- Input Warnings ----
-function getInputWarnings(inputs) {
+function getInputWarnings(inputs, pipelineDeals) {
   const warnings = [];
 
   if (inputs.ebitda > 0 && inputs.annualRevenue > 0 && inputs.ebitda > inputs.annualRevenue) {
@@ -284,6 +284,19 @@ function getInputWarnings(inputs) {
       warnings.push({
         id: 'inv-comp-sum', severity: 'warn',
         text: `Inventory composition sums to ${compSum.toFixed(0)}% — expected ~100%. Verify percentages.`,
+      });
+    }
+  }
+
+  // Duplicate company in pipeline
+  if (inputs.companyName && pipelineDeals?.length > 0) {
+    const match = pipelineDeals.find(d =>
+      (d.inputs?.companyName || d.name || '').toLowerCase() === inputs.companyName.toLowerCase()
+    );
+    if (match) {
+      warnings.push({
+        id: 'duplicate-company', severity: 'warn',
+        text: `"${inputs.companyName}" already exists in your pipeline (${match.stage || 'Screening'}).`,
       });
     }
   }
@@ -614,7 +627,7 @@ export default function DealInputForm({ inputs, onChange, schema, modules, activ
 
       {/* Input Validation Warnings */}
       {(() => {
-        const warnings = getInputWarnings(inputs);
+        const warnings = getInputWarnings(inputs, pipelineDeals);
         if (warnings.length === 0) return null;
         return (
           <div className="space-y-2">

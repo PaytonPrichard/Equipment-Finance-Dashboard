@@ -303,6 +303,7 @@ function AuthenticatedApp({ profile, user }) {
   const [recentDeals, setRecentDeals] = useState([]);
   const [sofrAlert, setSofrAlert] = useState(false);
   const [lastAcknowledgedSofr, setLastAcknowledgedSofr] = useState(null);
+  const [customWeights, setCustomWeights] = useState(null);
 
   const { sofr, sofrDate, sofrSource } = useSofrRate();
 
@@ -365,7 +366,23 @@ function AuthenticatedApp({ profile, user }) {
 
   // Dynamic module calculations
   const metrics = useMemo(() => mod.calculateMetrics(inputs, sofr), [inputs, sofr, mod]);
-  const riskScore = useMemo(() => mod.calculateRiskScore(inputs, metrics), [inputs, metrics, mod]);
+  const baseRiskScore = useMemo(() => mod.calculateRiskScore(inputs, metrics), [inputs, metrics, mod]);
+
+  // Apply custom weights if set (re-weight the factor scores)
+  const riskScore = useMemo(() => {
+    if (!customWeights || !baseRiskScore?.factors) return baseRiskScore;
+    const { factors } = baseRiskScore;
+    const total = Object.values(customWeights).reduce((a, b) => a + b, 0);
+    if (total === 0) return baseRiskScore;
+    const composite = Math.round(
+      Object.keys(customWeights).reduce((sum, key) => {
+        const factorScore = factors[key] || 0;
+        return sum + factorScore * (customWeights[key] / total);
+      }, 0)
+    );
+    return { ...baseRiskScore, composite };
+  }, [baseRiskScore, customWeights]);
+
   const recommendation = useMemo(() => mod.getRecommendation(riskScore.composite), [riskScore.composite, mod]);
   const commentary = useMemo(() => mod.generateCommentary(inputs, metrics, riskScore), [inputs, metrics, riskScore, mod]);
   const structure = useMemo(() => mod.getSuggestedStructure(inputs, metrics, riskScore.composite, sofr), [inputs, metrics, riskScore.composite, sofr, mod]);
@@ -822,7 +839,7 @@ function AuthenticatedApp({ profile, user }) {
                   )}
 
                   {/* Executive Summary — equipment only (uses equipment-specific metrics) */}
-                  {isEquipment && <ExecutiveSummary inputs={inputs} metrics={metrics} riskScore={riskScore} recommendation={recommendation} />}
+                  <ExecutiveSummary inputs={inputs} metrics={metrics} riskScore={riskScore} recommendation={recommendation} />
 
                   {/* Gauge + Radar */}
                   <div id="sec-score" className="grid grid-cols-1 md:grid-cols-2 gap-6 scroll-mt-20">
@@ -1037,7 +1054,7 @@ function AuthenticatedApp({ profile, user }) {
                     )}
 
                     <div id="sec-weights" className="scroll-mt-20">
-                      <ScoringWeights inputs={inputs} metrics={metrics} riskScore={riskScore} />
+                      <ScoringWeights inputs={inputs} metrics={metrics} riskScore={baseRiskScore} onWeightsChange={setCustomWeights} />
                     </div>
                   </Suspense></ErrorBoundary>
 

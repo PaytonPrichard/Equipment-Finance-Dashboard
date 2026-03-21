@@ -74,6 +74,10 @@ export default function BatchScreening({ sofr = DEFAULT_SOFR, onLoadDeal }) {
           setStatus({ type: 'error', message: 'No valid rows found in CSV.' });
           return;
         }
+        if (deals.length > 500) {
+          setStatus({ type: 'error', message: `CSV has ${deals.length} rows. Maximum is 500 deals per batch.` });
+          return;
+        }
 
         // Score every deal
         const scored = deals.map((deal) => {

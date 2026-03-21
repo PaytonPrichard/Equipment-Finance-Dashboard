@@ -22,6 +22,7 @@ export default function PipelineDashboard() {
   const { profile } = useAuth();
   const [deals, setDeals] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
 
   // Re-fetch when component mounts (tab switch) or refreshKey changes
@@ -30,10 +31,12 @@ export default function PipelineDashboard() {
       setLoading(false);
       return;
     }
-    fetchPipelineDeals(profile.org_id).then(({ data }) => {
-      setDeals(data || []);
+    setError(null);
+    fetchPipelineDeals(profile.org_id).then(({ data, error: fetchErr }) => {
+      if (fetchErr) setError(fetchErr.message || 'Failed to load pipeline data');
+      else setDeals(data || []);
       setLoading(false);
-    }).catch(() => setLoading(false));
+    }).catch((err) => { setError(err.message || 'Failed to load pipeline data'); setLoading(false); });
   }, [profile?.org_id, refreshKey]);
 
   // Re-fetch when tab becomes visible (user switches back to Dashboard)
@@ -88,6 +91,20 @@ export default function PipelineDashboard() {
     return (
       <div className="glass-card rounded-2xl p-8 text-center">
         <p className="text-slate-500 text-sm">Loading pipeline data...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="glass-card rounded-2xl p-8 text-center">
+        <div className="w-12 h-12 rounded-2xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center mx-auto mb-4">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-rose-400" strokeWidth="1.5">
+            <circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" />
+          </svg>
+        </div>
+        <p className="text-sm text-slate-300 mb-1">Unable to load dashboard</p>
+        <p className="text-[11px] text-slate-500">{error}</p>
       </div>
     );
   }

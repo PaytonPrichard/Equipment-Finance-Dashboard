@@ -39,6 +39,12 @@ function generateTakeaways(inputs, metrics, riskScore, recommendation) {
     equipmentLtv: 'Strong collateral coverage is the most favorable aspect of this deal.',
     yearsInBusiness: 'The borrower\'s long operating history is a notable positive here.',
     termCoverage: 'The loan term is well within the equipment\'s useful life, which reduces residual risk.',
+    arQuality: 'The receivables aging profile is strong, indicating healthy collection patterns.',
+    concentration: 'Customer diversification is a notable positive — no single obligor dominates.',
+    dilution: 'Low dilution indicates stable invoicing practices with minimal credits and returns.',
+    inventoryQuality: 'Inventory quality — strong turnover and low obsolescence — is the deal\'s best attribute.',
+    composition: 'The inventory composition skews toward finished goods, which supports higher advance rates.',
+    liquidationValue: 'The appraised liquidation value provides solid collateral protection.',
   };
   if (strongest[1] >= 80) {
     items.push({
@@ -57,6 +63,12 @@ function generateTakeaways(inputs, metrics, riskScore, recommendation) {
     equipmentLtv: 'Collateral coverage is the weakest factor here. A larger equity contribution or down payment would help strengthen the lender\'s position.',
     yearsInBusiness: 'The borrower has a limited operating track record, which adds uncertainty to the credit profile.',
     termCoverage: 'The loan term is long relative to the equipment\'s useful life, which creates residual value risk toward the end of the term.',
+    arQuality: 'The receivables aging profile is concerning — a significant portion of AR is past due, which reduces the effective borrowing base.',
+    concentration: 'Customer concentration is high, meaning a single obligor default could materially impact the borrowing base.',
+    dilution: 'The dilution rate is elevated, suggesting frequent credits, returns, or adjustments that erode collateral value.',
+    inventoryQuality: 'Inventory quality is the weakest factor — slow turnover or high obsolescence increases collateral risk.',
+    composition: 'Heavy work-in-progress concentration limits liquidation value and caps advance rates.',
+    liquidationValue: 'The appraised liquidation value is low, meaning recovery in a default scenario would be limited.',
   };
   if (weakest[1] < 60) {
     items.push({
@@ -82,8 +94,8 @@ function generateTakeaways(inputs, metrics, riskScore, recommendation) {
     });
   }
 
-  // 5. EBITDA margin context
-  if (metrics.ebitdaMargin > 0) {
+  // 5. EBITDA margin context (equipment only)
+  if (metrics.ebitdaMargin !== undefined && metrics.ebitdaMargin > 0) {
     if (metrics.ebitdaMargin < 10) {
       items.push({
         type: 'caution',
@@ -97,13 +109,13 @@ function generateTakeaways(inputs, metrics, riskScore, recommendation) {
     }
   }
 
-  // 6. LTV / equity
-  if (metrics.ltv > 1.0) {
+  // 6. LTV / equity (equipment only)
+  if (metrics.ltv !== undefined && metrics.ltv > 1.0) {
     items.push({
       type: 'negative',
       text: `LTV is over 100%, meaning the financing exceeds the equipment's value. An equity contribution or additional collateral would be needed to bring this in line.`,
     });
-  } else if ((inputs.downPayment || 0) > 0 && metrics.ltv <= 0.85) {
+  } else if (metrics.ltv !== undefined && (inputs.downPayment || 0) > 0 && metrics.ltv <= 0.85) {
     items.push({
       type: 'positive',
       text: `The ${formatCurrency(inputs.downPayment)} down payment brings LTV to ${formatPercent(metrics.ltv * 100)}, which gives the lender a solid collateral cushion.`,
