@@ -369,8 +369,35 @@ function AuthenticatedApp({ profile, user }) {
 
   const valid = mod.isInputValid(inputs);
 
-  // Dynamic module calculations
-  const metrics = useMemo(() => mod.calculateMetrics(inputs, sofr), [inputs, sofr, mod]);
+  // Org credit policy overrides
+  const orgSettings = useMemo(() => profile?.organizations?.org_settings || {}, [profile?.organizations?.org_settings]);
+
+  // Dynamic module calculations (with org rate adjustments)
+  const metrics = useMemo(() => {
+    const baseMetrics = mod.calculateMetrics(inputs, sofr);
+
+    // Apply org-level spread overrides if set
+    if (orgSettings.baseSpreadBps !== undefined || orgSettings.creditSpreadStrong !== undefined || orgSettings.creditSpreadWeak !== undefined) {
+      const orgSpreadAdj = (orgSettings.baseSpreadBps !== undefined ? orgSettings.baseSpreadBps - (baseMetrics.rateInfo?.baseSpread || 200) : 0)
+        + (inputs.creditRating === 'Strong' && orgSettings.creditSpreadStrong !== undefined ? orgSettings.creditSpreadStrong - (baseMetrics.rateInfo?.creditAdj || -75) : 0)
+        + (inputs.creditRating === 'Weak' && orgSettings.creditSpreadWeak !== undefined ? orgSettings.creditSpreadWeak - (baseMetrics.rateInfo?.creditAdj || 200) : 0);
+
+      if (orgSpreadAdj !== 0) {
+        const adjRate = (baseMetrics.rate || baseMetrics.effectiveRate || 0) + orgSpreadAdj / 10000;
+        const adjNewDS = baseMetrics.netFinanced ? baseMetrics.netFinanced * adjRate / (baseMetrics.monthlyPayment ? 1 : 1) : baseMetrics.borrowingBase ? baseMetrics.borrowingBase * adjRate : baseMetrics.newAnnualDebtService;
+        const totalDS = baseMetrics.existingDebtService + (adjNewDS || baseMetrics.newAnnualDebtService);
+        const adjDscr = inputs.ebitda && totalDS > 0 ? inputs.ebitda / totalDS : baseMetrics.dscr;
+        return {
+          ...baseMetrics,
+          rate: adjRate,
+          effectiveRate: adjRate,
+          newAnnualDebtService: adjNewDS || baseMetrics.newAnnualDebtService,
+          dscr: adjDscr,
+        };
+      }
+    }
+    return baseMetrics;
+  }, [inputs, sofr, mod, orgSettings]);
   const baseRiskScore = useMemo(() => mod.calculateRiskScore(inputs, metrics), [inputs, metrics, mod]);
 
   // Apply custom weights if set (re-weight the factor scores)

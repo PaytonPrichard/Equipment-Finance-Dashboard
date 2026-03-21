@@ -163,7 +163,7 @@ export default function LandingPage({ onGetStarted, onSignIn }) {
             {[
               { value: '2 min', label: 'Average screening time' },
               { value: '3', label: 'Asset classes supported' },
-              { value: '94%', label: 'Faster than spreadsheets' },
+              { value: '7', label: 'Risk factors scored' },
               { value: '100%', label: 'Self-serve, no consultants' },
             ].map((stat) => (
               <div key={stat.label} className="text-center">

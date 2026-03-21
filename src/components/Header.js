@@ -139,6 +139,12 @@ export default function Header({ activeTab, onTabChange, onOpenGuide }) {
                 <span className="text-slate-300 font-medium block">{profile.full_name || profile.email}</span>
                 <span className="text-[10px] text-slate-600 uppercase tracking-wider">{ROLE_LABELS[profile.role] || profile.role}</span>
               </div>
+              <a
+                href="mailto:joelpeter617@gmail.com?subject=ABL%20Screening%20Feedback"
+                className="px-3 py-1.5 rounded-lg text-[11px] font-medium text-slate-500 hover:text-gold-400 transition-all"
+              >
+                Feedback
+              </a>
               <button
                 onClick={signOut}
                 className="px-3 py-1.5 rounded-lg text-[11px] font-medium text-slate-400 hover:text-rose-400 bg-white/[0.04] border border-white/[0.06] hover:border-rose-500/20 transition-all"
