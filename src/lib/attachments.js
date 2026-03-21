@@ -14,17 +14,6 @@ import { supabase } from './supabase';
 
 const BUCKET = 'deal-documents';
 const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25 MB
-const ALLOWED_TYPES = [
-  'application/pdf',
-  'application/msword',
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-  'application/vnd.ms-excel',
-  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-  'image/png',
-  'image/jpeg',
-  'image/webp',
-  'text/csv',
-];
 
 const ALLOWED_EXTENSIONS = [
   '.pdf', '.doc', '.docx', '.xls', '.xlsx', '.png', '.jpg', '.jpeg', '.webp', '.csv',

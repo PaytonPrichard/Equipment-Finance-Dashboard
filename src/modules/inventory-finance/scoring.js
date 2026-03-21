@@ -87,9 +87,7 @@ export function calculateMetrics(inputs, sofr = DEFAULT_SOFR) {
   // --- Eligible inventory ---
   // Exclude obsolete inventory entirely.
   // WIP gets a haircut — only the portion within WIP advance rate is eligible.
-  const eligibleRaw = raw;
   const eligibleWip = wip * MAX_ADVANCE_RATE_WIP / MAX_ADVANCE_RATE_FINISHED; // haircut WIP relative to finished
-  const eligibleFinished = finished;
   const eligibleInventory = Math.max(totalInv - obsolete - (wip - eligibleWip), 0);
 
   // --- Blended advance rate based on composition ---

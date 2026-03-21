@@ -4,7 +4,6 @@
 
 import {
   lerp,
-  calculateMonthlyPayment,
   formatCurrency,
   formatCurrencyFull,
   formatPercent,
@@ -51,9 +50,8 @@ export function calculateMetrics(inputs, sofr = DEFAULT_SOFR) {
     creditRating,
     industrySector,
     totalAROutstanding,
-    arOver30 = 0,
-    arOver60 = 0,
-    arOver90 = 0,
+    // eslint-disable-next-line no-unused-vars
+    arOver30 = 0, arOver60 = 0, arOver90 = 0,
     topCustomerConcentration = 0,
     dilutionRate = 0,
     ineligiblesPct = 0,
