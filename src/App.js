@@ -6,6 +6,7 @@ import LandingPage from './components/LandingPage';
 import OrgSetup from './components/OrgSetup';
 import useSofrRate from './hooks/useSofrRate';
 import { useIdleTimeout } from './hooks/useIdleTimeout';
+import { useToast } from './contexts/ToastContext';
 import { useSessionGuard } from './hooks/useSessionGuard';
 import { useOrgPlan } from './hooks/useOrgPlan';
 import PlanBanner from './components/PlanBanner';
@@ -249,6 +250,7 @@ export default function App() {
 function AuthenticatedApp({ profile, user }) {
   const userId = user?.id;
   const { signOut: authSignOut } = useAuth();
+  const { addToast } = useToast();
   const draftSaveTimer = useRef(null);
   const { plan, isExpired, isExpiringSoon, daysRemaining } = useOrgPlan();
 
@@ -591,12 +593,12 @@ function AuthenticatedApp({ profile, user }) {
                     <button
                       onClick={async () => {
                         const { error } = await updatePipelineDeal(activePipelineDealId, inputs, riskScore.composite, user?.id, profile?.org_id);
-                        if (!error) {
-                          const btn = document.getElementById('update-pipeline-btn');
-                          if (btn) { btn.textContent = 'Updated'; setTimeout(() => { btn.textContent = 'Update Pipeline Deal'; }, 2000); }
+                        if (error) {
+                          addToast('Failed to update deal', 'error');
+                        } else {
+                          addToast('Pipeline deal updated', 'success');
                         }
                       }}
-                      id="update-pipeline-btn"
                       className="pill-btn px-3 py-1.5 rounded-lg text-[11px] font-medium text-gold-400 hover:text-gold-300 border border-gold-500/20 hover:border-gold-500/40 transition-colors"
                     >
                       Update Pipeline Deal

@@ -1,13 +1,20 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import {
-  calculateMetrics,
-  calculateRiskScore,
-  getRecommendation,
-  formatCurrency,
-  formatRatio,
-  formatPercent,
-  DEFAULT_SOFR,
-} from '../utils/calculations';
+import { formatCurrency, formatRatio, formatPercent } from '../utils/format';
+import { getModule } from '../modules';
+import { DEFAULT_SOFR } from '../modules/equipment-finance/constants';
+
+// Score deals using the appropriate module based on deal inputs
+function scoreDeal(deal, sofr) {
+  // Detect module from deal inputs
+  const moduleKey = deal.inputs?.totalAROutstanding ? 'accounts_receivable'
+    : deal.inputs?.totalInventory ? 'inventory_finance'
+    : 'equipment_finance';
+  const mod = getModule(moduleKey);
+  const metrics = mod.calculateMetrics(deal.inputs, sofr);
+  const riskScore = mod.calculateRiskScore(deal.inputs, metrics);
+  const rec = mod.getRecommendation(riskScore.composite);
+  return { metrics, riskScore, rec, moduleKey };
+}
 
 function scoreBadgeClasses(score) {
   if (score >= 75) return 'bg-emerald-500/[0.08] border-emerald-500/15 text-emerald-400';
@@ -33,15 +40,13 @@ const METRIC_ROWS = [
 ];
 
 function extractComparableValues(inputs, sofr = DEFAULT_SOFR) {
-  const metrics = calculateMetrics(inputs, sofr);
-  const riskScore = calculateRiskScore(inputs, metrics);
-  const recommendation = getRecommendation(riskScore.composite);
+  const { metrics, riskScore, rec } = scoreDeal({ inputs }, sofr);
 
   return {
     metrics,
     riskScore: riskScore.composite,
-    recommendation: recommendation.category,
-    recommendationObj: recommendation,
+    recommendation: rec.category,
+    recommendationObj: rec,
     dscr: metrics.dscr,
     leverage: metrics.leverage,
     ltv: metrics.ltv,
