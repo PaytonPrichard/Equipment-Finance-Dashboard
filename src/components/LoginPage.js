@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 
-export default function LoginPage({ passwordRecovery }) {
+export default function LoginPage({ passwordRecovery, onBackToLanding }) {
   const { signIn, signUp } = useAuth();
   const [mode, setMode] = useState(passwordRecovery ? 'update_password' : 'signin');
   const [email, setEmail] = useState('');
@@ -292,9 +292,19 @@ export default function LoginPage({ passwordRecovery }) {
         </div>
 
         {/* Footer */}
-        <p className="text-center text-[11px] text-slate-600 mt-6">
-          Equipment Finance Dashboard &middot; Secure Authentication
-        </p>
+        <div className="text-center mt-6">
+          {onBackToLanding && (
+            <button
+              onClick={onBackToLanding}
+              className="text-[11px] text-gold-400 hover:text-gold-300 font-medium transition-colors mb-2 block mx-auto"
+            >
+              &larr; Back to home
+            </button>
+          )}
+          <p className="text-[11px] text-slate-600">
+            ABL Screening Platform &middot; Secure Authentication
+          </p>
+        </div>
       </div>
     </div>
   );

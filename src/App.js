@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect, useRef, lazy, Suspense } from 'react';
 import { useAuth } from './contexts/AuthContext';
 import LoginPage from './components/LoginPage';
+import LandingPage from './components/LandingPage';
 import OrgSetup from './components/OrgSetup';
 import useSofrRate from './hooks/useSofrRate';
 import { useIdleTimeout } from './hooks/useIdleTimeout';
@@ -108,6 +109,7 @@ function getScoreGlow(score) {
 
 export default function App() {
   const { session, user, profile, loading: authLoading, refreshProfile, passwordRecovery, emailVerified, signOut } = useAuth();
+  const [showLogin, setShowLogin] = useState(false);
 
   // Auto sign-out after 30 minutes of inactivity
   useIdleTimeout(() => {
@@ -138,7 +140,10 @@ export default function App() {
   }
 
   if (!session) {
-    return <LoginPage />;
+    if (showLogin) {
+      return <LoginPage onBackToLanding={() => setShowLogin(false)} />;
+    }
+    return <LandingPage onGetStarted={() => setShowLogin(true)} onSignIn={() => setShowLogin(true)} />;
   }
 
   // Block unverified email users
