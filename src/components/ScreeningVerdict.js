@@ -64,7 +64,7 @@ export default function ScreeningVerdict({ verdict, reasons }) {
         </div>
       </div>
 
-      <div className="space-y-1.5 mt-3">
+      <div className="space-y-2 mt-3">
         {failReasons.map((r, i) => (
           <div key={`f-${i}`} className="flex items-start gap-2">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-rose-400 mt-0.5 flex-shrink-0" strokeWidth="2.5">

@@ -59,7 +59,7 @@ export default function MetricCard({ title, value, subtitle, status, flag, thres
   const c = getMetricColor(status);
 
   return (
-    <div className={`metric-card rounded-2xl p-4 border ${c.bg} ${c.border}`}>
+    <div className={`metric-card rounded-2xl p-5 border ${c.bg} ${c.border}`}>
       <div className="flex items-start justify-between mb-1.5">
         <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
           {title}

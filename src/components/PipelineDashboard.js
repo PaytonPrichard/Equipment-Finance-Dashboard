@@ -129,27 +129,27 @@ export default function PipelineDashboard() {
     <div className="space-y-5">
       {/* KPI Row */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-        <div className="glass-card rounded-2xl p-4 text-center">
+        <div className="glass-card rounded-2xl p-5 text-center">
           <p className="text-2xl font-bold font-mono text-slate-100">{stats.totalDeals}</p>
           <p className="text-[10px] text-slate-500 mt-1 uppercase tracking-wider">Total Deals</p>
         </div>
-        <div className="glass-card rounded-2xl p-4 text-center">
+        <div className="glass-card rounded-2xl p-5 text-center">
           <p className="text-2xl font-bold font-mono text-gold-400">{formatCurrency(stats.activeValue)}</p>
           <p className="text-[10px] text-slate-500 mt-1 uppercase tracking-wider">Active Pipeline</p>
         </div>
-        <div className="glass-card rounded-2xl p-4 text-center">
+        <div className="glass-card rounded-2xl p-5 text-center">
           <p className={`text-2xl font-bold font-mono ${stats.passRate !== null && stats.passRate >= 50 ? 'text-emerald-400' : stats.passRate !== null ? 'text-amber-400' : 'text-slate-500'}`}>
             {stats.passRate !== null ? `${stats.passRate}%` : '—'}
           </p>
           <p className="text-[10px] text-slate-500 mt-1 uppercase tracking-wider">Pass Rate</p>
         </div>
-        <div className="glass-card rounded-2xl p-4 text-center">
+        <div className="glass-card rounded-2xl p-5 text-center">
           <p className={`text-2xl font-bold font-mono ${stats.avgScore >= 75 ? 'text-emerald-400' : stats.avgScore >= 55 ? 'text-lime-400' : stats.avgScore >= 35 ? 'text-amber-400' : 'text-slate-300'}`}>
             {stats.avgScore !== null ? stats.avgScore : '—'}
           </p>
           <p className="text-[10px] text-slate-500 mt-1 uppercase tracking-wider">Avg Score</p>
         </div>
-        <div className="glass-card rounded-2xl p-4 text-center">
+        <div className="glass-card rounded-2xl p-5 text-center">
           <p className="text-2xl font-bold font-mono text-slate-100">{stats.recentDeals}</p>
           <p className="text-[10px] text-slate-500 mt-1 uppercase tracking-wider">Last 7 Days</p>
         </div>

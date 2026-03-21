@@ -564,14 +564,14 @@ function AuthenticatedApp({ profile, user }) {
                           addToast('Pipeline deal updated', 'success');
                         }
                       }}
-                      className="pill-btn px-3 py-1.5 rounded-lg text-[11px] font-medium text-gold-400 hover:text-gold-300 border border-gold-500/20 hover:border-gold-500/40 transition-colors"
+                      className="px-4 py-2 rounded-xl bg-gold-500/15 text-[11px] font-semibold text-gold-300 border border-gold-500/30 hover:bg-gold-500/20 hover:border-gold-500/40 transition-all"
                     >
                       Update Pipeline Deal
                     </button>
                   )}
                   <button
                     onClick={clearForm}
-                    className="pill-btn px-3 py-1.5 rounded-lg text-[11px] font-medium text-slate-600 hover:text-slate-400"
+                    className="pill-btn px-3 py-2 rounded-lg text-[11px] font-medium text-slate-600 hover:text-slate-400"
                   >
                     Clear
                   </button>

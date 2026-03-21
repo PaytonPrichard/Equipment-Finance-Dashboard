@@ -183,7 +183,7 @@ export default function LandingPage({ onGetStarted, onSignIn }) {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           {CORE_FEATURES.map((feature) => (
-            <div key={feature.title} className={`rounded-2xl p-6 transition-all ${
+            <div key={feature.title} className={`rounded-2xl p-5 transition-all ${
               feature.highlight
                 ? 'bg-gradient-to-br from-gold-500/[0.08] to-transparent border-2 border-gold-500/20 hover:border-gold-500/40'
                 : 'bg-white/[0.02] border border-white/[0.06] hover:border-gold-500/20 hover:bg-white/[0.03]'
@@ -198,7 +198,7 @@ export default function LandingPage({ onGetStarted, onSignIn }) {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {MORE_FEATURES.map((feature) => (
-            <div key={feature.title} className="bg-white/[0.02] border border-white/[0.06] rounded-2xl p-6 hover:border-gold-500/20 hover:bg-white/[0.03] transition-all">
+            <div key={feature.title} className="bg-white/[0.02] border border-white/[0.06] rounded-2xl p-5 hover:border-gold-500/20 hover:bg-white/[0.03] transition-all">
               <div className="w-10 h-10 rounded-xl bg-gold-500/10 flex items-center justify-center text-gold-400 mb-4">
                 {feature.icon}
               </div>

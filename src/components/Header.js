@@ -11,8 +11,8 @@ export default function Header({ activeTab, onTabChange, onOpenGuide }) {
   const tutorial = useTutorial();
   const [moreOpen, setMoreOpen] = useState(false);
   return (
-    <header className="border-b border-white/[0.04] bg-[#141210]/80 backdrop-blur-xl sticky top-0 z-50">
-      <div className="max-w-[1600px] mx-auto px-6 py-3.5 flex items-center justify-between">
+    <header className="border-b border-white/[0.06] bg-[#141210]/80 backdrop-blur-xl sticky top-0 z-50">
+      <div className="max-w-[1600px] mx-auto px-6 py-3 flex items-center justify-between">
         {/* Logo */}
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-gold-500 to-gold-600 flex items-center justify-center shadow-lg shadow-gold-500/20">
@@ -33,7 +33,7 @@ export default function Header({ activeTab, onTabChange, onOpenGuide }) {
 
         {/* Tabs + Info */}
         <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1 bg-white/[0.03] rounded-xl p-1 border border-white/[0.04]">
+          <div className="flex items-center gap-1 bg-white/[0.03] rounded-xl p-1 border border-white/[0.06]">
             {/* Primary tabs: always visible */}
             {[
               { id: 'screening', label: 'New Deal' },
@@ -102,7 +102,7 @@ export default function Header({ activeTab, onTabChange, onOpenGuide }) {
             {tutorial?.resetTutorial && (
               <button
                 onClick={tutorial.resetTutorial}
-                className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-600 hover:text-gold-400 hover:bg-gold-500/10 border border-white/[0.04] hover:border-gold-500/20 transition-all"
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-600 hover:text-gold-400 hover:bg-gold-500/10 border border-white/[0.06] hover:border-gold-500/20 transition-all"
                 title="Replay tutorial"
               >
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -114,7 +114,7 @@ export default function Header({ activeTab, onTabChange, onOpenGuide }) {
             <span className="relative">
               <button
                 onClick={onOpenGuide}
-                className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-500 hover:text-gold-400 hover:bg-gold-500/10 border border-white/[0.04] hover:border-gold-500/20 transition-all"
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-500 hover:text-gold-400 hover:bg-gold-500/10 border border-white/[0.06] hover:border-gold-500/20 transition-all"
                 title="Guide & Reference"
               >
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

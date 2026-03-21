@@ -73,7 +73,7 @@ function Tip({ text }) {
 // ---- Label ----
 function Label({ children, required, tip }) {
   return (
-    <label className="flex items-center gap-0 text-[11px] font-semibold text-slate-500 mb-2 uppercase tracking-wider">
+    <label className="flex items-center gap-0 text-[11px] font-semibold text-slate-500 mb-2.5 uppercase tracking-wider">
       {children}
       {required && <span className="text-gold-400 ml-0.5">*</span>}
       {tip && <Tip text={tip} />}
@@ -543,7 +543,7 @@ function renderFieldsLayout(fields, inputs, onChange, schema, pipelineDeals) {
   return groups.map((group, i) => {
     if (group.type === 'grid') {
       return (
-        <div key={i} className="grid grid-cols-2 gap-4">
+        <div key={i} className="grid grid-cols-2 gap-3">
           {group.fields.map((f) => (
             <React.Fragment key={f.key}>
               {renderField(f, inputs, onChange, schema, pipelineDeals)}
@@ -574,7 +574,7 @@ export default function DealInputForm({ inputs, onChange, schema, modules, activ
   return (
     <div className="space-y-5">
       {/* Quick instruction */}
-      <div className="bg-gold-500/[0.04] border border-gold-500/10 rounded-xl px-4 py-3">
+      <div className="bg-gold-500/[0.04] border border-gold-500/10 rounded-xl px-5 py-3">
         <p className="text-[12px] text-slate-300 leading-relaxed">
           Select an asset class, fill in required fields (<span className="text-gold-400 font-semibold">*</span>), and results will appear as you type.
         </p>
@@ -582,7 +582,7 @@ export default function DealInputForm({ inputs, onChange, schema, modules, activ
 
       {/* Asset Class Selector */}
       {modules && modules.length > 1 && (
-        <div className="glass-card rounded-2xl p-5">
+        <div className="glass-card rounded-2xl p-6">
           <div className="flex items-center gap-2.5 mb-4">
             <div className="w-7 h-7 rounded-lg bg-gold-500/10 flex items-center justify-center">
               {ICONS.layers}
