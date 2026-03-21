@@ -5,6 +5,7 @@ import LandingPage from './components/LandingPage';
 import OrgSetup from './components/OrgSetup';
 import useSofrRate from './hooks/useSofrRate';
 import { useIdleTimeout } from './hooks/useIdleTimeout';
+import { useSessionGuard } from './hooks/useSessionGuard';
 import { useOrgPlan } from './hooks/useOrgPlan';
 import PlanBanner from './components/PlanBanner';
 import Header from './components/Header';
@@ -184,8 +185,15 @@ export default function App() {
 
 function AuthenticatedApp({ profile, user }) {
   const userId = user?.id;
+  const { signOut: authSignOut } = useAuth();
   const draftSaveTimer = useRef(null);
   const { plan, isExpired, isExpiringSoon, daysRemaining } = useOrgPlan();
+
+  // Enforce single session for Analyst tier (1 user plans)
+  useSessionGuard(userId, plan === 'analyst', () => {
+    alert('Your session was ended because another login was detected.');
+    authSignOut();
+  });
 
   const [savedDealsList, setSavedDealsList] = useState([]);
 
