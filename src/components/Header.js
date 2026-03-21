@@ -2,10 +2,13 @@ import React from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useRole } from '../hooks/useRole';
 import { ROLE_LABELS } from '../lib/permissions';
+import TutorialBeacon from './TutorialBeacon';
+import { useTutorial } from '../contexts/TutorialContext';
 
 export default function Header({ activeTab, onTabChange, onOpenGuide }) {
   const { profile, signOut } = useAuth();
   const { can } = useRole();
+  const tutorial = useTutorial();
   return (
     <header className="border-b border-white/[0.04] bg-[#141210]/80 backdrop-blur-xl sticky top-0 z-50">
       <div className="max-w-[1600px] mx-auto px-6 py-3.5 flex items-center justify-between">
@@ -106,17 +109,37 @@ export default function Header({ activeTab, onTabChange, onOpenGuide }) {
                 {tab.label}
               </button>
             ))}
+            <TutorialBeacon id="pipeline" title="Pipeline" description="Save deals here to track through your workflow." position="bottom" />
           </div>
-          <button
-            onClick={onOpenGuide}
-            className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-500 hover:text-gold-400 hover:bg-gold-500/10 border border-white/[0.04] hover:border-gold-500/20 transition-all"
-            title="Guide & Reference"
-          >
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="12" cy="12" r="10" />
-              <path d="M12 16v-4M12 8h.01" />
-            </svg>
-          </button>
+          <div className="flex items-center gap-1.5">
+            {tutorial?.resetTutorial && (
+              <button
+                onClick={tutorial.resetTutorial}
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-600 hover:text-gold-400 hover:bg-gold-500/10 border border-white/[0.04] hover:border-gold-500/20 transition-all"
+                title="Replay tutorial"
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <polyline points="1 4 1 10 7 10" />
+                  <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
+                </svg>
+              </button>
+            )}
+            <span className="relative">
+              <button
+                onClick={onOpenGuide}
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-500 hover:text-gold-400 hover:bg-gold-500/10 border border-white/[0.04] hover:border-gold-500/20 transition-all"
+                title="Guide & Reference"
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="M12 16v-4M12 8h.01" />
+                </svg>
+              </button>
+              <span className="absolute -top-1 -right-1">
+                <TutorialBeacon id="guide" title="Full Guide" description="Tap here anytime for help on every feature." position="bottom" />
+              </span>
+            </span>
+          </div>
         </div>
 
         {/* User info */}

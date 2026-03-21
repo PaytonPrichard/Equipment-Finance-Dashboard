@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import companyProfiles from '../data/companyProfiles';
 import { formatCurrencyFull } from '../utils/format';
+import TutorialBeacon from './TutorialBeacon';
 
 const DS_ESTIMATE_RATE = 0.08;
 
@@ -622,6 +623,9 @@ export default function DealInputForm({ inputs, onChange, schema, modules, activ
             <h3 className="text-sm font-semibold text-slate-300">
               {section.title}
             </h3>
+            {section.key === 'borrower' && (
+              <TutorialBeacon id="form" title="Start Here" description="Enter financials or search for a company to auto-fill." position="right" />
+            )}
           </div>
 
           <div className="space-y-4">

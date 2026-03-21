@@ -7,6 +7,9 @@ import OrgSetup from './components/OrgSetup';
 import useSofrRate from './hooks/useSofrRate';
 import { useIdleTimeout } from './hooks/useIdleTimeout';
 import { useToast } from './contexts/ToastContext';
+import { TutorialProvider, useTutorial } from './contexts/TutorialContext';
+import WelcomeTutorial from './components/WelcomeTutorial';
+import TutorialBeacon from './components/TutorialBeacon';
 import { useSessionGuard } from './hooks/useSessionGuard';
 import { useOrgPlan } from './hooks/useOrgPlan';
 import PlanBanner from './components/PlanBanner';
@@ -481,6 +484,8 @@ function AuthenticatedApp({ profile, user }) {
   const moduleLabel = mod.META?.name || 'Equipment Finance';
 
   return (
+    <TutorialProvider userId={userId}>
+    <TutorialWelcomeHandler loadExample={loadExample} exampleDeals={exampleDeals} addToast={addToast} />
     <div className="min-h-screen">
       <Header activeTab={activeTab} onTabChange={setActiveTab} onOpenGuide={() => setGuideOpen(true)} />
       <Suspense fallback={null}>
@@ -728,7 +733,8 @@ function AuthenticatedApp({ profile, user }) {
               ) : (
                 <div className="space-y-6 animate-fade-in-up">
                   {/* Section Nav */}
-                  <nav className="flex flex-wrap gap-1.5 pb-1">
+                  <nav className="flex flex-wrap gap-1.5 pb-1 items-center">
+                    <TutorialBeacon id="nav" title="Jump To" description="Click any label to scroll to that section." position="bottom" />
                     {[
                       { id: 'sec-summary', label: 'Summary' },
                       { id: 'sec-score', label: 'Score' },
@@ -844,7 +850,10 @@ function AuthenticatedApp({ profile, user }) {
                   <ExecutiveSummary inputs={inputs} metrics={metrics} riskScore={riskScore} recommendation={recommendation} />
 
                   {/* Gauge + Radar */}
-                  <div id="sec-score" className="grid grid-cols-1 md:grid-cols-2 gap-6 scroll-mt-20">
+                  <div id="sec-score" className="grid grid-cols-1 md:grid-cols-2 gap-6 scroll-mt-20 relative">
+                    <div className="absolute -top-1 right-0">
+                      <TutorialBeacon id="score" title="Risk Score" description="75+ is strong, 55-74 moderate, below 35 weak." position="left" />
+                    </div>
                     <div className={`glass-card rounded-2xl p-5 flex flex-col items-center justify-center ${getScoreGlow(riskScore.composite)}`}>
                       <RiskScoreGauge score={riskScore.composite} />
                     </div>
@@ -1025,7 +1034,10 @@ function AuthenticatedApp({ profile, user }) {
                   )}
 
                   {/* Stress Test */}
-                  <div id="sec-stress" className="scroll-mt-20">
+                  <div id="sec-stress" className="scroll-mt-20 relative">
+                    <div className="absolute top-4 right-4">
+                      <TutorialBeacon id="stress" title="Stress Test" description="See how the deal holds up under revenue declines." position="left" />
+                    </div>
                     <StressTestPanel stressResults={stressResults} />
                   </div>
 
@@ -1118,5 +1130,24 @@ function AuthenticatedApp({ profile, user }) {
         )}
       </div>
     </div>
+    </TutorialProvider>
+  );
+}
+
+// Tutorial welcome handler — sits inside TutorialProvider to access context
+function TutorialWelcomeHandler({ loadExample, exampleDeals, addToast }) {
+  const tutorial = useTutorial();
+  if (!tutorial?.showWelcome) return null;
+  return (
+    <WelcomeTutorial
+      onComplete={() => {
+        tutorial.completeWelcome();
+        if (exampleDeals?.length > 0) {
+          loadExample(exampleDeals[0]);
+          addToast('Example deal loaded — explore the results below', 'info');
+        }
+      }}
+      onSkip={() => tutorial.completeWelcome()}
+    />
   );
 }
