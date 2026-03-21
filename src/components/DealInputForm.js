@@ -53,10 +53,15 @@ const ICONS = {
 function Tip({ text }) {
   return (
     <span className="relative group ml-1.5 inline-flex align-middle">
-      <span className="w-4 h-4 rounded-full bg-slate-700/60 text-slate-500 text-[10px] font-bold inline-flex items-center justify-center cursor-help hover:text-gold-400 hover:bg-gold-500/10 transition-colors">
+      <span
+        className="w-4 h-4 rounded-full bg-slate-700/60 text-slate-500 text-[10px] font-bold inline-flex items-center justify-center cursor-help hover:text-gold-400 hover:bg-gold-500/10 transition-colors focus:text-gold-400 focus:bg-gold-500/10 focus:outline-none"
+        tabIndex={0}
+        role="button"
+        aria-label="More info"
+      >
         ?
       </span>
-      <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2.5 rounded-xl bg-slate-800 border border-slate-700/50 text-xs text-slate-300 w-60 text-left leading-relaxed shadow-2xl opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity duration-200 z-50">
+      <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2.5 rounded-xl bg-slate-800 border border-slate-700/50 text-xs text-slate-300 w-60 text-left leading-relaxed shadow-2xl opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto group-focus-within:opacity-100 group-focus-within:pointer-events-auto transition-opacity duration-200 z-50" role="tooltip">
         {text}
         <span className="absolute top-full left-1/2 -translate-x-1/2 border-[5px] border-transparent border-t-slate-800" />
       </span>

@@ -80,6 +80,7 @@ export default function DealAttachments({ dealId, dealType }) {
   };
 
   const handleDelete = async (attachment) => {
+    if (!window.confirm(`Delete "${attachment.file_name}"?`)) return;
     const { error: delError } = await deleteAttachment(attachment.id, attachment.storage_path);
     if (delError) {
       setError(delError);
