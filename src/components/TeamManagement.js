@@ -42,6 +42,13 @@ export default function TeamManagement() {
   const [discountCode, setDiscountCode] = useState('');
   const [redeemingCode, setRedeemingCode] = useState(false);
 
+  // Branding state
+  const [brandingLogoUrl, setBrandingLogoUrl] = useState('');
+  const [brandingAccentColor, setBrandingAccentColor] = useState('#d4a843');
+  const [brandingFooterText, setBrandingFooterText] = useState('');
+  const [brandingMemoTitle, setBrandingMemoTitle] = useState('');
+  const [savingBranding, setSavingBranding] = useState(false);
+
   // Transfer admin state
   const [transferTarget, setTransferTarget] = useState(null);
   const [transferConfirmText, setTransferConfirmText] = useState('');
@@ -89,6 +96,12 @@ export default function TeamManagement() {
         addToast('Failed to load organization: ' + orgRes.error.message, 'error');
       } else {
         setOrg(orgRes.data);
+        // Load branding settings
+        const b = orgRes.data?.branding || {};
+        setBrandingLogoUrl(b.logoUrl || '');
+        setBrandingAccentColor(b.accentColor || '#d4a843');
+        setBrandingFooterText(b.footerText || '');
+        setBrandingMemoTitle(b.memoTitle || '');
       }
     } catch (err) {
       addToast('An unexpected error occurred while loading team data.', 'error');
@@ -644,6 +657,118 @@ export default function TeamManagement() {
           </button>
         </form>
       </div>
+
+      {/* Memo Branding Settings */}
+      {can('org.manage_users') && (
+        <div className="glass-card rounded-2xl p-6">
+          <div className="flex items-center gap-2.5 mb-5">
+            <div className="w-7 h-7 rounded-lg bg-gold-500/10 flex items-center justify-center">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-gold-400" strokeWidth="2">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                <circle cx="8.5" cy="8.5" r="1.5" />
+                <polyline points="21 15 16 10 5 21" />
+              </svg>
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-slate-200">Memo Branding</h3>
+              <p className="text-[10px] text-slate-500">Customize how exported screening memos look</p>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div>
+              <label className="block text-[11px] font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">Logo URL</label>
+              <input
+                type="url"
+                value={brandingLogoUrl}
+                onChange={(e) => setBrandingLogoUrl(e.target.value)}
+                placeholder="https://yourfirm.com/logo.png"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-sm placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-gold-500/40 focus:border-gold-500/40 transition-all"
+              />
+              <p className="text-[10px] text-slate-600 mt-1">Appears in the top-right corner of exported memos. Max height: 40px.</p>
+              {brandingLogoUrl && (
+                <div className="mt-2 p-3 bg-white/[0.03] rounded-lg border border-white/[0.06]">
+                  <p className="text-[9px] text-slate-600 mb-1.5">Preview:</p>
+                  <img src={brandingLogoUrl} alt="Logo preview" style={{ maxHeight: 40, maxWidth: 180 }} onError={(e) => { e.target.style.display = 'none'; }} />
+                </div>
+              )}
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-[11px] font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">Accent Color</label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="color"
+                    value={brandingAccentColor}
+                    onChange={(e) => setBrandingAccentColor(e.target.value)}
+                    className="w-8 h-8 rounded-lg border border-white/[0.08] cursor-pointer bg-transparent"
+                  />
+                  <input
+                    type="text"
+                    value={brandingAccentColor}
+                    onChange={(e) => setBrandingAccentColor(e.target.value)}
+                    className="flex-1 px-3 py-2 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-sm font-mono focus:outline-none focus:ring-2 focus:ring-gold-500/40 transition-all"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-[11px] font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">Memo Title</label>
+                <input
+                  type="text"
+                  value={brandingMemoTitle}
+                  onChange={(e) => setBrandingMemoTitle(e.target.value)}
+                  placeholder="e.g. Credit Screening Memo"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-sm placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-gold-500/40 transition-all"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-[11px] font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">Footer Text</label>
+              <input
+                type="text"
+                value={brandingFooterText}
+                onChange={(e) => setBrandingFooterText(e.target.value)}
+                placeholder="e.g. Confidential — Internal Use Only"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-sm placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-gold-500/40 transition-all"
+              />
+            </div>
+
+            <button
+              onClick={async () => {
+                if (!supabase || !orgId) return;
+                setSavingBranding(true);
+                const { error } = await supabase
+                  .from('organizations')
+                  .update({
+                    branding: {
+                      logoUrl: brandingLogoUrl,
+                      accentColor: brandingAccentColor,
+                      footerText: brandingFooterText,
+                      memoTitle: brandingMemoTitle,
+                    },
+                    updated_at: new Date().toISOString(),
+                  })
+                  .eq('id', orgId);
+                setSavingBranding(false);
+                if (error) {
+                  addToast('Failed to save branding: ' + error.message, 'error');
+                } else {
+                  addToast('Branding saved', 'success');
+                  // Clear profile cache so branding is picked up on next load
+                  try { localStorage.removeItem('efd_profile_cache'); } catch (e) { /* ignore */ }
+                  refreshProfile();
+                }
+              }}
+              disabled={savingBranding}
+              className="pill-btn px-4 py-2.5 rounded-xl text-[12px] font-semibold bg-gradient-to-r from-gold-500 to-gold-600 text-white shadow-lg shadow-gold-500/20 hover:shadow-gold-500/30 hover:from-gold-400 hover:to-gold-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            >
+              {savingBranding ? 'Saving...' : 'Save Branding'}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

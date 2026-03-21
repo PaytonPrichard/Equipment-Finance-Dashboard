@@ -486,7 +486,7 @@ function AuthenticatedApp({ profile, user }) {
                 </button>
                 )}
                 <div className="ml-auto flex items-center gap-2">
-                  {valid && <ExportPanel summaryText={summaryText} inputs={inputs} metrics={metrics} riskScore={riskScore} recommendation={recommendation} screeningResult={screeningResult} />}
+                  {valid && <ExportPanel summaryText={summaryText} inputs={inputs} metrics={metrics} riskScore={riskScore} recommendation={recommendation} screeningResult={screeningResult} profile={profile} moduleLabel={moduleLabel} />}
                   <SavedDeals
                     currentInputs={valid ? inputs : null}
                     currentScore={valid ? riskScore.composite : null}
