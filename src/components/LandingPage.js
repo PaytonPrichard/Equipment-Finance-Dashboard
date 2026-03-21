@@ -158,16 +158,16 @@ export default function LandingPage({ onGetStarted, onSignIn }) {
       </nav>
 
       {/* Hero */}
-      <section className="max-w-6xl mx-auto px-6 pt-16 pb-24 text-center">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gold-500/10 border border-gold-500/20 text-[11px] text-gold-400 font-semibold mb-6">
+      <section className="max-w-6xl mx-auto px-6 pt-10 pb-12 text-center">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gold-500/10 border border-gold-500/20 text-[11px] text-gold-400 font-semibold mb-4">
           <span className="w-1.5 h-1.5 rounded-full bg-gold-400 animate-pulse" />
           Pre-origination deal screening for ABL lenders
         </div>
-        <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-white leading-tight mb-6 tracking-tight">
+        <h1 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-white leading-tight mb-4 tracking-tight">
           Screen deals in minutes,<br />
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-gold-400 to-gold-600">not spreadsheets.</span>
         </h1>
-        <p className="text-lg text-slate-400 max-w-2xl mx-auto mb-10 leading-relaxed">
+        <p className="text-base text-slate-400 max-w-2xl mx-auto mb-6 leading-relaxed">
           The modern deal screening platform for asset-based lending teams.
           Score equipment, AR, and inventory deals instantly with configurable
           credit criteria, automated risk analysis, and professional screening memos.
@@ -186,7 +186,7 @@ export default function LandingPage({ onGetStarted, onSignIn }) {
             See Features
           </button>
         </div>
-        <p className="text-[11px] text-slate-600 mt-4">No credit card required. Full access for 14 days.</p>
+        <p className="text-[11px] text-slate-600 mt-3">No credit card required. Full access for 14 days.</p>
       </section>
 
       {/* Social Proof Bar */}
