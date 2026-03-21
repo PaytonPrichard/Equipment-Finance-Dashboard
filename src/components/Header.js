@@ -112,16 +112,16 @@ export default function Header({ activeTab, onTabChange, onOpenGuide }) {
         </div>
 
         {/* User info */}
-        <div className="hidden lg:flex items-center gap-3 text-[11px] text-slate-500">
+        <div className="flex items-center gap-3 text-[11px] text-slate-500">
           {profile && (
             <>
-              <div className="text-right">
+              <div className="text-right hidden lg:block">
                 <span className="text-slate-300 font-medium block">{profile.full_name || profile.email}</span>
                 <span className="text-[10px] text-slate-600 uppercase tracking-wider">{ROLE_LABELS[profile.role] || profile.role}</span>
               </div>
               <button
                 onClick={signOut}
-                className="px-2.5 py-1.5 rounded-lg text-[10px] font-medium text-slate-500 hover:text-slate-300 bg-white/[0.03] border border-white/[0.04] hover:border-white/[0.08] transition-all"
+                className="px-3 py-1.5 rounded-lg text-[11px] font-medium text-slate-400 hover:text-slate-200 bg-white/[0.04] border border-white/[0.06] hover:border-white/[0.10] transition-all"
               >
                 Sign Out
               </button>

@@ -130,6 +130,7 @@ export default function DealPipeline({ onLoadDeal, currentInputs, currentScore, 
       addToast('Failed to add deal to pipeline', 'error');
       setDeals((prev) => prev.filter((d) => d.id !== tempId));
     } else if (data) {
+      addToast('Deal added to pipeline', 'success');
       setDeals((prev) => prev.map((d) => (d.id === tempId ? data : d)));
     }
   };

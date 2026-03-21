@@ -48,6 +48,9 @@ export default function OrgSetup({ profile, onComplete }) {
         return;
       }
 
+      // Clear cached profile so the new org_id gets picked up
+      try { localStorage.removeItem('efd_profile_cache'); } catch (e) { /* ignore */ }
+
       // Signal completion so the app re-fetches the profile
       if (onComplete) {
         onComplete();

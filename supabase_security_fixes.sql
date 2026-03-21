@@ -118,9 +118,12 @@ BEGIN
   -- Mark attempt as successful
   UPDATE public.invite_attempts
     SET success = true
-    WHERE user_id = v_user_id
-    ORDER BY attempted_at DESC
-    LIMIT 1;
+    WHERE id = (
+      SELECT id FROM public.invite_attempts
+      WHERE user_id = v_user_id
+      ORDER BY attempted_at DESC
+      LIMIT 1
+    );
 
   RETURN json_build_object(
     'success', true,

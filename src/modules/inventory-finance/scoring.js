@@ -101,8 +101,8 @@ export function calculateMetrics(inputs, sofr = DEFAULT_SOFR) {
     ? totalEligibleValue / totalNonObsolete
     : 0;
 
-  // Apply NOLV cap if provided — advance rate cannot exceed NOLV %
-  const nolv = (nolvPct || 0) > 0 ? nolvPct : 1.0;
+  // Apply NOLV cap if provided — input is percentage (0-100), convert to decimal
+  const nolv = (nolvPct || 0) > 0 ? nolvPct / 100 : 1.0;
   const effectiveAdvanceRate = Math.min(blendedAdvanceRate, nolv);
 
   // Apply perishable discount — perishable goods get 15% haircut on advance rate
@@ -110,9 +110,10 @@ export function calculateMetrics(inputs, sofr = DEFAULT_SOFR) {
     ? effectiveAdvanceRate * 0.85
     : effectiveAdvanceRate;
 
-  // Cap at requested advance rate if specified
-  const appliedAdvanceRate = (requestedAdvanceRate || 0) > 0
-    ? Math.min(finalAdvanceRate, requestedAdvanceRate)
+  // Cap at requested advance rate if specified (input is percentage 0-100)
+  const requestedDecimal = (requestedAdvanceRate || 0) > 0 ? requestedAdvanceRate / 100 : 0;
+  const appliedAdvanceRate = requestedDecimal > 0
+    ? Math.min(finalAdvanceRate, requestedDecimal)
     : finalAdvanceRate;
 
   // Borrowing base
@@ -207,7 +208,7 @@ export function calculateRiskScore(inputs, metrics) {
   }
 
   // Liquidation Value (10%) — NOLV percentage; higher is better
-  const nolv = (inputs.nolvPct || 0) > 0 ? inputs.nolvPct : 0.50; // assume 50% if not provided
+  const nolv = (inputs.nolvPct || 0) > 0 ? inputs.nolvPct / 100 : 0.50; // input is %, convert to decimal
   factors.liquidationValue = lerp(nolv, [
     [0, 5], [0.20, 20], [0.40, 50], [0.55, 70], [0.70, 88], [0.85, 100],
   ]);

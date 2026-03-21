@@ -22,7 +22,9 @@ export default function PipelineDashboard() {
   const { profile } = useAuth();
   const [deals, setDeals] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [refreshKey, setRefreshKey] = useState(0);
 
+  // Re-fetch when component mounts (tab switch) or refreshKey changes
   useEffect(() => {
     if (!profile?.org_id) {
       setLoading(false);
@@ -32,7 +34,14 @@ export default function PipelineDashboard() {
       setDeals(data || []);
       setLoading(false);
     }).catch(() => setLoading(false));
-  }, [profile?.org_id]);
+  }, [profile?.org_id, refreshKey]);
+
+  // Re-fetch when tab becomes visible (user switches back to Dashboard)
+  useEffect(() => {
+    const handleFocus = () => setRefreshKey(k => k + 1);
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, []);
 
   const stats = useMemo(() => {
     const byStage = {};

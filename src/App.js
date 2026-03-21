@@ -450,10 +450,12 @@ function AuthenticatedApp({ profile, user }) {
           <div className="flex flex-wrap items-center gap-2">
             {activeTab === 'screening' && (
               <>
+                {isEquipment && (
                 <span className="text-[10px] font-semibold text-slate-600 uppercase tracking-widest mr-1">
                   Previous Deals:
                 </span>
-                {exampleDeals.map((deal) => {
+                )}
+                {isEquipment && exampleDeals.map((deal) => {
                   const score = exampleScores[deal.id] ?? 0;
                   const scoreColor = score >= 75 ? 'bg-emerald-500 text-white' : score >= 55 ? 'bg-teal-500 text-white' : score >= 35 ? 'bg-amber-500 text-white' : 'bg-rose-500 text-white';
                   return (
@@ -471,12 +473,14 @@ function AuthenticatedApp({ profile, user }) {
                     </button>
                   );
                 })}
+                {isEquipment && (
                 <button
                   onClick={() => setActiveTab('historical')}
                   className="pill-btn px-3 py-1.5 rounded-lg text-[11px] font-medium text-gold-400 hover:text-gold-300 border border-gold-500/20 hover:border-gold-500/40 transition-colors"
                 >
                   View History &rarr;
                 </button>
+                )}
                 <div className="ml-auto flex items-center gap-2">
                   {valid && <ExportPanel summaryText={summaryText} inputs={inputs} metrics={metrics} riskScore={riskScore} recommendation={recommendation} screeningResult={screeningResult} />}
                   <SavedDeals
@@ -520,9 +524,9 @@ function AuthenticatedApp({ profile, user }) {
       {/* Main */}
       <div className="max-w-[1600px] mx-auto px-6 py-8">
         {activeTab === 'screening' ? (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8" style={{ height: 'calc(100vh - 160px)' }}>
-            {/* Left: Form — independent scroll */}
-            <div className="lg:col-span-5 xl:col-span-4 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 160px)', scrollbarWidth: 'none' }}>
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:h-[calc(100vh-160px)]">
+            {/* Left: Form — independent scroll on desktop */}
+            <div className="lg:col-span-5 xl:col-span-4 lg:overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
               <DealInputForm
                 inputs={inputs}
                 onChange={setInputs}
@@ -533,8 +537,8 @@ function AuthenticatedApp({ profile, user }) {
               />
             </div>
 
-            {/* Right: Results — independent scroll */}
-            <div className="lg:col-span-7 xl:col-span-8 overflow-y-auto pl-2" style={{ maxHeight: 'calc(100vh - 160px)' }}>
+            {/* Right: Results — independent scroll on desktop */}
+            <div className="lg:col-span-7 xl:col-span-8 lg:overflow-y-auto lg:pl-2">
               {!valid ? (
                 <div className="flex flex-col items-center justify-center min-h-[520px] text-center">
                   <div className="w-16 h-16 rounded-2xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-center mb-5">
@@ -684,8 +688,26 @@ function AuthenticatedApp({ profile, user }) {
                         )}
                       </div>
                     </div>
-                    <div className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider border ${recommendation.bgClass} ${recommendation.textClass}`}>
-                      Score: {riskScore.composite}/100
+                    <div className="flex flex-col items-end gap-2">
+                      <div className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider border ${recommendation.bgClass} ${recommendation.textClass}`}>
+                        Score: {riskScore.composite}/100
+                      </div>
+                      {/* Quick asset class switch */}
+                      <div className="flex gap-1">
+                        {modules.map(m => (
+                          <button
+                            key={m.key}
+                            onClick={() => handleModuleChange(m.key)}
+                            className={`px-2 py-0.5 rounded text-[9px] font-semibold transition-colors ${
+                              activeModule === m.key
+                                ? 'bg-gold-500/15 text-gold-400 border border-gold-500/30'
+                                : 'text-slate-600 hover:text-slate-400 border border-transparent'
+                            }`}
+                          >
+                            {m.name.replace(' Finance', '')}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   </div>
 

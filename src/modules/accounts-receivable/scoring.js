@@ -55,7 +55,7 @@ export function calculateMetrics(inputs, sofr = DEFAULT_SOFR) {
     topCustomerConcentration = 0,
     dilutionRate = 0,
     ineligiblesPct = 0,
-    requestedAdvanceRate = 0.80,
+    requestedAdvanceRate = 80,
   } = inputs;
 
   const rateInfo = getScreeningRate(creditRating, industrySector, sofr);
@@ -65,8 +65,8 @@ export function calculateMetrics(inputs, sofr = DEFAULT_SOFR) {
   const ineligibleAmount = (totalAROutstanding || 0) * (ineligiblesPct / 100);
   const eligibleAR = Math.max((totalAROutstanding || 0) - ineligibleAmount, 0);
 
-  // Advance rate capped at MAX_ADVANCE_RATE
-  const advanceRate = Math.min(requestedAdvanceRate, MAX_ADVANCE_RATE);
+  // Advance rate: input is percentage (0-100), convert to decimal, cap at MAX
+  const advanceRate = Math.min((requestedAdvanceRate || 0) / 100, MAX_ADVANCE_RATE);
 
   // Borrowing base = eligible AR * advance rate
   const borrowingBase = eligibleAR * advanceRate;
@@ -137,9 +137,9 @@ export function calculateRiskScore(inputs, metrics) {
   ]);
 
   // AR Quality / Aging (20%) — based on % of AR that is current (under 30 days)
-  // Higher % current = better quality
-  const totalAR = inputs.totalAROutstanding || 1;
-  const pctCurrent = 1 - ((inputs.arOver30 || 0) + (inputs.arOver60 || 0) + (inputs.arOver90 || 0)) / totalAR;
+  // Form inputs are percentages (0-100), convert to decimal for scoring
+  const pctOver = ((inputs.arOver30 || 0) + (inputs.arOver60 || 0) + (inputs.arOver90 || 0)) / 100;
+  const pctCurrent = 1 - pctOver;
   const pctCurrentClamped = Math.max(0, Math.min(1, pctCurrent));
   factors.arQuality = lerp(pctCurrentClamped, [
     [0, 5], [0.50, 20], [0.65, 40], [0.75, 60], [0.85, 80], [0.95, 95], [1.0, 100],

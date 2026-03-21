@@ -64,6 +64,6 @@ export const INITIAL_INPUTS = {
   topCustomerConcentration: 0,
   dilutionRate: 0,
   ineligiblesPct: 0,
-  requestedAdvanceRate: 0.80,
+  requestedAdvanceRate: 80,
   existingABLFacility: false,
 };
