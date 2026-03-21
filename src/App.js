@@ -223,12 +223,18 @@ function AuthenticatedApp({ profile, user }) {
   });
 
   const [savedDealsList, setSavedDealsList] = useState([]);
+  const [pipelineDealsList, setPipelineDealsList] = useState([]);
 
-  // Fetch saved deals from Supabase for DealComparison and other consumers
+  // Fetch saved deals and pipeline deals from Supabase
   useEffect(() => {
     if (profile?.org_id) {
       fetchSavedDeals(profile.org_id).then(({ data }) => {
         if (data) setSavedDealsList(data);
+      });
+      import('./lib/pipeline').then(({ fetchPipelineDeals }) => {
+        fetchPipelineDeals(profile.org_id).then(({ data }) => {
+          if (data) setPipelineDealsList(data);
+        });
       });
     }
   }, [profile?.org_id]);
@@ -587,6 +593,7 @@ function AuthenticatedApp({ profile, user }) {
                 modules={modules}
                 activeModule={activeModule}
                 onModuleChange={handleModuleChange}
+                pipelineDeals={pipelineDealsList}
               />
             </div>
 

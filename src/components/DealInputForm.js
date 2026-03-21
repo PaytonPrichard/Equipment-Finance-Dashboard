@@ -76,7 +76,7 @@ function Label({ children, required, tip }) {
 }
 
 // ---- Company Search ----
-function CompanySearch({ value, onSelect, onManualChange, tip }) {
+function CompanySearch({ value, onSelect, onManualChange, tip, pipelineDeals }) {
   const [query, setQuery] = useState(value || '');
   const [open, setOpen] = useState(false);
   const [selectedSource, setSelectedSource] = useState(null);
@@ -93,9 +93,35 @@ function CompanySearch({ value, onSelect, onManualChange, tip }) {
   }, []);
 
   const results = query.length >= 2
-    ? companyProfiles.filter(c =>
-        c.companyName.toLowerCase().includes(query.toLowerCase())
-      ).slice(0, 6)
+    ? (() => {
+        const q = query.toLowerCase();
+        // Pipeline deals first (user's own data), then static profiles
+        const pipelineMatches = (pipelineDeals || [])
+          .filter(d => {
+            const name = d.inputs?.companyName || d.name || '';
+            return name.toLowerCase().includes(q);
+          })
+          .map(d => ({
+            companyName: d.inputs?.companyName || d.name,
+            yearsInBusiness: d.inputs?.yearsInBusiness || 0,
+            annualRevenue: d.inputs?.annualRevenue || 0,
+            ebitda: d.inputs?.ebitda || 0,
+            totalExistingDebt: d.inputs?.totalExistingDebt || 0,
+            industrySector: d.inputs?.industrySector || 'Other',
+            creditRating: d.inputs?.creditRating || 'Not Rated',
+            source: 'Pipeline',
+          }));
+        const staticMatches = companyProfiles
+          .filter(c => c.companyName.toLowerCase().includes(q));
+        // Deduplicate by company name
+        const seen = new Set();
+        return [...pipelineMatches, ...staticMatches].filter(c => {
+          const key = c.companyName.toLowerCase();
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        }).slice(0, 8);
+      })()
     : [];
 
   const fmtCurrency = (v) => {
@@ -108,7 +134,7 @@ function CompanySearch({ value, onSelect, onManualChange, tip }) {
 
   return (
     <div ref={ref} className="relative">
-      <Label tip={tip || 'Start typing to search the company database. Select a match to auto-populate borrower financials.'}>
+      <Label tip={tip || 'Search your pipeline deals or type a new company name. Selecting a match auto-populates borrower financials.'}>
         Company Name
       </Label>
       <div className="relative">
@@ -126,7 +152,7 @@ function CompanySearch({ value, onSelect, onManualChange, tip }) {
             setSelectedSource(null);
           }}
           onFocus={() => query.length >= 2 && setOpen(true)}
-          placeholder="Search company database..."
+          placeholder="Search or enter company name..."
           className="form-input"
           style={{ paddingLeft: '2.75rem' }}
         />
@@ -267,7 +293,7 @@ function getInputWarnings(inputs) {
 
 // ============ FIELD RENDERER ============
 
-function renderField(field, inputs, onChange, schema) {
+function renderField(field, inputs, onChange, schema, pipelineDeals) {
   const value = inputs[field.key];
   const update = (val) => onChange({ ...inputs, [field.key]: val });
 
@@ -277,6 +303,7 @@ function renderField(field, inputs, onChange, schema) {
         <CompanySearch
           value={value}
           tip={field.tip}
+          pipelineDeals={pipelineDeals}
           onSelect={(company) => {
             onChange({
               ...inputs,
@@ -470,7 +497,7 @@ function renderField(field, inputs, onChange, schema) {
 
 // ============ LAYOUT HELPER ============
 
-function renderFieldsLayout(fields, inputs, onChange, schema) {
+function renderFieldsLayout(fields, inputs, onChange, schema, pipelineDeals) {
   const groups = [];
   let currentHalfGroup = [];
 
@@ -500,7 +527,7 @@ function renderFieldsLayout(fields, inputs, onChange, schema) {
         <div key={i} className="grid grid-cols-2 gap-4">
           {group.fields.map((f) => (
             <React.Fragment key={f.key}>
-              {renderField(f, inputs, onChange, schema)}
+              {renderField(f, inputs, onChange, schema, pipelineDeals)}
             </React.Fragment>
           ))}
         </div>
@@ -508,7 +535,7 @@ function renderFieldsLayout(fields, inputs, onChange, schema) {
     }
     return (
       <React.Fragment key={group.field.key}>
-        {renderField(group.field, inputs, onChange, schema)}
+        {renderField(group.field, inputs, onChange, schema, pipelineDeals)}
       </React.Fragment>
     );
   });
@@ -516,7 +543,7 @@ function renderFieldsLayout(fields, inputs, onChange, schema) {
 
 // ============ MAIN FORM ============
 
-export default function DealInputForm({ inputs, onChange, schema, modules, activeModule, onModuleChange }) {
+export default function DealInputForm({ inputs, onChange, schema, modules, activeModule, onModuleChange, pipelineDeals }) {
   // Guard: if equipment module has TRAC selected but equipment type doesn't support it
   if (schema.equipmentDefaults && inputs.financingType === 'TRAC') {
     const ftField = schema.sections.flatMap(s => s.fields).find(f => f.key === 'financingType');
@@ -580,7 +607,7 @@ export default function DealInputForm({ inputs, onChange, schema, modules, activ
           </div>
 
           <div className="space-y-4">
-            {renderFieldsLayout(section.fields, inputs, onChange, schema)}
+            {renderFieldsLayout(section.fields, inputs, onChange, schema, pipelineDeals)}
           </div>
         </div>
       ))}
