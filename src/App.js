@@ -26,7 +26,7 @@ import { DEFAULT_CRITERIA, evaluateScreening } from './lib/screeningCriteria';
 import StressTestPanel from './components/StressTestPanel';
 import ExportPanel from './components/ExportPanel';
 // import SavedDeals from './components/SavedDeals'; // Hidden — pipeline replaces save library
-import CsvImport from './components/CsvImport';
+// import CsvImport from './components/CsvImport'; // Moved to batch tab
 import ExecutiveSummary from './components/ExecutiveSummary';
 import { fetchSavedDeals } from './lib/deals';
 import { updatePipelineDeal } from './lib/pipeline';
@@ -437,17 +437,6 @@ function AuthenticatedApp({ profile, user }) {
     return base;
   }, [sofr]);
 
-  // Precompute scores for example deal buttons (equipment-finance)
-  const exampleScores = useMemo(() => {
-    const map = {};
-    exampleDeals.forEach((deal) => {
-      const m = eqCalculateMetrics(deal.inputs, sofr);
-      const rs = eqCalculateRiskScore(deal.inputs, m);
-      map[deal.id] = rs.composite;
-    });
-    return map;
-  }, [sofr]);
-
   const loadExample = (deal) => {
     // Example deals are equipment-finance, ensure module matches
     if (activeModule !== 'equipment_finance') {
@@ -474,6 +463,7 @@ function AuthenticatedApp({ profile, user }) {
     setActiveTab('screening');
   };
 
+  // eslint-disable-next-line no-unused-vars
   const handleCsvImport = (deals) => {
     setImportedDeals(deals);
     setActiveTab('historical');
@@ -555,43 +545,13 @@ function AuthenticatedApp({ profile, user }) {
         </div>
       )}
 
-      {/* Toolbar bar */}
+      {/* Toolbar */}
+      {activeTab === 'screening' && (
       <div className="border-b border-white/[0.04] bg-[#141210]/60 backdrop-blur-sm">
-        <div className="max-w-[1600px] mx-auto px-6 py-2.5">
-          <div className="flex flex-wrap items-center gap-2">
+        <div className="max-w-[1600px] mx-auto px-6 py-2">
+          <div className="flex items-center gap-2">
             {activeTab === 'screening' && (
               <>
-                {isEquipment && (
-                <span className="text-[10px] font-semibold text-slate-600 uppercase tracking-widest mr-1">
-                  Previous Deals:
-                </span>
-                )}
-                {isEquipment && exampleDeals.map((deal) => {
-                  const score = exampleScores[deal.id] ?? 0;
-                  const scoreColor = score >= 75 ? 'bg-emerald-500 text-white' : score >= 55 ? 'bg-teal-500 text-white' : score >= 35 ? 'bg-amber-500 text-white' : 'bg-rose-500 text-white';
-                  return (
-                    <button
-                      key={deal.id}
-                      onClick={() => loadExample(deal)}
-                      className={`pill-btn px-3 py-1.5 rounded-lg text-[11px] font-medium flex items-center gap-1.5 ${
-                        activeDeal === deal.id ? 'pill-btn-active' : 'text-slate-500'
-                      }`}
-                    >
-                      <span className={`inline-flex items-center justify-center w-5 h-5 rounded-full text-[9px] font-bold leading-none ${scoreColor}`}>
-                        {score}
-                      </span>
-                      {deal.label}
-                    </button>
-                  );
-                })}
-                {isEquipment && (
-                <button
-                  onClick={() => setActiveTab('historical')}
-                  className="pill-btn px-3 py-1.5 rounded-lg text-[11px] font-medium text-gold-400 hover:text-gold-300 border border-gold-500/20 hover:border-gold-500/40 transition-colors"
-                >
-                  View History &rarr;
-                </button>
-                )}
                 <div className="ml-auto flex items-center gap-2">
                   {valid && <ExportPanel summaryText={summaryText} inputs={inputs} metrics={metrics} riskScore={riskScore} recommendation={recommendation} screeningResult={screeningResult} profile={profile} moduleLabel={moduleLabel} />}
                   {activePipelineDealId && valid && (
@@ -618,27 +578,10 @@ function AuthenticatedApp({ profile, user }) {
                 </div>
               </>
             )}
-            {activeTab === 'historical' && (
-              <>
-                <span className="text-[10px] font-semibold text-slate-600 uppercase tracking-widest mr-1">
-                  Portfolio:
-                </span>
-                <span className="text-[11px] text-slate-500">
-                  {historicalDeals.length + importedDeals.length} deals scored against screening model
-                </span>
-                <div className="ml-auto">
-                  <CsvImport onImport={handleCsvImport} />
-                </div>
-              </>
-            )}
-            {activeTab === 'compare' && (
-              <span className="text-[11px] text-slate-500">
-                Select two deals to compare side by side
-              </span>
-            )}
           </div>
         </div>
       </div>
+      )}
 
       {/* Main */}
       <div className="max-w-[1600px] mx-auto px-6 py-8">
@@ -732,26 +675,17 @@ function AuthenticatedApp({ profile, user }) {
                 </div>
               ) : (
                 <div className="space-y-6 animate-fade-in-up">
-                  {/* Section Nav */}
+                  {/* Section Nav (simplified) */}
                   <nav className="flex flex-wrap gap-1.5 pb-1 items-center">
                     <TutorialBeacon id="nav" title="Jump To" description="Click any label to scroll to that section." position="bottom" />
                     {[
-                      { id: 'sec-summary', label: 'Summary' },
                       { id: 'sec-score', label: 'Score' },
                       { id: 'sec-metrics', label: 'Metrics' },
-                      isEquipment && { id: 'sec-debt', label: 'Debt Service' },
-                      !isEquipment && { id: 'sec-facility', label: 'Facility' },
                       { id: 'sec-stress', label: 'Stress Test' },
-                      { id: 'sec-recommendation', label: 'Recommendation' },
+                      { id: 'sec-recommendation', label: 'Assessment' },
                       { id: 'sec-structure', label: 'Structure' },
-                      isEquipment && { id: 'sec-whatif', label: 'What-If' },
-                      isEquipment && { id: 'sec-comps', label: 'Comps' },
-                      isEquipment && { id: 'sec-benchmarks', label: 'Benchmarks' },
-                      isEquipment && { id: 'sec-sensitivity', label: 'Sensitivity' },
-                      { id: 'sec-weights', label: 'Weights' },
                       { id: 'sec-policy', label: 'Policy' },
-                      isEquipment && { id: 'sec-checklist', label: 'Checklist' },
-                    ].filter(Boolean).map((s) => (
+                    ].map((s) => (
                       <button
                         key={s.id}
                         onClick={() => document.getElementById(s.id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })}

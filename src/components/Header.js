@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useRole } from '../hooks/useRole';
 import { ROLE_LABELS } from '../lib/permissions';
@@ -9,6 +9,7 @@ export default function Header({ activeTab, onTabChange, onOpenGuide }) {
   const { profile, signOut } = useAuth();
   const { can } = useRole();
   const tutorial = useTutorial();
+  const [moreOpen, setMoreOpen] = useState(false);
   return (
     <header className="border-b border-white/[0.04] bg-[#141210]/80 backdrop-blur-xl sticky top-0 z-50">
       <div className="max-w-[1600px] mx-auto px-6 py-3.5 flex items-center justify-between">
@@ -33,83 +34,69 @@ export default function Header({ activeTab, onTabChange, onOpenGuide }) {
         {/* Tabs + Info */}
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-1 bg-white/[0.03] rounded-xl p-1 border border-white/[0.04]">
+            {/* Primary tabs: always visible */}
             {[
-              { id: 'screening', label: 'New Deal', icon: (
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                  <polyline points="14 2 14 8 20 8" />
-                </svg>
-              )},
-              { id: 'pipeline', label: 'Pipeline', icon: (
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <rect x="3" y="3" width="7" height="7" rx="1" />
-                  <rect x="14" y="3" width="7" height="7" rx="1" />
-                  <rect x="3" y="14" width="7" height="7" rx="1" />
-                  <rect x="14" y="14" width="7" height="7" rx="1" />
-                </svg>
-              )},
-              { id: 'dashboard', label: 'Dashboard', icon: (
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
-                </svg>
-              )},
-              { id: 'batch', label: 'Batch', icon: (
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5-5m0 0l5 5m-5-5v12" />
-                </svg>
-              )},
-              { id: 'compare', label: 'Compare', icon: (
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <line x1="18" y1="20" x2="18" y2="10" />
-                  <line x1="12" y1="20" x2="12" y2="4" />
-                  <line x1="6" y1="20" x2="6" y2="14" />
-                </svg>
-              )},
-              { id: 'historical', label: 'Model Performance', icon: (
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
-                </svg>
-              )},
-              ...(can('audit.view') ? [{
-                id: 'audit', label: 'Audit Log', icon: (
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                  </svg>
-                ),
-              }] : []),
-              ...(can('org.manage_users') ? [{
-                id: 'team', label: 'My Team', icon: (
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                    <circle cx="9" cy="7" r="4" />
-                    <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-                    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-                  </svg>
-                ),
-              }] : []),
-              ...(can('org.manage_users') ? [{
-                id: 'billing', label: 'Billing', icon: (
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
-                    <line x1="1" y1="10" x2="23" y2="10" />
-                  </svg>
-                ),
-              }] : []),
+              { id: 'screening', label: 'New Deal' },
+              { id: 'pipeline', label: 'Pipeline' },
+              { id: 'dashboard', label: 'Dashboard' },
             ].map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => onTabChange(tab.id)}
-                className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold transition-all ${
+                className={`px-4 py-2 rounded-lg text-xs font-semibold transition-all ${
                   activeTab === tab.id
                     ? 'bg-gold-500/15 text-gold-300 shadow-sm'
                     : 'text-slate-500 hover:text-slate-300'
                 }`}
               >
-                {tab.icon}
                 {tab.label}
               </button>
             ))}
             <TutorialBeacon id="pipeline" title="Pipeline" description="Save deals here to track through your workflow." position="bottom" />
+
+            {/* More menu */}
+            <div className="relative">
+              <button
+                onClick={() => setMoreOpen(!moreOpen)}
+                className={`px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
+                  ['batch', 'compare', 'historical', 'audit', 'team', 'billing'].includes(activeTab)
+                    ? 'bg-gold-500/15 text-gold-300'
+                    : 'text-slate-500 hover:text-slate-300'
+                }`}
+              >
+                More
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="inline ml-1 -mt-0.5" strokeWidth="2.5">
+                  <polyline points="6 9 12 15 18 9" />
+                </svg>
+              </button>
+              {moreOpen && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setMoreOpen(false)} />
+                  <div className="absolute top-full left-0 mt-2 py-2 w-44 bg-[rgba(20,20,28,0.95)] backdrop-blur-xl border border-white/[0.08] rounded-xl shadow-xl z-50 animate-fade-in">
+                    {[
+                      { id: 'batch', label: 'Batch Screening' },
+                      { id: 'compare', label: 'Compare Deals' },
+                      { id: 'historical', label: 'Model Performance' },
+                      ...(can('audit.view') ? [{ id: 'audit', label: 'Audit Log' }] : []),
+                      ...(can('org.manage_users') ? [{ id: 'team', label: 'My Team' }] : []),
+                      ...(can('org.manage_users') ? [{ id: 'billing', label: 'Billing' }] : []),
+                    ].map((tab) => (
+                      <button
+                        key={tab.id}
+                        onClick={() => { onTabChange(tab.id); setMoreOpen(false); }}
+                        className={`w-full text-left px-4 py-2 text-xs font-medium transition-colors ${
+                          activeTab === tab.id
+                            ? 'text-gold-300 bg-gold-500/10'
+                            : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
+                        }`}
+                      >
+                        {tab.label}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
           </div>
           <div className="flex items-center gap-1.5">
             {tutorial?.resetTutorial && (
