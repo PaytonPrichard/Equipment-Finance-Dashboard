@@ -250,11 +250,23 @@ export default function DealPipeline({ onLoadDeal, currentInputs, currentScore, 
     }
   };
 
-  /* --- Grouping --- */
+  /* --- Search & Grouping --- */
+
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const filteredDeals = searchQuery.trim()
+    ? deals.filter(d => {
+        const q = searchQuery.toLowerCase();
+        return (d.name || '').toLowerCase().includes(q)
+          || (d.inputs?.industrySector || '').toLowerCase().includes(q)
+          || (d.inputs?.companyName || '').toLowerCase().includes(q)
+          || (d.stage || '').toLowerCase().includes(q);
+      })
+    : deals;
 
   const grouped = {};
   STAGES.forEach((s) => { grouped[s.key] = []; });
-  deals.forEach((d) => {
+  filteredDeals.forEach((d) => {
     if (grouped[d.stage]) grouped[d.stage].push(d);
   });
 
@@ -268,11 +280,38 @@ export default function DealPipeline({ onLoadDeal, currentInputs, currentScore, 
     <div className="space-y-5 animate-fade-in-up">
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
-        <div>
-          <h3 className="text-sm font-semibold text-slate-200">Deal Pipeline</h3>
-          <p className="text-[11px] text-slate-500 mt-0.5">
-            {deals.length} deal{deals.length !== 1 ? 's' : ''} across {STAGES.length} stages
-          </p>
+        <div className="flex items-center gap-4">
+          <div>
+            <h3 className="text-sm font-semibold text-slate-200">Deal Pipeline</h3>
+            <p className="text-[11px] text-slate-500 mt-0.5">
+              {searchQuery ? `${filteredDeals.length} of ${deals.length}` : deals.length} deal{deals.length !== 1 ? 's' : ''} across {STAGES.length} stages
+            </p>
+          </div>
+          {deals.length > 0 && (
+            <div className="relative">
+              <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search deals..."
+                className="bg-white/[0.04] rounded-lg pl-8 pr-3 py-1.5 text-[11px] text-slate-200 outline-none placeholder-slate-600 border border-white/[0.06] focus:border-gold-500/30 transition-colors w-44"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-600 hover:text-slate-400"
+                >
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
+                </button>
+              )}
+            </div>
+          )}
         </div>
 
         <div>
