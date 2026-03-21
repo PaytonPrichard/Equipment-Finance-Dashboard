@@ -20,7 +20,7 @@ import ScreeningCriteria from './components/ScreeningCriteria';
 import { DEFAULT_CRITERIA, evaluateScreening } from './lib/screeningCriteria';
 import StressTestPanel from './components/StressTestPanel';
 import ExportPanel from './components/ExportPanel';
-import SavedDeals from './components/SavedDeals';
+// import SavedDeals from './components/SavedDeals'; // Hidden — pipeline replaces save library
 import CsvImport from './components/CsvImport';
 import ExecutiveSummary from './components/ExecutiveSummary';
 import { fetchSavedDeals } from './lib/deals';
@@ -501,26 +501,19 @@ function AuthenticatedApp({ profile, user }) {
                 )}
                 <div className="ml-auto flex items-center gap-2">
                   {valid && <ExportPanel summaryText={summaryText} inputs={inputs} metrics={metrics} riskScore={riskScore} recommendation={recommendation} screeningResult={screeningResult} profile={profile} moduleLabel={moduleLabel} />}
-                  <SavedDeals
-                    currentInputs={valid ? inputs : null}
-                    currentScore={valid ? riskScore.composite : null}
-                    onLoadDeal={(dealInputs) => { setInputs(dealInputs); setActiveDeal(null); }}
-                    onDealsChange={setSavedDealsList}
-                    readOnly={isExpired}
-                  />
                   {activePipelineDealId && valid && (
                     <button
                       onClick={async () => {
                         const { error } = await updatePipelineDeal(activePipelineDealId, inputs, riskScore.composite, user?.id, profile?.org_id);
                         if (!error) {
                           const btn = document.getElementById('update-pipeline-btn');
-                          if (btn) { btn.textContent = 'Updated'; setTimeout(() => { btn.textContent = 'Update in Pipeline'; }, 2000); }
+                          if (btn) { btn.textContent = 'Updated'; setTimeout(() => { btn.textContent = 'Update Pipeline Deal'; }, 2000); }
                         }
                       }}
                       id="update-pipeline-btn"
                       className="pill-btn px-3 py-1.5 rounded-lg text-[11px] font-medium text-gold-400 hover:text-gold-300 border border-gold-500/20 hover:border-gold-500/40 transition-colors"
                     >
-                      Update in Pipeline
+                      Update Pipeline Deal
                     </button>
                   )}
                   <button

@@ -347,7 +347,7 @@ export default function DealPipeline({ onLoadDeal, currentInputs, currentScore, 
                 className="pill-btn px-3 py-1.5 rounded-lg text-[11px] font-medium text-gold-400"
                 onClick={handleStartAdd}
               >
-                + Add Current Deal
+                + Add to Pipeline
               </button>
               {deals.length > 0 && (
                 <button
