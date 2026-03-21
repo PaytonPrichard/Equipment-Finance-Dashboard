@@ -64,32 +64,30 @@ export default function ScreeningVerdict({ verdict, reasons }) {
         </div>
       </div>
 
-      {reasons.length > 0 && (
-        <div className="space-y-1.5 mt-3">
-          {failReasons.map((r, i) => (
-            <div key={`f-${i}`} className="flex items-start gap-2">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-rose-400 mt-0.5 flex-shrink-0" strokeWidth="2.5">
-                <line x1="18" y1="6" x2="6" y2="18" />
-                <line x1="6" y1="6" x2="18" y2="18" />
-              </svg>
-              <span className="text-[11px] text-rose-300/90 leading-relaxed">{r.text}</span>
-            </div>
-          ))}
-          {flagReasons.map((r, i) => (
-            <div key={`w-${i}`} className="flex items-start gap-2">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-amber-400 mt-0.5 flex-shrink-0" strokeWidth="2">
-                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-                <line x1="12" y1="9" x2="12" y2="13" />
-                <line x1="12" y1="17" x2="12.01" y2="17" />
-              </svg>
-              <span className="text-[11px] text-amber-300/90 leading-relaxed">{r.text}</span>
-            </div>
-          ))}
-          {reasons.length === 0 && verdict === 'pass' && (
-            <p className="text-[11px] text-emerald-300/70">All screening criteria met</p>
-          )}
-        </div>
-      )}
+      <div className="space-y-1.5 mt-3">
+        {failReasons.map((r, i) => (
+          <div key={`f-${i}`} className="flex items-start gap-2">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-rose-400 mt-0.5 flex-shrink-0" strokeWidth="2.5">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+            <span className="text-[11px] text-rose-300/90 leading-relaxed">{r.text}</span>
+          </div>
+        ))}
+        {flagReasons.map((r, i) => (
+          <div key={`w-${i}`} className="flex items-start gap-2">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-amber-400 mt-0.5 flex-shrink-0" strokeWidth="2">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+              <line x1="12" y1="9" x2="12" y2="13" />
+              <line x1="12" y1="17" x2="12.01" y2="17" />
+            </svg>
+            <span className="text-[11px] text-amber-300/90 leading-relaxed">{r.text}</span>
+          </div>
+        ))}
+        {reasons.length === 0 && verdict === 'pass' && (
+          <p className="text-[11px] text-emerald-300/70">All screening criteria met</p>
+        )}
+      </div>
     </div>
   );
 }
