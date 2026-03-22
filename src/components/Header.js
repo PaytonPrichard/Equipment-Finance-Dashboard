@@ -15,20 +15,9 @@ export default function Header({ activeTab, onTabChange, onOpenGuide }) {
       <div className="max-w-[1600px] mx-auto px-6 py-3 flex items-center justify-between">
         {/* Logo */}
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-gold-500 to-gold-600 flex items-center justify-center shadow-lg shadow-gold-500/20">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
-              <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
-            </svg>
-          </div>
-          <div>
-            <h1 className="text-[15px] font-bold text-white tracking-tight">
-              Equipment Finance
-            </h1>
-            <p className="text-[10px] text-slate-500 font-medium tracking-widest uppercase">
-              Deal Screening Tool
-            </p>
-          </div>
+          <h1 className="text-lg font-extrabold tracking-tight">
+            <span className="text-white">Tranche</span>
+          </h1>
         </div>
 
         {/* Tabs + Info */}
@@ -140,7 +129,7 @@ export default function Header({ activeTab, onTabChange, onOpenGuide }) {
                 <span className="text-[10px] text-slate-600 uppercase tracking-wider">{ROLE_LABELS[profile.role] || profile.role}</span>
               </div>
               <a
-                href="mailto:joelpeter617@gmail.com?subject=ABL%20Screening%20Feedback"
+                href="mailto:joelpeter617@gmail.com?subject=Tranche%20Feedback"
                 className="px-3 py-1.5 rounded-lg text-[11px] font-medium text-slate-500 hover:text-gold-400 transition-all"
               >
                 Feedback

@@ -163,15 +163,10 @@ export default function App() {
   if (authLoading) {
     return (
       <div className="min-h-screen bg-[#141210] flex flex-col items-center justify-center">
-        <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-gold-500 to-gold-600 shadow-lg shadow-gold-500/20 mb-6">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
-            <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
-          </svg>
-        </div>
+        <h1 className="text-2xl font-extrabold text-white tracking-tight mb-6">Tranche</h1>
         <div className="flex items-center gap-3">
           <div className="w-5 h-5 border-2 border-gold-500/30 border-t-gold-500 rounded-full animate-spin" />
-          <span className="text-sm text-slate-400 font-medium">Connecting...</span>
+          <span className="text-sm text-slate-400 font-medium">Loading...</span>
         </div>
       </div>
     );

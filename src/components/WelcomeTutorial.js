@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 
 const SLIDES = [
   {
-    title: 'Welcome to ABL Screening',
+    title: 'Welcome to Tranche',
     body: 'Enter borrower details and get an instant risk assessment in under 2 minutes.',
     visual: (
       <div className="flex items-center justify-center gap-4 py-6">

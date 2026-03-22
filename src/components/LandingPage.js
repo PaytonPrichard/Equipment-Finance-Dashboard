@@ -110,15 +110,7 @@ export default function LandingPage({ onGetStarted, onSignIn }) {
       {/* Sticky Nav */}
       <nav className="sticky top-0 z-50 bg-[#141210]/95 backdrop-blur-md border-b border-white/[0.04]">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-gold-500 to-gold-600 flex items-center justify-center shadow-lg shadow-gold-500/20">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
-                <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
-                <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
-              </svg>
-            </div>
-            <span className="text-white font-bold text-lg tracking-tight">ABL Screening</span>
-          </div>
+          <span className="text-xl font-extrabold text-white tracking-tight">Tranche</span>
           <div className="hidden md:flex items-center gap-8">
             <button onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })} className="text-sm text-slate-400 hover:text-white transition-colors">Features</button>
             <button onClick={() => document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' })} className="text-sm text-slate-400 hover:text-white transition-colors">How It Works</button>
@@ -318,15 +310,7 @@ export default function LandingPage({ onGetStarted, onSignIn }) {
       {/* Footer */}
       <footer className="border-t border-white/[0.04]">
         <div className="max-w-6xl mx-auto px-6 py-8 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-gold-500 to-gold-600 flex items-center justify-center">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
-                <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
-                <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
-              </svg>
-            </div>
-            <span className="text-[11px] text-slate-600">ABL Screening Platform</span>
-          </div>
+          <span className="text-[12px] font-bold text-slate-600 tracking-tight">Tranche</span>
           <span className="text-[10px] text-slate-700">&copy; {new Date().getFullYear()}</span>
         </div>
       </footer>

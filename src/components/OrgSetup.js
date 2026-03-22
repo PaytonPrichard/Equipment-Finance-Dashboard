@@ -76,14 +76,8 @@ export default function OrgSetup({ profile, onComplete }) {
             <div className="w-2 h-2 rounded-full bg-gold-500 animate-pulse" />
             <span className="text-[10px] text-slate-600 ml-2">Step 3 of 3</span>
           </div>
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-br from-gold-500 to-gold-600 shadow-lg shadow-gold-500/20 mb-4">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
-              <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
-            </svg>
-          </div>
-          <h1 className="text-xl font-bold text-white tracking-tight">
-            ABL Screening
+          <h1 className="text-2xl font-extrabold text-white tracking-tight mb-1">
+            Tranche
           </h1>
           <p className="text-sm text-slate-500 mt-1">
             Let's set up your organization to start screening deals
@@ -280,7 +274,7 @@ export default function OrgSetup({ profile, onComplete }) {
 
         {/* Footer */}
         <p className="text-center text-[11px] text-slate-600 mt-6">
-          ABL Screening &middot; Organization Setup
+          Tranche &middot; Organization Setup
         </p>
       </div>
     </div>

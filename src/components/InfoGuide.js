@@ -13,7 +13,7 @@ const SECTIONS = [
     content: [
       {
         heading: 'What is this tool?',
-        body: 'ABL Screening is a pre-origination deal screening platform for asset-based lending. It helps credit analysts quickly evaluate whether a deal is worth advancing to full underwriting, before investing significant time and resources. It supports equipment finance, accounts receivable, and inventory finance asset classes.',
+        body: 'Tranche is a pre-origination deal screening platform for asset-based lending. It helps credit analysts quickly evaluate whether a deal is worth advancing to full underwriting, before investing significant time and resources. It supports equipment finance, accounts receivable, and inventory finance asset classes.',
       },
       {
         heading: 'What it does',

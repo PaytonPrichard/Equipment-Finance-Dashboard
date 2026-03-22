@@ -222,7 +222,7 @@ function parseSummaryToPdfHtml(summaryText, inputs) {
 <html>
 <head>
 <meta charset="utf-8"/>
-<title>Equipment Finance Deal Screening - ${esc(companyName)}</title>
+<title>Tranche Screening - ${esc(companyName)}</title>
 <style>
   @page {
     margin: 0.6in 0.7in;
@@ -326,7 +326,7 @@ function parseSummaryToPdfHtml(summaryText, inputs) {
 <div class="page">
   <div class="header">
     <h1>${esc(companyName)}</h1>
-    <div class="subtitle">Equipment Finance Deal Screening &mdash; Preliminary Assessment</div>
+    <div class="subtitle">Preliminary Screening Assessment</div>
   </div>
 
   <div class="score-banner">

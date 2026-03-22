@@ -129,17 +129,11 @@ export default function LoginPage({ passwordRecovery, onBackToLanding }) {
               <span className="text-[10px] text-slate-600 ml-2">Step 1 of 3</span>
             </div>
           )}
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-br from-gold-500 to-gold-600 shadow-lg shadow-gold-500/20 mb-4">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
-              <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
-            </svg>
-          </div>
-          <h1 className="text-xl font-bold text-white tracking-tight">
-            ABL Screening
+          <h1 className="text-2xl font-extrabold text-white tracking-tight mb-1">
+            Tranche
           </h1>
           <p className="text-sm text-slate-500 mt-1">
-            Deal Screening & Risk Analysis
+            Screen deals. Fund faster.
           </p>
         </div>
 
@@ -313,7 +307,7 @@ export default function LoginPage({ passwordRecovery, onBackToLanding }) {
             </button>
           )}
           <p className="text-[11px] text-slate-600">
-            ABL Screening Platform &middot; Secure Authentication
+            Tranche &middot; Secure Authentication
           </p>
         </div>
       </div>
