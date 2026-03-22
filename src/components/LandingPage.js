@@ -135,10 +135,13 @@ export default function LandingPage({ onGetStarted, onSignIn }) {
           </button>
         </div>
         <p className="text-xs text-gray-400">No credit card required. Full access for 14 days.</p>
+        <p className="text-[12px] text-gray-400 mt-4">Built for credit teams at mid-market lenders. Currently in pilot with select firms.</p>
       </section>
 
-      {/* Dashboard Mockup Placeholder */}
+      {/* Product Screenshot */}
       <section className="max-w-4xl mx-auto px-6 pb-12">
+        {/* Replace the src below with a real screenshot of a scored deal */}
+        {/* To add: take a screenshot showing verdict banner + score gauge + metric cards */}
         <div className="rounded-2xl bg-[#141210] border border-gray-200 shadow-2xl shadow-gray-300/30 overflow-hidden">
           <div className="px-4 py-2.5 flex items-center gap-1.5 border-b border-white/[0.06]">
             <div className="w-2.5 h-2.5 rounded-full bg-rose-400/60" />
