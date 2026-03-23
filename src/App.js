@@ -472,6 +472,7 @@ function AuthenticatedApp({ profile, user }) {
   };
 
   const clearForm = () => {
+    if (!window.confirm('Clear all fields? This cannot be undone.')) return;
     setInputs(mod.INITIAL_INPUTS);
     setActiveDeal(null);
     setActivePipelineDealId(null);
@@ -517,14 +518,14 @@ function AuthenticatedApp({ profile, user }) {
       />
 
       {/* SOFR Rate Indicator */}
-      <div className="bg-[#141210]/80 border-b border-white/[0.04]">
+      <div className="bg-gray-50 border-b border-gray-200">
         <div className="max-w-[1600px] mx-auto px-6 py-1.5 flex items-center gap-3">
-          <span className="text-[10px] text-slate-600 uppercase tracking-wider font-semibold">SOFR</span>
-          <span className="font-mono text-[11px] text-gold-400 font-semibold">{(sofr * 100).toFixed(2)}%</span>
+          <span className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">SOFR</span>
+          <span className="font-mono text-[11px] text-gray-700 font-semibold">{(sofr * 100).toFixed(2)}%</span>
           <span className={`text-[9px] px-1.5 py-0.5 rounded font-medium ${
-            sofrSource.includes('live') ? 'bg-emerald-500/10 text-emerald-400' :
-            sofrSource.includes('cached') ? 'bg-gold-500/10 text-gold-400' :
-            'bg-amber-500/10 text-amber-400'
+            sofrSource.includes('live') ? 'bg-emerald-50 text-emerald-600' :
+            sofrSource.includes('cached') ? 'bg-gray-100 text-gray-500' :
+            'bg-amber-50 text-amber-600'
           }`}>
             {sofrSource}
           </span>
@@ -574,7 +575,7 @@ function AuthenticatedApp({ profile, user }) {
 
       {/* Toolbar */}
       {activeTab === 'screening' && (
-      <div className="border-b border-white/[0.04] bg-[#141210]/60 backdrop-blur-sm">
+      <div className="border-b border-gray-200 bg-white/80 backdrop-blur-sm">
         <div className="max-w-[1600px] mx-auto px-6 py-2">
           <div className="flex items-center gap-2">
             {activeTab === 'screening' && (
@@ -631,16 +632,16 @@ function AuthenticatedApp({ profile, user }) {
             <div className="lg:col-span-7 xl:col-span-8 lg:overflow-y-auto lg:pl-2">
               {!valid ? (
                 <div className="flex flex-col items-center justify-center min-h-[520px] text-center">
-                  <div className="w-16 h-16 rounded-2xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-center mb-5">
-                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-slate-600" strokeWidth="1.5">
+                  <div className="w-16 h-16 rounded-2xl bg-gray-100 border border-gray-200 flex items-center justify-center mb-5">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-gray-400" strokeWidth="1.5">
                       <path d="M9 17H7A5 5 0 0 1 7 7h2" />
                       <path d="M15 7h2a5 5 0 1 1 0 10h-2" />
                       <line x1="8" y1="12" x2="16" y2="12" />
                     </svg>
                   </div>
-                  <h3 className="text-lg font-semibold text-slate-300 mb-2">Enter Deal Parameters</h3>
-                  <p className="text-sm text-slate-500 max-w-md mb-8">
-                    Fill in borrower and {isEquipment ? 'equipment' : activeModule === 'accounts_receivable' ? 'receivables' : 'inventory'} details{isEquipment ? ', or load a deal above' : ''}.
+                  <h3 className="text-lg font-semibold text-gray-700 mb-2">Enter Deal Parameters</h3>
+                  <p className="text-sm text-gray-400 max-w-md mb-8">
+                    Fill in borrower and {isEquipment ? 'equipment' : activeModule === 'accounts_receivable' ? 'receivables' : 'inventory'} details to see screening results.
                   </p>
                   <div className="grid grid-cols-3 gap-4 max-w-lg w-full">
                     {[
@@ -649,11 +650,11 @@ function AuthenticatedApp({ profile, user }) {
                       { n: '3', t: 'Review Assessment', d: 'Score, metrics, stress test' },
                     ].map((s) => (
                       <div key={s.n} className="glass-card rounded-xl p-4 text-center">
-                        <div className="w-7 h-7 rounded-lg bg-gold-500/10 flex items-center justify-center mx-auto mb-2.5">
-                          <span className="text-xs font-bold text-gold-400">{s.n}</span>
+                        <div className="w-7 h-7 rounded-lg bg-gray-100 flex items-center justify-center mx-auto mb-2.5">
+                          <span className="text-xs font-bold text-gray-500">{s.n}</span>
                         </div>
-                        <p className="text-xs text-slate-300 font-semibold mb-0.5">{s.t}</p>
-                        <p className="text-[10px] text-slate-600">{s.d}</p>
+                        <p className="text-xs text-gray-700 font-semibold mb-0.5">{s.t}</p>
+                        <p className="text-[10px] text-gray-400">{s.d}</p>
                       </div>
                     ))}
                   </div>
@@ -661,9 +662,9 @@ function AuthenticatedApp({ profile, user }) {
                   {isEquipment && exampleDeals.length > 0 && (
                     <button
                       onClick={() => loadExample(exampleDeals[0])}
-                      className="mt-6 px-5 py-2.5 rounded-xl bg-gold-500/[0.08] border border-gold-500/20 text-sm text-gold-400 font-medium hover:bg-gold-500/[0.12] hover:border-gold-500/30 transition-all"
+                      className="mt-6 px-5 py-2.5 rounded-xl bg-gray-900 text-sm text-white font-medium hover:bg-gray-800 transition-all"
                     >
-                      Load an example deal to explore
+                      Load example: $5M Heavy Machinery, Manufacturing
                     </button>
                   )}
                   {/* Recently Screened Deals */}

@@ -18,12 +18,9 @@ input[type='number'] {
   appearance: textfield;
 }
 
-/* ---- Background (charcoal bronze) ---- */
+/* ---- Background (light) ---- */
 body {
-  background: #141210;
-  background-image:
-    radial-gradient(ellipse 80% 60% at 50% -20%, rgba(212,168,67,0.05) 0%, transparent 70%),
-    radial-gradient(ellipse 60% 50% at 80% 50%, rgba(184,146,58,0.025) 0%, transparent 60%);
+  background: #f8f9fa;
   min-height: 100vh;
 }
 
@@ -32,51 +29,48 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
-/* ---- Glass card base ---- */
+/* ---- Card base (light) ---- */
 .glass-card {
-  background: rgba(20, 20, 28, 0.6);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(148, 163, 184, 0.08);
-  box-shadow:
-    0 0 0 1px rgba(148,163,184,0.04),
-    0 4px 24px rgba(0,0,0,0.25);
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
   transition: border-color 0.25s ease, box-shadow 0.25s ease;
 }
 .glass-card:hover {
-  border-color: rgba(148,163,184,0.12);
+  border-color: #d1d5db;
 }
 
-/* ---- Inputs ---- */
+/* ---- Inputs (light) ---- */
 .form-input {
-  background: rgba(20, 20, 28, 0.5);
-  border: 1px solid rgba(148, 163, 184, 0.1);
+  background: #ffffff;
+  border: 1px solid #d1d5db;
   border-radius: 10px;
   padding-top: 12px;
   padding-bottom: 12px;
   padding-right: 16px;
   padding-left: 16px;
   font-size: 14px;
-  color: #e2e8f0;
+  color: #111827;
   outline: none;
   transition: all 0.2s ease;
   width: 100%;
 }
 .form-input::placeholder {
-  color: #64748b;
+  color: #9ca3af;
 }
 .form-input:focus {
-  border-color: rgba(212, 168, 67, 0.5);
-  box-shadow: 0 0 0 3px rgba(212, 168, 67, 0.1), 0 0 20px rgba(212, 168, 67, 0.05);
+  border-color: #6b7280;
+  box-shadow: 0 0 0 3px rgba(107, 114, 128, 0.1);
 }
 
 .form-select {
-  background: rgba(20, 20, 28, 0.5);
-  border: 1px solid rgba(148, 163, 184, 0.1);
+  background: #ffffff;
+  border: 1px solid #d1d5db;
   border-radius: 10px;
   padding: 10px 16px;
   font-size: 14px;
-  color: #e2e8f0;
+  color: #111827;
   outline: none;
   transition: all 0.2s ease;
   width: 100%;
@@ -84,8 +78,8 @@ body {
   cursor: pointer;
 }
 .form-select:focus {
-  border-color: rgba(212, 168, 67, 0.5);
-  box-shadow: 0 0 0 3px rgba(212, 168, 67, 0.1);
+  border-color: #6b7280;
+  box-shadow: 0 0 0 3px rgba(107, 114, 128, 0.1);
 }
 
 /* ---- Animations ---- */

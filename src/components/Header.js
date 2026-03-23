@@ -11,18 +11,18 @@ export default function Header({ activeTab, onTabChange, onOpenGuide, onOpenSett
   const tutorial = useTutorial();
   const [moreOpen, setMoreOpen] = useState(false);
   return (
-    <header className="border-b border-white/[0.06] bg-[#141210]/80 backdrop-blur-xl sticky top-0 z-50">
+    <header className="border-b border-gray-200 bg-white/90 backdrop-blur-md sticky top-0 z-50">
       <div className="max-w-[1600px] mx-auto px-6 py-3 flex items-center justify-between">
         {/* Logo */}
         <div className="flex items-center gap-3">
           <h1 className="text-lg font-extrabold tracking-tight">
-            <span className="text-white">Tranche</span>
+            <span className="text-gray-900">Tranche</span>
           </h1>
         </div>
 
         {/* Tabs + Info */}
         <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1 bg-white/[0.03] rounded-xl p-1 border border-white/[0.06]">
+          <div className="flex items-center gap-1 bg-gray-100 rounded-xl p-1 border border-gray-200">
             {/* Primary tabs: always visible */}
             {[
               { id: 'screening', label: 'New Deal' },
@@ -34,8 +34,8 @@ export default function Header({ activeTab, onTabChange, onOpenGuide, onOpenSett
                 onClick={() => onTabChange(tab.id)}
                 className={`px-4 py-2 rounded-lg text-xs font-semibold transition-all ${
                   activeTab === tab.id
-                    ? 'bg-gold-500/15 text-gold-300 shadow-sm'
-                    : 'text-slate-500 hover:text-slate-300'
+                    ? 'bg-white text-gray-900 shadow-sm'
+                    : 'text-gray-500 hover:text-gray-900'
                 }`}
               >
                 {tab.label}
@@ -50,7 +50,7 @@ export default function Header({ activeTab, onTabChange, onOpenGuide, onOpenSett
                 className={`px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
                   ['batch', 'compare', 'historical', 'audit', 'team', 'billing'].includes(activeTab)
                     ? 'bg-gold-500/15 text-gold-300'
-                    : 'text-slate-500 hover:text-slate-300'
+                    : 'text-gray-500 hover:text-gray-900'
                 }`}
               >
                 More
@@ -61,7 +61,7 @@ export default function Header({ activeTab, onTabChange, onOpenGuide, onOpenSett
               {moreOpen && (
                 <>
                   <div className="fixed inset-0 z-40" onClick={() => setMoreOpen(false)} />
-                  <div className="absolute top-full left-0 mt-2 py-2 w-44 bg-[rgba(20,20,28,0.95)] backdrop-blur-xl border border-white/[0.08] rounded-xl shadow-xl z-50 animate-fade-in">
+                  <div className="absolute top-full left-0 mt-2 py-2 w-44 bg-white border border-gray-200 rounded-xl shadow-xl z-50 animate-fade-in">
                     {[
                       { id: 'batch', label: 'Batch Screening' },
                       { id: 'compare', label: 'Compare Deals' },
@@ -73,8 +73,8 @@ export default function Header({ activeTab, onTabChange, onOpenGuide, onOpenSett
                         onClick={() => { onTabChange(tab.id); setMoreOpen(false); }}
                         className={`w-full text-left px-4 py-2 text-xs font-medium transition-colors ${
                           activeTab === tab.id
-                            ? 'text-gold-300 bg-gold-500/10'
-                            : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
+                            ? 'text-gray-900 bg-gray-100'
+                            : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'
                         }`}
                       >
                         {tab.label}
@@ -89,7 +89,7 @@ export default function Header({ activeTab, onTabChange, onOpenGuide, onOpenSett
             {tutorial?.resetTutorial && (
               <button
                 onClick={tutorial.resetTutorial}
-                className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-600 hover:text-gold-400 hover:bg-gold-500/10 border border-white/[0.06] hover:border-gold-500/20 transition-all"
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-600 hover:text-gold-400 hover:bg-gold-500/10 border border-gray-200 hover:border-gold-500/20 transition-all"
                 title="Replay tutorial"
               >
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -101,7 +101,7 @@ export default function Header({ activeTab, onTabChange, onOpenGuide, onOpenSett
             <span className="relative">
               <button
                 onClick={onOpenGuide}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-slate-500 hover:text-gold-400 hover:bg-gold-500/10 border border-white/[0.06] hover:border-gold-500/20 transition-all"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-slate-500 hover:text-gold-400 hover:bg-gold-500/10 border border-gray-200 hover:border-gold-500/20 transition-all"
                 title="Guide & Reference"
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -124,7 +124,7 @@ export default function Header({ activeTab, onTabChange, onOpenGuide, onOpenSett
             <>
               <button
                 onClick={onOpenSettings}
-                className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-500 hover:text-white hover:bg-white/[0.06] border border-white/[0.06] hover:border-white/[0.10] transition-all"
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-500 hover:text-white hover:bg-white/[0.06] border border-gray-200 hover:border-white/[0.10] transition-all"
                 title="Settings"
               >
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
