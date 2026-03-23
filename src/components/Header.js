@@ -89,7 +89,7 @@ export default function Header({ activeTab, onTabChange, onOpenGuide, onOpenSett
             {tutorial?.resetTutorial && (
               <button
                 onClick={tutorial.resetTutorial}
-                className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-600 hover:text-gold-400 hover:bg-gold-500/10 border border-gray-200 hover:border-gold-500/20 transition-all"
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-600 hover:text-gray-900 hover:bg-gray-100 border border-gray-200 hover:border-gray-300 transition-all"
                 title="Replay tutorial"
               >
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -101,7 +101,7 @@ export default function Header({ activeTab, onTabChange, onOpenGuide, onOpenSett
             <span className="relative">
               <button
                 onClick={onOpenGuide}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-slate-500 hover:text-gold-400 hover:bg-gold-500/10 border border-gray-200 hover:border-gold-500/20 transition-all"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-slate-500 hover:text-gray-900 hover:bg-gray-100 border border-gray-200 hover:border-gray-300 transition-all"
                 title="Guide & Reference"
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -124,7 +124,7 @@ export default function Header({ activeTab, onTabChange, onOpenGuide, onOpenSett
             <>
               <button
                 onClick={onOpenSettings}
-                className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-500 hover:text-white hover:bg-white/[0.06] border border-gray-200 hover:border-white/[0.10] transition-all"
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-900 hover:bg-gray-100 border border-gray-200 hover:border-gray-300 transition-all"
                 title="Settings"
               >
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -132,7 +132,7 @@ export default function Header({ activeTab, onTabChange, onOpenGuide, onOpenSett
                   <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
                 </svg>
               </button>
-              <span className="text-[11px] text-slate-500 hidden lg:inline">{profile.full_name || profile.email}</span>
+              <span className="text-[11px] text-gray-500 hidden lg:inline">{profile.full_name || profile.email}</span>
             </>
           )}
         </div>

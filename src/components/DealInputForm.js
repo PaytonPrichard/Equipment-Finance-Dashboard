@@ -50,21 +50,21 @@ const ICONS = {
   ),
 };
 
-// ---- Inline Tooltip ----
+// ---- Inline Tooltip (visible on parent hover only) ----
 function Tip({ text }) {
   return (
     <span className="relative group ml-1.5 inline-flex align-middle">
       <span
-        className="w-4 h-4 rounded-full bg-slate-700/60 text-slate-500 text-[10px] font-bold inline-flex items-center justify-center cursor-help hover:text-gray-500 hover:bg-gold-500/10 transition-colors focus:text-gray-500 focus:bg-gold-500/10 focus:outline-none"
+        className="w-3.5 h-3.5 rounded-full bg-gray-200 text-gray-400 text-[9px] font-bold inline-flex items-center justify-center cursor-help hover:text-gray-600 hover:bg-gray-300 transition-colors focus:text-gray-600 focus:bg-gray-300 focus:outline-none"
         tabIndex={0}
         role="button"
         aria-label="More info"
       >
         ?
       </span>
-      <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2.5 rounded-xl bg-slate-800 border border-slate-700/50 text-xs text-slate-300 w-60 text-left leading-relaxed shadow-2xl opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto group-focus-within:opacity-100 group-focus-within:pointer-events-auto transition-opacity duration-200 z-50" role="tooltip">
+      <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 rounded-lg bg-gray-800 text-[11px] text-gray-200 w-56 text-left leading-relaxed shadow-xl opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto group-focus-within:opacity-100 group-focus-within:pointer-events-auto transition-opacity duration-200 z-50" role="tooltip">
         {text}
-        <span className="absolute top-full left-1/2 -translate-x-1/2 border-[5px] border-transparent border-t-slate-800" />
+        <span className="absolute top-full left-1/2 -translate-x-1/2 border-[5px] border-transparent border-t-gray-800" />
       </span>
     </span>
   );
