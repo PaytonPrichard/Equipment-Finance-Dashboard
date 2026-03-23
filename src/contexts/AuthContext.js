@@ -246,10 +246,31 @@ export function AuthProvider({ children }) {
   const signOut = useCallback(async () => {
     if (!supabase) return;
 
+    // Clear all cached state first
+    try {
+      localStorage.removeItem('efd_profile_cache');
+      localStorage.removeItem('efd_tutorial_state');
+      localStorage.removeItem('efd_session_token');
+      // Clear Supabase auth token
+      const storageKey = `sb-${new URL(process.env.REACT_APP_SUPABASE_URL).hostname.split('.')[0]}-auth-token`;
+      localStorage.removeItem(storageKey);
+    } catch (e) { /* ignore */ }
+
+    // Clear React state immediately
+    setSession(null);
+    setUser(null);
+    setProfile(null);
+    setPermissions(null);
+    setEmailVerified(false);
+
+    // Tell Supabase to sign out (server-side token revocation)
     const { error } = await supabase.auth.signOut();
     if (error) {
       console.error('Error signing out:', error.message);
     }
+
+    // Force reload to landing page
+    window.location.href = '/';
   }, []);
 
   // Re-fetch the current user's profile and permissions

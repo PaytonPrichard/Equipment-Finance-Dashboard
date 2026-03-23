@@ -194,10 +194,6 @@ export default function SettingsPanel({ isOpen, onClose, onCriteriaChange, activ
             <button
               onClick={() => {
                 onClose();
-                try {
-                  localStorage.removeItem('efd_profile_cache');
-                  localStorage.removeItem('efd_tutorial_state');
-                } catch (e) { /* ignore */ }
                 signOut();
               }}
               className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[12px] font-medium text-gray-500 hover:text-rose-400 transition-all"
