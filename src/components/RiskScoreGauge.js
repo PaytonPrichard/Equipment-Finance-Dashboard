@@ -32,7 +32,7 @@ export default function RiskScoreGauge({ score }) {
         {/* Background arc */}
         <circle
           cx="100" cy="100" r="80" fill="none"
-          stroke="rgba(148,163,184,0.06)" strokeWidth="16"
+          stroke="rgba(148,163,184,0.15)" strokeWidth="16"
           strokeDasharray={`${ARC_LENGTH} ${CIRCUMFERENCE}`}
           transform="rotate(135, 100, 100)"
           strokeLinecap="round"
@@ -85,17 +85,17 @@ export default function RiskScoreGauge({ score }) {
           style={{ transition: 'all 0.8s cubic-bezier(0.16,1,0.3,1)' }}
         />
         <circle cx="100" cy="100" r="5" fill={color} style={{ transition: 'fill 0.4s ease' }} />
-        <circle cx="100" cy="100" r="2" fill="#0b1120" />
+        <circle cx="100" cy="100" r="2" fill="#ffffff" />
         {/* Score text */}
         <text
           x="100" y="138" textAnchor="middle"
-          style={{ fontSize: '34px', fontWeight: 800, fontFamily: 'Inter, sans-serif', fill: '#f1f5f9' }}
+          style={{ fontSize: '34px', fontWeight: 800, fontFamily: 'Inter, sans-serif', fill: '#111827' }}
         >
           {score}
         </text>
         <text
           x="100" y="152" textAnchor="middle"
-          style={{ fontSize: '10px', fontWeight: 600, fontFamily: 'Inter, sans-serif', fill: '#64748b', letterSpacing: '0.15em' }}
+          style={{ fontSize: '10px', fontWeight: 600, fontFamily: 'Inter, sans-serif', fill: '#374151', letterSpacing: '0.15em' }}
         >
           {getScoreLabel(score).toUpperCase()}
         </text>

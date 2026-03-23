@@ -33,12 +33,12 @@ function CustomTooltip({ active, payload }) {
   if (!active || !payload || !payload.length) return null;
   const data = payload[0].payload;
   return (
-    <div className="bg-slate-800 border border-slate-700/50 rounded-xl px-3 py-2.5 shadow-2xl">
-      <p className="text-xs font-semibold text-slate-200">{data.label}</p>
-      <p className="text-xs text-slate-400 mt-0.5">
-        Score: <span className="text-gold-400 font-mono font-medium">{data.score}</span>/100
+    <div className="bg-white border border-gray-200 rounded-xl px-3 py-2.5 shadow-lg">
+      <p className="text-xs font-semibold text-gray-800">{data.label}</p>
+      <p className="text-xs text-gray-500 mt-0.5">
+        Score: <span className="text-gray-900 font-mono font-medium">{data.score}</span>/100
       </p>
-      <p className="text-[10px] text-slate-500">Weight: {data.weight}</p>
+      <p className="text-[10px] text-gray-400">Weight: {data.weight}</p>
     </div>
   );
 }
@@ -55,26 +55,26 @@ export default function RiskRadarChart({ factors }) {
   return (
     <ResponsiveContainer width="100%" height={260}>
       <RadarChart data={data} cx="50%" cy="50%" outerRadius="72%">
-        <PolarGrid stroke="rgba(148,163,184,0.08)" strokeDasharray="3 3" />
+        <PolarGrid stroke="rgba(148,163,184,0.2)" strokeDasharray="3 3" />
         <PolarAngleAxis
           dataKey="factor"
-          tick={{ fill: '#94a3b8', fontSize: 10, fontWeight: 500 }}
+          tick={{ fill: '#374151', fontSize: 10, fontWeight: 500 }}
         />
         <PolarRadiusAxis
           angle={90}
           domain={[0, 100]}
-          tick={{ fill: '#475569', fontSize: 9 }}
+          tick={{ fill: '#6b7280', fontSize: 9 }}
           axisLine={false}
           tickCount={5}
         />
         <Radar
           name="Score"
           dataKey="score"
-          stroke="#d4a843"
-          fill="#d4a843"
-          fillOpacity={0.1}
+          stroke="#1f2937"
+          fill="#1f2937"
+          fillOpacity={0.08}
           strokeWidth={2}
-          dot={{ r: 3, fill: '#d4a843', strokeWidth: 0 }}
+          dot={{ r: 3, fill: '#1f2937', strokeWidth: 0 }}
         />
         <Tooltip content={<CustomTooltip />} />
       </RadarChart>
