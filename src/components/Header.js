@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useRole } from '../hooks/useRole';
-import { ROLE_LABELS } from '../lib/permissions';
+// import { ROLE_LABELS } from '../lib/permissions';
 import TutorialBeacon from './TutorialBeacon';
 import { useTutorial } from '../contexts/TutorialContext';
 
-export default function Header({ activeTab, onTabChange, onOpenGuide }) {
-  const { profile, signOut } = useAuth();
+export default function Header({ activeTab, onTabChange, onOpenGuide, onOpenSettings }) {
+  const { profile } = useAuth();
   const { can } = useRole();
   const tutorial = useTutorial();
   const [moreOpen, setMoreOpen] = useState(false);
@@ -67,8 +67,6 @@ export default function Header({ activeTab, onTabChange, onOpenGuide }) {
                       { id: 'compare', label: 'Compare Deals' },
                       { id: 'historical', label: 'Model Performance' },
                       ...(can('audit.view') ? [{ id: 'audit', label: 'Audit Log' }] : []),
-                      ...(can('org.manage_users') ? [{ id: 'team', label: 'My Team' }] : []),
-                      ...(can('org.manage_users') ? [{ id: 'billing', label: 'Billing' }] : []),
                     ].map((tab) => (
                       <button
                         key={tab.id}
@@ -120,26 +118,21 @@ export default function Header({ activeTab, onTabChange, onOpenGuide }) {
           </div>
         </div>
 
-        {/* User info */}
-        <div className="flex items-center gap-3 text-[11px] text-slate-500">
+        {/* Settings + User */}
+        <div className="flex items-center gap-2">
           {profile && (
             <>
-              <div className="text-right hidden lg:block">
-                <span className="text-slate-300 font-medium block">{profile.full_name || profile.email}</span>
-                <span className="text-[10px] text-slate-600 uppercase tracking-wider">{ROLE_LABELS[profile.role] || profile.role}</span>
-              </div>
-              <a
-                href="mailto:joelpeter617@gmail.com?subject=Tranche%20Feedback"
-                className="px-3 py-1.5 rounded-lg text-[11px] font-medium text-slate-500 hover:text-gold-400 transition-all"
-              >
-                Feedback
-              </a>
               <button
-                onClick={signOut}
-                className="px-3 py-1.5 rounded-lg text-[11px] font-medium text-slate-400 hover:text-rose-400 bg-white/[0.04] border border-white/[0.06] hover:border-rose-500/20 transition-all"
+                onClick={onOpenSettings}
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-500 hover:text-white hover:bg-white/[0.06] border border-white/[0.06] hover:border-white/[0.10] transition-all"
+                title="Settings"
               >
-                Sign Out
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="12" cy="12" r="3" />
+                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                </svg>
               </button>
+              <span className="text-[11px] text-slate-500 hidden lg:inline">{profile.full_name || profile.email}</span>
             </>
           )}
         </div>

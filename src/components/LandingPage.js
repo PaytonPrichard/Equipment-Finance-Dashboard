@@ -140,38 +140,12 @@ export default function LandingPage({ onGetStarted, onSignIn }) {
 
       {/* Product Screenshot */}
       <section className="max-w-4xl mx-auto px-6 pb-12">
-        {/* Replace the src below with a real screenshot of a scored deal */}
-        {/* To add: take a screenshot showing verdict banner + score gauge + metric cards */}
-        <div className="rounded-2xl bg-[#141210] border border-gray-200 shadow-2xl shadow-gray-300/30 overflow-hidden">
-          <div className="px-4 py-2.5 flex items-center gap-1.5 border-b border-white/[0.06]">
-            <div className="w-2.5 h-2.5 rounded-full bg-rose-400/60" />
-            <div className="w-2.5 h-2.5 rounded-full bg-amber-400/60" />
-            <div className="w-2.5 h-2.5 rounded-full bg-emerald-400/60" />
-            <span className="text-[10px] text-slate-600 ml-2 font-mono">tranche</span>
-          </div>
-          <div className="p-6 md:p-8">
-            <div className="grid grid-cols-3 gap-3 mb-4">
-              <div className="bg-emerald-500/[0.08] border border-emerald-500/20 rounded-xl p-3 text-center">
-                <p className="text-lg font-bold font-mono text-emerald-400">82</p>
-                <p className="text-[9px] text-slate-500">Risk Score</p>
-              </div>
-              <div className="bg-emerald-500/[0.08] border border-emerald-500/20 rounded-xl p-3 text-center">
-                <p className="text-sm font-bold text-emerald-400">PASS</p>
-                <p className="text-[9px] text-slate-500">Verdict</p>
-              </div>
-              <div className="bg-white/[0.04] border border-white/[0.06] rounded-xl p-3 text-center">
-                <p className="text-sm font-bold font-mono text-slate-300">1.72x</p>
-                <p className="text-[9px] text-slate-500">DSCR</p>
-              </div>
-            </div>
-            <div className="grid grid-cols-4 gap-2">
-              {['Leverage 2.8x', 'LTV 78%', 'Term 60%', 'Score 82/100'].map(m => (
-                <div key={m} className="bg-white/[0.03] rounded-lg p-2 text-center">
-                  <p className="text-[10px] text-slate-400 font-mono">{m}</p>
-                </div>
-              ))}
-            </div>
-          </div>
+        <div className="rounded-2xl border border-gray-200 shadow-2xl shadow-gray-300/30 overflow-hidden">
+          <img
+            src="/screenshot.png"
+            alt="Tranche deal screening dashboard showing risk score, pass verdict, executive summary, and risk factor breakdown"
+            className="w-full"
+          />
         </div>
       </section>
 

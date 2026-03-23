@@ -59,6 +59,7 @@ const TeamManagement = lazy(() => import('./components/TeamManagement'));
 const PipelineDashboard = lazy(() => import('./components/PipelineDashboard'));
 const InfoGuide = lazy(() => import('./components/InfoGuide'));
 const BillingPage = lazy(() => import('./components/BillingPage'));
+const SettingsPanel = lazy(() => import('./components/SettingsPanel'));
 const DueDiligenceChecklist = lazy(() => import('./components/DueDiligenceChecklist'));
 const ComparableDeals = lazy(() => import('./components/ComparableDeals'));
 const WhatIfPanel = lazy(() => import('./components/WhatIfPanel'));
@@ -300,6 +301,7 @@ function AuthenticatedApp({ profile, user }) {
   const [activeTab, setActiveTab] = useState('screening');
   const [importedDeals, setImportedDeals] = useState([]);
   const [guideOpen, setGuideOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [recentDeals, setRecentDeals] = useState([]);
   const [sofrAlert, setSofrAlert] = useState(false);
   const [lastAcknowledgedSofr, setLastAcknowledgedSofr] = useState(null);
@@ -499,9 +501,12 @@ function AuthenticatedApp({ profile, user }) {
     <TutorialProvider userId={userId}>
     <TutorialWelcomeHandler loadExample={loadExample} exampleDeals={exampleDeals} addToast={addToast} />
     <div className="min-h-screen">
-      <Header activeTab={activeTab} onTabChange={setActiveTab} onOpenGuide={() => setGuideOpen(true)} />
+      <Header activeTab={activeTab} onTabChange={setActiveTab} onOpenGuide={() => setGuideOpen(true)} onOpenSettings={() => setSettingsOpen(true)} />
       <Suspense fallback={null}>
         <InfoGuide isOpen={guideOpen} onClose={() => setGuideOpen(false)} />
+        <Suspense fallback={null}>
+          <SettingsPanel isOpen={settingsOpen} onClose={() => setSettingsOpen(false)} onCriteriaChange={setScreeningCriteria} activeModule={activeModule} />
+        </Suspense>
       </Suspense>
       <PlanBanner
         plan={plan}
