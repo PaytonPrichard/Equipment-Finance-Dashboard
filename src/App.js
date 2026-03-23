@@ -604,6 +604,8 @@ function AuthenticatedApp({ profile, user }) {
                 pipelineDeals={pipelineDealsList}
                 sofr={sofr}
                 sofrSource={sofrSource}
+                analystName={profile?.full_name || user?.user_metadata?.full_name || ''}
+                analystEmail={user?.email || ''}
               />
             </div>
 

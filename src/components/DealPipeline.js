@@ -446,7 +446,11 @@ export default function DealPipeline({ onLoadDeal, currentInputs, currentScore, 
                             <span className={`inline-flex items-center px-1.5 py-0.5 rounded-md border text-[9px] font-bold tracking-wider ${v.cls}`}>
                               {v.label}
                             </span>
-                          ) : null;
+                          ) : (
+                            <span className="inline-flex items-center px-1.5 py-0.5 rounded-md border text-[9px] font-bold tracking-wider bg-amber-50 text-amber-600 border-amber-200">
+                              Incomplete
+                            </span>
+                          );
                         })()}
                         <span className="text-[10px] text-gray-400 truncate">
                           {deal.inputs?.industrySector || deal.inputs?.industry || ''}

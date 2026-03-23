@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import companyProfiles from '../data/companyProfiles';
 import { formatCurrencyFull } from '../utils/format';
 import TutorialBeacon from './TutorialBeacon';
+import { getMissingFields, generateRequestInfoEmail } from '../lib/incompleteFields';
 
 const DS_ESTIMATE_RATE = 0.08;
 
@@ -312,7 +313,21 @@ function getInputWarnings(inputs, pipelineDeals) {
 
 // ============ FIELD RENDERER ============
 
-function renderField(field, inputs, onChange, schema, pipelineDeals) {
+function MissingFieldWrapper({ isMissing, label, children }) {
+  if (!isMissing) return children;
+  return (
+    <div className="relative">
+      {children}
+      <div className="mt-1 flex items-center gap-1">
+        <span className="text-[9px] font-semibold text-amber-600 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded">
+          Missing — required for screening
+        </span>
+      </div>
+    </div>
+  );
+}
+
+function renderField(field, inputs, onChange, schema, pipelineDeals, missingKeys) {
   const value = inputs[field.key];
   const update = (val) => onChange({ ...inputs, [field.key]: val });
 
@@ -516,7 +531,7 @@ function renderField(field, inputs, onChange, schema, pipelineDeals) {
 
 // ============ LAYOUT HELPER ============
 
-function renderFieldsLayout(fields, inputs, onChange, schema, pipelineDeals) {
+function renderFieldsLayout(fields, inputs, onChange, schema, pipelineDeals, missingKeys) {
   const groups = [];
   let currentHalfGroup = [];
 
@@ -546,7 +561,9 @@ function renderFieldsLayout(fields, inputs, onChange, schema, pipelineDeals) {
         <div key={i} className="grid grid-cols-2 gap-3">
           {group.fields.map((f) => (
             <React.Fragment key={f.key}>
-              {renderField(f, inputs, onChange, schema, pipelineDeals)}
+              <MissingFieldWrapper isMissing={missingKeys?.has(f.key)} label={f.label}>
+                {renderField(f, inputs, onChange, schema, pipelineDeals, missingKeys)}
+              </MissingFieldWrapper>
             </React.Fragment>
           ))}
         </div>
@@ -554,7 +571,9 @@ function renderFieldsLayout(fields, inputs, onChange, schema, pipelineDeals) {
     }
     return (
       <React.Fragment key={group.field.key}>
-        {renderField(group.field, inputs, onChange, schema, pipelineDeals)}
+        <MissingFieldWrapper isMissing={missingKeys?.has(group.field.key)} label={group.field.label}>
+          {renderField(group.field, inputs, onChange, schema, pipelineDeals, missingKeys)}
+        </MissingFieldWrapper>
       </React.Fragment>
     );
   });
@@ -562,7 +581,7 @@ function renderFieldsLayout(fields, inputs, onChange, schema, pipelineDeals) {
 
 // ============ MAIN FORM ============
 
-export default function DealInputForm({ inputs, onChange, schema, modules, activeModule, onModuleChange, pipelineDeals, sofr, sofrSource }) {
+export default function DealInputForm({ inputs, onChange, schema, modules, activeModule, onModuleChange, pipelineDeals, sofr, sofrSource, analystName, analystEmail }) {
   // Guard: if equipment module has TRAC selected but equipment type doesn't support it
   if (schema.equipmentDefaults && inputs.financingType === 'TRAC') {
     const ftField = schema.sections.flatMap(s => s.fields).find(f => f.key === 'financingType');
@@ -571,13 +590,24 @@ export default function DealInputForm({ inputs, onChange, schema, modules, activ
     }
   }
 
+  const missingFields = getMissingFields(inputs, schema);
+  const missingKeys = new Set(missingFields.map(f => f.key));
+  const hasIncomplete = missingFields.length > 0;
+
   return (
     <div className="space-y-5">
-      {/* Required note + SOFR */}
+      {/* Required note + SOFR + Incomplete badge */}
       <div className="flex items-center justify-between">
-        <p className="text-[11px] text-gray-400">
-          <span className="text-rose-400">*</span> Required. Results update as you type.
-        </p>
+        <div className="flex items-center gap-2">
+          <p className="text-[11px] text-gray-400">
+            <span className="text-rose-400">*</span> Required. Results update as you type.
+          </p>
+          {hasIncomplete && inputs.companyName && (
+            <span className="text-[9px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded">
+              {missingFields.length} incomplete
+            </span>
+          )}
+        </div>
         {sofr > 0 && (
           <span className="text-[10px] text-gray-400 font-mono">
             SOFR {(sofr * 100).toFixed(2)}%
@@ -633,7 +663,7 @@ export default function DealInputForm({ inputs, onChange, schema, modules, activ
           </div>
 
           <div className="space-y-4">
-            {renderFieldsLayout(section.fields, inputs, onChange, schema, pipelineDeals)}
+            {renderFieldsLayout(section.fields, inputs, onChange, schema, pipelineDeals, missingKeys)}
           </div>
         </div>
       ))}
@@ -669,6 +699,32 @@ export default function DealInputForm({ inputs, onChange, schema, modules, activ
           </div>
         );
       })()}
+
+      {/* Request Info button for incomplete deals */}
+      {hasIncomplete && inputs.companyName && (
+        <div className="glass-card rounded-2xl p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-[12px] font-medium text-gray-700">{missingFields.length} field{missingFields.length !== 1 ? 's' : ''} needed to complete screening</p>
+              <p className="text-[10px] text-gray-400 mt-0.5">
+                {missingFields.map(f => f.label).join(', ')}
+              </p>
+            </div>
+            <a
+              href={generateRequestInfoEmail({
+                dealName: inputs.companyName,
+                brokerName: '',
+                missingFields,
+                analystName: analystName || '',
+                analystEmail: analystEmail || '',
+              })}
+              className="px-3 py-2 rounded-lg bg-gray-900 text-white text-[11px] font-semibold hover:bg-gray-800 transition-all flex-shrink-0"
+            >
+              Request Info
+            </a>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
