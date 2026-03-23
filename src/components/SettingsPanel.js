@@ -172,9 +172,9 @@ export default function SettingsPanel({ isOpen, onClose, onCriteriaChange, activ
     <div className="fixed inset-0 z-[100] flex items-center justify-center">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fade-in" onClick={onClose} />
 
-      <div className="relative w-full max-w-3xl max-h-[85vh] mx-4 rounded-2xl border border-gray-200 overflow-hidden animate-fade-in-up flex" style={{ background: 'rgba(17, 17, 22, 0.97)' }}>
+      <div className="relative w-full max-w-3xl max-h-[85vh] mx-4 rounded-2xl border border-gray-200 overflow-hidden animate-fade-in-up flex bg-white">
         {/* Sidebar */}
-        <div className="w-48 flex-shrink-0 border-r border-gray-200 py-4 flex flex-col">
+        <div className="w-48 flex-shrink-0 border-r border-gray-200 bg-gray-50 py-4 flex flex-col">
           <h2 className="text-sm font-bold text-gray-900 px-4 mb-4">Settings</h2>
           <nav className="flex-1 space-y-0.5 px-2">
             {visibleNav.map(item => (
@@ -192,7 +192,14 @@ export default function SettingsPanel({ isOpen, onClose, onCriteriaChange, activ
           </nav>
           <div className="px-2 pt-2 border-t border-gray-200 mt-2">
             <button
-              onClick={() => { onClose(); signOut(); }}
+              onClick={() => {
+                onClose();
+                try {
+                  localStorage.removeItem('efd_profile_cache');
+                  localStorage.removeItem('efd_tutorial_state');
+                } catch (e) { /* ignore */ }
+                signOut();
+              }}
               className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[12px] font-medium text-gray-500 hover:text-rose-400 transition-all"
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" /></svg>
@@ -289,7 +296,7 @@ export default function SettingsPanel({ isOpen, onClose, onCriteriaChange, activ
                     <option value="credit_committee">Credit Committee</option>
                     <option value="admin">Admin</option>
                   </select>
-                  <button onClick={handleCreateInvite} className="px-4 py-2 rounded-lg bg-gray-100 text-gray-900 text-[12px] font-semibold hover:bg-white/[0.12] transition-all">
+                  <button onClick={handleCreateInvite} className="px-4 py-2 rounded-lg bg-gray-100 text-gray-900 text-[12px] font-semibold hover:bg-gray-100 transition-all">
                     Invite
                   </button>
                 </div>
@@ -326,7 +333,7 @@ export default function SettingsPanel({ isOpen, onClose, onCriteriaChange, activ
                       <input type="date" value={planExpiry} onChange={(e) => setPlanExpiry(e.target.value)} className="w-full px-3 py-2.5 rounded-xl bg-gray-50 border border-gray-200 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-gray-400/40 transition-all" />
                     </div>
                   </div>
-                  <button onClick={() => saveToOrg({ plan: planType, plan_expires_at: planExpiry ? new Date(planExpiry + 'T23:59:59Z').toISOString() : null })} className="px-4 py-2 rounded-lg bg-gray-100 text-gray-900 text-[12px] font-semibold hover:bg-white/[0.12] transition-all">
+                  <button onClick={() => saveToOrg({ plan: planType, plan_expires_at: planExpiry ? new Date(planExpiry + 'T23:59:59Z').toISOString() : null })} className="px-4 py-2 rounded-lg bg-gray-100 text-gray-900 text-[12px] font-semibold hover:bg-gray-100 transition-all">
                     Save Plan
                   </button>
                 </div>
@@ -371,7 +378,7 @@ export default function SettingsPanel({ isOpen, onClose, onCriteriaChange, activ
                         <SettingsInput label="Weak Credit Adj" value={orgSettings.creditSpreadWeak ?? 200} onChange={(v) => setOrgSettings(s => ({ ...s, creditSpreadWeak: v }))} type="number" suffix="bps" />
                         <SettingsInput label="Max AR Advance" value={orgSettings.maxAdvanceRateAR ?? 85} onChange={(v) => setOrgSettings(s => ({ ...s, maxAdvanceRateAR: v }))} type="number" suffix="%" />
                       </div>
-                      <button onClick={() => saveToOrg({ org_settings: orgSettings })} className="px-4 py-2 rounded-lg bg-gray-100 text-gray-900 text-[12px] font-semibold hover:bg-white/[0.12] transition-all">
+                      <button onClick={() => saveToOrg({ org_settings: orgSettings })} className="px-4 py-2 rounded-lg bg-gray-100 text-gray-900 text-[12px] font-semibold hover:bg-gray-100 transition-all">
                         Save Firm Assumptions
                       </button>
                     </div>
@@ -406,7 +413,7 @@ export default function SettingsPanel({ isOpen, onClose, onCriteriaChange, activ
                     <SettingsInput label="Memo Title" value={brandingMemoTitle} onChange={setBrandingMemoTitle} placeholder="e.g. Credit Screening Memo" />
                   </div>
                   <SettingsInput label="Footer Text" value={brandingFooterText} onChange={setBrandingFooterText} placeholder="e.g. Confidential" />
-                  <button onClick={() => saveToOrg({ branding: { logoUrl: brandingLogoUrl, accentColor: brandingAccentColor, footerText: brandingFooterText, memoTitle: brandingMemoTitle } })} className="px-4 py-2 rounded-lg bg-gray-100 text-gray-900 text-[12px] font-semibold hover:bg-white/[0.12] transition-all">
+                  <button onClick={() => saveToOrg({ branding: { logoUrl: brandingLogoUrl, accentColor: brandingAccentColor, footerText: brandingFooterText, memoTitle: brandingMemoTitle } })} className="px-4 py-2 rounded-lg bg-gray-100 text-gray-900 text-[12px] font-semibold hover:bg-gray-100 transition-all">
                     Save Branding
                   </button>
                 </div>
