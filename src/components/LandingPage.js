@@ -113,7 +113,7 @@ export default function LandingPage({ onGetStarted, onSignIn }) {
     <div className="min-h-screen bg-[#f8f9fa]">
       {/* Nav */}
       <nav className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-200/60">
-        <div className="max-w-5xl mx-auto px-6 py-3 flex items-center justify-between">
+        <div className="max-w-6xl mx-auto px-6 py-3 flex items-center justify-between">
           <span className="text-xl font-extrabold text-gray-900 tracking-tight">Tranche</span>
           <div className="hidden md:flex items-center gap-6">
             <button onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })} className="text-sm text-gray-500 hover:text-gray-900 transition-colors">Features</button>
@@ -128,7 +128,7 @@ export default function LandingPage({ onGetStarted, onSignIn }) {
       </nav>
 
       {/* Hero */}
-      <section className="max-w-5xl mx-auto px-6 pt-16 pb-10 text-center">
+      <section className="max-w-6xl mx-auto px-6 pt-16 pb-10 text-center">
         <p className="text-sm text-gray-500 font-medium mb-3">Pre-origination deal screening for ABL lenders</p>
         <h1 className="text-3xl md:text-4xl font-extrabold text-gray-900 leading-tight mb-4 tracking-tight">
           Screen equipment, AR, and inventory<br />
@@ -150,7 +150,7 @@ export default function LandingPage({ onGetStarted, onSignIn }) {
       </section>
 
       {/* Product Screenshot */}
-      <section className="max-w-4xl mx-auto px-6 pb-12">
+      <section className="max-w-5xl mx-auto px-6 pb-12">
         <div className="rounded-2xl border border-gray-200 shadow-2xl shadow-gray-300/30 overflow-hidden">
           <img
             src="/screenshot.png"
@@ -161,7 +161,7 @@ export default function LandingPage({ onGetStarted, onSignIn }) {
       </section>
 
       {/* Who is this for */}
-      <section className="max-w-5xl mx-auto px-6 pb-12">
+      <section className="max-w-6xl mx-auto px-6 pb-12">
         <div className="flex items-center justify-center gap-x-8 gap-y-3 flex-wrap">
           {[
             { title: 'Credit Analysts', desc: 'Screen 10x more deals.' },
@@ -180,7 +180,10 @@ export default function LandingPage({ onGetStarted, onSignIn }) {
       </section>
 
       {/* Features */}
-      <section id="features" className="max-w-5xl mx-auto px-6 py-12">
+      <section id="features" className="relative bg-white border-y border-gray-200/60 overflow-hidden">
+        {/* Subtle grid pattern */}
+        <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(circle, #000 1px, transparent 1px)', backgroundSize: '24px 24px' }} />
+        <div className="relative max-w-6xl mx-auto px-6 py-12">
         <h2 className="text-2xl font-bold text-gray-900 mb-2 text-center">Purpose-built for ABL teams</h2>
         <p className="text-gray-500 text-center mb-8 text-sm">No consultants. No 6-month implementation. Start screening today.</p>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -194,11 +197,12 @@ export default function LandingPage({ onGetStarted, onSignIn }) {
             </div>
           ))}
         </div>
+        </div>
       </section>
 
       {/* How It Works */}
-      <section id="how-it-works" className="bg-white border-y border-gray-200">
-        <div className="max-w-5xl mx-auto px-6 py-12">
+      <section id="how-it-works" className="border-b border-gray-200">
+        <div className="max-w-6xl mx-auto px-6 py-12">
           <h2 className="text-2xl font-bold text-gray-900 mb-2 text-center">Screen a deal in 3 steps</h2>
           <p className="text-gray-500 text-center mb-8 text-sm">No learning curve. Start today.</p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-3xl mx-auto">
@@ -228,7 +232,7 @@ export default function LandingPage({ onGetStarted, onSignIn }) {
 
       {/* Speed to Value */}
       <section className="bg-gray-900">
-        <div className="max-w-5xl mx-auto px-6 py-12">
+        <div className="max-w-6xl mx-auto px-6 py-12">
         <h2 className="text-2xl font-bold text-white mb-2 text-center">Your whole pipeline, scored by end of day</h2>
         <p className="text-gray-400 text-center mb-8 text-sm">No 6-month rollout. No consultant engagement. One afternoon.</p>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
@@ -343,7 +347,9 @@ export default function LandingPage({ onGetStarted, onSignIn }) {
       </section>
 
       {/* Pricing */}
-      <section id="pricing" className="max-w-5xl mx-auto px-6 py-12">
+      <section id="pricing" className="relative overflow-hidden">
+        <div className="absolute inset-0 opacity-[0.02]" style={{ backgroundImage: 'linear-gradient(135deg, #000 25%, transparent 25%, transparent 50%, #000 50%, #000 75%, transparent 75%)', backgroundSize: '40px 40px' }} />
+        <div className="relative max-w-6xl mx-auto px-6 py-12">
         <h2 className="text-2xl font-bold text-gray-900 mb-2 text-center">Simple pricing</h2>
         <p className="text-gray-500 text-center mb-8 text-sm">Per-organization, not per-seat. Cancel anytime.</p>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto">
@@ -397,11 +403,12 @@ export default function LandingPage({ onGetStarted, onSignIn }) {
           <span>&middot;</span>
           <span>Annual: save 20%</span>
         </div>
+        </div>
       </section>
 
       {/* Final CTA */}
       <section className="bg-gray-900">
-        <div className="max-w-5xl mx-auto px-6 py-12 text-center">
+        <div className="max-w-6xl mx-auto px-6 py-12 text-center">
           <h2 className="text-xl font-bold text-white mb-2">Ready to screen your first deal?</h2>
           <p className="text-gray-400 mb-6 text-sm">Set up in 5 minutes. Screen your first deal in 2. No credit card, no contracts.</p>
           <button onClick={onGetStarted} className="px-6 py-3 rounded-lg bg-white text-gray-900 font-semibold hover:bg-gray-100 transition-all">
@@ -412,7 +419,7 @@ export default function LandingPage({ onGetStarted, onSignIn }) {
 
       {/* Contact */}
       <section id="contact" className="bg-gray-900 border-t border-gray-800">
-        <div className="max-w-5xl mx-auto px-6 py-10 text-center">
+        <div className="max-w-6xl mx-auto px-6 py-10 text-center">
           <h2 className="text-lg font-bold text-white mb-2">Get in touch</h2>
           <p className="text-gray-400 text-sm mb-4">Questions about Tranche, pricing, or pilot programs? We respond within one business day.</p>
           <a
@@ -430,7 +437,7 @@ export default function LandingPage({ onGetStarted, onSignIn }) {
 
       {/* Trust Bar */}
       <section className="bg-gray-900 border-t border-gray-800">
-        <div className="max-w-5xl mx-auto px-6 py-6">
+        <div className="max-w-6xl mx-auto px-6 py-6">
           <div className="flex items-center justify-center gap-8 flex-wrap">
             {[
               { icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>, label: 'SOC 2 in progress' },
@@ -449,7 +456,7 @@ export default function LandingPage({ onGetStarted, onSignIn }) {
 
       {/* Footer */}
       <footer className="bg-gray-900 border-t border-gray-800">
-        <div className="max-w-5xl mx-auto px-6 py-6 flex items-center justify-between">
+        <div className="max-w-6xl mx-auto px-6 py-6 flex items-center justify-between">
           <span className="text-[12px] font-bold text-gray-500 tracking-tight">Tranche</span>
           <span className="text-[10px] text-gray-600">&copy; {new Date().getFullYear()}</span>
         </div>
