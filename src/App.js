@@ -650,7 +650,7 @@ function AuthenticatedApp({ profile, user }) {
             />
           </Suspense></ErrorBoundary>
         ) : activeTab === 'screening' ? (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:h-[calc(100vh-160px)]">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:h-[calc(100vh-160px)]" style={{ marginRight: '-1.5rem' }}>
             {/* Left: Form — independent scroll on desktop */}
             <div className="lg:col-span-4 lg:overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
               <DealInputForm
@@ -670,7 +670,7 @@ function AuthenticatedApp({ profile, user }) {
             </div>
 
             {/* Right: Results — independent scroll on desktop */}
-            <div className="lg:col-span-8 lg:overflow-y-auto lg:pr-1">
+            <div className="lg:col-span-8 lg:overflow-y-auto lg:pr-4">
               {!valid && !partialValid ? (
                 <div className="flex flex-col items-center justify-center min-h-[520px] text-center">
                   <div className="w-16 h-16 rounded-2xl bg-gray-100 border border-gray-200 flex items-center justify-center mb-5">
