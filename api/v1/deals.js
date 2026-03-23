@@ -31,42 +31,13 @@ module.exports = async function handler(req, res) {
 
   // ── POST: Create and score a deal ──────────────────────────
   if (req.method === 'POST') {
-    const { name, inputs, module: moduleKey } = req.body || {};
+    const { name, inputs } = req.body || {};
 
     if (!name || !inputs) {
       return res.status(400).json({ error: 'name and inputs are required' });
     }
 
-    // Score the deal server-side
-    let score = null;
-    try {
-      // Dynamic import of scoring module
-      const modKey = moduleKey || 'equipment_finance';
-      const modules = {
-        equipment_finance: () => require('../../src/modules/equipment-finance/scoring'),
-        accounts_receivable: () => require('../../src/modules/accounts-receivable/scoring'),
-        inventory_finance: () => require('../../src/modules/inventory-finance/scoring'),
-      };
-
-      const loader = modules[modKey];
-      if (!loader) {
-        return res.status(400).json({ error: `Unknown module: ${modKey}. Valid: equipment_finance, accounts_receivable, inventory_finance` });
-      }
-
-      // Note: Server-side scoring may not work if modules use browser-only APIs.
-      // In that case, score will be null and the deal is saved unscored.
-      try {
-        const mod = loader();
-        const metrics = mod.calculateMetrics(inputs);
-        const riskScore = mod.calculateRiskScore(inputs, metrics);
-        score = riskScore?.composite || null;
-      } catch {
-        // Scoring failed — save deal without score
-        score = null;
-      }
-    } catch {
-      score = null;
-    }
+    const score = req.body.score || null;
 
     // Save to pipeline
     const { data, error } = await supabaseAdmin
@@ -93,7 +64,6 @@ module.exports = async function handler(req, res) {
       name,
       stage: 'Screening',
       score,
-      module: moduleKey || 'equipment_finance',
     });
 
     return res.status(201).json({
