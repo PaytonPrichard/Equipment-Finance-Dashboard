@@ -518,10 +518,32 @@ function IntegrationsSection({ addToast }) {
 
   return (
     <div className="space-y-8">
+      {/* Why Connect */}
+      <div className="p-4 rounded-xl bg-gray-50 border border-gray-200">
+        <h3 className="text-sm font-bold text-gray-900 mb-2">Connect your CRM to Tranche</h3>
+        <p className="text-[12px] text-gray-500 leading-relaxed mb-3">
+          Push deals from Salesforce, HubSpot, or any system directly into Tranche for scoring. Get results back automatically via webhooks. No manual data entry. No switching between tools.
+        </p>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-[11px]">
+          <div className="flex items-start gap-2">
+            <span className="w-5 h-5 rounded-full bg-gray-900 text-white flex items-center justify-center text-[10px] font-bold flex-shrink-0 mt-0.5">1</span>
+            <span className="text-gray-600"><strong className="text-gray-900">Create an API key</strong> below. Copy it. You'll paste it into your CRM's integration settings.</span>
+          </div>
+          <div className="flex items-start gap-2">
+            <span className="w-5 h-5 rounded-full bg-gray-900 text-white flex items-center justify-center text-[10px] font-bold flex-shrink-0 mt-0.5">2</span>
+            <span className="text-gray-600"><strong className="text-gray-900">Add a webhook</strong> if you want Tranche to push updates back. Your CRM receives score and stage changes in real time.</span>
+          </div>
+          <div className="flex items-start gap-2">
+            <span className="w-5 h-5 rounded-full bg-gray-900 text-white flex items-center justify-center text-[10px] font-bold flex-shrink-0 mt-0.5">3</span>
+            <span className="text-gray-600"><strong className="text-gray-900">Use the API reference</strong> at the bottom of this page to configure your CRM or build custom integrations.</span>
+          </div>
+        </div>
+      </div>
+
       {/* API Keys */}
       <div>
         <h3 className="text-sm font-bold text-gray-900 mb-1">API Keys</h3>
-        <p className="text-[12px] text-gray-400 mb-4">Create API keys to connect external systems. Keys authenticate requests to the Tranche API.</p>
+        <p className="text-[12px] text-gray-400 mb-4">Each key authenticates one integration. Name it after the system it connects to.</p>
 
         {createdKey && (
           <div className="mb-4 p-3 rounded-lg bg-amber-50 border border-amber-200">
