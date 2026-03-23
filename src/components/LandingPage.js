@@ -108,6 +108,7 @@ export default function LandingPage({ onGetStarted, onSignIn }) {
           <div className="hidden md:flex items-center gap-6">
             <button onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })} className="text-sm text-gray-500 hover:text-gray-900 transition-colors">Features</button>
             <button onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })} className="text-sm text-gray-500 hover:text-gray-900 transition-colors">Pricing</button>
+            <button onClick={() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })} className="text-sm text-gray-500 hover:text-gray-900 transition-colors">Contact</button>
           </div>
           <div className="flex items-center gap-3">
             <button onClick={onSignIn} className="px-4 py-2 rounded-lg text-sm font-semibold text-gray-700 hover:text-gray-900 border border-gray-300 hover:border-gray-400 transition-all">Sign In</button>
@@ -364,6 +365,24 @@ export default function LandingPage({ onGetStarted, onSignIn }) {
           <button onClick={onGetStarted} className="px-6 py-3 rounded-lg bg-white text-gray-900 font-semibold hover:bg-gray-100 transition-all">
             Start Your Free Trial
           </button>
+        </div>
+      </section>
+
+      {/* Contact */}
+      <section id="contact" className="bg-gray-900 border-t border-gray-800">
+        <div className="max-w-5xl mx-auto px-6 py-10 text-center">
+          <h2 className="text-lg font-bold text-white mb-2">Get in touch</h2>
+          <p className="text-gray-400 text-sm mb-4">Questions about Tranche, pricing, or pilot programs? We respond within one business day.</p>
+          <a
+            href="mailto:team@usetranche.com"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-gray-800 border border-gray-700 text-sm font-medium text-white hover:bg-gray-700 hover:border-gray-600 transition-all"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+              <polyline points="22,6 12,13 2,6" />
+            </svg>
+            team@usetranche.com
+          </a>
         </div>
       </section>
 
