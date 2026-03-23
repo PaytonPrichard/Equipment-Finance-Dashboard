@@ -153,10 +153,9 @@ body {
 
 /* ---- Company search dropdown ---- */
 .company-dropdown {
-  background: rgba(20, 20, 28, 0.95);
-  backdrop-filter: blur(16px);
-  border: 1px solid rgba(148,163,184,0.12);
-  box-shadow: 0 16px 48px rgba(0,0,0,0.4), 0 0 0 1px rgba(148,163,184,0.04);
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.04);
 }
 
 /* ---- Toggle switch ---- */
@@ -170,16 +169,16 @@ body {
 /* ---- Pill buttons (gold accent) ---- */
 .pill-btn {
   transition: all 0.2s ease;
-  border: 1px solid rgba(148,163,184,0.08);
+  border: 1px solid #e5e7eb;
 }
 .pill-btn:hover:not(.pill-btn-active):not(:disabled) {
-  border-color: rgba(148,163,184,0.16);
-  background: rgba(30,30,38,0.6);
+  border-color: #d1d5db;
+  background: #f9fafb;
 }
 .pill-btn-active {
-  background: rgba(212,168,67,0.12);
-  border-color: rgba(212,168,67,0.3);
-  color: #E8C96A;
+  background: #111827;
+  border-color: #111827;
+  color: #ffffff;
 }
 
 /* ---- What-If Sliders (gold) ---- */
