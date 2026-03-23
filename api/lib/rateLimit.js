@@ -10,6 +10,7 @@ const LIMITS = {
   auth: { windowMs: 60 * 1000, max: 10 },           // 10 req/min for auth
   checkout: { windowMs: 60 * 1000, max: 5 },        // 5 req/min for checkout
   webhook: { windowMs: 60 * 1000, max: 100 },       // 100 req/min for webhooks
+  api: { windowMs: 60 * 1000, max: 120 },             // 120 req/min for public API
 };
 
 function cleanup() {

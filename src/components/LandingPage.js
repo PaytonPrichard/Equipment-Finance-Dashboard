@@ -68,6 +68,16 @@ const FEATURES = [
       </svg>
     ),
   },
+  {
+    title: 'CRM Integrations',
+    description: 'REST API and webhooks to connect Salesforce, HubSpot, or any CRM.',
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+        <polyline points="16 18 22 12 16 6" />
+        <polyline points="8 6 2 12 8 18" />
+      </svg>
+    ),
+  },
 ];
 
 const PRICING = [
@@ -84,7 +94,7 @@ const PRICING = [
     price: '$500',
     period: '/mo',
     who: 'For credit teams of 2-10',
-    features: ['Up to 10 users', 'Everything in Starter', 'Unlimited deals', 'Firm-branded memos', 'Shared pipeline & audit trail', 'Custom scoring weights'],
+    features: ['Up to 10 users', 'Everything in Starter', 'Unlimited deals', 'Firm-branded memos', 'Shared pipeline & audit trail', 'Custom scoring weights', 'API & webhook integrations'],
     cta: 'Start Free Trial',
     highlight: true,
   },

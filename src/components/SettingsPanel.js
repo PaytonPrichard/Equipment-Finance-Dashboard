@@ -14,6 +14,7 @@ const NAV_ITEMS = [
   { id: 'screening', label: 'Screening Policy', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" /></svg> },
   { id: 'branding', label: 'Branding', adminOnly: true, icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" /></svg> },
   { id: 'billing', label: 'Billing', adminOnly: true, icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2" /><line x1="1" y1="10" x2="23" y2="10" /></svg> },
+  { id: 'integrations', label: 'Integrations', adminOnly: true, icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" /></svg> },
 ];
 
 function SettingsInput({ label, value, onChange, type = 'text', placeholder, hint, suffix }) {
@@ -439,6 +440,180 @@ export default function SettingsPanel({ isOpen, onClose, onCriteriaChange, activ
               </div>
             </div>
           )}
+
+          {/* Integrations */}
+          {section === 'integrations' && isAdmin && (
+            <IntegrationsSection addToast={addToast} />
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Integrations Section (API Keys + Webhooks) ──────────────
+function IntegrationsSection({ addToast }) {
+  const { session } = useAuth();
+  const [apiKeys, setApiKeys] = useState([]);
+  const [webhooksList, setWebhooksList] = useState([]);
+  const [newKeyName, setNewKeyName] = useState('');
+  const [newWebhookUrl, setNewWebhookUrl] = useState('');
+  const [createdKey, setCreatedKey] = useState(null);
+  const [createdSecret, setCreatedSecret] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  const getAuthHeaders = useCallback(() => ({
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${session?.access_token}`,
+  }), [session?.access_token]);
+
+  useEffect(() => {
+    if (!session?.access_token) return;
+    const h = getAuthHeaders();
+    fetch('/api/v1/keys', { headers: h }).then(r => r.json()).then(d => setApiKeys(d.keys || [])).catch(() => {});
+    fetch('/api/v1/webhooks', { headers: h }).then(r => r.json()).then(d => setWebhooksList(d.webhooks || [])).catch(() => {});
+  }, [session?.access_token, getAuthHeaders]);
+
+  const createKey = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch('/api/v1/keys', { method: 'POST', headers: getAuthHeaders(), body: JSON.stringify({ name: newKeyName || 'Default' }) });
+      const data = await res.json();
+      if (res.ok) { setCreatedKey(data.key); setNewKeyName(''); setApiKeys(prev => [data, ...prev]); addToast('API key created. Copy it now.', 'success'); }
+      else { addToast(data.error || 'Failed to create key', 'error'); }
+    } catch { addToast('Failed to create key', 'error'); }
+    setLoading(false);
+  };
+
+  const revokeKey = async (id) => {
+    if (!window.confirm('Revoke this API key? Any integrations using it will stop working.')) return;
+    const res = await fetch(`/api/v1/keys?id=${id}`, { method: 'DELETE', headers: getAuthHeaders() });
+    if (res.ok) { setApiKeys(prev => prev.map(k => k.id === id ? { ...k, revoked_at: new Date().toISOString() } : k)); addToast('Key revoked', 'success'); }
+  };
+
+  const createWebhook = async () => {
+    if (!newWebhookUrl) return;
+    setLoading(true);
+    try {
+      const res = await fetch('/api/v1/webhooks', { method: 'POST', headers: getAuthHeaders(), body: JSON.stringify({ url: newWebhookUrl }) });
+      const data = await res.json();
+      if (res.ok) { setCreatedSecret(data.secret); setNewWebhookUrl(''); setWebhooksList(prev => [data, ...prev]); addToast('Webhook created. Copy the signing secret now.', 'success'); }
+      else { addToast(data.error || 'Failed to create webhook', 'error'); }
+    } catch { addToast('Failed to create webhook', 'error'); }
+    setLoading(false);
+  };
+
+  const deleteWebhook = async (id) => {
+    if (!window.confirm('Delete this webhook?')) return;
+    const res = await fetch(`/api/v1/webhooks?id=${id}`, { method: 'DELETE', headers: getAuthHeaders() });
+    if (res.ok) { setWebhooksList(prev => prev.filter(w => w.id !== id)); addToast('Webhook deleted', 'success'); }
+  };
+
+  const toggleWebhook = async (id, active) => {
+    const res = await fetch(`/api/v1/webhooks?id=${id}`, { method: 'PATCH', headers: getAuthHeaders(), body: JSON.stringify({ active: !active }) });
+    if (res.ok) { setWebhooksList(prev => prev.map(w => w.id === id ? { ...w, active: !active } : w)); }
+  };
+
+  const copyText = (text) => { navigator.clipboard.writeText(text); addToast('Copied to clipboard', 'success'); };
+
+  return (
+    <div className="space-y-8">
+      {/* API Keys */}
+      <div>
+        <h3 className="text-sm font-bold text-gray-900 mb-1">API Keys</h3>
+        <p className="text-[12px] text-gray-400 mb-4">Create API keys to connect external systems. Keys authenticate requests to the Tranche API.</p>
+
+        {createdKey && (
+          <div className="mb-4 p-3 rounded-lg bg-amber-50 border border-amber-200">
+            <p className="text-[12px] text-amber-800 font-semibold mb-1">Save this key now. It won't be shown again.</p>
+            <div className="flex items-center gap-2">
+              <code className="text-[11px] bg-white px-2 py-1 rounded border border-amber-200 font-mono text-gray-900 flex-1 truncate">{createdKey}</code>
+              <button onClick={() => copyText(createdKey)} className="px-2 py-1 rounded text-[11px] bg-amber-100 text-amber-700 hover:bg-amber-200 transition-colors">Copy</button>
+              <button onClick={() => setCreatedKey(null)} className="text-[11px] text-gray-400 hover:text-gray-600">Dismiss</button>
+            </div>
+          </div>
+        )}
+
+        <div className="flex items-center gap-2 mb-4">
+          <input type="text" value={newKeyName} onChange={(e) => setNewKeyName(e.target.value)} placeholder="Key name (e.g. Salesforce)" className="flex-1 px-3 py-2 rounded-lg bg-gray-50 border border-gray-200 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-400/40" />
+          <button onClick={createKey} disabled={loading} className="px-4 py-2 rounded-lg bg-gray-900 text-white text-[12px] font-semibold hover:bg-gray-800 disabled:opacity-50 transition-all">Create Key</button>
+        </div>
+
+        <div className="space-y-2">
+          {apiKeys.map((k) => (
+            <div key={k.id} className={`flex items-center justify-between p-3 rounded-lg border ${k.revoked_at ? 'bg-gray-50 border-gray-100 opacity-50' : 'bg-white border-gray-200'}`}>
+              <div>
+                <p className="text-[12px] text-gray-900 font-medium">{k.name}</p>
+                <p className="text-[10px] text-gray-400 font-mono">{k.key_prefix}...</p>
+              </div>
+              <div className="flex items-center gap-3 text-[10px] text-gray-400">
+                {k.last_used_at && <span>Used {new Date(k.last_used_at).toLocaleDateString()}</span>}
+                {k.revoked_at ? <span className="text-rose-400">Revoked</span> : <button onClick={() => revokeKey(k.id)} className="text-rose-400 hover:text-rose-600 transition-colors">Revoke</button>}
+              </div>
+            </div>
+          ))}
+          {apiKeys.length === 0 && <p className="text-[12px] text-gray-400">No API keys created yet.</p>}
+        </div>
+      </div>
+
+      {/* Webhooks */}
+      <div>
+        <h3 className="text-sm font-bold text-gray-900 mb-1">Webhooks</h3>
+        <p className="text-[12px] text-gray-400 mb-1">Receive real-time notifications when deals are created, scored, or move pipeline stages.</p>
+        <p className="text-[10px] text-gray-400 mb-4">Events: deal.created, deal.scored, pipeline.stage_changed. Payloads signed with HMAC-SHA256.</p>
+
+        {createdSecret && (
+          <div className="mb-4 p-3 rounded-lg bg-amber-50 border border-amber-200">
+            <p className="text-[12px] text-amber-800 font-semibold mb-1">Save this signing secret now. It won't be shown again.</p>
+            <div className="flex items-center gap-2">
+              <code className="text-[11px] bg-white px-2 py-1 rounded border border-amber-200 font-mono text-gray-900 flex-1 truncate">{createdSecret}</code>
+              <button onClick={() => copyText(createdSecret)} className="px-2 py-1 rounded text-[11px] bg-amber-100 text-amber-700 hover:bg-amber-200 transition-colors">Copy</button>
+              <button onClick={() => setCreatedSecret(null)} className="text-[11px] text-gray-400 hover:text-gray-600">Dismiss</button>
+            </div>
+          </div>
+        )}
+
+        <div className="flex items-center gap-2 mb-4">
+          <input type="url" value={newWebhookUrl} onChange={(e) => setNewWebhookUrl(e.target.value)} placeholder="https://your-system.com/webhook" className="flex-1 px-3 py-2 rounded-lg bg-gray-50 border border-gray-200 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-400/40" />
+          <button onClick={createWebhook} disabled={loading || !newWebhookUrl} className="px-4 py-2 rounded-lg bg-gray-900 text-white text-[12px] font-semibold hover:bg-gray-800 disabled:opacity-50 transition-all">Add Webhook</button>
+        </div>
+
+        <div className="space-y-2">
+          {webhooksList.map((w) => (
+            <div key={w.id} className="flex items-center justify-between p-3 rounded-lg bg-white border border-gray-200">
+              <div className="min-w-0 flex-1">
+                <p className="text-[12px] text-gray-900 font-mono truncate">{w.url}</p>
+                <p className="text-[10px] text-gray-400">{(w.events || []).join(', ')}</p>
+              </div>
+              <div className="flex items-center gap-3 flex-shrink-0 ml-3">
+                <button onClick={() => toggleWebhook(w.id, w.active)} className={`text-[10px] font-medium ${w.active ? 'text-emerald-600' : 'text-gray-400'}`}>{w.active ? 'Active' : 'Paused'}</button>
+                <button onClick={() => deleteWebhook(w.id)} className="text-[10px] text-rose-400 hover:text-rose-600 transition-colors">Delete</button>
+              </div>
+            </div>
+          ))}
+          {webhooksList.length === 0 && <p className="text-[12px] text-gray-400">No webhooks configured yet.</p>}
+        </div>
+      </div>
+
+      {/* API Reference */}
+      <div>
+        <h3 className="text-sm font-bold text-gray-900 mb-1">API Reference</h3>
+        <div className="p-4 rounded-xl bg-gray-50 border border-gray-200 space-y-3 text-[12px] font-mono">
+          <div>
+            <p className="text-gray-500 text-[10px] uppercase tracking-wider font-sans mb-1">Base URL</p>
+            <p className="text-gray-900">{window.location.origin}/api/v1</p>
+          </div>
+          <div>
+            <p className="text-gray-500 text-[10px] uppercase tracking-wider font-sans mb-1">Authentication</p>
+            <p className="text-gray-700">X-API-Key: trn_your_key_here</p>
+          </div>
+          <div className="border-t border-gray-200 pt-3 space-y-2">
+            <p className="text-gray-500 text-[10px] uppercase tracking-wider font-sans mb-1">Endpoints</p>
+            <p className="text-gray-700"><span className="text-emerald-600">POST</span> /api/v1/deals — Create and score a deal</p>
+            <p className="text-gray-700"><span className="text-blue-600">GET</span> /api/v1/deals — List pipeline deals</p>
+            <p className="text-gray-700"><span className="text-blue-600">GET</span> /api/v1/deals?id=123 — Get specific deal</p>
+            <p className="text-gray-700"><span className="text-amber-600">PATCH</span> /api/v1/deals?id=123 — Update stage or notes</p>
+          </div>
         </div>
       </div>
     </div>
