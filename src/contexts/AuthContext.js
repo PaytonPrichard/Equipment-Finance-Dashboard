@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { resolvePermissions } from '../lib/permissions';
 
@@ -12,7 +12,6 @@ export function useAuth() {
   return context;
 }
 
-// Null/offline context when Supabase client is not available
 const OFFLINE_CONTEXT = {
   user: null,
   profile: null,
@@ -25,6 +24,33 @@ const OFFLINE_CONTEXT = {
   refreshProfile: async () => {},
 };
 
+const CACHE_KEY = 'efd_profile_cache';
+
+function getAuthStorageKey() {
+  try {
+    return `sb-${new URL(process.env.REACT_APP_SUPABASE_URL).hostname.split('.')[0]}-auth-token`;
+  } catch {
+    return null;
+  }
+}
+
+function readCachedProfile(userId) {
+  try {
+    const cached = localStorage.getItem(CACHE_KEY);
+    if (cached) {
+      const parsed = JSON.parse(cached);
+      if (parsed?.id === userId) return parsed;
+    }
+  } catch { /* ignore */ }
+  return null;
+}
+
+function writeCachedProfile(profile) {
+  try {
+    localStorage.setItem(CACHE_KEY, JSON.stringify(profile));
+  } catch { /* ignore */ }
+}
+
 export function AuthProvider({ children }) {
   const [session, setSession] = useState(null);
   const [user, setUser] = useState(null);
@@ -33,169 +59,134 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(!!supabase);
   const [passwordRecovery, setPasswordRecovery] = useState(false);
   const [emailVerified, setEmailVerified] = useState(false);
+  const retryTimerRef = useRef(null);
+  const fetchingRef = useRef(false);
 
-  // Fetch profile and permissions for a given user
-  // Uses localStorage cache for instant load, refreshes from Supabase in background
-  const fetchProfileAndPermissions = useCallback(async (authUser, backgroundRefresh = false) => {
-    if (!supabase || !authUser) {
-      setProfile(null);
-      setPermissions(null);
-      return;
-    }
-
-    const cacheKey = 'efd_profile_cache';
-
-    // On initial load, try cache first for instant availability
-    if (!backgroundRefresh) {
-      try {
-        const cached = localStorage.getItem(cacheKey);
-        if (cached) {
-          const cachedProfile = JSON.parse(cached);
-          if (cachedProfile?.id === authUser.id) {
-            setProfile(cachedProfile);
-            const role = cachedProfile.role || 'analyst';
-            setPermissions(resolvePermissions(role, []));
-            // Refresh from network in background
-            fetchProfileAndPermissions(authUser, true).catch(() => {});
-            return;
-          }
-        }
-      } catch (e) { /* ignore cache errors */ }
-    }
+  // Fetch profile from Supabase with retry
+  const fetchProfile = useCallback(async (authUser) => {
+    if (!supabase || !authUser || fetchingRef.current) return;
+    fetchingRef.current = true;
 
     try {
-      let profileData = null;
-      let profileError = null;
-
-      // Try full query with org join first
-      const result = await supabase
+      // Single query, no fallback chain
+      const { data, error } = await supabase
         .from('profiles')
         .select('*, organizations(name, branding, org_settings)')
         .eq('id', authUser.id)
-        .single();
+        .maybeSingle();
 
-      if (result.error) {
-        // Fallback: simpler query without org_settings (column may not exist)
+      if (error) {
+        // Try simpler query
         const fallback = await supabase
           .from('profiles')
           .select('*, organizations(name, branding)')
           .eq('id', authUser.id)
-          .single();
-        profileData = fallback.data;
-        profileError = fallback.error;
-      } else {
-        profileData = result.data;
-        profileError = result.error;
-      }
+          .maybeSingle();
 
-      if (profileError) {
-        console.error('Error fetching profile:', profileError.message);
-        if (!backgroundRefresh) {
-          setProfile(null);
-          setPermissions(null);
+        if (fallback.data) {
+          setProfile(fallback.data);
+          writeCachedProfile(fallback.data);
+          const role = fallback.data.role || 'analyst';
+          setPermissions(resolvePermissions(role, []));
+          fetchingRef.current = false;
+          return;
         }
+
+        // Both failed — schedule retry
+        console.warn('Profile fetch failed, retrying in 5s:', error.message);
+        if (retryTimerRef.current) clearTimeout(retryTimerRef.current);
+        retryTimerRef.current = setTimeout(() => {
+          fetchingRef.current = false;
+          fetchProfile(authUser);
+        }, 5000);
+        fetchingRef.current = false;
         return;
       }
 
-      setProfile(profileData);
+      if (data) {
+        setProfile(data);
+        writeCachedProfile(data);
 
-      // Cache for next load
-      try {
-        localStorage.setItem(cacheKey, JSON.stringify(profileData));
-      } catch (e) { /* ignore */ }
-
-      // Fetch org-level permission overrides
-      let orgOverrides = [];
-      if (profileData?.org_id) {
-        const { data: overrideData, error: overrideError } = await supabase
-          .from('org_permissions')
-          .select('*')
-          .eq('org_id', profileData.org_id);
-
-        if (overrideError) {
-          console.error('Error fetching org permissions:', overrideError.message);
-        } else {
-          orgOverrides = overrideData || [];
+        // Fetch org permissions
+        let orgOverrides = [];
+        if (data.org_id) {
+          const { data: overrides } = await supabase
+            .from('org_permissions')
+            .select('*')
+            .eq('org_id', data.org_id);
+          orgOverrides = overrides || [];
         }
-      }
 
-      const role = profileData?.role || 'analyst';
-      const resolved = resolvePermissions(role, orgOverrides);
-      setPermissions(resolved);
-    } catch (err) {
-      console.error('Unexpected error fetching profile/permissions:', err);
-      if (!backgroundRefresh) {
-        setProfile(null);
-        setPermissions(null);
+        const role = data.role || 'analyst';
+        setPermissions(resolvePermissions(role, orgOverrides));
       }
+    } catch (err) {
+      console.error('Profile fetch error:', err);
+      // Schedule retry
+      if (retryTimerRef.current) clearTimeout(retryTimerRef.current);
+      retryTimerRef.current = setTimeout(() => {
+        fetchingRef.current = false;
+        fetchProfile(authUser);
+      }, 5000);
     }
+
+    fetchingRef.current = false;
   }, []);
 
-  // Initialize session and listen for auth changes
+  // Initialize: read auth from localStorage, load cached profile, fetch fresh in background
   useEffect(() => {
     if (!supabase) return;
 
     let mounted = true;
 
-    // Read session from localStorage (instant), stop loading immediately,
-    // then fetch profile and refresh token in the background
-    const initSession = () => {
-      try {
-        const storageKey = `sb-${new URL(process.env.REACT_APP_SUPABASE_URL).hostname.split('.')[0]}-auth-token`;
-        const stored = localStorage.getItem(storageKey);
+    const init = () => {
+      const storageKey = getAuthStorageKey();
+      if (!storageKey) { setLoading(false); return; }
 
+      // Step 1: Read auth token from localStorage (instant)
+      let authUser = null;
+      try {
+        const stored = localStorage.getItem(storageKey);
         if (stored) {
           const parsed = JSON.parse(stored);
-          const authUser = parsed?.user ?? null;
-
+          authUser = parsed?.user ?? null;
           if (mounted && authUser) {
             setSession(parsed);
             setUser(authUser);
             setEmailVerified(!!authUser.email_confirmed_at);
-            setLoading(false);
-
-            // Fetch profile in background (non-blocking)
-            if (authUser.email_confirmed_at) {
-              fetchProfileAndPermissions(authUser).catch(console.error);
-            }
-
-            // Refresh token in background
-            supabase.auth.getSession().catch(() => {});
-            return;
           }
         }
-      } catch (err) {
-        console.error('Error reading stored session:', err);
+      } catch { /* ignore */ }
+
+      // Step 2: Load cached profile (instant)
+      if (authUser) {
+        const cached = readCachedProfile(authUser.id);
+        if (cached && mounted) {
+          setProfile(cached);
+          const role = cached.role || 'analyst';
+          setPermissions(resolvePermissions(role, []));
+        }
       }
 
-      // No stored session — fall back to getSession
-      supabase.auth.getSession().then(({ data: { session: currentSession }, error }) => {
-        if (error) console.error('Error getting session:', error.message);
-        if (!mounted) return;
+      // Step 3: Stop loading (UI is usable now)
+      if (mounted) setLoading(false);
 
-        const authUser = currentSession?.user ?? null;
-        setSession(currentSession);
-        setUser(authUser);
-        setEmailVerified(!!authUser?.email_confirmed_at);
-        setLoading(false);
+      // Step 4: Refresh profile from network (background, non-blocking)
+      if (authUser?.email_confirmed_at) {
+        fetchProfile(authUser);
+      }
 
-        if (authUser?.email_confirmed_at) {
-          fetchProfileAndPermissions(authUser).catch(console.error);
-        }
-      }).catch((err) => {
-        console.error('getSession failed:', err);
-        if (mounted) setLoading(false);
-      });
+      // Step 5: Refresh auth token (background)
+      supabase.auth.getSession().catch(() => {});
     };
 
-    initSession();
+    init();
 
-    // Listen for auth state changes (sign in, sign out, token refresh, etc.)
+    // Listen for auth changes (sign in, sign out, token refresh)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, newSession) => {
         if (!mounted) return;
 
-        // Detect password recovery flow
         if (event === 'PASSWORD_RECOVERY') {
           setPasswordRecovery(true);
         }
@@ -205,9 +196,10 @@ export function AuthProvider({ children }) {
         setUser(authUser);
         setEmailVerified(!!authUser?.email_confirmed_at);
 
-        if (authUser && authUser.email_confirmed_at) {
-          await fetchProfileAndPermissions(authUser);
-        } else {
+        if (event === 'SIGNED_IN' && authUser?.email_confirmed_at) {
+          // Fresh sign in — fetch profile
+          fetchProfile(authUser);
+        } else if (event === 'SIGNED_OUT') {
           setProfile(null);
           setPermissions(null);
         }
@@ -219,26 +211,22 @@ export function AuthProvider({ children }) {
     return () => {
       mounted = false;
       subscription.unsubscribe();
+      if (retryTimerRef.current) clearTimeout(retryTimerRef.current);
     };
-  }, [fetchProfileAndPermissions]);
+  }, [fetchProfile]);
 
-  // Auth actions
   const signIn = useCallback(async (email, password) => {
     if (!supabase) return { error: { message: 'Auth unavailable in offline mode' } };
-
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     return { data, error };
   }, []);
 
   const signUp = useCallback(async (email, password, fullName) => {
     if (!supabase) return { error: { message: 'Auth unavailable in offline mode' } };
-
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: {
-        data: { full_name: fullName },
-      },
+      options: { data: { full_name: fullName } },
     });
     return { data, error };
   }, []);
@@ -246,41 +234,33 @@ export function AuthProvider({ children }) {
   const signOut = useCallback(async () => {
     if (!supabase) return;
 
-    // Clear all cached state first
+    // Clear everything
     try {
-      localStorage.removeItem('efd_profile_cache');
+      localStorage.removeItem(CACHE_KEY);
       localStorage.removeItem('efd_tutorial_state');
       localStorage.removeItem('efd_session_token');
-      // Clear Supabase auth token
-      const storageKey = `sb-${new URL(process.env.REACT_APP_SUPABASE_URL).hostname.split('.')[0]}-auth-token`;
-      localStorage.removeItem(storageKey);
-    } catch (e) { /* ignore */ }
+      const storageKey = getAuthStorageKey();
+      if (storageKey) localStorage.removeItem(storageKey);
+    } catch { /* ignore */ }
 
-    // Clear React state immediately
     setSession(null);
     setUser(null);
     setProfile(null);
     setPermissions(null);
     setEmailVerified(false);
 
-    // Tell Supabase to sign out (server-side token revocation)
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      console.error('Error signing out:', error.message);
-    }
+    await supabase.auth.signOut().catch(() => {});
 
-    // Force reload to landing page
     window.location.href = '/';
   }, []);
 
-  // Re-fetch the current user's profile and permissions
   const refreshProfile = useCallback(async () => {
     if (user) {
-      await fetchProfileAndPermissions(user);
+      fetchingRef.current = false; // Allow re-fetch
+      await fetchProfile(user);
     }
-  }, [user, fetchProfileAndPermissions]);
+  }, [user, fetchProfile]);
 
-  // If Supabase is not configured, provide offline context
   if (!supabase) {
     return (
       <AuthContext.Provider value={OFFLINE_CONTEXT}>
@@ -289,22 +269,20 @@ export function AuthProvider({ children }) {
     );
   }
 
-  const value = {
-    user,
-    profile,
-    session,
-    permissions,
-    loading,
-    passwordRecovery,
-    emailVerified,
-    signIn,
-    signUp,
-    signOut,
-    refreshProfile,
-  };
-
   return (
-    <AuthContext.Provider value={value}>
+    <AuthContext.Provider value={{
+      user,
+      profile,
+      session,
+      permissions,
+      loading,
+      passwordRecovery,
+      emailVerified,
+      signIn,
+      signUp,
+      signOut,
+      refreshProfile,
+    }}>
       {children}
     </AuthContext.Provider>
   );
