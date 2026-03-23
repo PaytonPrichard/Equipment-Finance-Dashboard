@@ -51,7 +51,7 @@ export function AuthProvider({ children }) {
         const cached = localStorage.getItem(cacheKey);
         if (cached) {
           const cachedProfile = JSON.parse(cached);
-          if (cachedProfile?.id === authUser.id && cachedProfile?.org_id) {
+          if (cachedProfile?.id === authUser.id) {
             setProfile(cachedProfile);
             const role = cachedProfile.role || 'analyst';
             setPermissions(resolvePermissions(role, []));
@@ -64,11 +64,29 @@ export function AuthProvider({ children }) {
     }
 
     try {
-      const { data: profileData, error: profileError } = await supabase
+      let profileData = null;
+      let profileError = null;
+
+      // Try full query with org join first
+      const result = await supabase
         .from('profiles')
         .select('*, organizations(name, branding, org_settings)')
         .eq('id', authUser.id)
         .single();
+
+      if (result.error) {
+        // Fallback: simpler query without org_settings (column may not exist)
+        const fallback = await supabase
+          .from('profiles')
+          .select('*, organizations(name, branding)')
+          .eq('id', authUser.id)
+          .single();
+        profileData = fallback.data;
+        profileError = fallback.error;
+      } else {
+        profileData = result.data;
+        profileError = result.error;
+      }
 
       if (profileError) {
         console.error('Error fetching profile:', profileError.message);
