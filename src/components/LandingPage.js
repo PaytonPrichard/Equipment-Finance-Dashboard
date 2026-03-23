@@ -33,8 +33,8 @@ const FEATURES = [
     ),
   },
   {
-    title: 'Deal Pipeline',
-    description: 'Track deals from screening through funded with document attachments.',
+    title: 'Pipeline & Collaboration',
+    description: 'Track deals from screening through funded. Role-based access and full audit trail.',
     icon: (
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
         <rect x="3" y="3" width="7" height="7" rx="1" />
@@ -53,18 +53,6 @@ const FEATURES = [
         <polyline points="14 2 14 8 20 8" />
         <line x1="16" y1="13" x2="8" y2="13" />
         <line x1="16" y1="17" x2="8" y2="17" />
-      </svg>
-    ),
-  },
-  {
-    title: 'Team Collaboration',
-    description: 'Role-based access, shared pipeline, and audit trail.',
-    icon: (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-        <circle cx="9" cy="7" r="4" />
-        <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
       </svg>
     ),
   },
