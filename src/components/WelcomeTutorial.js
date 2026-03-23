@@ -6,15 +6,15 @@ const SLIDES = [
     body: 'Enter borrower details and get an instant risk assessment in under 2 minutes.',
     visual: (
       <div className="flex items-center justify-center gap-4 py-6">
-        <div className="w-14 h-14 rounded-2xl bg-gold-500/10 border border-gold-500/20 flex items-center justify-center">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-gold-400" strokeWidth="1.5">
+        <div className="w-14 h-14 rounded-2xl bg-gray-100 border border-gray-200 flex items-center justify-center">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-gray-500" strokeWidth="1.5">
             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
             <polyline points="14 2 14 8 20 8" />
             <line x1="16" y1="13" x2="8" y2="13" />
             <line x1="16" y1="17" x2="8" y2="17" />
           </svg>
         </div>
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-gold-500/40" strokeWidth="1.5">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-gray-300" strokeWidth="1.5">
           <polyline points="9 18 15 12 9 6" />
         </svg>
         <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
@@ -32,22 +32,22 @@ const SLIDES = [
     visual: (
       <div className="flex items-center justify-center gap-3 py-6">
         <div className="w-24 rounded-xl bg-white/[0.04] border border-white/[0.08] p-3 text-center">
-          <div className="w-full h-2 bg-slate-700 rounded mb-2" />
-          <div className="w-3/4 h-2 bg-slate-700 rounded mb-2" />
-          <div className="w-full h-2 bg-slate-700 rounded mb-2" />
-          <div className="w-1/2 h-2 bg-slate-700 rounded" />
-          <p className="text-[8px] text-slate-600 mt-2">FORM</p>
+          <div className="w-full h-2 bg-gray-200 rounded mb-2" />
+          <div className="w-3/4 h-2 bg-gray-200 rounded mb-2" />
+          <div className="w-full h-2 bg-gray-200 rounded mb-2" />
+          <div className="w-1/2 h-2 bg-gray-200 rounded" />
+          <p className="text-[8px] text-gray-400 mt-2">FORM</p>
         </div>
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-gold-500 flex-shrink-0" strokeWidth="2">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-gray-400 flex-shrink-0" strokeWidth="2">
           <polyline points="9 18 15 12 9 6" />
         </svg>
-        <div className="w-24 rounded-xl bg-gold-500/[0.04] border border-gold-500/15 p-3 text-center">
+        <div className="w-24 rounded-xl bg-gray-50 border border-gray-200 p-3 text-center">
           <div className="w-8 h-8 rounded-full bg-emerald-500/20 border border-emerald-500/30 mx-auto mb-2 flex items-center justify-center">
             <span className="text-[8px] font-bold text-emerald-400">82</span>
           </div>
           <div className="w-full h-1.5 bg-emerald-500/20 rounded mb-1.5" />
           <div className="w-3/4 h-1.5 bg-lime-500/20 rounded" />
-          <p className="text-[8px] text-slate-600 mt-2">RESULTS</p>
+          <p className="text-[8px] text-gray-400 mt-2">RESULTS</p>
         </div>
       </div>
     ),
@@ -68,7 +68,7 @@ const SLIDES = [
                 {item.icon}
               </svg>
             </div>
-            <p className="text-[10px] text-slate-500 font-medium">{item.label}</p>
+            <p className="text-[10px] text-gray-400 font-medium">{item.label}</p>
           </div>
         ))}
       </div>
@@ -101,14 +101,14 @@ export default function WelcomeTutorial({ onComplete, onSkip }) {
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onSkip} />
 
       {/* Modal */}
-      <div className="relative w-full max-w-md bg-[rgba(20,20,28,0.95)] backdrop-blur-xl border border-white/[0.08] rounded-2xl shadow-2xl animate-fade-in-up">
+      <div className="relative w-full max-w-md bg-white border border-gray-200 rounded-2xl shadow-2xl animate-fade-in-up">
         <div className="p-8 text-center">
           {/* Visual */}
           {slide.visual}
 
           {/* Content */}
-          <h2 className="text-lg font-bold text-white mb-2">{slide.title}</h2>
-          <p className="text-sm text-slate-400 leading-relaxed max-w-sm mx-auto">{slide.body}</p>
+          <h2 className="text-lg font-bold text-gray-900 mb-2">{slide.title}</h2>
+          <p className="text-sm text-gray-500 leading-relaxed max-w-sm mx-auto">{slide.body}</p>
         </div>
 
         {/* Bottom bar */}
@@ -119,7 +119,7 @@ export default function WelcomeTutorial({ onComplete, onSkip }) {
               <div
                 key={i}
                 className={`w-2 h-2 rounded-full transition-colors ${
-                  i === step ? 'bg-gold-400' : 'bg-slate-700'
+                  i === step ? 'bg-gray-900' : 'bg-gray-200'
                 }`}
               />
             ))}
@@ -129,7 +129,7 @@ export default function WelcomeTutorial({ onComplete, onSkip }) {
           <div className="flex items-center gap-3">
             <button
               onClick={onSkip}
-              className="text-[11px] text-slate-500 hover:text-slate-300 transition-colors"
+              className="text-[11px] text-gray-400 hover:text-gray-600 transition-colors"
             >
               Skip tour
             </button>
@@ -141,7 +141,7 @@ export default function WelcomeTutorial({ onComplete, onSkip }) {
                   setStep(s => s + 1);
                 }
               }}
-              className="px-5 py-2 rounded-xl bg-gradient-to-r from-gold-500 to-gold-600 text-white text-sm font-semibold shadow-lg shadow-gold-500/20 hover:shadow-gold-500/30 hover:from-gold-400 hover:to-gold-500 transition-all"
+              className="px-5 py-2 rounded-xl bg-gradient-to-r from-gray-800 to-gray-900 text-white text-sm font-semibold shadow-lg shadow-gray-300/20 hover:shadow-gray-300/30 hover:from-gray-700 hover:to-gray-800 transition-all"
             >
               {isLast ? 'Get Started' : 'Next'}
             </button>

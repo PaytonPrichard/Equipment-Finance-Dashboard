@@ -6,7 +6,7 @@ import { formatCurrency } from '../utils/format';
 const STAGES = ['Screening', 'Under Review', 'Approved', 'Funded', 'Declined'];
 
 const STAGE_COLORS = {
-  Screening:      { bg: 'bg-gold-500/[0.08]',    border: 'border-gray-200',    text: 'text-gray-600',    bar: 'bg-gold-500' },
+  Screening:      { bg: 'bg-amber-50',    border: 'border-gray-200',    text: 'text-gray-600',    bar: 'bg-amber-500' },
   'Under Review': { bg: 'bg-amber-500/[0.08]',   border: 'border-amber-500/20',   text: 'text-amber-400',   bar: 'bg-amber-500' },
   Approved:       { bg: 'bg-emerald-500/[0.08]',  border: 'border-emerald-500/20', text: 'text-emerald-400', bar: 'bg-emerald-500' },
   Funded:         { bg: 'bg-teal-500/[0.08]',     border: 'border-teal-500/20',    text: 'text-teal-400',    bar: 'bg-teal-500' },

@@ -167,7 +167,7 @@ function CompanySearch({ value, onSelect, onManualChange, tip, pipelineDeals }) 
 
       {selectedSource && (
         <div className="mt-1.5 flex items-center gap-1.5 animate-fade-in">
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-gray-900/10 border border-gold-500/20 text-[10px] text-gray-500 font-medium">
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-50 border border-emerald-200 text-[10px] text-emerald-600 font-medium">
             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
               <polyline points="20 6 9 17 4 12" />
             </svg>
@@ -193,7 +193,7 @@ function CompanySearch({ value, onSelect, onManualChange, tip, pipelineDeals }) 
               }}
               className="w-full px-3 py-2.5 text-left hover:bg-gray-100/60 transition-colors flex items-center gap-3"
             >
-              <div className="w-8 h-8 rounded-lg bg-gray-100 border border-slate-700/50 flex items-center justify-center flex-shrink-0">
+              <div className="w-8 h-8 rounded-lg bg-gray-100 border border-gray-200 flex items-center justify-center flex-shrink-0">
                 <span className="text-xs font-bold text-gray-400">
                   {company.companyName.charAt(0)}
                 </span>
