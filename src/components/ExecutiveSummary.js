@@ -180,7 +180,7 @@ export default function ExecutiveSummary({ inputs, metrics, riskScore, recommend
   return (
     <div className={`rounded-2xl p-5 border ${recommendation.bgClass}`}>
       <div className="flex items-center gap-2 mb-3">
-        <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+        <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
           Executive Summary
         </h3>
       </div>
@@ -193,7 +193,7 @@ export default function ExecutiveSummary({ inputs, metrics, riskScore, recommend
               <span className={`mt-0.5 flex-shrink-0 ${style.icon}`}>
                 {TYPE_ICONS[item.type]}
               </span>
-              <p className="text-[13px] text-slate-300 leading-relaxed">{item.text}</p>
+              <p className="text-[13px] text-gray-700 leading-relaxed">{item.text}</p>
             </div>
           );
         })}

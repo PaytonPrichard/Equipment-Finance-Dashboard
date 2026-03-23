@@ -144,7 +144,7 @@ function CompanySearch({ value, onSelect, onManualChange, tip, pipelineDeals }) 
         Company Name
       </Label>
       <div className="relative">
-        <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <circle cx="11" cy="11" r="8" />
           <line x1="21" y1="21" x2="16.65" y2="16.65" />
         </svg>
@@ -166,19 +166,19 @@ function CompanySearch({ value, onSelect, onManualChange, tip, pipelineDeals }) 
 
       {selectedSource && (
         <div className="mt-1.5 flex items-center gap-1.5 animate-fade-in">
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-gold-500/10 border border-gold-500/20 text-[10px] text-gray-500 font-medium">
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-gray-900/10 border border-gold-500/20 text-[10px] text-gray-500 font-medium">
             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
               <polyline points="20 6 9 17 4 12" />
             </svg>
             Data from {selectedSource}
           </span>
-          <span className="text-[10px] text-slate-600">Fields auto-populated</span>
+          <span className="text-[10px] text-gray-400">Fields auto-populated</span>
         </div>
       )}
 
       {open && results.length > 0 && (
         <div className="absolute top-full left-0 right-0 mt-1 company-dropdown rounded-xl z-50 py-1 max-h-72 overflow-y-auto animate-fade-in">
-          <div className="px-3 py-2 text-[10px] text-slate-500 uppercase tracking-wider font-semibold border-b border-slate-800/50">
+          <div className="px-3 py-2 text-[10px] text-gray-400 uppercase tracking-wider font-semibold border-b border-gray-200">
             {results.length} match{results.length !== 1 ? 'es' : ''} found
           </div>
           {results.map((company) => (
@@ -190,22 +190,22 @@ function CompanySearch({ value, onSelect, onManualChange, tip, pipelineDeals }) 
                 setSelectedSource(company.source);
                 setOpen(false);
               }}
-              className="w-full px-3 py-2.5 text-left hover:bg-slate-800/60 transition-colors flex items-center gap-3"
+              className="w-full px-3 py-2.5 text-left hover:bg-gray-100/60 transition-colors flex items-center gap-3"
             >
-              <div className="w-8 h-8 rounded-lg bg-slate-800 border border-slate-700/50 flex items-center justify-center flex-shrink-0">
-                <span className="text-xs font-bold text-slate-400">
+              <div className="w-8 h-8 rounded-lg bg-gray-100 border border-slate-700/50 flex items-center justify-center flex-shrink-0">
+                <span className="text-xs font-bold text-gray-400">
                   {company.companyName.charAt(0)}
                 </span>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm text-slate-200 font-medium truncate">
+                <p className="text-sm text-gray-800 font-medium truncate">
                   {company.companyName}
                 </p>
-                <p className="text-[11px] text-slate-500">
+                <p className="text-[11px] text-gray-400">
                   {company.industrySector} &middot; {fmtCurrency(company.annualRevenue)} rev &middot; {company.creditRating}
                 </p>
               </div>
-              <span className="text-[10px] text-slate-600 flex-shrink-0">
+              <span className="text-[10px] text-gray-400 flex-shrink-0">
                 {company.source}
               </span>
             </button>
@@ -344,7 +344,7 @@ function renderField(field, inputs, onChange, schema, pipelineDeals) {
         <div>
           <Label required={field.required} tip={field.tip}>{field.label}</Label>
           <div className="relative">
-            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm font-medium">$</span>
+            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-medium">$</span>
             <input
               type="text"
               inputMode="numeric"
@@ -359,7 +359,7 @@ function renderField(field, inputs, onChange, schema, pipelineDeals) {
             />
           </div>
           {field.key === 'actualAnnualDebtService' && !(value > 0) && inputs.totalExistingDebt > 0 && (
-            <p className="text-[10px] text-slate-600 mt-1 pl-1">
+            <p className="text-[10px] text-gray-400 mt-1 pl-1">
               Est: {formatCurrencyFull(inputs.totalExistingDebt * DS_ESTIMATE_RATE)}/yr
             </p>
           )}
@@ -379,7 +379,7 @@ function renderField(field, inputs, onChange, schema, pipelineDeals) {
             min="0"
           />
           {field.key === 'loanTerm' && value > 0 && (
-            <p className="text-[11px] text-slate-600 mt-1.5 pl-1 font-mono">
+            <p className="text-[11px] text-gray-400 mt-1.5 pl-1 font-mono">
               = {(value / 12).toFixed(1)} years
             </p>
           )}
@@ -401,7 +401,7 @@ function renderField(field, inputs, onChange, schema, pipelineDeals) {
               min="0"
               max="100"
             />
-            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 text-sm font-medium">%</span>
+            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-medium">%</span>
           </div>
         </div>
       );
@@ -420,12 +420,12 @@ function renderField(field, inputs, onChange, schema, pipelineDeals) {
                 <option key={opt} value={opt}>{opt}</option>
               ))}
             </select>
-            <svg className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <svg className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
             </svg>
           </div>
           {field.key === 'equipmentType' && schema.equipmentDefaults && schema.equipmentDefaults[value] && (
-            <p className="text-[10px] text-slate-600 mt-1 pl-1">
+            <p className="text-[10px] text-gray-400 mt-1 pl-1">
               Typical life: {schema.equipmentDefaults[value].usefulLifeRange[0]}–{schema.equipmentDefaults[value].usefulLifeRange[1]} yrs
               {schema.equipmentDefaults[value].suggestedType !== (inputs.financingType || 'EFA') && (
                 <span className="text-gray-500 ml-1">
@@ -447,7 +447,7 @@ function renderField(field, inputs, onChange, schema, pipelineDeals) {
                 key={opt}
                 onClick={() => update(opt)}
                 className={`pill-btn flex-1 py-2.5 rounded-xl text-sm font-medium text-center ${
-                  value === opt ? 'bg-gray-900 text-white' : 'text-slate-400'
+                  value === opt ? 'bg-gray-900 text-white' : 'text-gray-400'
                 }`}
               >
                 {opt}
@@ -465,10 +465,10 @@ function renderField(field, inputs, onChange, schema, pipelineDeals) {
             onClick={() => update(!value)}
             className="flex items-center gap-3"
           >
-            <div className={`toggle-track relative w-11 h-6 rounded-full ${value ? 'bg-gold-500' : 'bg-slate-700'}`}>
+            <div className={`toggle-track relative w-11 h-6 rounded-full ${value ? 'bg-gray-900' : 'bg-gray-200'}`}>
               <div className={`toggle-thumb absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-md ${value ? 'translate-x-[22px]' : 'translate-x-0.5'}`} />
             </div>
-            <span className={`text-sm font-medium ${value ? 'text-gold-300' : 'text-slate-500'}`}>
+            <span className={`text-sm font-medium ${value ? 'text-gray-700' : 'text-gray-400'}`}>
               {value ? 'Yes' : 'No'}
             </span>
           </button>
@@ -494,11 +494,11 @@ function renderField(field, inputs, onChange, schema, pipelineDeals) {
                   title={disabled ? 'TRAC: Vehicles/Fleet and Rail Cars only' : ft.description}
                   className={`pill-btn rounded-xl py-2.5 px-2 text-center ${
                     disabled ? 'opacity-30 cursor-not-allowed' :
-                    active ? 'bg-gray-900 text-white' : 'text-slate-400'
+                    active ? 'bg-gray-900 text-white' : 'text-gray-400'
                   }`}
                 >
                   <span className="text-xs font-semibold block">{ft.label}</span>
-                  <span className="text-[10px] text-slate-500 block mt-0.5 leading-tight">
+                  <span className="text-[10px] text-gray-400 block mt-0.5 leading-tight">
                     {ftDesc[key] || ft.description}
                   </span>
                 </button>
@@ -603,7 +603,7 @@ export default function DealInputForm({ inputs, onChange, schema, modules, activ
                 key={m.key}
                 onClick={() => onModuleChange(m.key)}
                 className={`pill-btn rounded-xl py-3 px-2 text-center transition-all ${
-                  activeModule === m.key ? 'bg-gray-900 text-white' : 'text-slate-400 hover:text-slate-300'
+                  activeModule === m.key ? 'bg-gray-900 text-white' : 'text-gray-400 hover:text-gray-500'
                 }`}
               >
                 <div className="flex items-center justify-center mb-1.5">

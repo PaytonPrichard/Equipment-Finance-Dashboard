@@ -60,7 +60,7 @@ export default function ScreeningVerdict({ verdict, reasons }) {
               {config.label}
             </span>
           </div>
-          <p className="text-[11px] text-slate-500">{config.description}</p>
+          <p className="text-[11px] text-gray-500">{config.description}</p>
         </div>
       </div>
 
@@ -71,7 +71,7 @@ export default function ScreeningVerdict({ verdict, reasons }) {
               <line x1="18" y1="6" x2="6" y2="18" />
               <line x1="6" y1="6" x2="18" y2="18" />
             </svg>
-            <span className="text-[11px] text-rose-300/90 leading-relaxed">{r.text}</span>
+            <span className="text-[11px] text-rose-600 leading-relaxed">{r.text}</span>
           </div>
         ))}
         {flagReasons.map((r, i) => (
@@ -81,11 +81,11 @@ export default function ScreeningVerdict({ verdict, reasons }) {
               <line x1="12" y1="9" x2="12" y2="13" />
               <line x1="12" y1="17" x2="12.01" y2="17" />
             </svg>
-            <span className="text-[11px] text-amber-300/90 leading-relaxed">{r.text}</span>
+            <span className="text-[11px] text-amber-700 leading-relaxed">{r.text}</span>
           </div>
         ))}
         {reasons.length === 0 && verdict === 'pass' && (
-          <p className="text-[11px] text-emerald-300/70">All screening criteria met</p>
+          <p className="text-[11px] text-emerald-600">All screening criteria met</p>
         )}
       </div>
     </div>

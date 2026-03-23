@@ -647,7 +647,7 @@ function AuthenticatedApp({ profile, user }) {
                   {isEquipment && exampleDeals.length > 0 && (
                     <button
                       onClick={() => loadExample(exampleDeals[0])}
-                      className="mt-6 px-5 py-2.5 rounded-xl bg-gray-900 text-sm text-gray-900 font-medium hover:bg-gray-800 transition-all"
+                      className="mt-6 px-5 py-2.5 rounded-xl bg-gray-900 text-sm text-white font-medium hover:bg-gray-800 transition-all"
                     >
                       Load example: $5M Heavy Machinery, Manufacturing
                     </button>
