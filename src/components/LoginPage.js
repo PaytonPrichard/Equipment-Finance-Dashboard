@@ -133,7 +133,7 @@ export default function LoginPage({ passwordRecovery, onBackToLanding }) {
             Tranche
           </h1>
           <p className="text-sm text-gray-400 mt-1">
-            Screen deals. Fund faster.
+            ABL deal screening for credit teams
           </p>
         </div>
 
@@ -144,20 +144,20 @@ export default function LoginPage({ passwordRecovery, onBackToLanding }) {
 
           {/* Success messages */}
           {signUpSuccess && (
-            <div className="mb-4 p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-sm">
-              Account created successfully. Please check your email to confirm your account, then sign in.
+            <div className="mb-4 p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm">
+              Account created. Check your email to confirm your account, then sign in.
             </div>
           )}
 
           {resetSent && (
-            <div className="mb-4 p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-sm">
-              Reset link sent! Check your inbox (and spam folder) for an email from us. The link expires in 1 hour.
+            <div className="mb-4 p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm">
+              Reset link sent. Check your inbox and spam folder. The link expires in 1 hour.
             </div>
           )}
 
           {/* Error message */}
           {error && (
-            <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-300 text-sm">
+            <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm">
               {error}
             </div>
           )}
@@ -243,7 +243,7 @@ export default function LoginPage({ passwordRecovery, onBackToLanding }) {
                 <button
                   type="button"
                   onClick={() => switchMode('forgot')}
-                  className="text-[12px] text-gray-600 hover:text-gray-600 transition-colors"
+                  className="text-[12px] text-gray-500 hover:text-gray-700 transition-colors"
                 >
                   Forgot password?
                 </button>
@@ -258,7 +258,7 @@ export default function LoginPage({ passwordRecovery, onBackToLanding }) {
             >
               {loading ? (
                 <>
-                  <svg className="animate-spin h-4 w-4 text-gray-900" viewBox="0 0 24 24" fill="none">
+                  <svg className="animate-spin h-4 w-4 text-white" viewBox="0 0 24 24" fill="none">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                   </svg>
@@ -275,7 +275,7 @@ export default function LoginPage({ passwordRecovery, onBackToLanding }) {
             {mode === 'signin' && (
               <div>
                 <span className="text-sm text-gray-400">Don't have an account? </span>
-                <button onClick={() => switchMode('signup')} className="text-sm text-gray-600 hover:text-gray-600 font-medium transition-colors">
+                <button onClick={() => switchMode('signup')} className="text-sm text-gray-600 hover:text-gray-900 font-medium transition-colors">
                   Sign Up
                 </button>
               </div>
@@ -283,13 +283,13 @@ export default function LoginPage({ passwordRecovery, onBackToLanding }) {
             {mode === 'signup' && (
               <div>
                 <span className="text-sm text-gray-400">Already have an account? </span>
-                <button onClick={() => switchMode('signin')} className="text-sm text-gray-600 hover:text-gray-600 font-medium transition-colors">
+                <button onClick={() => switchMode('signin')} className="text-sm text-gray-600 hover:text-gray-900 font-medium transition-colors">
                   Sign In
                 </button>
               </div>
             )}
             {(mode === 'forgot' || mode === 'update_password') && (
-              <button onClick={() => switchMode('signin')} className="text-sm text-gray-600 hover:text-gray-600 font-medium transition-colors">
+              <button onClick={() => switchMode('signin')} className="text-sm text-gray-600 hover:text-gray-900 font-medium transition-colors">
                 Back to Sign In
               </button>
             )}
@@ -301,13 +301,13 @@ export default function LoginPage({ passwordRecovery, onBackToLanding }) {
           {onBackToLanding && (
             <button
               onClick={onBackToLanding}
-              className="text-[11px] text-gray-600 hover:text-gray-600 font-medium transition-colors mb-2 block mx-auto"
+              className="text-[11px] text-gray-500 hover:text-gray-700 font-medium transition-colors mb-2 block mx-auto"
             >
               &larr; Back to home
             </button>
           )}
           <p className="text-[11px] text-gray-400">
-            Tranche &middot; Secure Authentication
+            Tranche &middot; ABL Deal Screening
           </p>
         </div>
       </div>

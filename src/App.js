@@ -181,55 +181,7 @@ export default function App() {
 
   // Block unverified email users
   if (session && !emailVerified) {
-    return (
-      <div className="min-h-screen bg-[#f8f9fa] flex items-center justify-center px-4">
-        <div className="w-full max-w-md text-center">
-          {/* Progress */}
-          <div className="flex items-center justify-center gap-2 mb-8">
-            <div className="w-2 h-2 rounded-full bg-gray-900" />
-            <div className="w-8 h-0.5 bg-gray-900" />
-            <div className="w-2 h-2 rounded-full bg-gray-900 animate-pulse" />
-            <div className="w-8 h-0.5 bg-gray-200" />
-            <div className="w-2 h-2 rounded-full bg-gray-200" />
-            <span className="text-[10px] text-gray-400 ml-2">Step 2 of 3</span>
-          </div>
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/20 mb-4">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-amber-400" strokeWidth="2">
-              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
-              <polyline points="22,6 12,13 2,6" />
-            </svg>
-          </div>
-          <h2 className="text-lg font-semibold text-gray-900 mb-2">Check your inbox</h2>
-          <p className="text-sm text-gray-500 mb-2">
-            We sent a verification link to <span className="text-gray-900 font-medium">{user?.email}</span>.
-          </p>
-          <p className="text-[11px] text-gray-500 mb-6">
-            Check your spam folder if you don't see it. Usually arrives within 1–2 minutes.
-          </p>
-          <div className="flex items-center justify-center gap-4">
-            <button
-              onClick={async () => {
-                if (supabase) {
-                  await supabase.auth.resend({ type: 'signup', email: user?.email });
-                  const btn = document.getElementById('resend-btn');
-                  if (btn) { btn.textContent = 'Sent!'; btn.disabled = true; setTimeout(() => { btn.textContent = 'Resend email'; btn.disabled = false; }, 60000); }
-                }
-              }}
-              id="resend-btn"
-              className="px-4 py-2 rounded-xl bg-white border border-gray-200 text-sm text-gray-900 font-medium hover:bg-gray-50 transition-all"
-            >
-              Resend email
-            </button>
-            <button
-              onClick={signOut}
-              className="text-sm text-gray-500 hover:text-gray-700 font-medium transition-colors"
-            >
-              Sign out
-            </button>
-          </div>
-        </div>
-      </div>
-    );
+    return <EmailVerificationScreen email={user?.email} signOut={signOut} />;
   }
 
   // Show org onboarding if user has no organization
@@ -561,10 +513,29 @@ function AuthenticatedApp({ profile, user }) {
       )}
 
       {/* Toolbar */}
-      {activeTab === 'screening' && (
+      {(activeTab === 'screening' || activeTab === 'batch') && (
       <div className="border-b border-gray-200 bg-white/80 backdrop-blur-sm">
         <div className="max-w-[1600px] mx-auto px-6 py-2">
           <div className="flex items-center gap-2">
+            {/* Single / Batch toggle */}
+            <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-0.5">
+              <button
+                onClick={() => setActiveTab('screening')}
+                className={`px-3 py-1.5 rounded-md text-[11px] font-semibold transition-all ${
+                  activeTab === 'screening' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                Single Deal
+              </button>
+              <button
+                onClick={() => setActiveTab('batch')}
+                className={`px-3 py-1.5 rounded-md text-[11px] font-semibold transition-all ${
+                  activeTab === 'batch' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                Batch Upload
+              </button>
+            </div>
             {activeTab === 'screening' && (
               <>
                 <div className="ml-auto flex items-center gap-2">
@@ -670,7 +641,15 @@ function AuthenticatedApp({ profile, user }) {
 
       {/* Main */}
       <div className="max-w-[1600px] mx-auto px-6 py-8">
-        {activeTab === 'screening' ? (
+        {activeTab === 'batch' ? (
+          <ErrorBoundary><Suspense fallback={<LazyFallback />}>
+            <BatchScreening
+              sofr={sofr}
+              activeModule={activeModule}
+              onLoadDeal={(dealInputs) => { setInputs(dealInputs); setActiveDeal(null); setActiveTab('screening'); }}
+            />
+          </Suspense></ErrorBoundary>
+        ) : activeTab === 'screening' ? (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:h-[calc(100vh-160px)]">
             {/* Left: Form — independent scroll on desktop */}
             <div className="lg:col-span-5 xl:col-span-4 lg:overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
@@ -1151,47 +1130,128 @@ function AuthenticatedApp({ profile, user }) {
               )}
             </div>
           </div>
-        ) : (
+        ) : activeTab === 'pipeline' ? (
           <ErrorBoundary><Suspense fallback={<LazyFallback />}>
-            {activeTab === 'historical' ? (
-              <div className="space-y-8">
-                <PortfolioAnalytics scoredDeals={allHistorical} />
-                <HistoricalDealsTable deals={[...historicalDeals, ...importedDeals]} sofr={sofr} />
+            <DealPipeline
+              currentInputs={valid ? inputs : null}
+              currentScore={valid ? riskScore.composite : null}
+              onLoadDeal={(dealInputs, dealId) => { setInputs(dealInputs); setActiveDeal(null); setActivePipelineDealId(dealId || null); setActiveTab('screening'); }}
+              readOnly={isExpired}
+            />
+          </Suspense></ErrorBoundary>
+        ) : activeTab === 'team' ? (
+          <ErrorBoundary><Suspense fallback={<LazyFallback />}>
+            <TeamManagement />
+          </Suspense></ErrorBoundary>
+        ) : activeTab === 'billing' ? (
+          <ErrorBoundary><Suspense fallback={<LazyFallback />}>
+            <BillingPage />
+          </Suspense></ErrorBoundary>
+        ) : (
+          /* Dashboard group: Overview, Compare, Performance, Audit */
+          <ErrorBoundary><Suspense fallback={<LazyFallback />}>
+            <div className="space-y-6">
+              {/* Sub-tab bar */}
+              <div className="flex items-center gap-1 bg-gray-100 rounded-xl p-1 border border-gray-200 w-fit">
+                {[
+                  { id: 'dashboard', label: 'Overview' },
+                  { id: 'compare', label: 'Compare' },
+                  { id: 'historical', label: 'Performance' },
+                  { id: 'audit', label: 'Audit Log' },
+                ].map((sub) => (
+                  <button
+                    key={sub.id}
+                    onClick={() => setActiveTab(sub.id)}
+                    className={`px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-all ${
+                      activeTab === sub.id
+                        ? 'bg-white text-gray-900 shadow-sm border border-gray-200'
+                        : 'text-gray-500 hover:text-gray-700'
+                    }`}
+                  >
+                    {sub.label}
+                  </button>
+                ))}
               </div>
-            ) : activeTab === 'pipeline' ? (
-              <DealPipeline
-                currentInputs={valid ? inputs : null}
-                currentScore={valid ? riskScore.composite : null}
-                onLoadDeal={(dealInputs, dealId) => { setInputs(dealInputs); setActiveDeal(null); setActivePipelineDealId(dealId || null); setActiveTab('screening'); }}
-                readOnly={isExpired}
-              />
-            ) : activeTab === 'dashboard' ? (
-              <PipelineDashboard />
-            ) : activeTab === 'batch' ? (
-              <BatchScreening
-                sofr={sofr}
-                onLoadDeal={(dealInputs) => { setInputs(dealInputs); setActiveDeal(null); setActiveTab('screening'); }}
-              />
-            ) : activeTab === 'audit' ? (
-              <AuditLogViewer />
-            ) : activeTab === 'team' ? (
-              <TeamManagement />
-            ) : activeTab === 'billing' ? (
-              <BillingPage />
-            ) : (
-              /* Compare tab */
-              <DealComparison
-                exampleDeals={exampleDeals}
-                savedDeals={savedDealsList}
-                historicalDeals={historicalDeals}
-                sofr={sofr}
-              />
-            )}
+
+              {activeTab === 'dashboard' && <PipelineDashboard />}
+              {activeTab === 'compare' && (
+                <DealComparison
+                  exampleDeals={exampleDeals}
+                  savedDeals={savedDealsList}
+                  historicalDeals={historicalDeals}
+                  sofr={sofr}
+                />
+              )}
+              {activeTab === 'historical' && (
+                <div className="space-y-8">
+                  <PortfolioAnalytics scoredDeals={allHistorical} />
+                  <HistoricalDealsTable deals={[...historicalDeals, ...importedDeals]} sofr={sofr} />
+                </div>
+              )}
+              {activeTab === 'audit' && <AuditLogViewer />}
+            </div>
           </Suspense></ErrorBoundary>
         )}
       </div>
     </div>
     </TutorialProvider>
+  );
+}
+
+// Email verification screen — Step 2 of 3 onboarding
+function EmailVerificationScreen({ email, signOut }) {
+  const [resendState, setResendState] = useState('idle'); // idle, sent, cooldown
+
+  const handleResend = async () => {
+    if (resendState !== 'idle' || !supabase) return;
+    setResendState('sent');
+    await supabase.auth.resend({ type: 'signup', email });
+    setTimeout(() => setResendState('cooldown'), 2000);
+    setTimeout(() => setResendState('idle'), 60000);
+  };
+
+  return (
+    <div className="min-h-screen bg-[#f8f9fa] flex items-center justify-center px-4">
+      <div className="w-full max-w-md text-center">
+        {/* Progress */}
+        <div className="flex items-center justify-center gap-2 mb-8">
+          <div className="w-2 h-2 rounded-full bg-gray-900" />
+          <div className="w-8 h-0.5 bg-gray-900" />
+          <div className="w-2 h-2 rounded-full bg-gray-900 animate-pulse" />
+          <div className="w-8 h-0.5 bg-gray-200" />
+          <div className="w-2 h-2 rounded-full bg-gray-200" />
+          <span className="text-[10px] text-gray-400 ml-2">Step 2 of 3</span>
+        </div>
+        <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-amber-50 border border-amber-200 mb-4">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-amber-500" strokeWidth="2">
+            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+            <polyline points="22,6 12,13 2,6" />
+          </svg>
+        </div>
+        <h2 className="text-lg font-semibold text-gray-900 mb-2">Check your inbox</h2>
+        <p className="text-sm text-gray-500 mb-2">
+          We sent a verification link to <span className="text-gray-900 font-medium">{email}</span>.
+        </p>
+        <p className="text-[11px] text-gray-400 mb-6">
+          Check your spam folder if you don't see it. Usually arrives within a couple minutes.
+        </p>
+        <div className="flex items-center justify-center gap-4">
+          <button
+            onClick={handleResend}
+            disabled={resendState !== 'idle'}
+            className="px-4 py-2 rounded-xl bg-white border border-gray-200 text-sm text-gray-700 font-medium hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+          >
+            {resendState === 'sent' ? 'Sent!' : resendState === 'cooldown' ? 'Wait 60s' : 'Resend email'}
+          </button>
+          <button
+            onClick={signOut}
+            className="text-sm text-gray-500 hover:text-gray-700 font-medium transition-colors"
+          >
+            Sign out
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -1205,7 +1265,7 @@ function TutorialWelcomeHandler({ loadExample, exampleDeals, addToast }) {
         tutorial.completeWelcome();
         if (exampleDeals?.length > 0) {
           loadExample(exampleDeals[0]);
-          addToast('Example deal loaded — explore the results below', 'info');
+          addToast('Example deal loaded. Explore the results below.', 'info');
         }
       }}
       onSkip={() => tutorial.completeWelcome()}

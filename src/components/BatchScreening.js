@@ -1,19 +1,55 @@
 import React, { useRef, useState, useMemo, useCallback } from 'react';
-import {
-  parseCsvDeals,
-  calculateMetrics,
-  calculateRiskScore,
-  getRecommendation,
-  formatCurrency,
-  DEFAULT_SOFR,
-} from '../utils/calculations';
+import { formatCurrency, DEFAULT_SOFR } from '../utils/calculations';
+import { getModule, getAvailableModules } from '../modules';
 import { exportBatchCsv } from '../utils/csvExport';
 
-// ── CSV Template ──────────────────────────────────────────────
-const TEMPLATE_HEADERS =
-  'CompanyName,YearsInBusiness,AnnualRevenue,EBITDA,TotalExistingDebt,IndustrySector,CreditRating,EquipmentType,EquipmentCondition,EquipmentCost,DownPayment,FinancingType,UsefulLife,LoanTerm,EssentialUse';
-const TEMPLATE_ROW =
-  'Acme Corp,10,50000000,8000000,20000000,Manufacturing,Adequate,Heavy Machinery,New,5000000,500000,EFA,15,84,true';
+// ── CSV Templates per module ─────────────────────────────────
+const TEMPLATES = {
+  equipment_finance: {
+    headers: 'CompanyName,YearsInBusiness,AnnualRevenue,EBITDA,TotalExistingDebt,IndustrySector,CreditRating,EquipmentType,EquipmentCondition,EquipmentCost,DownPayment,FinancingType,UsefulLife,LoanTerm,EssentialUse',
+    row: 'Acme Corp,10,50000000,8000000,20000000,Manufacturing,Adequate,Heavy Machinery,New,5000000,500000,EFA,15,84,true',
+  },
+  accounts_receivable: {
+    headers: 'CompanyName,YearsInBusiness,AnnualRevenue,EBITDA,TotalExistingDebt,IndustrySector,CreditRating,TotalAROutstanding,ARUnder30,AROver30,AROver60,AROver90,TopCustomerConcentration,DilutionRate,IneligiblesPct,RequestedAdvanceRate,ExistingABLFacility',
+    row: 'Acme Corp,10,50000000,8000000,20000000,Manufacturing,Adequate,12000000,8000000,2500000,1000000,500000,25,3,10,80,false',
+  },
+  inventory_finance: {
+    headers: 'CompanyName,YearsInBusiness,AnnualRevenue,EBITDA,TotalExistingDebt,IndustrySector,CreditRating,TotalInventory,RawMaterials,WorkInProgress,FinishedGoods,ObsoleteInventory,InventoryTurnover,AverageDaysOnHand,RequestedAdvanceRate,NOLVPct,Perishable',
+    row: 'Acme Corp,10,50000000,8000000,20000000,Manufacturing,Adequate,15000000,4000000,3000000,7000000,1000000,6,60,50,65,false',
+  },
+};
+
+// ── Module-specific table columns ────────────────────────────
+function getColumns(moduleKey) {
+  const common = [
+    { key: 'companyName', label: 'Company Name', accessor: (d) => d.inputs.companyName },
+    { key: 'industrySector', label: 'Industry', accessor: (d) => d.inputs.industrySector },
+  ];
+
+  const assetCol = {
+    equipment_finance: {
+      key: 'equipmentCost', label: 'Equipment Cost',
+      accessor: (d) => d.inputs.equipmentCost, format: (v) => formatCurrency(v),
+    },
+    accounts_receivable: {
+      key: 'totalAR', label: 'Total AR',
+      accessor: (d) => d.inputs.totalAROutstanding, format: (v) => formatCurrency(v),
+    },
+    inventory_finance: {
+      key: 'totalInventory', label: 'Total Inventory',
+      accessor: (d) => d.inputs.totalInventory, format: (v) => formatCurrency(v),
+    },
+  };
+
+  return [
+    ...common,
+    assetCol[moduleKey] || assetCol.equipment_finance,
+    { key: 'dscr', label: 'DSCR', accessor: (d) => d.metrics.dscr, format: (v) => v.toFixed(2) + 'x' },
+    { key: 'leverage', label: 'Leverage', accessor: (d) => d.metrics.leverage, format: (v) => v.toFixed(1) + 'x' },
+    { key: 'score', label: 'Risk Score', accessor: (d) => d.riskScore.composite, badge: true },
+    { key: 'recommendation', label: 'Recommendation', accessor: (d) => d.rec.category, recStyle: true },
+  ];
+}
 
 // ── Score helpers ─────────────────────────────────────────────
 function scoreBadgeBg(s) {
@@ -37,23 +73,34 @@ const DIST_COLORS = {
   Weak:       { bar: 'bg-rose-500',    text: 'text-rose-400',    bg: 'bg-rose-500/[0.06] border border-rose-500/15' },
 };
 
-// ── Column definitions ────────────────────────────────────────
-const COLUMNS = [
-  { key: 'companyName',   label: 'Company Name',  accessor: (d) => d.inputs.companyName },
-  { key: 'industrySector',label: 'Industry',       accessor: (d) => d.inputs.industrySector },
-  { key: 'equipmentCost', label: 'Equipment Cost', accessor: (d) => d.inputs.equipmentCost, format: (v) => formatCurrency(v) },
-  { key: 'dscr',          label: 'DSCR',           accessor: (d) => d.metrics.dscr,          format: (v) => v.toFixed(2) + 'x' },
-  { key: 'leverage',      label: 'Leverage',       accessor: (d) => d.metrics.leverage,      format: (v) => v.toFixed(1) + 'x' },
-  { key: 'score',         label: 'Risk Score',     accessor: (d) => d.riskScore.composite,   badge: true },
-  { key: 'recommendation',label: 'Recommendation', accessor: (d) => d.rec.category,          recStyle: true },
-];
+// ── Module label map ─────────────────────────────────────────
+const MODULE_LABELS = {
+  equipment_finance: 'Equipment',
+  accounts_receivable: 'Accounts Receivable',
+  inventory_finance: 'Inventory',
+};
 
-export default function BatchScreening({ sofr = DEFAULT_SOFR, onLoadDeal }) {
+export default function BatchScreening({ sofr = DEFAULT_SOFR, onLoadDeal, activeModule: initialModule = 'equipment_finance' }) {
   const fileRef = useRef(null);
   const [status, setStatus] = useState(null);
   const [scoredDeals, setScoredDeals] = useState([]);
   const [sortKey, setSortKey] = useState('score');
   const [sortAsc, setSortAsc] = useState(false);
+  const [batchModule, setBatchModule] = useState(initialModule);
+
+  const mod = useMemo(() => getModule(batchModule), [batchModule]);
+  const columns = useMemo(() => getColumns(batchModule), [batchModule]);
+  const availableModules = useMemo(() => getAvailableModules(), []);
+
+  // Clear results when switching modules
+  const handleModuleSwitch = useCallback((key) => {
+    if (key === batchModule) return;
+    setBatchModule(key);
+    setScoredDeals([]);
+    setSortKey('score');
+    setSortAsc(false);
+    setStatus(null);
+  }, [batchModule]);
 
   // ── CSV Upload ────────────────────────────────────────────
   const handleFile = useCallback((e) => {
@@ -69,7 +116,7 @@ export default function BatchScreening({ sofr = DEFAULT_SOFR, onLoadDeal }) {
           return;
         }
 
-        const deals = parseCsvDeals(text);
+        const deals = mod.parseCsvDeals(text);
         if (!deals || deals.length === 0) {
           setStatus({ type: 'error', message: 'No valid rows found in CSV.' });
           return;
@@ -81,14 +128,14 @@ export default function BatchScreening({ sofr = DEFAULT_SOFR, onLoadDeal }) {
 
         // Score every deal
         const scored = deals.map((deal) => {
-          const metrics = calculateMetrics(deal.inputs, sofr);
-          const riskScore = calculateRiskScore(deal.inputs, metrics);
-          const rec = getRecommendation(riskScore.composite);
+          const metrics = mod.calculateMetrics(deal.inputs, sofr);
+          const riskScore = mod.calculateRiskScore(deal.inputs, metrics);
+          const rec = mod.getRecommendation(riskScore.composite);
           return { ...deal, metrics, riskScore, rec };
         });
 
         setScoredDeals(scored);
-        setStatus({ type: 'success', message: `Screened ${scored.length} deal${scored.length === 1 ? '' : 's'}` });
+        setStatus({ type: 'success', message: `Screened ${scored.length} ${MODULE_LABELS[batchModule] || ''} deal${scored.length === 1 ? '' : 's'}` });
         setTimeout(() => setStatus(null), 4000);
       } catch (err) {
         setStatus({ type: 'error', message: err.message || 'Failed to parse CSV.' });
@@ -99,19 +146,20 @@ export default function BatchScreening({ sofr = DEFAULT_SOFR, onLoadDeal }) {
     };
     reader.readAsText(file);
     e.target.value = '';
-  }, [sofr]);
+  }, [sofr, mod, batchModule]);
 
   // ── Template Download ─────────────────────────────────────
   const downloadTemplate = useCallback(() => {
-    const csv = `${TEMPLATE_HEADERS}\n${TEMPLATE_ROW}\n`;
+    const tmpl = TEMPLATES[batchModule] || TEMPLATES.equipment_finance;
+    const csv = `${tmpl.headers}\n${tmpl.row}\n`;
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'batch_screening_template.csv';
+    a.download = `batch_${batchModule}_template.csv`;
     a.click();
     URL.revokeObjectURL(url);
-  }, []);
+  }, [batchModule]);
 
   // ── Distribution stats ────────────────────────────────────
   const distribution = useMemo(() => {
@@ -133,7 +181,7 @@ export default function BatchScreening({ sofr = DEFAULT_SOFR, onLoadDeal }) {
   }, [sortKey]);
 
   const sortedDeals = useMemo(() => {
-    const col = COLUMNS.find((c) => c.key === sortKey);
+    const col = columns.find((c) => c.key === sortKey);
     if (!col) return scoredDeals;
     return [...scoredDeals].sort((a, b) => {
       let va = col.accessor(a);
@@ -144,7 +192,7 @@ export default function BatchScreening({ sofr = DEFAULT_SOFR, onLoadDeal }) {
       if (va > vb) return sortAsc ? 1 : -1;
       return 0;
     });
-  }, [scoredDeals, sortKey, sortAsc]);
+  }, [scoredDeals, sortKey, sortAsc, columns]);
 
   // ── Render ────────────────────────────────────────────────
   const total = scoredDeals.length;
@@ -155,8 +203,25 @@ export default function BatchScreening({ sofr = DEFAULT_SOFR, onLoadDeal }) {
       <div className="glass-card rounded-2xl p-6">
         <h3 className="text-sm font-semibold text-gray-800 mb-3">Batch Deal Screening</h3>
         <p className="text-[11px] text-gray-400 mb-4">
-          Upload a CSV to screen multiple deals at once. Each deal will be scored and ranked automatically.
+          Upload a CSV to screen multiple deals at once. Select the asset class, then upload your file.
         </p>
+
+        {/* Asset class selector */}
+        <div className="flex items-center gap-1.5 mb-4">
+          {availableModules.map((m) => (
+            <button
+              key={m.key}
+              onClick={() => handleModuleSwitch(m.key)}
+              className={`px-3 py-1.5 rounded-lg text-[11px] font-medium transition-colors ${
+                batchModule === m.key
+                  ? 'bg-gray-900 text-white'
+                  : 'pill-btn text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              {MODULE_LABELS[m.key] || m.name}
+            </button>
+          ))}
+        </div>
 
         <div className="flex items-center gap-3 flex-wrap">
           <button
@@ -200,7 +265,7 @@ export default function BatchScreening({ sofr = DEFAULT_SOFR, onLoadDeal }) {
             >
               <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V3" />
             </svg>
-            Download Template
+            Download {MODULE_LABELS[batchModule]} Template
           </button>
 
           {scoredDeals.length > 0 && (
@@ -292,7 +357,7 @@ export default function BatchScreening({ sofr = DEFAULT_SOFR, onLoadDeal }) {
               <table className="w-full text-left">
                 <thead>
                   <tr className="border-b border-gray-200">
-                    {COLUMNS.map((col) => {
+                    {columns.map((col) => {
                       const active = sortKey === col.key;
                       return (
                         <th
@@ -343,7 +408,7 @@ export default function BatchScreening({ sofr = DEFAULT_SOFR, onLoadDeal }) {
                       onClick={() => onLoadDeal && onLoadDeal(deal.inputs)}
                       title="Click to load into screening form"
                     >
-                      {COLUMNS.map((col) => {
+                      {columns.map((col) => {
                         const raw = col.accessor(deal);
 
                         // Risk score badge

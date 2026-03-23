@@ -85,7 +85,7 @@ export default function OrgSetup({ profile, onComplete }) {
         </div>
 
         {/* Card */}
-        <div className="bg-gray-50 border border-gray-200 rounded-2xl  p-8 shadow-2xl shadow-gray-200/40">
+        <div className="bg-white border border-gray-200 rounded-2xl p-8 shadow-2xl shadow-gray-200/40">
           {!mode && (
             <>
               <h2 className="text-lg font-semibold text-gray-900 mb-1">
@@ -122,7 +122,7 @@ export default function OrgSetup({ profile, onComplete }) {
               </p>
 
               {error && (
-                <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-300 text-sm">
+                <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm">
                   {error}
                 </div>
               )}
@@ -151,7 +151,7 @@ export default function OrgSetup({ profile, onComplete }) {
                 >
                   {loading ? (
                     <>
-                      <svg className="animate-spin h-4 w-4 text-gray-900" viewBox="0 0 24 24" fill="none">
+                      <svg className="animate-spin h-4 w-4 text-white" viewBox="0 0 24 24" fill="none">
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                       </svg>
@@ -184,14 +184,14 @@ export default function OrgSetup({ profile, onComplete }) {
               </p>
 
               {error && (
-                <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-300 text-sm">
+                <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm">
                   {error}
                 </div>
               )}
 
               {joinSuccess && (
-                <div className="mb-4 p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-sm">
-                  You've joined the organization! Redirecting...
+                <div className="mb-4 p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm">
+                  Joined the organization. Redirecting...
                 </div>
               )}
 
@@ -242,7 +242,7 @@ export default function OrgSetup({ profile, onComplete }) {
                 >
                   {loading ? (
                     <>
-                      <svg className="animate-spin h-4 w-4 text-gray-900" viewBox="0 0 24 24" fill="none">
+                      <svg className="animate-spin h-4 w-4 text-white" viewBox="0 0 24 24" fill="none">
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                       </svg>

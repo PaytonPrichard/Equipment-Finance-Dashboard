@@ -151,16 +151,19 @@ export default function LandingPage({ onGetStarted, onSignIn }) {
 
       {/* Who is this for */}
       <section className="max-w-5xl mx-auto px-6 pb-12">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="flex items-center justify-center gap-x-8 gap-y-3 flex-wrap">
           {[
-            { title: 'Credit Analysts', desc: 'Screen 10x more deals with consistent criteria.' },
-            { title: 'Deal Teams', desc: 'Track pipeline from screening through funded.' },
-            { title: 'Credit Committees', desc: 'Receive standardized memos with full audit trail.' },
-          ].map(p => (
-            <div key={p.title} className="bg-white rounded-xl border border-gray-200 p-5">
-              <h3 className="text-sm font-semibold text-gray-900 mb-1">{p.title}</h3>
-              <p className="text-[13px] text-gray-500">{p.desc}</p>
-            </div>
+            { title: 'Credit Analysts', desc: 'Screen 10x more deals.' },
+            { title: 'Deal Teams', desc: 'Track pipeline to funded.' },
+            { title: 'Credit Committees', desc: 'Standardized memos.' },
+          ].map((p, i) => (
+            <React.Fragment key={p.title}>
+              {i > 0 && <span className="hidden md:inline text-gray-300 text-sm select-none">/</span>}
+              <div className="text-center">
+                <span className="text-sm font-semibold text-gray-900">{p.title}</span>
+                <span className="text-sm text-gray-400 ml-1.5">{p.desc}</span>
+              </div>
+            </React.Fragment>
           ))}
         </div>
       </section>
@@ -209,6 +212,90 @@ export default function LandingPage({ onGetStarted, onSignIn }) {
               </div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* Speed to Value */}
+      <section className="bg-gray-900">
+        <div className="max-w-5xl mx-auto px-6 py-12">
+        <h2 className="text-2xl font-bold text-white mb-2 text-center">Your whole pipeline, scored by end of day</h2>
+        <p className="text-gray-400 text-center mb-8 text-sm">No 6-month rollout. No consultant engagement. One afternoon.</p>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
+          {[
+            {
+              time: '10 min',
+              title: 'Upload your pipeline',
+              desc: 'Batch upload existing deals via CSV. Hundreds of deals scored at once.',
+              icon: (
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="17 8 12 3 7 8" />
+                  <line x1="12" y1="3" x2="12" y2="15" />
+                </svg>
+              ),
+            },
+            {
+              time: '5 min',
+              title: 'Set credit policy',
+              desc: 'Configure DSCR, leverage, and concentration thresholds to match your firm.',
+              icon: (
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <line x1="4" y1="21" x2="4" y2="14" />
+                  <line x1="4" y1="10" x2="4" y2="3" />
+                  <line x1="12" y1="21" x2="12" y2="12" />
+                  <line x1="12" y1="8" x2="12" y2="3" />
+                  <line x1="20" y1="21" x2="20" y2="16" />
+                  <line x1="20" y1="12" x2="20" y2="3" />
+                  <line x1="1" y1="14" x2="7" y2="14" />
+                  <line x1="9" y1="8" x2="15" y2="8" />
+                  <line x1="17" y1="16" x2="23" y2="16" />
+                </svg>
+              ),
+            },
+            {
+              time: '2 min',
+              title: 'Invite your team',
+              desc: 'Send invite codes. Role-based access is set up automatically.',
+              icon: (
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                  <circle cx="8.5" cy="7" r="4" />
+                  <line x1="20" y1="8" x2="20" y2="14" />
+                  <line x1="23" y1="11" x2="17" y2="11" />
+                </svg>
+              ),
+            },
+            {
+              time: 'Done',
+              title: 'Dashboard is live',
+              desc: 'Pipeline analytics, score distributions, and deal tracking. Ready to go.',
+              icon: (
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                  <polyline points="22 4 12 14.01 9 11.01" />
+                </svg>
+              ),
+            },
+          ].map((item, idx) => (
+            <div key={item.title} className="bg-gray-800/60 rounded-xl border border-gray-700/50 p-5 relative">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-8 h-8 rounded-lg bg-gray-700/50 flex items-center justify-center text-gray-400">
+                  {item.icon}
+                </div>
+                <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">{item.time}</span>
+              </div>
+              <h3 className="text-sm font-semibold text-white mb-1">{item.title}</h3>
+              <p className="text-[13px] text-gray-400 leading-relaxed">{item.desc}</p>
+              {idx < 3 && (
+                <div className="hidden md:block absolute top-1/2 -right-2.5 -translate-y-1/2">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-gray-600" strokeWidth="2">
+                    <polyline points="9 18 15 12 9 6" />
+                  </svg>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
         </div>
       </section>
 
