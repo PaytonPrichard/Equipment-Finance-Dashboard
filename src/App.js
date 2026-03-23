@@ -645,14 +645,22 @@ function AuthenticatedApp({ profile, user }) {
                       </div>
                     ))}
                   </div>
-                  {/* Try Example button */}
-                  {isEquipment && exampleDeals.length > 0 && (
-                    <button
-                      onClick={() => loadExample(exampleDeals[0])}
-                      className="mt-6 px-5 py-2.5 rounded-xl bg-gray-900 text-sm text-white font-medium hover:bg-gray-800 transition-all"
-                    >
-                      Load example: $5M Heavy Machinery, Manufacturing
-                    </button>
+                  {/* Try Example buttons */}
+                  {isEquipment && exampleDeals.length > 1 && (
+                    <div className="mt-6 flex items-center gap-3">
+                      <button
+                        onClick={() => loadExample(exampleDeals.find(d => d.id === 'strong') || exampleDeals[0])}
+                        className="px-4 py-2.5 rounded-xl bg-gray-900 text-sm text-white font-medium hover:bg-gray-800 transition-all"
+                      >
+                        Try a strong deal (85+)
+                      </button>
+                      <button
+                        onClick={() => loadExample(exampleDeals.find(d => d.id === 'moderate') || exampleDeals[1])}
+                        className="px-4 py-2.5 rounded-xl border border-gray-300 text-sm text-gray-700 font-medium hover:border-gray-400 transition-all"
+                      >
+                        Try a borderline deal (~50)
+                      </button>
+                    </div>
                   )}
                   {/* Recently Screened Deals */}
                   {recentDeals.length > 0 && (
