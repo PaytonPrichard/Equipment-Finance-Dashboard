@@ -4,7 +4,7 @@ const { checkRateLimit } = require('./lib/rateLimit');
 module.exports = async function handler(req, res) {
   if (handlePreflight(req, res)) return;
 
-  if (!checkRateLimit(req, res)) {
+  if (!checkRateLimit(req, res, 'default')) {
     return res.status(429).json({ rate: null, error: 'Too many requests' });
   }
 

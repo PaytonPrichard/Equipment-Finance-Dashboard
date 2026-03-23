@@ -1,71 +1,69 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
+import { registerSession, checkSession, heartbeatSession, clearSession } from '../lib/sessions';
 
-const SESSION_KEY = 'efd_active_session';
-const HEARTBEAT_INTERVAL = 30000; // 30 seconds
+const HEARTBEAT_INTERVAL = 60000; // 60 seconds
+const CHECK_INTERVAL = 30000; // 30 seconds
 
 /**
- * Enforces single-session for the current user.
+ * Enforces single-session per user across devices.
  *
- * On mount, generates a unique session ID and writes it to localStorage.
- * Other tabs detect the change via the 'storage' event and compare session IDs.
- * If their session ID doesn't match, they call onSessionConflict (sign out).
- *
- * This works across tabs in the same browser. For cross-device enforcement,
- * use a Supabase-backed session table (future enhancement).
+ * On mount: registers this device as the active session (invalidates others).
+ * Periodically: checks if this session is still valid (another device may have taken over).
+ * On conflict: calls onSessionConflict (typically signs out).
  *
  * @param {string} userId - Current user ID
  * @param {boolean} enforce - Whether to enforce (e.g., only for Analyst tier)
- * @param {Function} onSessionConflict - Called when another session takes over
+ * @param {Function} onSessionConflict - Called when another device takes over
  */
 export function useSessionGuard(userId, enforce, onSessionConflict) {
-  const sessionIdRef = useRef(null);
+  const conflictRef = useRef(onSessionConflict);
+  conflictRef.current = onSessionConflict;
+
+  const handleConflict = useCallback(() => {
+    if (conflictRef.current) conflictRef.current();
+  }, []);
 
   useEffect(() => {
     if (!enforce || !userId) return;
 
-    // Generate a unique session ID for this tab
-    const sessionId = `${userId}_${Date.now()}_${Math.random().toString(36).slice(2)}`;
-    sessionIdRef.current = sessionId;
+    // Register this device as the active session
+    registerSession(userId);
 
-    // Claim the session
-    try {
-      localStorage.setItem(SESSION_KEY, sessionId);
-    } catch (e) { /* ignore */ }
-
-    // Listen for other tabs claiming the session
-    const handleStorage = (e) => {
-      if (e.key === SESSION_KEY && e.newValue && e.newValue !== sessionIdRef.current) {
-        // Another tab has taken over — this session is no longer active
-        if (onSessionConflict) {
-          onSessionConflict();
-        }
+    // Periodically check if our session is still valid
+    const checkInterval = setInterval(async () => {
+      const isValid = await checkSession(userId);
+      if (!isValid) {
+        handleConflict();
       }
-    };
+    }, CHECK_INTERVAL);
 
-    window.addEventListener('storage', handleStorage);
-
-    // Periodic heartbeat to re-assert this session
-    const interval = setInterval(() => {
-      try {
-        const current = localStorage.getItem(SESSION_KEY);
-        if (current !== sessionIdRef.current) {
-          // Session was taken over while we weren't looking
-          if (onSessionConflict) {
-            onSessionConflict();
-          }
-        }
-      } catch (e) { /* ignore */ }
+    // Heartbeat to keep session alive
+    const heartbeatInterval = setInterval(() => {
+      heartbeatSession(userId);
     }, HEARTBEAT_INTERVAL);
 
-    return () => {
-      window.removeEventListener('storage', handleStorage);
-      clearInterval(interval);
-      // Clean up on unmount only if we still own the session
-      try {
-        if (localStorage.getItem(SESSION_KEY) === sessionIdRef.current) {
-          localStorage.removeItem(SESSION_KEY);
-        }
-      } catch (e) { /* ignore */ }
+    // Also check on tab focus (user switches back to this tab)
+    const handleFocus = async () => {
+      const isValid = await checkSession(userId);
+      if (!isValid) {
+        handleConflict();
+      }
     };
-  }, [userId, enforce, onSessionConflict]);
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      clearInterval(checkInterval);
+      clearInterval(heartbeatInterval);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [userId, enforce, handleConflict]);
+
+  // Cleanup session on unmount (logout)
+  useEffect(() => {
+    return () => {
+      if (enforce && userId) {
+        clearSession(userId);
+      }
+    };
+  }, [userId, enforce]);
 }

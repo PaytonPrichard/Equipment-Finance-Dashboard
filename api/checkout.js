@@ -25,7 +25,7 @@ async function authenticateRequest(req) {
 
 module.exports = async function handler(req, res) {
   if (handlePreflight(req, res)) return;
-  if (!checkRateLimit(req, res)) {
+  if (!checkRateLimit(req, res, 'checkout')) {
     return res.status(429).json({ error: 'Too many requests' });
   }
 
