@@ -1,5 +1,5 @@
-const { handlePreflight, setCorsHeaders } = require('./lib/cors');
-const { checkRateLimit } = require('./lib/rateLimit');
+const { handlePreflight, setCorsHeaders } = require('../server-lib/cors');
+const { checkRateLimit } = require('../server-lib/rateLimit');
 
 module.exports = async function handler(req, res) {
   if (handlePreflight(req, res)) return;

@@ -10,9 +10,9 @@
 //   4. Set NEXT_PUBLIC_APP_URL to your production URL
 // ============================================================
 
-const { handlePreflight } = require('./lib/cors');
-const { checkRateLimit } = require('./lib/rateLimit');
-const { supabaseAdmin } = require('./lib/supabaseAdmin');
+const { handlePreflight } = require('../server-lib/cors');
+const { checkRateLimit } = require('../server-lib/rateLimit');
+const { supabaseAdmin } = require('../server-lib/supabaseAdmin');
 
 async function authenticateRequest(req) {
   const authHeader = req.headers.authorization || req.headers.Authorization || '';

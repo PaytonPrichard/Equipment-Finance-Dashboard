@@ -1,5 +1,5 @@
-const { handlePreflight } = require('./lib/cors');
-const { supabaseAdmin } = require('./lib/supabaseAdmin');
+const { handlePreflight } = require('../server-lib/cors');
+const { supabaseAdmin } = require('../server-lib/supabaseAdmin');
 
 async function authenticateRequest(req) {
   const authHeader = req.headers.authorization || req.headers.Authorization || '';

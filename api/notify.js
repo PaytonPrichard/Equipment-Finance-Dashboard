@@ -2,8 +2,8 @@
 // Email Notification API — sends stage change emails via Resend
 // ============================================================
 
-const { handlePreflight } = require('./lib/cors');
-const { supabaseAdmin } = require('./lib/supabaseAdmin');
+const { handlePreflight } = require('../server-lib/cors');
+const { supabaseAdmin } = require('../server-lib/supabaseAdmin');
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const FROM_EMAIL = process.env.NOTIFICATION_FROM_EMAIL || 'Tranche <notifications@usetranche.com>';

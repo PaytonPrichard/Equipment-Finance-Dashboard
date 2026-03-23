@@ -3,11 +3,11 @@
 // Vercel serverless function (Node.js / CommonJS)
 // ============================================================
 
-const { supabaseAdmin } = require('./lib/supabaseAdmin');
-const { validateDealInputs } = require('./lib/validate');
-const { handlePreflight } = require('./lib/cors');
-const { checkRateLimit } = require('./lib/rateLimit');
-const { checkPlanStatus } = require('./lib/planCheck');
+const { supabaseAdmin } = require('../server-lib/supabaseAdmin');
+const { validateDealInputs } = require('../server-lib/validate');
+const { handlePreflight } = require('../server-lib/cors');
+const { checkRateLimit } = require('../server-lib/rateLimit');
+const { checkPlanStatus } = require('../server-lib/planCheck');
 
 // Roles permitted to move deals into certain pipeline stages
 const STAGE_ROLE_REQUIREMENTS = {

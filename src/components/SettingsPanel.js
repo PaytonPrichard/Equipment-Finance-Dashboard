@@ -470,14 +470,14 @@ function IntegrationsSection({ addToast }) {
   useEffect(() => {
     if (!session?.access_token) return;
     const h = getAuthHeaders();
-    fetch('/api/v1/keys', { headers: h }).then(r => r.json()).then(d => setApiKeys(d.keys || [])).catch(() => {});
-    fetch('/api/v1/webhooks', { headers: h }).then(r => r.json()).then(d => setWebhooksList(d.webhooks || [])).catch(() => {});
+    fetch('/api/v1?resource=keys', { headers: h }).then(r => r.json()).then(d => setApiKeys(d.keys || [])).catch(() => {});
+    fetch('/api/v1?resource=webhooks', { headers: h }).then(r => r.json()).then(d => setWebhooksList(d.webhooks || [])).catch(() => {});
   }, [session?.access_token, getAuthHeaders]);
 
   const createKey = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/v1/keys', { method: 'POST', headers: getAuthHeaders(), body: JSON.stringify({ name: newKeyName || 'Default' }) });
+      const res = await fetch('/api/v1?resource=keys', { method: 'POST', headers: getAuthHeaders(), body: JSON.stringify({ name: newKeyName || 'Default' }) });
       const data = await res.json();
       if (res.ok) { setCreatedKey(data.key); setNewKeyName(''); setApiKeys(prev => [data, ...prev]); addToast('API key created. Copy it now.', 'success'); }
       else { addToast(data.error || 'Failed to create key', 'error'); }
@@ -487,7 +487,7 @@ function IntegrationsSection({ addToast }) {
 
   const revokeKey = async (id) => {
     if (!window.confirm('Revoke this API key? Any integrations using it will stop working.')) return;
-    const res = await fetch(`/api/v1/keys?id=${id}`, { method: 'DELETE', headers: getAuthHeaders() });
+    const res = await fetch(`/api/v1?resource=keys&id=${id}`, { method: 'DELETE', headers: getAuthHeaders() });
     if (res.ok) { setApiKeys(prev => prev.map(k => k.id === id ? { ...k, revoked_at: new Date().toISOString() } : k)); addToast('Key revoked', 'success'); }
   };
 
@@ -495,7 +495,7 @@ function IntegrationsSection({ addToast }) {
     if (!newWebhookUrl) return;
     setLoading(true);
     try {
-      const res = await fetch('/api/v1/webhooks', { method: 'POST', headers: getAuthHeaders(), body: JSON.stringify({ url: newWebhookUrl }) });
+      const res = await fetch('/api/v1?resource=webhooks', { method: 'POST', headers: getAuthHeaders(), body: JSON.stringify({ url: newWebhookUrl }) });
       const data = await res.json();
       if (res.ok) { setCreatedSecret(data.secret); setNewWebhookUrl(''); setWebhooksList(prev => [data, ...prev]); addToast('Webhook created. Copy the signing secret now.', 'success'); }
       else { addToast(data.error || 'Failed to create webhook', 'error'); }
@@ -505,12 +505,12 @@ function IntegrationsSection({ addToast }) {
 
   const deleteWebhook = async (id) => {
     if (!window.confirm('Delete this webhook?')) return;
-    const res = await fetch(`/api/v1/webhooks?id=${id}`, { method: 'DELETE', headers: getAuthHeaders() });
+    const res = await fetch(`/api/v1?resource=webhooks&id=${id}`, { method: 'DELETE', headers: getAuthHeaders() });
     if (res.ok) { setWebhooksList(prev => prev.filter(w => w.id !== id)); addToast('Webhook deleted', 'success'); }
   };
 
   const toggleWebhook = async (id, active) => {
-    const res = await fetch(`/api/v1/webhooks?id=${id}`, { method: 'PATCH', headers: getAuthHeaders(), body: JSON.stringify({ active: !active }) });
+    const res = await fetch(`/api/v1?resource=webhooks&id=${id}`, { method: 'PATCH', headers: getAuthHeaders(), body: JSON.stringify({ active: !active }) });
     if (res.ok) { setWebhooksList(prev => prev.map(w => w.id === id ? { ...w, active: !active } : w)); }
   };
 
@@ -631,10 +631,10 @@ function IntegrationsSection({ addToast }) {
           </div>
           <div className="border-t border-gray-200 pt-3 space-y-2">
             <p className="text-gray-500 text-[10px] uppercase tracking-wider font-sans mb-1">Endpoints</p>
-            <p className="text-gray-700"><span className="text-emerald-600">POST</span> /api/v1/deals — Create and score a deal</p>
-            <p className="text-gray-700"><span className="text-blue-600">GET</span> /api/v1/deals — List pipeline deals</p>
-            <p className="text-gray-700"><span className="text-blue-600">GET</span> /api/v1/deals?id=123 — Get specific deal</p>
-            <p className="text-gray-700"><span className="text-amber-600">PATCH</span> /api/v1/deals?id=123 — Update stage or notes</p>
+            <p className="text-gray-700"><span className="text-emerald-600">POST</span> /api/v1?resource=deals — Create a deal</p>
+            <p className="text-gray-700"><span className="text-blue-600">GET</span> /api/v1?resource=deals — List pipeline deals</p>
+            <p className="text-gray-700"><span className="text-blue-600">GET</span> /api/v1?resource=deals&amp;id=123 — Get specific deal</p>
+            <p className="text-gray-700"><span className="text-amber-600">PATCH</span> /api/v1?resource=deals&amp;id=123 — Update stage or notes</p>
           </div>
         </div>
       </div>

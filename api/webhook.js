@@ -8,7 +8,7 @@
 //   3. Subscribe to: checkout.session.completed, customer.subscription.deleted
 // ============================================================
 
-const { supabaseAdmin } = require('./lib/supabaseAdmin');
+const { supabaseAdmin } = require('../server-lib/supabaseAdmin');
 
 function getRawBody(req) {
   return new Promise((resolve, reject) => {
