@@ -19,19 +19,19 @@ const NAV_ITEMS = [
 function SettingsInput({ label, value, onChange, type = 'text', placeholder, hint, suffix }) {
   return (
     <div>
-      <label className="block text-[11px] font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">{label}</label>
+      <label className="block text-[11px] font-semibold text-gray-400 mb-1.5 uppercase tracking-wider">{label}</label>
       <div className="relative">
         <input
           type={type}
           value={value}
           onChange={(e) => onChange(type === 'number' ? (parseFloat(e.target.value) || 0) : e.target.value)}
           placeholder={placeholder}
-          className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-sm placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-gold-500/40 transition-all"
+          className="w-full px-3.5 py-2.5 rounded-xl bg-gray-50 border border-gray-200 text-gray-900 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-400/40 transition-all"
           style={suffix ? { paddingRight: '2.5rem' } : undefined}
         />
-        {suffix && <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs">{suffix}</span>}
+        {suffix && <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs">{suffix}</span>}
       </div>
-      {hint && <p className="text-[9px] text-slate-600 mt-1">{hint}</p>}
+      {hint && <p className="text-[9px] text-gray-400 mt-1">{hint}</p>}
     </div>
   );
 }
@@ -172,28 +172,28 @@ export default function SettingsPanel({ isOpen, onClose, onCriteriaChange, activ
     <div className="fixed inset-0 z-[100] flex items-center justify-center">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-fade-in" onClick={onClose} />
 
-      <div className="relative w-full max-w-3xl max-h-[85vh] mx-4 rounded-2xl border border-white/[0.08] overflow-hidden animate-fade-in-up flex" style={{ background: 'rgba(17, 17, 22, 0.97)' }}>
+      <div className="relative w-full max-w-3xl max-h-[85vh] mx-4 rounded-2xl border border-gray-200 overflow-hidden animate-fade-in-up flex" style={{ background: 'rgba(17, 17, 22, 0.97)' }}>
         {/* Sidebar */}
-        <div className="w-48 flex-shrink-0 border-r border-white/[0.06] py-4 flex flex-col">
-          <h2 className="text-sm font-bold text-white px-4 mb-4">Settings</h2>
+        <div className="w-48 flex-shrink-0 border-r border-gray-200 py-4 flex flex-col">
+          <h2 className="text-sm font-bold text-gray-900 px-4 mb-4">Settings</h2>
           <nav className="flex-1 space-y-0.5 px-2">
             {visibleNav.map(item => (
               <button
                 key={item.id}
                 onClick={() => setSection(item.id)}
                 className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[12px] font-medium transition-all ${
-                  section === item.id ? 'bg-white/[0.08] text-white' : 'text-slate-400 hover:text-white hover:bg-white/[0.04]'
+                  section === item.id ? 'bg-gray-100 text-gray-900' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'
                 }`}
               >
-                <span className={section === item.id ? 'text-gold-400' : 'text-slate-500'}>{item.icon}</span>
+                <span className={section === item.id ? 'text-gray-600' : 'text-gray-400'}>{item.icon}</span>
                 {item.label}
               </button>
             ))}
           </nav>
-          <div className="px-2 pt-2 border-t border-white/[0.06] mt-2">
+          <div className="px-2 pt-2 border-t border-gray-200 mt-2">
             <button
               onClick={() => { onClose(); signOut(); }}
-              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[12px] font-medium text-slate-400 hover:text-rose-400 transition-all"
+              className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-[12px] font-medium text-gray-500 hover:text-rose-400 transition-all"
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" /></svg>
               Sign Out
@@ -204,7 +204,7 @@ export default function SettingsPanel({ isOpen, onClose, onCriteriaChange, activ
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-6">
           {/* Close button */}
-          <button onClick={onClose} className="absolute top-4 right-4 text-slate-500 hover:text-white transition-colors">
+          <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-gray-900 transition-colors">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></svg>
           </button>
 
@@ -212,36 +212,36 @@ export default function SettingsPanel({ isOpen, onClose, onCriteriaChange, activ
           {section === 'account' && (
             <div className="space-y-6">
               <div>
-                <h3 className="text-sm font-bold text-white mb-4">Account</h3>
+                <h3 className="text-sm font-bold text-gray-900 mb-4">Account</h3>
                 <div className="space-y-3">
                   <div className="flex items-center justify-between py-2">
-                    <span className="text-[12px] text-slate-400">Name</span>
-                    <span className="text-[12px] text-white font-medium">{profile?.full_name || user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User'}</span>
+                    <span className="text-[12px] text-gray-500">Name</span>
+                    <span className="text-[12px] text-gray-900 font-medium">{profile?.full_name || user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User'}</span>
                   </div>
-                  <div className="flex items-center justify-between py-2 border-t border-white/[0.04]">
-                    <span className="text-[12px] text-slate-400">Email</span>
-                    <span className="text-[12px] text-white font-medium">{user?.email}</span>
+                  <div className="flex items-center justify-between py-2 border-t border-gray-200">
+                    <span className="text-[12px] text-gray-500">Email</span>
+                    <span className="text-[12px] text-gray-900 font-medium">{user?.email}</span>
                   </div>
-                  <div className="flex items-center justify-between py-2 border-t border-white/[0.04]">
-                    <span className="text-[12px] text-slate-400">Role</span>
-                    <span className="text-[12px] text-white font-medium">{ROLE_LABELS[profile?.role] || profile?.role}</span>
+                  <div className="flex items-center justify-between py-2 border-t border-gray-200">
+                    <span className="text-[12px] text-gray-500">Role</span>
+                    <span className="text-[12px] text-gray-900 font-medium">{ROLE_LABELS[profile?.role] || profile?.role}</span>
                   </div>
-                  <div className="flex items-center justify-between py-2 border-t border-white/[0.04]">
-                    <span className="text-[12px] text-slate-400">Organization</span>
-                    <span className="text-[12px] text-white font-medium">{profile?.organizations?.name || 'None'}</span>
+                  <div className="flex items-center justify-between py-2 border-t border-gray-200">
+                    <span className="text-[12px] text-gray-500">Organization</span>
+                    <span className="text-[12px] text-gray-900 font-medium">{profile?.organizations?.name || 'None'}</span>
                   </div>
-                  <div className="flex items-center justify-between py-2 border-t border-white/[0.04]">
-                    <span className="text-[12px] text-slate-400">Plan</span>
+                  <div className="flex items-center justify-between py-2 border-t border-gray-200">
+                    <span className="text-[12px] text-gray-500">Plan</span>
                     <div className="flex items-center gap-2">
-                      <span className="text-[12px] text-white font-medium capitalize">{(plan || 'Free').replace(/_/g, ' ')}</span>
-                      {daysRemaining != null && <span className="text-[10px] text-slate-500">{daysRemaining} days left</span>}
+                      <span className="text-[12px] text-gray-900 font-medium capitalize">{(plan || 'Free').replace(/_/g, ' ')}</span>
+                      {daysRemaining != null && <span className="text-[10px] text-gray-400">{daysRemaining} days left</span>}
                       {isExpired && <span className="text-[10px] text-rose-400">Expired</span>}
                     </div>
                   </div>
                 </div>
               </div>
               <div className="pt-2">
-                <a href="mailto:joelpeter617@gmail.com?subject=Tranche%20Feedback" className="text-[12px] text-slate-400 hover:text-gold-400 transition-colors">
+                <a href="mailto:joelpeter617@gmail.com?subject=Tranche%20Feedback" className="text-[12px] text-gray-500 hover:text-gray-600 transition-colors">
                   Send feedback
                 </a>
               </div>
@@ -252,44 +252,44 @@ export default function SettingsPanel({ isOpen, onClose, onCriteriaChange, activ
           {section === 'team' && isAdmin && (
             <div className="space-y-6">
               <div>
-                <h3 className="text-sm font-bold text-white mb-4">Team Members</h3>
+                <h3 className="text-sm font-bold text-gray-900 mb-4">Team Members</h3>
                 {loadingTeam ? (
-                  <p className="text-[12px] text-slate-500">Loading...</p>
+                  <p className="text-[12px] text-gray-400">Loading...</p>
                 ) : (
                   <div className="space-y-2">
                     {members.map(m => (
-                      <div key={m.id} className="flex items-center justify-between py-2 border-b border-white/[0.04]">
+                      <div key={m.id} className="flex items-center justify-between py-2 border-b border-gray-200">
                         <div>
-                          <p className="text-[12px] text-white font-medium">{m.full_name || m.email}</p>
-                          <p className="text-[10px] text-slate-500">{m.email}</p>
+                          <p className="text-[12px] text-gray-900 font-medium">{m.full_name || m.email}</p>
+                          <p className="text-[10px] text-gray-400">{m.email}</p>
                         </div>
-                        <span className="text-[10px] text-slate-400 uppercase tracking-wider">{ROLE_LABELS[m.role] || m.role}</span>
+                        <span className="text-[10px] text-gray-500 uppercase tracking-wider">{ROLE_LABELS[m.role] || m.role}</span>
                       </div>
                     ))}
                   </div>
                 )}
               </div>
               <div>
-                <h3 className="text-sm font-bold text-white mb-3">Create Invite</h3>
+                <h3 className="text-sm font-bold text-gray-900 mb-3">Create Invite</h3>
                 <div className="flex gap-2">
                   <input
                     type="email"
                     value={inviteEmail}
                     onChange={(e) => setInviteEmail(e.target.value)}
                     placeholder="Email (optional)"
-                    className="flex-1 px-3 py-2 rounded-lg bg-white/[0.04] border border-white/[0.08] text-white text-[12px] placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-gold-500/40 transition-all"
+                    className="flex-1 px-3 py-2 rounded-lg bg-gray-50 border border-gray-200 text-gray-900 text-[12px] placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-400/40 transition-all"
                   />
                   <select
                     value={inviteRole}
                     onChange={(e) => setInviteRole(e.target.value)}
-                    className="px-3 py-2 rounded-lg bg-white/[0.04] border border-white/[0.08] text-white text-[12px] focus:outline-none"
+                    className="px-3 py-2 rounded-lg bg-gray-50 border border-gray-200 text-gray-900 text-[12px] focus:outline-none"
                   >
                     <option value="analyst">Analyst</option>
                     <option value="senior_analyst">Senior Analyst</option>
                     <option value="credit_committee">Credit Committee</option>
                     <option value="admin">Admin</option>
                   </select>
-                  <button onClick={handleCreateInvite} className="px-4 py-2 rounded-lg bg-white/[0.08] text-white text-[12px] font-semibold hover:bg-white/[0.12] transition-all">
+                  <button onClick={handleCreateInvite} className="px-4 py-2 rounded-lg bg-gray-100 text-gray-900 text-[12px] font-semibold hover:bg-white/[0.12] transition-all">
                     Invite
                   </button>
                 </div>
@@ -298,10 +298,10 @@ export default function SettingsPanel({ isOpen, onClose, onCriteriaChange, activ
                     {invites.map(inv => (
                       <div key={inv.id} className="flex items-center justify-between py-1.5">
                         <div className="flex items-center gap-2">
-                          <span className="text-[11px] font-mono text-gold-400">{inv.invite_code}</span>
-                          {inv.email && <span className="text-[10px] text-slate-500">{inv.email}</span>}
+                          <span className="text-[11px] font-mono text-gray-600">{inv.invite_code}</span>
+                          {inv.email && <span className="text-[10px] text-gray-400">{inv.email}</span>}
                         </div>
-                        <button onClick={() => { navigator.clipboard.writeText(inv.invite_code); addToast('Code copied', 'success'); }} className="text-[10px] text-slate-500 hover:text-white transition-colors">Copy</button>
+                        <button onClick={() => { navigator.clipboard.writeText(inv.invite_code); addToast('Code copied', 'success'); }} className="text-[10px] text-gray-400 hover:text-gray-900 transition-colors">Copy</button>
                       </div>
                     ))}
                   </div>
@@ -309,11 +309,11 @@ export default function SettingsPanel({ isOpen, onClose, onCriteriaChange, activ
               </div>
               {isAdmin && (
                 <div>
-                  <h3 className="text-sm font-bold text-white mb-3">Plan Management</h3>
+                  <h3 className="text-sm font-bold text-gray-900 mb-3">Plan Management</h3>
                   <div className="grid grid-cols-2 gap-3 mb-3">
                     <div>
-                      <label className="block text-[11px] font-semibold text-slate-500 mb-1 uppercase tracking-wider">Plan Type</label>
-                      <select value={planType} onChange={(e) => setPlanType(e.target.value)} className="w-full px-3 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-sm focus:outline-none focus:ring-2 focus:ring-gold-500/40 transition-all">
+                      <label className="block text-[11px] font-semibold text-gray-400 mb-1 uppercase tracking-wider">Plan Type</label>
+                      <select value={planType} onChange={(e) => setPlanType(e.target.value)} className="w-full px-3 py-2.5 rounded-xl bg-gray-50 border border-gray-200 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-gray-400/40 transition-all">
                         <option value="free">Free</option>
                         <option value="pilot">Pilot</option>
                         <option value="starter">Starter</option>
@@ -322,11 +322,11 @@ export default function SettingsPanel({ isOpen, onClose, onCriteriaChange, activ
                       </select>
                     </div>
                     <div>
-                      <label className="block text-[11px] font-semibold text-slate-500 mb-1 uppercase tracking-wider">Expiry</label>
-                      <input type="date" value={planExpiry} onChange={(e) => setPlanExpiry(e.target.value)} className="w-full px-3 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-sm focus:outline-none focus:ring-2 focus:ring-gold-500/40 transition-all" />
+                      <label className="block text-[11px] font-semibold text-gray-400 mb-1 uppercase tracking-wider">Expiry</label>
+                      <input type="date" value={planExpiry} onChange={(e) => setPlanExpiry(e.target.value)} className="w-full px-3 py-2.5 rounded-xl bg-gray-50 border border-gray-200 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-gray-400/40 transition-all" />
                     </div>
                   </div>
-                  <button onClick={() => saveToOrg({ plan: planType, plan_expires_at: planExpiry ? new Date(planExpiry + 'T23:59:59Z').toISOString() : null })} className="px-4 py-2 rounded-lg bg-white/[0.08] text-white text-[12px] font-semibold hover:bg-white/[0.12] transition-all">
+                  <button onClick={() => saveToOrg({ plan: planType, plan_expires_at: planExpiry ? new Date(planExpiry + 'T23:59:59Z').toISOString() : null })} className="px-4 py-2 rounded-lg bg-gray-100 text-gray-900 text-[12px] font-semibold hover:bg-white/[0.12] transition-all">
                     Save Plan
                   </button>
                 </div>
@@ -338,23 +338,23 @@ export default function SettingsPanel({ isOpen, onClose, onCriteriaChange, activ
           {section === 'screening' && (
             <div className="space-y-6">
               <div>
-                <h3 className="text-sm font-bold text-white mb-1">Screening Policy</h3>
-                <p className="text-[12px] text-slate-500 mb-4">Configure pass/flag/fail thresholds for deal screening.</p>
+                <h3 className="text-sm font-bold text-gray-900 mb-1">Screening Policy</h3>
+                <p className="text-[12px] text-gray-400 mb-4">Configure pass/flag/fail thresholds for deal screening.</p>
                 <div className="space-y-4">
                   <div>
-                    <h4 className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-3">Score Thresholds</h4>
+                    <h4 className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-3">Score Thresholds</h4>
                     <div className="grid grid-cols-2 gap-3">
                       <SettingsInput label="Pass (min score)" value={criteria.passScore} onChange={(v) => updateCriteriaField('passScore', v)} type="number" />
                       <SettingsInput label="Flag (min score)" value={criteria.flagScore} onChange={(v) => updateCriteriaField('flagScore', v)} type="number" />
                     </div>
-                    <div className="mt-2 h-2 rounded-full bg-slate-800 relative overflow-hidden">
+                    <div className="mt-2 h-2 rounded-full bg-gray-100 relative overflow-hidden">
                       <div className="absolute left-0 top-0 h-full bg-rose-500/40 rounded-l-full" style={{ width: `${criteria.flagScore}%` }} />
                       <div className="absolute top-0 h-full bg-amber-500/40" style={{ left: `${criteria.flagScore}%`, width: `${criteria.passScore - criteria.flagScore}%` }} />
                       <div className="absolute top-0 h-full bg-emerald-500/40 rounded-r-full" style={{ left: `${criteria.passScore}%`, width: `${100 - criteria.passScore}%` }} />
                     </div>
                   </div>
                   <div>
-                    <h4 className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-3">Credit Policy Limits</h4>
+                    <h4 className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-3">Credit Policy Limits</h4>
                     <div className="grid grid-cols-2 gap-3">
                       <SettingsInput label="Min DSCR" value={criteria.minDscr} onChange={(v) => updateCriteriaField('minDscr', v)} type="number" suffix="x" hint="Below 1.0x auto-fails." />
                       <SettingsInput label="Max Leverage" value={criteria.maxLeverage} onChange={(v) => updateCriteriaField('maxLeverage', v)} type="number" suffix="x" />
@@ -364,14 +364,14 @@ export default function SettingsPanel({ isOpen, onClose, onCriteriaChange, activ
                   </div>
                   {isAdmin && (
                     <div>
-                      <h4 className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-3">Firm Credit Assumptions</h4>
+                      <h4 className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-3">Firm Credit Assumptions</h4>
                       <div className="grid grid-cols-2 gap-3 mb-3">
                         <SettingsInput label="Base Spread" value={orgSettings.baseSpreadBps ?? 200} onChange={(v) => setOrgSettings(s => ({ ...s, baseSpreadBps: v }))} type="number" suffix="bps" hint="Default: 200" />
                         <SettingsInput label="Strong Credit Adj" value={orgSettings.creditSpreadStrong ?? -75} onChange={(v) => setOrgSettings(s => ({ ...s, creditSpreadStrong: v }))} type="number" suffix="bps" />
                         <SettingsInput label="Weak Credit Adj" value={orgSettings.creditSpreadWeak ?? 200} onChange={(v) => setOrgSettings(s => ({ ...s, creditSpreadWeak: v }))} type="number" suffix="bps" />
                         <SettingsInput label="Max AR Advance" value={orgSettings.maxAdvanceRateAR ?? 85} onChange={(v) => setOrgSettings(s => ({ ...s, maxAdvanceRateAR: v }))} type="number" suffix="%" />
                       </div>
-                      <button onClick={() => saveToOrg({ org_settings: orgSettings })} className="px-4 py-2 rounded-lg bg-white/[0.08] text-white text-[12px] font-semibold hover:bg-white/[0.12] transition-all">
+                      <button onClick={() => saveToOrg({ org_settings: orgSettings })} className="px-4 py-2 rounded-lg bg-gray-100 text-gray-900 text-[12px] font-semibold hover:bg-white/[0.12] transition-all">
                         Save Firm Assumptions
                       </button>
                     </div>
@@ -385,28 +385,28 @@ export default function SettingsPanel({ isOpen, onClose, onCriteriaChange, activ
           {section === 'branding' && isAdmin && (
             <div className="space-y-6">
               <div>
-                <h3 className="text-sm font-bold text-white mb-1">Memo Branding</h3>
-                <p className="text-[12px] text-slate-500 mb-4">Customize how exported screening memos look.</p>
+                <h3 className="text-sm font-bold text-gray-900 mb-1">Memo Branding</h3>
+                <p className="text-[12px] text-gray-400 mb-4">Customize how exported screening memos look.</p>
                 <div className="space-y-3">
                   <SettingsInput label="Logo URL" value={brandingLogoUrl} onChange={setBrandingLogoUrl} placeholder="https://yourfirm.com/logo.png" hint="Appears in the top-right corner of exported memos. Max height: 40px." />
                   {brandingLogoUrl && (
-                    <div className="p-3 bg-white/[0.03] rounded-lg border border-white/[0.06]">
-                      <p className="text-[9px] text-slate-600 mb-1.5">Preview:</p>
+                    <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                      <p className="text-[9px] text-gray-400 mb-1.5">Preview:</p>
                       <img src={brandingLogoUrl} alt="Logo preview" style={{ maxHeight: 40, maxWidth: 180 }} onError={(e) => { e.target.style.display = 'none'; }} />
                     </div>
                   )}
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-[11px] font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">Accent Color</label>
+                      <label className="block text-[11px] font-semibold text-gray-400 mb-1.5 uppercase tracking-wider">Accent Color</label>
                       <div className="flex items-center gap-2">
-                        <input type="color" value={brandingAccentColor} onChange={(e) => setBrandingAccentColor(e.target.value)} className="w-8 h-8 rounded-lg border border-white/[0.08] cursor-pointer bg-transparent" />
-                        <input type="text" value={brandingAccentColor} onChange={(e) => setBrandingAccentColor(e.target.value)} className="flex-1 px-3 py-2 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-sm font-mono focus:outline-none focus:ring-2 focus:ring-gold-500/40 transition-all" />
+                        <input type="color" value={brandingAccentColor} onChange={(e) => setBrandingAccentColor(e.target.value)} className="w-8 h-8 rounded-lg border border-gray-200 cursor-pointer bg-transparent" />
+                        <input type="text" value={brandingAccentColor} onChange={(e) => setBrandingAccentColor(e.target.value)} className="flex-1 px-3 py-2 rounded-xl bg-gray-50 border border-gray-200 text-gray-900 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-gray-400/40 transition-all" />
                       </div>
                     </div>
                     <SettingsInput label="Memo Title" value={brandingMemoTitle} onChange={setBrandingMemoTitle} placeholder="e.g. Credit Screening Memo" />
                   </div>
                   <SettingsInput label="Footer Text" value={brandingFooterText} onChange={setBrandingFooterText} placeholder="e.g. Confidential" />
-                  <button onClick={() => saveToOrg({ branding: { logoUrl: brandingLogoUrl, accentColor: brandingAccentColor, footerText: brandingFooterText, memoTitle: brandingMemoTitle } })} className="px-4 py-2 rounded-lg bg-white/[0.08] text-white text-[12px] font-semibold hover:bg-white/[0.12] transition-all">
+                  <button onClick={() => saveToOrg({ branding: { logoUrl: brandingLogoUrl, accentColor: brandingAccentColor, footerText: brandingFooterText, memoTitle: brandingMemoTitle } })} className="px-4 py-2 rounded-lg bg-gray-100 text-gray-900 text-[12px] font-semibold hover:bg-white/[0.12] transition-all">
                     Save Branding
                   </button>
                 </div>
@@ -418,19 +418,19 @@ export default function SettingsPanel({ isOpen, onClose, onCriteriaChange, activ
           {section === 'billing' && isAdmin && (
             <div className="space-y-6">
               <div>
-                <h3 className="text-sm font-bold text-white mb-1">Billing</h3>
-                <p className="text-[12px] text-slate-500 mb-4">Manage your subscription and payment method.</p>
-                <div className="p-4 rounded-xl bg-white/[0.03] border border-white/[0.06] mb-4">
+                <h3 className="text-sm font-bold text-gray-900 mb-1">Billing</h3>
+                <p className="text-[12px] text-gray-400 mb-4">Manage your subscription and payment method.</p>
+                <div className="p-4 rounded-xl bg-gray-50 border border-gray-200 mb-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-[12px] text-white font-medium capitalize">{plan || 'Free'} Plan</p>
-                      {daysRemaining != null && <p className="text-[10px] text-slate-500">{daysRemaining} days remaining</p>}
+                      <p className="text-[12px] text-gray-900 font-medium capitalize">{plan || 'Free'} Plan</p>
+                      {daysRemaining != null && <p className="text-[10px] text-gray-400">{daysRemaining} days remaining</p>}
                       {isExpired && <p className="text-[10px] text-rose-400">Plan expired. Upgrade to continue.</p>}
                     </div>
                   </div>
                 </div>
-                <p className="text-[12px] text-slate-500">Stripe billing integration coming soon. Contact us for plan changes or pilot extensions.</p>
-                <a href="mailto:joelpeter617@gmail.com?subject=Tranche%20Billing" className="inline-block mt-2 text-[12px] text-gold-400 hover:text-gold-300 transition-colors">
+                <p className="text-[12px] text-gray-400">Stripe billing integration coming soon. Contact us for plan changes or pilot extensions.</p>
+                <a href="mailto:joelpeter617@gmail.com?subject=Tranche%20Billing" className="inline-block mt-2 text-[12px] text-gray-600 hover:text-gray-700 transition-colors">
                   Contact about billing
                 </a>
               </div>

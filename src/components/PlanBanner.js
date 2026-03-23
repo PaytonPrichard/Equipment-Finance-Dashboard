@@ -25,7 +25,7 @@ export default function PlanBanner({ plan, isExpired, isExpiringSoon, daysRemain
           {onManagePlan && (
             <button
               onClick={onManagePlan}
-              className="flex-shrink-0 px-3 py-1.5 rounded-lg text-[11px] font-semibold text-white bg-rose-500/20 border border-rose-500/30 hover:bg-rose-500/30 transition-colors"
+              className="flex-shrink-0 px-3 py-1.5 rounded-lg text-[11px] font-semibold text-gray-900 bg-rose-500/20 border border-rose-500/30 hover:bg-rose-500/30 transition-colors"
             >
               Upgrade Plan
             </button>

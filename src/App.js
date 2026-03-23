@@ -186,11 +186,11 @@ export default function App() {
         <div className="w-full max-w-md text-center">
           {/* Progress */}
           <div className="flex items-center justify-center gap-2 mb-8">
-            <div className="w-2 h-2 rounded-full bg-gold-500" />
-            <div className="w-8 h-0.5 bg-gold-500" />
-            <div className="w-2 h-2 rounded-full bg-gold-500 animate-pulse" />
-            <div className="w-8 h-0.5 bg-slate-700" />
-            <div className="w-2 h-2 rounded-full bg-slate-700" />
+            <div className="w-2 h-2 rounded-full bg-gray-900" />
+            <div className="w-8 h-0.5 bg-gray-900" />
+            <div className="w-2 h-2 rounded-full bg-gray-900 animate-pulse" />
+            <div className="w-8 h-0.5 bg-gray-200" />
+            <div className="w-2 h-2 rounded-full bg-gray-200" />
             <span className="text-[10px] text-gray-400 ml-2">Step 2 of 3</span>
           </div>
           <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/20 mb-4">
@@ -200,7 +200,7 @@ export default function App() {
             </svg>
           </div>
           <h2 className="text-lg font-semibold text-gray-900 mb-2">Check your inbox</h2>
-          <p className="text-sm text-slate-400 mb-2">
+          <p className="text-sm text-gray-500 mb-2">
             We sent a verification link to <span className="text-gray-900 font-medium">{user?.email}</span>.
           </p>
           <p className="text-[11px] text-gray-500 mb-6">
@@ -216,7 +216,7 @@ export default function App() {
                 }
               }}
               id="resend-btn"
-              className="px-4 py-2 rounded-xl bg-white/[0.04] border border-white/[0.08] text-sm text-gray-900 font-medium hover:bg-white/[0.08] transition-all"
+              className="px-4 py-2 rounded-xl bg-white border border-gray-200 text-sm text-gray-900 font-medium hover:bg-gray-50 transition-all"
             >
               Resend email
             </button>
@@ -524,7 +524,7 @@ function AuthenticatedApp({ profile, user }) {
                   <line x1="12" y1="17" x2="12.01" y2="17" />
                 </svg>
               </span>
-              <span className="text-[11px] text-amber-200/90">
+              <span className="text-[11px] text-amber-800">
                 SOFR has moved from{' '}
                 <span className="font-mono font-semibold">{(lastAcknowledgedSofr * 100).toFixed(2)}%</span>
                 {' '}to{' '}
@@ -538,7 +538,7 @@ function AuthenticatedApp({ profile, user }) {
             </div>
             <button
               onClick={dismissSofrAlert}
-              className="flex-shrink-0 text-amber-400/70 hover:text-amber-300 transition-colors p-1 rounded hover:bg-amber-500/10"
+              className="flex-shrink-0 text-amber-600 hover:text-amber-800 transition-colors p-1 rounded hover:bg-amber-100"
               aria-label="Dismiss SOFR alert"
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

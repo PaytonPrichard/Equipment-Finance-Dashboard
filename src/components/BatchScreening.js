@@ -153,15 +153,15 @@ export default function BatchScreening({ sofr = DEFAULT_SOFR, onLoadDeal }) {
     <div className="space-y-6 animate-fade-in-up">
       {/* Upload area */}
       <div className="glass-card rounded-2xl p-6">
-        <h3 className="text-sm font-semibold text-slate-200 mb-3">Batch Deal Screening</h3>
-        <p className="text-[11px] text-slate-500 mb-4">
+        <h3 className="text-sm font-semibold text-gray-800 mb-3">Batch Deal Screening</h3>
+        <p className="text-[11px] text-gray-400 mb-4">
           Upload a CSV to screen multiple deals at once. Each deal will be scored and ranked automatically.
         </p>
 
         <div className="flex items-center gap-3 flex-wrap">
           <button
             type="button"
-            className="pill-btn px-3 py-1.5 rounded-lg text-[11px] font-medium text-slate-400 flex items-center gap-1.5"
+            className="pill-btn px-3 py-1.5 rounded-lg text-[11px] font-medium text-gray-500 flex items-center gap-1.5"
             onClick={() => fileRef.current?.click()}
           >
             <svg
@@ -187,7 +187,7 @@ export default function BatchScreening({ sofr = DEFAULT_SOFR, onLoadDeal }) {
 
           <button
             type="button"
-            className="pill-btn px-3 py-1.5 rounded-lg text-[11px] font-medium text-gold-400 hover:text-gold-300 flex items-center gap-1.5"
+            className="pill-btn px-3 py-1.5 rounded-lg text-[11px] font-medium text-gray-600 hover:text-gray-700 flex items-center gap-1.5"
             onClick={downloadTemplate}
           >
             <svg
@@ -205,7 +205,7 @@ export default function BatchScreening({ sofr = DEFAULT_SOFR, onLoadDeal }) {
 
           {scoredDeals.length > 0 && (
             <button
-              className="pill-btn px-3 py-1.5 rounded-lg text-[11px] font-medium text-slate-400 hover:text-slate-200 flex items-center gap-1.5"
+              className="pill-btn px-3 py-1.5 rounded-lg text-[11px] font-medium text-gray-500 hover:text-gray-800 flex items-center gap-1.5"
               onClick={() => exportBatchCsv(scoredDeals.map(d => ({
                 ...d,
                 score: d.riskScore.composite,
@@ -237,15 +237,15 @@ export default function BatchScreening({ sofr = DEFAULT_SOFR, onLoadDeal }) {
           {/* KPI cards */}
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
             <div className="glass-card rounded-2xl p-5 text-center">
-              <p className="text-2xl font-bold font-mono text-slate-100">{total}</p>
-              <p className="text-[11px] text-slate-500 mt-1">Deals Screened</p>
+              <p className="text-2xl font-bold font-mono text-gray-900">{total}</p>
+              <p className="text-[11px] text-gray-400 mt-1">Deals Screened</p>
             </div>
             {(['Strong', 'Moderate', 'Borderline', 'Weak']).map((bucket) => {
               const c = DIST_COLORS[bucket];
               return (
                 <div key={bucket} className={`${c.bg} rounded-2xl p-5 text-center`}>
                   <p className={`text-2xl font-bold font-mono ${c.text}`}>{distribution[bucket]}</p>
-                  <p className="text-[11px] text-slate-500 mt-1">{bucket}</p>
+                  <p className="text-[11px] text-gray-400 mt-1">{bucket}</p>
                 </div>
               );
             })}
@@ -253,7 +253,7 @@ export default function BatchScreening({ sofr = DEFAULT_SOFR, onLoadDeal }) {
 
           {/* Distribution bar */}
           <div className="glass-card rounded-2xl p-5">
-            <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3">
+            <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">
               Score Distribution
             </h4>
             <div className="flex rounded-lg overflow-hidden h-5">
@@ -268,7 +268,7 @@ export default function BatchScreening({ sofr = DEFAULT_SOFR, onLoadDeal }) {
                     title={`${bucket}: ${distribution[bucket]} (${pct.toFixed(0)}%)`}
                   >
                     {pct >= 12 && (
-                      <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-white/90">
+                      <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold text-gray-900/90">
                         {distribution[bucket]}
                       </span>
                     )}
@@ -278,7 +278,7 @@ export default function BatchScreening({ sofr = DEFAULT_SOFR, onLoadDeal }) {
             </div>
             <div className="flex items-center gap-4 mt-2">
               {(['Strong', 'Moderate', 'Borderline', 'Weak']).map((bucket) => (
-                <span key={bucket} className="flex items-center gap-1.5 text-[10px] text-slate-500">
+                <span key={bucket} className="flex items-center gap-1.5 text-[10px] text-gray-400">
                   <span className={`inline-block w-2 h-2 rounded-sm ${DIST_COLORS[bucket].bar}`} />
                   {bucket} ({bucket === 'Strong' ? '75+' : bucket === 'Moderate' ? '55-74' : bucket === 'Borderline' ? '35-54' : '<35'})
                 </span>
@@ -291,13 +291,13 @@ export default function BatchScreening({ sofr = DEFAULT_SOFR, onLoadDeal }) {
             <div className="overflow-x-auto">
               <table className="w-full text-left">
                 <thead>
-                  <tr className="border-b border-white/[0.04]">
+                  <tr className="border-b border-gray-200">
                     {COLUMNS.map((col) => {
                       const active = sortKey === col.key;
                       return (
                         <th
                           key={col.key}
-                          className="px-5 py-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest cursor-pointer select-none hover:text-slate-300 transition-colors"
+                          className="px-5 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest cursor-pointer select-none hover:text-gray-700 transition-colors"
                           onClick={() => handleSort(col.key)}
                         >
                           <span className="inline-flex items-center gap-1">
@@ -323,7 +323,7 @@ export default function BatchScreening({ sofr = DEFAULT_SOFR, onLoadDeal }) {
                                 fill="none"
                                 stroke="currentColor"
                                 strokeWidth="1.5"
-                                className="text-slate-700"
+                                className="text-gray-300"
                               >
                                 <polyline points="7 10 12 5 17 10" />
                                 <polyline points="7 14 12 19 17 14" />
@@ -339,7 +339,7 @@ export default function BatchScreening({ sofr = DEFAULT_SOFR, onLoadDeal }) {
                   {sortedDeals.map((deal) => (
                     <tr
                       key={deal.id}
-                      className="border-b border-white/[0.02] hover:bg-white/[0.02] transition-colors cursor-pointer"
+                      className="border-b border-white/[0.02] hover:bg-gray-50 transition-colors cursor-pointer"
                       onClick={() => onLoadDeal && onLoadDeal(deal.inputs)}
                       title="Click to load into screening form"
                     >
@@ -371,7 +371,7 @@ export default function BatchScreening({ sofr = DEFAULT_SOFR, onLoadDeal }) {
                         // Default formatted cell
                         const display = col.format ? col.format(raw) : raw;
                         return (
-                          <td key={col.key} className="px-5 py-3 text-[12px] text-slate-300 font-mono whitespace-nowrap">
+                          <td key={col.key} className="px-5 py-3 text-[12px] text-gray-700 font-mono whitespace-nowrap">
                             {display}
                           </td>
                         );
@@ -383,7 +383,7 @@ export default function BatchScreening({ sofr = DEFAULT_SOFR, onLoadDeal }) {
             </div>
 
             {/* Footer hint */}
-            <div className="px-5 py-3 border-t border-white/[0.04] text-[10px] text-slate-600">
+            <div className="px-5 py-3 border-t border-gray-200 text-[10px] text-gray-400">
               Click any row to load the deal into the screening form &middot; Click column headers to sort
             </div>
           </div>

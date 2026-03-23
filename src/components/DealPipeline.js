@@ -22,7 +22,7 @@ const STAGES = [
 ];
 
 const STAGE_STYLES = {
-  Screening:      { bg: 'bg-gold-500/[0.08]',    border: 'border-gold-500/20',    text: 'text-gold-400',    dot: 'bg-gold-400' },
+  Screening:      { bg: 'bg-gold-500/[0.08]',    border: 'border-gray-200',    text: 'text-gray-600',    dot: 'bg-gold-400' },
   'Under Review': { bg: 'bg-amber-500/[0.08]',   border: 'border-amber-500/20',   text: 'text-amber-400',   dot: 'bg-amber-400' },
   Approved:       { bg: 'bg-emerald-500/[0.08]',  border: 'border-emerald-500/20', text: 'text-emerald-400', dot: 'bg-emerald-400' },
   Funded:         { bg: 'bg-teal-500/[0.08]',     border: 'border-teal-500/20',    text: 'text-teal-400',    dot: 'bg-teal-400' },
@@ -284,14 +284,14 @@ export default function DealPipeline({ onLoadDeal, currentInputs, currentScore, 
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-4">
           <div>
-            <h3 className="text-sm font-semibold text-slate-200">Deal Pipeline</h3>
-            <p className="text-[11px] text-slate-500 mt-0.5">
+            <h3 className="text-sm font-semibold text-gray-800">Deal Pipeline</h3>
+            <p className="text-[11px] text-gray-400 mt-0.5">
               {searchQuery ? `${filteredDeals.length} of ${deals.length}` : deals.length} deal{deals.length !== 1 ? 's' : ''} across {STAGES.length} stages
             </p>
           </div>
           {deals.length > 0 && (
             <div className="relative">
-              <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <circle cx="11" cy="11" r="8" />
                 <line x1="21" y1="21" x2="16.65" y2="16.65" />
               </svg>
@@ -300,12 +300,12 @@ export default function DealPipeline({ onLoadDeal, currentInputs, currentScore, 
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search deals..."
-                className="bg-white/[0.04] rounded-lg pl-8 pr-3 py-1.5 text-[11px] text-slate-200 outline-none placeholder-slate-600 border border-white/[0.06] focus:border-gold-500/30 transition-colors w-44"
+                className="bg-gray-50 rounded-lg pl-8 pr-3 py-1.5 text-[11px] text-gray-800 outline-none placeholder-gray-400 border border-gray-200 focus:border-gray-300 transition-colors w-44"
               />
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery('')}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-600 hover:text-slate-400"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-500"
                 >
                   <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                     <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
@@ -321,7 +321,7 @@ export default function DealPipeline({ onLoadDeal, currentInputs, currentScore, 
             <div className="flex gap-1.5 items-center">
               <input
                 ref={addInputRef}
-                className="bg-white/5 rounded-lg px-3 py-1.5 text-sm text-slate-200 outline-none placeholder-slate-600 border border-white/[0.06] focus:border-gold-500/30 transition-colors w-48"
+                className="bg-white/5 rounded-lg px-3 py-1.5 text-sm text-gray-800 outline-none placeholder-gray-400 border border-gray-200 focus:border-gray-300 transition-colors w-48"
                 placeholder="Name this deal..."
                 value={addingName}
                 onChange={(e) => setAddingName(e.target.value)}
@@ -331,13 +331,13 @@ export default function DealPipeline({ onLoadDeal, currentInputs, currentScore, 
                 }}
               />
               <button
-                className="pill-btn px-3 py-1.5 rounded-lg text-[11px] font-medium text-gold-400"
+                className="pill-btn px-3 py-1.5 rounded-lg text-[11px] font-medium text-gray-600"
                 onClick={handleConfirmAdd}
               >
                 Add
               </button>
               <button
-                className="pill-btn px-3 py-1.5 rounded-lg text-[11px] font-medium text-slate-500"
+                className="pill-btn px-3 py-1.5 rounded-lg text-[11px] font-medium text-gray-400"
                 onClick={() => setIsAdding(false)}
               >
                 Cancel
@@ -346,14 +346,14 @@ export default function DealPipeline({ onLoadDeal, currentInputs, currentScore, 
           ) : (
             <div className="flex items-center gap-2">
               <button
-                className="pill-btn px-3 py-1.5 rounded-lg text-[11px] font-medium text-gold-400"
+                className="pill-btn px-3 py-1.5 rounded-lg text-[11px] font-medium text-gray-600"
                 onClick={handleStartAdd}
               >
                 + Add to Pipeline
               </button>
               {deals.length > 0 && (
                 <button
-                  className="pill-btn px-3 py-1.5 rounded-lg text-[11px] font-medium text-slate-400 hover:text-slate-200 flex items-center gap-1.5"
+                  className="pill-btn px-3 py-1.5 rounded-lg text-[11px] font-medium text-gray-500 hover:text-gray-800 flex items-center gap-1.5"
                   onClick={() => exportPipelineCsv(deals)}
                 >
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -399,7 +399,7 @@ export default function DealPipeline({ onLoadDeal, currentInputs, currentScore, 
               {/* Cards */}
               <div className="flex-1 space-y-2 overflow-y-auto pr-0.5" style={{ maxHeight: 480 }}>
                 {columnDeals.length === 0 && (
-                  <div className="text-center text-slate-700 text-[10px] py-6">No deals</div>
+                  <div className="text-center text-gray-300 text-[10px] py-6">No deals</div>
                 )}
 
                 {columnDeals.map((deal) => {
@@ -416,7 +416,7 @@ export default function DealPipeline({ onLoadDeal, currentInputs, currentScore, 
                       {/* Company name + delete */}
                       <div className="flex items-start justify-between gap-1 mb-1.5">
                         <button
-                          className="text-sm font-semibold text-slate-200 truncate text-left hover:text-gold-400 transition-colors leading-tight"
+                          className="text-sm font-semibold text-gray-800 truncate text-left hover:text-gray-600 transition-colors leading-tight"
                           title="Load deal into screening form"
                           onClick={() => handleLoadDeal(deal)}
                         >
@@ -424,7 +424,7 @@ export default function DealPipeline({ onLoadDeal, currentInputs, currentScore, 
                         </button>
                         {showDelete && (
                           <button
-                            className="text-slate-700 hover:text-rose-400 text-sm leading-none opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 mt-0.5"
+                            className="text-gray-300 hover:text-rose-400 text-sm leading-none opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 mt-0.5"
                             title="Remove from pipeline"
                             onClick={() => handleDelete(deal.id)}
                           >
@@ -448,7 +448,7 @@ export default function DealPipeline({ onLoadDeal, currentInputs, currentScore, 
                             </span>
                           ) : null;
                         })()}
-                        <span className="text-[10px] text-slate-500 truncate">
+                        <span className="text-[10px] text-gray-400 truncate">
                           {deal.inputs?.industrySector || deal.inputs?.industry || ''}
                         </span>
                       </div>
@@ -456,12 +456,12 @@ export default function DealPipeline({ onLoadDeal, currentInputs, currentScore, 
                       {/* Deal value + days in stage */}
                       <div className="flex items-center justify-between mb-1.5">
                         {getDealValue(deal.inputs) && (
-                          <span className="text-[10px] text-slate-500">{getDealValue(deal.inputs)}</span>
+                          <span className="text-[10px] text-gray-400">{getDealValue(deal.inputs)}</span>
                         )}
                         {(() => {
                           const days = daysInStage(deal.updated_at);
                           return (
-                            <span className={`text-[9px] font-medium ${days > 14 ? 'text-amber-400' : days > 7 ? 'text-slate-400' : 'text-slate-600'}`}>
+                            <span className={`text-[9px] font-medium ${days > 14 ? 'text-amber-400' : days > 7 ? 'text-gray-500' : 'text-gray-400'}`}>
                               {days === 0 ? 'Today' : days === 1 ? '1 day' : `${days} days`}
                             </span>
                           );
@@ -473,7 +473,7 @@ export default function DealPipeline({ onLoadDeal, currentInputs, currentScore, 
                         <div className="mb-2">
                           <textarea
                             ref={noteInputRef}
-                            className="w-full bg-white/5 rounded-lg px-2 py-1.5 text-[11px] text-slate-300 outline-none placeholder-slate-600 border border-white/[0.06] focus:border-gold-500/30 transition-colors resize-none"
+                            className="w-full bg-white/5 rounded-lg px-2 py-1.5 text-[11px] text-gray-700 outline-none placeholder-gray-400 border border-gray-200 focus:border-gray-300 transition-colors resize-none"
                             rows={2}
                             placeholder="Add a note..."
                             value={noteText}
@@ -485,13 +485,13 @@ export default function DealPipeline({ onLoadDeal, currentInputs, currentScore, 
                           />
                           <div className="flex gap-1 mt-1">
                             <button
-                              className="text-[10px] text-gold-400 hover:text-gold-300"
+                              className="text-[10px] text-gray-600 hover:text-gray-700"
                               onClick={handleSaveNote}
                             >
                               Save
                             </button>
                             <button
-                              className="text-[10px] text-slate-600 hover:text-slate-400"
+                              className="text-[10px] text-gray-400 hover:text-gray-500"
                               onClick={() => { setEditingNoteId(null); setNoteText(''); }}
                             >
                               Cancel
@@ -500,7 +500,7 @@ export default function DealPipeline({ onLoadDeal, currentInputs, currentScore, 
                         </div>
                       ) : deal.notes ? (
                         <button
-                          className="text-[10px] text-slate-500 italic mb-2 text-left truncate w-full hover:text-slate-400 transition-colors"
+                          className="text-[10px] text-gray-400 italic mb-2 text-left truncate w-full hover:text-gray-500 transition-colors"
                           title={deal.notes}
                           onClick={() => handleStartNote(deal)}
                         >
@@ -508,7 +508,7 @@ export default function DealPipeline({ onLoadDeal, currentInputs, currentScore, 
                         </button>
                       ) : (
                         <button
-                          className="text-[10px] text-slate-700 mb-2 hover:text-slate-500 transition-colors opacity-0 group-hover:opacity-100"
+                          className="text-[10px] text-gray-300 mb-2 hover:text-gray-400 transition-colors opacity-0 group-hover:opacity-100"
                           onClick={() => handleStartNote(deal)}
                         >
                           + note
@@ -519,12 +519,12 @@ export default function DealPipeline({ onLoadDeal, currentInputs, currentScore, 
                       <DealAttachments dealId={deal.id} dealType="pipeline" />
 
                       {/* Move buttons */}
-                      <div className="flex items-center justify-between border-t border-white/[0.04] pt-2 mt-2">
+                      <div className="flex items-center justify-between border-t border-gray-200 pt-2 mt-2">
                         <button
                           className={`text-[10px] px-2 py-1 rounded-md transition-colors ${
                             canMoveBack
-                              ? 'text-slate-500 hover:text-slate-300 hover:bg-white/[0.04]'
-                              : 'text-slate-800 cursor-default'
+                              ? 'text-gray-400 hover:text-gray-700 hover:bg-gray-50'
+                              : 'text-gray-200 cursor-default'
                           }`}
                           disabled={!canMoveBack}
                           title={canMoveBack ? `Move to ${stageKeys[stageIdx - 1]}` : ''}
@@ -539,8 +539,8 @@ export default function DealPipeline({ onLoadDeal, currentInputs, currentScore, 
                         <button
                           className={`text-[10px] px-2 py-1 rounded-md transition-colors ${
                             canMoveForward
-                              ? 'text-slate-500 hover:text-slate-300 hover:bg-white/[0.04]'
-                              : 'text-slate-800 cursor-default'
+                              ? 'text-gray-400 hover:text-gray-700 hover:bg-gray-50'
+                              : 'text-gray-200 cursor-default'
                           }`}
                           disabled={!canMoveForward}
                           title={canMoveForward ? `Move to ${stageKeys[stageIdx + 1]}` : ''}
@@ -558,7 +558,7 @@ export default function DealPipeline({ onLoadDeal, currentInputs, currentScore, 
                 {hasMore && (
                   <button
                     onClick={() => setExpandedStages(prev => ({ ...prev, [stage.key]: true }))}
-                    className="w-full py-2 text-[10px] text-slate-500 hover:text-slate-300 transition-colors text-center"
+                    className="w-full py-2 text-[10px] text-gray-400 hover:text-gray-700 transition-colors text-center"
                   >
                     Show {allColumnDeals.length - DEALS_PER_STAGE} more...
                   </button>

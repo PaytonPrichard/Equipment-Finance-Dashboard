@@ -114,33 +114,33 @@ export default function LoginPage({ passwordRecovery, onBackToLanding }) {
   };
 
   return (
-    <div className="min-h-screen bg-[#141210] flex items-center justify-center px-4">
+    <div className="min-h-screen bg-[#f8f9fa] flex items-center justify-center px-4">
       <div className="w-full max-w-md">
         {/* Logo and App Title */}
         <div className="text-center mb-8">
           {/* Progress — only show for signup flow */}
           {mode === 'signup' && (
             <div className="flex items-center justify-center gap-2 mb-6">
-              <div className="w-2 h-2 rounded-full bg-gold-500 animate-pulse" />
+              <div className="w-2 h-2 rounded-full bg-gray-700 animate-pulse" />
               <div className="w-8 h-0.5 bg-slate-700" />
               <div className="w-2 h-2 rounded-full bg-slate-700" />
               <div className="w-8 h-0.5 bg-slate-700" />
               <div className="w-2 h-2 rounded-full bg-slate-700" />
-              <span className="text-[10px] text-slate-600 ml-2">Step 1 of 3</span>
+              <span className="text-[10px] text-gray-400 ml-2">Step 1 of 3</span>
             </div>
           )}
-          <h1 className="text-2xl font-extrabold text-white tracking-tight mb-1">
+          <h1 className="text-2xl font-extrabold text-gray-900 tracking-tight mb-1">
             Tranche
           </h1>
-          <p className="text-sm text-slate-500 mt-1">
+          <p className="text-sm text-gray-400 mt-1">
             Screen deals. Fund faster.
           </p>
         </div>
 
         {/* Card */}
-        <div className="bg-white/[0.03] border border-white/[0.06] rounded-2xl backdrop-blur-xl p-8 shadow-2xl shadow-black/20">
-          <h2 className="text-lg font-semibold text-white mb-1">{titles[mode]}</h2>
-          <p className="text-sm text-slate-500 mb-6">{subtitles[mode]}</p>
+        <div className="bg-white border border-gray-200 rounded-2xl backdrop-blur-xl p-8 shadow-2xl shadow-gray-200/40">
+          <h2 className="text-lg font-semibold text-gray-900 mb-1">{titles[mode]}</h2>
+          <p className="text-sm text-gray-400 mb-6">{subtitles[mode]}</p>
 
           {/* Success messages */}
           {signUpSuccess && (
@@ -166,7 +166,7 @@ export default function LoginPage({ passwordRecovery, onBackToLanding }) {
             {/* Full Name (sign up only) */}
             {mode === 'signup' && (
               <div>
-                <label htmlFor="fullName" className="block text-xs font-medium text-slate-400 mb-1.5">
+                <label htmlFor="fullName" className="block text-xs font-medium text-gray-500 mb-1.5">
                   Full Name
                 </label>
                 <input
@@ -176,7 +176,7 @@ export default function LoginPage({ passwordRecovery, onBackToLanding }) {
                   onChange={(e) => setFullName(e.target.value)}
                   placeholder="Jane Doe"
                   required
-                  className="w-full px-3.5 py-3 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-sm placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-gold-500/40 focus:border-gold-500/40 transition-all"
+                  className="w-full px-3.5 py-3 rounded-xl bg-white border border-gray-200 text-gray-900 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-400/40 focus:border-gray-400 transition-all"
                 />
               </div>
             )}
@@ -184,7 +184,7 @@ export default function LoginPage({ passwordRecovery, onBackToLanding }) {
             {/* Email (not shown in update_password mode) */}
             {mode !== 'update_password' && (
               <div>
-                <label htmlFor="email" className="block text-xs font-medium text-slate-400 mb-1.5">
+                <label htmlFor="email" className="block text-xs font-medium text-gray-500 mb-1.5">
                   Email
                 </label>
                 <input
@@ -194,7 +194,7 @@ export default function LoginPage({ passwordRecovery, onBackToLanding }) {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@company.com"
                   required
-                  className="w-full px-3.5 py-3 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-sm placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-gold-500/40 focus:border-gold-500/40 transition-all"
+                  className="w-full px-3.5 py-3 rounded-xl bg-white border border-gray-200 text-gray-900 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-400/40 focus:border-gray-400 transition-all"
                 />
               </div>
             )}
@@ -202,7 +202,7 @@ export default function LoginPage({ passwordRecovery, onBackToLanding }) {
             {/* Password (not shown in forgot mode) */}
             {mode !== 'forgot' && (
               <div>
-                <label htmlFor="password" className="block text-xs font-medium text-slate-400 mb-1.5">
+                <label htmlFor="password" className="block text-xs font-medium text-gray-500 mb-1.5">
                   {mode === 'update_password' ? 'New Password' : 'Password'}
                 </label>
                 <input
@@ -212,7 +212,7 @@ export default function LoginPage({ passwordRecovery, onBackToLanding }) {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder={mode === 'signin' ? 'Enter your password' : 'Min 10 chars, upper, lower, number, special'}
                   required
-                  className="w-full px-3.5 py-3 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-sm placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-gold-500/40 focus:border-gold-500/40 transition-all"
+                  className="w-full px-3.5 py-3 rounded-xl bg-white border border-gray-200 text-gray-900 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-400/40 focus:border-gray-400 transition-all"
                 />
                 {(mode === 'signup' || mode === 'update_password') && password.length > 0 && (
                   <div className="mt-2 space-y-1">
@@ -221,12 +221,12 @@ export default function LoginPage({ passwordRecovery, onBackToLanding }) {
                       return (
                         <div key={check.key} className="flex items-center gap-2">
                           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            className={passes ? 'text-emerald-400' : 'text-slate-600'} strokeWidth="2.5">
+                            className={passes ? 'text-emerald-400' : 'text-gray-400'} strokeWidth="2.5">
                             {passes
                               ? <polyline points="20 6 9 17 4 12" />
                               : <circle cx="12" cy="12" r="10" />}
                           </svg>
-                          <span className={`text-[11px] ${passes ? 'text-emerald-400' : 'text-slate-500'}`}>
+                          <span className={`text-[11px] ${passes ? 'text-emerald-400' : 'text-gray-400'}`}>
                             {check.label}
                           </span>
                         </div>
@@ -243,7 +243,7 @@ export default function LoginPage({ passwordRecovery, onBackToLanding }) {
                 <button
                   type="button"
                   onClick={() => switchMode('forgot')}
-                  className="text-[12px] text-gold-400 hover:text-gold-300 transition-colors"
+                  className="text-[12px] text-gray-600 hover:text-gray-600 transition-colors"
                 >
                   Forgot password?
                 </button>
@@ -254,11 +254,11 @@ export default function LoginPage({ passwordRecovery, onBackToLanding }) {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-2.5 rounded-xl bg-gradient-to-r from-gold-500 to-gold-600 text-white text-sm font-semibold shadow-lg shadow-gold-500/20 hover:shadow-gold-500/30 hover:from-gold-400 hover:to-gold-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+              className="w-full py-2.5 rounded-xl bg-gradient-to-r from-gray-800 to-gray-900 text-gray-900 text-sm font-semibold shadow-lg shadow-gray-300/20 hover:shadow-gray-300/30 hover:from-gray-700 hover:to-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
             >
               {loading ? (
                 <>
-                  <svg className="animate-spin h-4 w-4 text-white" viewBox="0 0 24 24" fill="none">
+                  <svg className="animate-spin h-4 w-4 text-gray-900" viewBox="0 0 24 24" fill="none">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                   </svg>
@@ -274,22 +274,22 @@ export default function LoginPage({ passwordRecovery, onBackToLanding }) {
           <div className="mt-6 text-center space-y-2">
             {mode === 'signin' && (
               <div>
-                <span className="text-sm text-slate-500">Don't have an account? </span>
-                <button onClick={() => switchMode('signup')} className="text-sm text-gold-400 hover:text-gold-300 font-medium transition-colors">
+                <span className="text-sm text-gray-400">Don't have an account? </span>
+                <button onClick={() => switchMode('signup')} className="text-sm text-gray-600 hover:text-gray-600 font-medium transition-colors">
                   Sign Up
                 </button>
               </div>
             )}
             {mode === 'signup' && (
               <div>
-                <span className="text-sm text-slate-500">Already have an account? </span>
-                <button onClick={() => switchMode('signin')} className="text-sm text-gold-400 hover:text-gold-300 font-medium transition-colors">
+                <span className="text-sm text-gray-400">Already have an account? </span>
+                <button onClick={() => switchMode('signin')} className="text-sm text-gray-600 hover:text-gray-600 font-medium transition-colors">
                   Sign In
                 </button>
               </div>
             )}
             {(mode === 'forgot' || mode === 'update_password') && (
-              <button onClick={() => switchMode('signin')} className="text-sm text-gold-400 hover:text-gold-300 font-medium transition-colors">
+              <button onClick={() => switchMode('signin')} className="text-sm text-gray-600 hover:text-gray-600 font-medium transition-colors">
                 Back to Sign In
               </button>
             )}
@@ -301,12 +301,12 @@ export default function LoginPage({ passwordRecovery, onBackToLanding }) {
           {onBackToLanding && (
             <button
               onClick={onBackToLanding}
-              className="text-[11px] text-gold-400 hover:text-gold-300 font-medium transition-colors mb-2 block mx-auto"
+              className="text-[11px] text-gray-600 hover:text-gray-600 font-medium transition-colors mb-2 block mx-auto"
             >
               &larr; Back to home
             </button>
           )}
-          <p className="text-[11px] text-slate-600">
+          <p className="text-[11px] text-gray-400">
             Tranche &middot; Secure Authentication
           </p>
         </div>

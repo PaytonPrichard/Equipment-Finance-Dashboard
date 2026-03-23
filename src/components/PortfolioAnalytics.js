@@ -13,10 +13,10 @@ const THRESHOLD = 55;
 const CustomTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null;
   return (
-    <div className="bg-slate-800 border border-slate-700/50 rounded-xl shadow-2xl px-3 py-2">
-      <p className="text-xs text-slate-200 font-medium">{label}</p>
-      <p className="text-xs text-slate-400">
-        Avg Score: <span className="text-white font-semibold">{payload[0].value.toFixed(1)}</span>
+    <div className="bg-gray-100 border border-gray-200/50 rounded-xl shadow-2xl px-3 py-2">
+      <p className="text-xs text-gray-800 font-medium">{label}</p>
+      <p className="text-xs text-gray-500">
+        Avg Score: <span className="text-gray-900 font-semibold">{payload[0].value.toFixed(1)}</span>
       </p>
     </div>
   );
@@ -70,7 +70,7 @@ export default function PortfolioAnalytics({ scoredDeals }) {
     <div className="space-y-6">
       {/* Average Score by Outcome */}
       <div className="glass-card rounded-2xl p-6">
-        <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4">
+        <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">
           Average Score by Outcome
         </h3>
         <div style={{ width: '100%', height: 220 }}>
@@ -102,12 +102,12 @@ export default function PortfolioAnalytics({ scoredDeals }) {
 
       {/* Score Distribution */}
       <div className="glass-card rounded-2xl p-6">
-        <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4">
+        <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">
           Score Distribution
         </h3>
-        <div className="bg-white/[0.02] rounded-xl p-4">
+        <div className="bg-gray-50 rounded-xl p-4">
           {/* Scale labels */}
-          <div className="flex justify-between text-[10px] text-slate-500 mb-1">
+          <div className="flex justify-between text-[10px] text-gray-400 mb-1">
             <span>0</span>
             <span>25</span>
             <span>50</span>
@@ -115,7 +115,7 @@ export default function PortfolioAnalytics({ scoredDeals }) {
             <span>100</span>
           </div>
           {/* Track */}
-          <div className="relative h-8 rounded-full bg-white/[0.02] border border-slate-700/30">
+          <div className="relative h-8 rounded-full bg-gray-50 border border-gray-200/30">
             {/* Threshold line */}
             <div
               className="absolute top-0 bottom-0 w-px bg-slate-500/40"
@@ -144,7 +144,7 @@ export default function PortfolioAnalytics({ scoredDeals }) {
             })}
           </div>
           {/* Threshold label */}
-          <div className="mt-1 text-[10px] text-slate-500" style={{ marginLeft: `${THRESHOLD}%`, transform: 'translateX(-50%)' }}>
+          <div className="mt-1 text-[10px] text-gray-400" style={{ marginLeft: `${THRESHOLD}%`, transform: 'translateX(-50%)' }}>
             Threshold ({THRESHOLD})
           </div>
         </div>
@@ -152,53 +152,53 @@ export default function PortfolioAnalytics({ scoredDeals }) {
 
       {/* Confusion Matrix */}
       <div className="glass-card rounded-2xl p-6">
-        <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4">
+        <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">
           Model Accuracy Matrix
         </h3>
-        <div className="bg-white/[0.02] rounded-xl overflow-hidden">
+        <div className="bg-gray-50 rounded-xl overflow-hidden">
           <table className="w-full text-xs text-center">
             <thead>
               <tr>
-                <th className="p-3 text-slate-500 font-medium" />
-                <th className="p-3 text-slate-400 font-semibold">Performed / Paid Off</th>
-                <th className="p-3 text-slate-400 font-semibold">Defaulted / Watchlist</th>
+                <th className="p-3 text-gray-400 font-medium" />
+                <th className="p-3 text-gray-500 font-semibold">Performed / Paid Off</th>
+                <th className="p-3 text-gray-500 font-semibold">Defaulted / Watchlist</th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td className="p-3 text-slate-400 font-semibold text-right">Score &ge; {THRESHOLD}</td>
+                <td className="p-3 text-gray-500 font-semibold text-right">Score &ge; {THRESHOLD}</td>
                 <td className="p-3">
                   <span className="inline-block bg-emerald-500/10 text-emerald-400 rounded-lg px-3 py-1.5 font-bold">
                     {tp}
                   </span>
-                  <div className="text-[10px] text-slate-500 mt-1">True Positive</div>
+                  <div className="text-[10px] text-gray-400 mt-1">True Positive</div>
                 </td>
                 <td className="p-3">
                   <span className="inline-block bg-rose-500/10 text-rose-400 rounded-lg px-3 py-1.5 font-bold">
                     {fp}
                   </span>
-                  <div className="text-[10px] text-slate-500 mt-1">False Positive / Missed Risk</div>
+                  <div className="text-[10px] text-gray-400 mt-1">False Positive / Missed Risk</div>
                 </td>
               </tr>
               <tr>
-                <td className="p-3 text-slate-400 font-semibold text-right">Score &lt; {THRESHOLD}</td>
+                <td className="p-3 text-gray-500 font-semibold text-right">Score &lt; {THRESHOLD}</td>
                 <td className="p-3">
                   <span className="inline-block bg-amber-500/10 text-amber-400 rounded-lg px-3 py-1.5 font-bold">
                     {fn}
                   </span>
-                  <div className="text-[10px] text-slate-500 mt-1">False Negative / Over-Conservative</div>
+                  <div className="text-[10px] text-gray-400 mt-1">False Negative / Over-Conservative</div>
                 </td>
                 <td className="p-3">
-                  <span className="inline-block bg-gold-500/10 text-gold-400 rounded-lg px-3 py-1.5 font-bold">
+                  <span className="inline-block bg-gray-100 text-gray-600 rounded-lg px-3 py-1.5 font-bold">
                     {tn}
                   </span>
-                  <div className="text-[10px] text-slate-500 mt-1">True Negative</div>
+                  <div className="text-[10px] text-gray-400 mt-1">True Negative</div>
                 </td>
               </tr>
             </tbody>
           </table>
           {total > 0 && (
-            <div className="border-t border-slate-700/30 px-3 py-2 text-[10px] text-slate-500 text-right">
+            <div className="border-t border-gray-200/30 px-3 py-2 text-[10px] text-gray-400 text-right">
               Accuracy: {(((tp + tn) / total) * 100).toFixed(1)}% ({tp + tn}/{total})
             </div>
           )}

@@ -93,17 +93,17 @@ export default function BillingPage() {
       <div className="glass-card rounded-2xl p-6">
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div>
-            <h2 className="text-lg font-bold text-white">{orgName}</h2>
+            <h2 className="text-lg font-bold text-gray-900">{orgName}</h2>
             <div className="flex items-center gap-3 mt-1">
               <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider ${
-                currentPlan === 'free' ? 'bg-slate-500/15 text-slate-400 border border-slate-500/30' :
-                currentPlan === 'pilot' ? 'bg-gold-500/15 text-gold-400 border border-gold-500/30' :
+                currentPlan === 'free' ? 'bg-slate-500/15 text-gray-500 border border-slate-500/30' :
+                currentPlan === 'pilot' ? 'bg-gold-500/15 text-gray-600 border border-gray-300' :
                 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
               }`}>
                 {currentPlan === 'free' ? 'Free' : currentPlan}
               </span>
               {daysRemaining !== null && daysRemaining > 0 && (
-                <span className="text-[11px] text-slate-500">{daysRemaining} days remaining</span>
+                <span className="text-[11px] text-gray-400">{daysRemaining} days remaining</span>
               )}
               {isExpired && (
                 <span className="text-[11px] text-rose-400 font-medium">Expired. Upgrade to continue.</span>
@@ -126,7 +126,7 @@ export default function BillingPage() {
                   else setError(data.message || data.error || 'Unable to open billing portal');
                 } catch { setError('Unable to open billing portal'); }
               }}
-              className="px-4 py-2 rounded-xl bg-white/[0.04] border border-white/[0.08] text-sm text-white font-medium hover:bg-white/[0.08] transition-all"
+              className="px-4 py-2 rounded-xl bg-gray-50 border border-gray-200 text-sm text-gray-900 font-medium hover:bg-gray-100 transition-all"
             >
               Manage Subscription
             </button>
@@ -139,7 +139,7 @@ export default function BillingPage() {
         <button
           onClick={() => setBillingCycle('monthly')}
           className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
-            billingCycle === 'monthly' ? 'bg-gold-500/15 text-gold-400 border border-gold-500/30' : 'text-slate-500 hover:text-slate-300'
+            billingCycle === 'monthly' ? 'bg-gold-500/15 text-gray-600 border border-gray-300' : 'text-gray-400 hover:text-gray-700'
           }`}
         >
           Monthly
@@ -147,7 +147,7 @@ export default function BillingPage() {
         <button
           onClick={() => setBillingCycle('annual')}
           className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all flex items-center gap-2 ${
-            billingCycle === 'annual' ? 'bg-gold-500/15 text-gold-400 border border-gold-500/30' : 'text-slate-500 hover:text-slate-300'
+            billingCycle === 'annual' ? 'bg-gold-500/15 text-gray-600 border border-gray-300' : 'text-gray-400 hover:text-gray-700'
           }`}
         >
           Annual
@@ -173,23 +173,23 @@ export default function BillingPage() {
               key={p.key}
               className={`rounded-2xl p-6 ${
                 p.highlight
-                  ? 'bg-gradient-to-b from-gold-500/[0.08] to-transparent border-2 border-gold-500/30 relative'
+                  ? 'bg-gradient-to-b from-gold-500/[0.08] to-transparent border-2 border-gray-300 relative'
                   : 'glass-card'
               }`}
             >
               {p.highlight && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full bg-gold-500 text-[10px] font-bold text-white uppercase tracking-wider">
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full bg-gold-500 text-[10px] font-bold text-gray-900 uppercase tracking-wider">
                   Most Popular
                 </div>
               )}
-              <h3 className="text-lg font-bold text-white mb-0.5">{p.name}</h3>
-              <p className="text-[11px] text-slate-500 mb-4">{p.description}</p>
+              <h3 className="text-lg font-bold text-gray-900 mb-0.5">{p.name}</h3>
+              <p className="text-[11px] text-gray-400 mb-4">{p.description}</p>
               <div className="flex items-baseline gap-1 mb-5">
-                <span className="text-3xl font-extrabold text-white">${price}</span>
-                <span className="text-sm text-slate-500">/{billingCycle === 'annual' ? 'mo' : 'month'}</span>
+                <span className="text-3xl font-extrabold text-gray-900">${price}</span>
+                <span className="text-sm text-gray-400">/{billingCycle === 'annual' ? 'mo' : 'month'}</span>
               </div>
               {billingCycle === 'annual' && (
-                <p className="text-[10px] text-slate-600 -mt-3 mb-4">
+                <p className="text-[10px] text-gray-400 -mt-3 mb-4">
                   ${price * 10}/year (2 months free)
                 </p>
               )}
@@ -198,18 +198,18 @@ export default function BillingPage() {
                 disabled={isCurrentPlan || loading === p.key}
                 className={`w-full py-2.5 rounded-xl text-sm font-semibold transition-all mb-5 ${
                   isCurrentPlan
-                    ? 'bg-white/[0.04] border border-white/[0.06] text-slate-500 cursor-default'
+                    ? 'bg-gray-50 border border-gray-200 text-gray-400 cursor-default'
                     : p.highlight
-                    ? 'bg-gradient-to-r from-gold-500 to-gold-600 text-white shadow-lg shadow-gold-500/20 hover:shadow-gold-500/30 disabled:opacity-50'
-                    : 'bg-white/[0.04] border border-white/[0.08] text-white hover:bg-white/[0.08] disabled:opacity-50'
+                    ? 'bg-gradient-to-r from-gray-800 to-gray-900 text-gray-900 shadow-lg shadow-gray-300/20 hover:shadow-gray-300/30 disabled:opacity-50'
+                    : 'bg-gray-50 border border-gray-200 text-gray-900 hover:bg-gray-100 disabled:opacity-50'
                 }`}
               >
                 {loading === p.key ? 'Redirecting...' : isCurrentPlan ? 'Current Plan' : 'Upgrade'}
               </button>
               <ul className="space-y-2">
                 {p.features.map((f) => (
-                  <li key={f} className="flex items-start gap-2 text-[12px] text-slate-300">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-gold-400 flex-shrink-0 mt-0.5" strokeWidth="2.5">
+                  <li key={f} className="flex items-start gap-2 text-[12px] text-gray-700">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-gray-600 flex-shrink-0 mt-0.5" strokeWidth="2.5">
                       <polyline points="20 6 9 17 4 12" />
                     </svg>
                     {f}
@@ -221,7 +221,7 @@ export default function BillingPage() {
         })}
       </div>
 
-      <p className="text-center text-[11px] text-slate-600">
+      <p className="text-center text-[11px] text-gray-400">
         All plans include a 14-day free trial. Cancel anytime.
       </p>
     </div>

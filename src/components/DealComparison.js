@@ -137,7 +137,7 @@ export default function DealComparison({ exampleDeals, savedDeals, historicalDea
     return (
       <div ref={ref} className="relative">
         <div className="relative">
-          <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <circle cx="11" cy="11" r="8" />
             <line x1="21" y1="21" x2="16.65" y2="16.65" />
           </svg>
@@ -153,7 +153,7 @@ export default function DealComparison({ exampleDeals, savedDeals, historicalDea
           {value && !open && (
             <button
               onClick={() => { onChange(''); setQuery(''); }}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 transition-colors"
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
                 <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
@@ -165,22 +165,22 @@ export default function DealComparison({ exampleDeals, savedDeals, historicalDea
         {open && (
           <div className="absolute top-full left-0 right-0 mt-1 company-dropdown rounded-xl z-50 py-1 max-h-72 overflow-y-auto animate-fade-in">
             {filtered.length === 0 ? (
-              <div className="px-4 py-3 text-[11px] text-slate-500">No deals match &ldquo;{query}&rdquo;</div>
+              <div className="px-4 py-3 text-[11px] text-gray-400">No deals match &ldquo;{query}&rdquo;</div>
             ) : (
               Object.entries(grouped).map(([group, deals]) => (
                 <div key={group}>
-                  <div className="px-3 py-1.5 text-[10px] text-slate-500 uppercase tracking-wider font-semibold border-b border-slate-800/50 sticky top-0 bg-[#0d1424]">
+                  <div className="px-3 py-1.5 text-[10px] text-gray-400 uppercase tracking-wider font-semibold border-b border-gray-200/50 sticky top-0 bg-[#0d1424]">
                     {group} ({deals.length})
                   </div>
                   {deals.map((d) => (
                     <button
                       key={d.cid}
                       onClick={() => { onChange(d.cid); setQuery(''); setOpen(false); }}
-                      className={`w-full px-3 py-2 text-left hover:bg-slate-800/60 transition-colors flex items-center gap-3 ${value === d.cid ? 'bg-gold-500/10' : ''}`}
+                      className={`w-full px-3 py-2 text-left hover:bg-gray-100/60 transition-colors flex items-center gap-3 ${value === d.cid ? 'bg-gray-100' : ''}`}
                     >
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm text-slate-200 font-medium truncate">{d.name}</p>
-                        <p className="text-[10px] text-slate-500">{d.industry} &middot; {formatCurrency(d.cost)}</p>
+                        <p className="text-sm text-gray-800 font-medium truncate">{d.name}</p>
+                        <p className="text-[10px] text-gray-400">{d.industry} &middot; {formatCurrency(d.cost)}</p>
                       </div>
                     </button>
                   ))}
@@ -200,7 +200,7 @@ export default function DealComparison({ exampleDeals, savedDeals, historicalDea
   );
 
   const renderCellValue = (row, data, isBetter) => {
-    if (!data) return <span className="text-slate-600">--</span>;
+    if (!data) return <span className="text-gray-400">--</span>;
 
     const val = data[row.key];
 
@@ -222,7 +222,7 @@ export default function DealComparison({ exampleDeals, savedDeals, historicalDea
 
     const formatted = row.format(val);
     return (
-      <span className={`font-mono font-semibold text-sm ${isBetter ? 'text-emerald-400' : 'text-slate-200'}`}>
+      <span className={`font-mono font-semibold text-sm ${isBetter ? 'text-emerald-400' : 'text-gray-800'}`}>
         {formatted}
       </span>
     );
@@ -234,14 +234,14 @@ export default function DealComparison({ exampleDeals, savedDeals, historicalDea
     <div className="space-y-6 animate-fade-in-up">
       {/* Header */}
       <div className="glass-card rounded-2xl p-6">
-        <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4">
+        <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">
           Deal Comparison
         </h3>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Left slot */}
           <div className="space-y-2">
-            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
               Deal A
             </label>
             <DealSearchSelect value={leftId} onChange={setLeftId} otherId={rightId} label="Deal A" />
@@ -249,7 +249,7 @@ export default function DealComparison({ exampleDeals, savedDeals, historicalDea
 
           {/* Right slot */}
           <div className="space-y-2">
-            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
               Deal B
             </label>
             <DealSearchSelect value={rightId} onChange={setRightId} otherId={leftId} label="Deal B" />
@@ -260,7 +260,7 @@ export default function DealComparison({ exampleDeals, savedDeals, historicalDea
       {/* Empty state */}
       {neitherSelected && (
         <div className="glass-card rounded-2xl p-6 text-center">
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-gray-400">
             Select two deals to compare side by side.
           </p>
         </div>
@@ -269,21 +269,21 @@ export default function DealComparison({ exampleDeals, savedDeals, historicalDea
       {/* Comparison table */}
       {(leftDeal || rightDeal) && (
         <div className="glass-card rounded-2xl p-6">
-          <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4">
+          <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">
             Metric Comparison
           </h3>
 
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-white/[0.06]">
-                  <th className="text-left text-[10px] font-bold text-slate-500 uppercase tracking-widest pb-3 pr-4 w-1/3">
+                <tr className="border-b border-gray-200">
+                  <th className="text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest pb-3 pr-4 w-1/3">
                     Metric
                   </th>
-                  <th className="text-left text-[10px] font-bold text-slate-500 uppercase tracking-widest pb-3 px-4 w-1/3">
+                  <th className="text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest pb-3 px-4 w-1/3">
                     {leftDeal ? leftDeal.displayName : 'Deal A'}
                   </th>
-                  <th className="text-left text-[10px] font-bold text-slate-500 uppercase tracking-widest pb-3 pl-4 w-1/3">
+                  <th className="text-left text-[10px] font-bold text-gray-400 uppercase tracking-widest pb-3 pl-4 w-1/3">
                     {rightDeal ? rightDeal.displayName : 'Deal B'}
                   </th>
                 </tr>
@@ -298,11 +298,11 @@ export default function DealComparison({ exampleDeals, savedDeals, historicalDea
                     better = determineBetter(leftVal, rightVal, row.direction);
                   }
 
-                  const rowBg = idx % 2 === 1 ? 'bg-white/[0.02]' : '';
+                  const rowBg = idx % 2 === 1 ? 'bg-gray-50' : '';
 
                   return (
                     <tr key={row.key} className={rowBg}>
-                      <td className="py-3 pr-4 text-xs text-slate-400 font-medium">
+                      <td className="py-3 pr-4 text-xs text-gray-500 font-medium">
                         {row.label}
                       </td>
                       <td className="py-3 px-4">
