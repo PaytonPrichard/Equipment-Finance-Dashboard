@@ -253,18 +253,35 @@ export default function DealPipeline({ onLoadDeal, currentInputs, currentScore, 
   /* --- Search & Grouping --- */
 
   const [searchQuery, setSearchQuery] = useState('');
+  const [filterRating, setFilterRating] = useState('all');
+  const [filterType, setFilterType] = useState('all');
   const [expandedStages, setExpandedStages] = useState({});
   const DEALS_PER_STAGE = 20;
 
-  const filteredDeals = searchQuery.trim()
-    ? deals.filter(d => {
-        const q = searchQuery.toLowerCase();
-        return (d.name || '').toLowerCase().includes(q)
-          || (d.inputs?.industrySector || '').toLowerCase().includes(q)
-          || (d.inputs?.companyName || '').toLowerCase().includes(q)
-          || (d.stage || '').toLowerCase().includes(q);
-      })
-    : deals;
+  const filteredDeals = deals.filter(d => {
+    // Search filter
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      const matchesSearch = (d.name || '').toLowerCase().includes(q)
+        || (d.inputs?.industrySector || '').toLowerCase().includes(q)
+        || (d.inputs?.companyName || '').toLowerCase().includes(q)
+        || (d.stage || '').toLowerCase().includes(q);
+      if (!matchesSearch) return false;
+    }
+    // Rating filter
+    if (filterRating !== 'all') {
+      if (filterRating === 'pass' && (d.score == null || d.score < 75)) return false;
+      if (filterRating === 'flag' && (d.score == null || d.score < 35 || d.score >= 75)) return false;
+      if (filterRating === 'fail' && (d.score == null || d.score >= 35)) return false;
+      if (filterRating === 'unscored' && d.score != null) return false;
+    }
+    // Type filter
+    if (filterType !== 'all') {
+      const dealType = d.inputs?.equipmentType || 'Other';
+      if (dealType !== filterType) return false;
+    }
+    return true;
+  });
 
   const grouped = {};
   STAGES.forEach((s) => { grouped[s.key] = []; });
@@ -314,6 +331,30 @@ export default function DealPipeline({ onLoadDeal, currentInputs, currentScore, 
               )}
             </div>
           )}
+          {/* Filters */}
+          <div className="flex items-center gap-2">
+            <select
+              value={filterRating}
+              onChange={(e) => setFilterRating(e.target.value)}
+              className="bg-white rounded-lg px-2 py-1.5 text-[11px] text-gray-600 border border-gray-200 focus:outline-none"
+            >
+              <option value="all">All ratings</option>
+              <option value="pass">Pass</option>
+              <option value="flag">Flag</option>
+              <option value="fail">Fail</option>
+              <option value="unscored">Unscored</option>
+            </select>
+            <select
+              value={filterType}
+              onChange={(e) => setFilterType(e.target.value)}
+              className="bg-white rounded-lg px-2 py-1.5 text-[11px] text-gray-600 border border-gray-200 focus:outline-none"
+            >
+              <option value="all">All types</option>
+              {[...new Set(deals.map(d => d.inputs?.equipmentType).filter(Boolean))].map(t => (
+                <option key={t} value={t}>{t}</option>
+              ))}
+            </select>
+          </div>
         </div>
 
         <div>
@@ -391,9 +432,20 @@ export default function DealPipeline({ onLoadDeal, currentInputs, currentScore, 
                     <span className={`text-xs font-semibold ${ss.text}`}>{stage.key}</span>
                   </div>
                   <span className={`text-[10px] font-bold font-mono px-1.5 py-0.5 rounded-md ${ss.bg} ${ss.text}`}>
-                    {columnDeals.length}
+                    {allColumnDeals.length}
                   </span>
                 </div>
+                {(() => {
+                  const colValue = allColumnDeals.reduce((sum, d) => {
+                    const v = d.inputs?.equipmentCost || d.inputs?.totalAROutstanding || d.inputs?.totalInventory || 0;
+                    return sum + v;
+                  }, 0);
+                  return colValue > 0 ? (
+                    <p className="text-[9px] text-gray-400 mt-1 font-mono">
+                      {colValue >= 1e6 ? `$${(colValue / 1e6).toFixed(1)}M` : colValue >= 1e3 ? `$${(colValue / 1e3).toFixed(0)}K` : `$${colValue.toLocaleString()}`}
+                    </p>
+                  ) : null;
+                })()}
               </div>
 
               {/* Cards */}

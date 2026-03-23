@@ -84,7 +84,37 @@ export default function PipelineDashboard() {
       else scoreDist.weak++;
     });
 
-    return { byStage, totalDeals, totalValue, activeValue, passRate, avgScore, recentDeals, scoreDist, activePipeline: activePipeline.length };
+    // Average deal size
+    const avgDealSize = activePipeline.length > 0 ? Math.round(activeValue / activePipeline.length) : 0;
+
+    // Verdict breakdown (pass/flag/fail based on score thresholds)
+    const verdictDist = { pass: 0, flag: 0, fail: 0, unscored: 0 };
+    deals.forEach(d => {
+      if (!d.score) verdictDist.unscored++;
+      else if (d.score >= 75) verdictDist.pass++;
+      else if (d.score >= 35) verdictDist.flag++;
+      else verdictDist.fail++;
+    });
+
+    // Equipment type breakdown
+    const byEquipType = {};
+    deals.forEach(d => {
+      const type = d.inputs?.equipmentType || d.inputs?.totalAROutstanding ? 'Accounts Receivable' : d.inputs?.totalInventory ? 'Inventory' : 'Other';
+      const equipType = d.inputs?.equipmentType || type;
+      byEquipType[equipType] = (byEquipType[equipType] || 0) + 1;
+    });
+
+    // Recent activity (last 10 deals by update time)
+    const recentActivity = [...deals]
+      .sort((a, b) => new Date(b.updated_at || b.created_at) - new Date(a.updated_at || a.created_at))
+      .slice(0, 10)
+      .map(d => ({
+        name: d.name || d.inputs?.companyName || 'Unknown',
+        stage: d.stage,
+        time: d.updated_at || d.created_at,
+      }));
+
+    return { byStage, totalDeals, totalValue, activeValue, passRate, avgScore, avgDealSize, recentDeals, scoreDist, verdictDist, byEquipType, recentActivity, activePipeline: activePipeline.length };
   }, [deals]);
 
   if (loading) {
@@ -150,8 +180,8 @@ export default function PipelineDashboard() {
           <p className="text-[10px] text-gray-400 mt-1 uppercase tracking-wider">Avg Score</p>
         </div>
         <div className="glass-card rounded-2xl p-5 text-center">
-          <p className="text-2xl font-bold font-mono text-gray-900">{stats.recentDeals}</p>
-          <p className="text-[10px] text-gray-400 mt-1 uppercase tracking-wider">Last 7 Days</p>
+          <p className="text-2xl font-bold font-mono text-gray-900">{formatCurrency(stats.avgDealSize)}</p>
+          <p className="text-[10px] text-gray-400 mt-1 uppercase tracking-wider">Avg Deal Size</p>
         </div>
       </div>
 
@@ -236,6 +266,82 @@ export default function PipelineDashboard() {
               </div>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Bottom row: Equipment Type + Recent Activity */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        {/* Deals by Equipment Type */}
+        <div className="glass-card rounded-2xl p-5">
+          <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">
+            Deals by Type
+          </h3>
+          <div className="space-y-2">
+            {Object.entries(stats.byEquipType).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([type, count]) => {
+              const maxCount = Math.max(...Object.values(stats.byEquipType), 1);
+              const pct = (count / maxCount) * 100;
+              return (
+                <div key={type}>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-[11px] text-gray-600">{type}</span>
+                    <span className="text-[11px] font-mono font-semibold text-gray-700">{count}</span>
+                  </div>
+                  <div className="h-2 rounded-full bg-gray-100 overflow-hidden">
+                    <div className="h-full rounded-full bg-gray-400 transition-all duration-500" style={{ width: `${pct}%` }} />
+                  </div>
+                </div>
+              );
+            })}
+            {Object.keys(stats.byEquipType).length === 0 && (
+              <p className="text-[11px] text-gray-400">No deals yet</p>
+            )}
+          </div>
+        </div>
+
+        {/* Recent Activity */}
+        <div className="glass-card rounded-2xl p-5">
+          <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">
+            Recent Activity
+          </h3>
+          <div className="space-y-2">
+            {stats.recentActivity.map((item, i) => {
+              const time = new Date(item.time);
+              const ago = Math.round((Date.now() - time.getTime()) / (1000 * 60 * 60));
+              const timeStr = ago < 1 ? 'Just now' : ago < 24 ? `${ago}h ago` : `${Math.round(ago / 24)}d ago`;
+              return (
+                <div key={i} className="flex items-start justify-between py-1.5 border-b border-gray-100 last:border-0">
+                  <div>
+                    <p className="text-[12px] text-gray-700 font-medium">{item.name}</p>
+                    <p className="text-[10px] text-gray-400">{item.stage}</p>
+                  </div>
+                  <span className="text-[10px] text-gray-400 flex-shrink-0">{timeStr}</span>
+                </div>
+              );
+            })}
+            {stats.recentActivity.length === 0 && (
+              <p className="text-[11px] text-gray-400">No recent activity</p>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Screening Verdict Breakdown */}
+      <div className="glass-card rounded-2xl p-5">
+        <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">
+          Screening Verdicts
+        </h3>
+        <div className="grid grid-cols-4 gap-3">
+          {[
+            { label: 'Pass', count: stats.verdictDist.pass, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-200' },
+            { label: 'Flag', count: stats.verdictDist.flag, color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-200' },
+            { label: 'Fail', count: stats.verdictDist.fail, color: 'text-rose-600', bg: 'bg-rose-50', border: 'border-rose-200' },
+            { label: 'Unscored', count: stats.verdictDist.unscored, color: 'text-gray-500', bg: 'bg-gray-50', border: 'border-gray-200' },
+          ].map(v => (
+            <div key={v.label} className={`${v.bg} border ${v.border} rounded-xl p-3 text-center`}>
+              <p className={`text-xl font-bold font-mono ${v.color}`}>{v.count}</p>
+              <p className="text-[10px] text-gray-400 mt-0.5">{v.label}</p>
+            </div>
+          ))}
         </div>
       </div>
     </div>
