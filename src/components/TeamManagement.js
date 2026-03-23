@@ -392,7 +392,7 @@ export default function TeamManagement() {
                         value={member.role || 'analyst'}
                         onChange={(e) => handleChangeRole(member.id, e.target.value)}
                         disabled={isSelf}
-                        className="bg-white/[0.03] border border-white/[0.06] rounded-lg px-2.5 py-1.5 text-[11px] text-slate-300 focus:outline-none focus:ring-1 focus:ring-gold-500/30 focus:border-gold-500/20 appearance-none cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed w-full"
+                        className="bg-white/[0.03] border border-white/[0.06] rounded-lg px-2.5 py-1.5 text-[11px] text-slate-300 focus:outline-none focus:ring-1 focus:ring-gray-400/30 focus:border-gray-300 appearance-none cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed w-full"
                         style={{
                           backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23475569' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E")`,
                           backgroundRepeat: 'no-repeat',
@@ -452,7 +452,7 @@ export default function TeamManagement() {
                   if (m) setTransferTarget(m);
                 }}
                 defaultValue=""
-                className="bg-white/[0.04] border border-white/[0.08] rounded-xl px-3.5 py-2.5 text-white text-sm focus:outline-none focus:ring-1 focus:ring-gold-500/30 focus:border-gold-500/20 appearance-none cursor-pointer"
+                className="bg-white border border-gray-200 rounded-xl px-3.5 py-2.5 text-gray-900 text-sm focus:outline-none focus:ring-1 focus:ring-gray-400/30 focus:border-gray-300 appearance-none cursor-pointer"
                 style={{
                   backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23475569' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E")`,
                   backgroundRepeat: 'no-repeat',
@@ -489,7 +489,7 @@ export default function TeamManagement() {
                   value={transferConfirmText}
                   onChange={(e) => setTransferConfirmText(e.target.value)}
                   placeholder="TRANSFER"
-                  className="bg-white/[0.04] border border-white/[0.08] rounded-xl px-3.5 py-2.5 text-white text-sm placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-gold-500/30 focus:border-gold-500/20 transition-all w-48 font-mono uppercase tracking-wider"
+                  className="bg-white border border-gray-200 rounded-xl px-3.5 py-2.5 text-gray-900 text-sm placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-400/30 focus:border-gray-300 transition-all w-48 font-mono uppercase tracking-wider"
                 />
               </div>
               <div className="flex gap-2">
@@ -527,7 +527,7 @@ export default function TeamManagement() {
               value={inviteEmail}
               onChange={(e) => setInviteEmail(e.target.value)}
               placeholder="user@example.com"
-              className="bg-white/[0.04] border border-white/[0.08] rounded-xl px-3.5 py-2.5 text-white text-sm placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-gold-500/30 focus:border-gold-500/20 transition-all"
+              className="bg-white border border-gray-200 rounded-xl px-3.5 py-2.5 text-gray-900 text-sm placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-400/30 focus:border-gray-300 transition-all"
             />
           </div>
 
@@ -538,7 +538,7 @@ export default function TeamManagement() {
             <select
               value={inviteRole}
               onChange={(e) => setInviteRole(e.target.value)}
-              className="bg-white/[0.04] border border-white/[0.08] rounded-xl px-3.5 py-2.5 text-white text-sm focus:outline-none focus:ring-1 focus:ring-gold-500/30 focus:border-gold-500/20 appearance-none cursor-pointer"
+              className="bg-white border border-gray-200 rounded-xl px-3.5 py-2.5 text-gray-900 text-sm focus:outline-none focus:ring-1 focus:ring-gray-400/30 focus:border-gray-300 appearance-none cursor-pointer"
               style={{
                 backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23475569' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E")`,
                 backgroundRepeat: 'no-repeat',
@@ -621,7 +621,7 @@ export default function TeamManagement() {
                   <div className="flex items-center gap-2 justify-end">
                     <button
                       onClick={() => handleCopyCode(invite.invite_code)}
-                      className="pill-btn px-3 py-1.5 rounded-lg text-[11px] font-medium text-slate-300 bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.08] transition-colors"
+                      className="pill-btn px-3 py-1.5 rounded-lg text-[11px] font-medium text-slate-300 bg-white border border-gray-200 hover:bg-white/[0.08] transition-colors"
                     >
                       Copy
                     </button>
@@ -657,7 +657,7 @@ export default function TeamManagement() {
               value={discountCode}
               onChange={(e) => setDiscountCode(e.target.value)}
               placeholder="PILOT-XXXX"
-              className="bg-white/[0.04] border border-white/[0.08] rounded-xl px-3.5 py-2.5 text-white text-sm placeholder-slate-600 focus:outline-none focus:ring-1 focus:ring-gold-500/30 focus:border-gold-500/20 transition-all font-mono uppercase tracking-wider"
+              className="bg-white border border-gray-200 rounded-xl px-3.5 py-2.5 text-gray-900 text-sm placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-400/30 focus:border-gray-300 transition-all font-mono uppercase tracking-wider"
             />
           </div>
 
@@ -695,7 +695,7 @@ export default function TeamManagement() {
               <select
                 value={planType}
                 onChange={(e) => setPlanType(e.target.value)}
-                className="w-full px-3.5 py-3 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-sm focus:outline-none focus:ring-2 focus:ring-gold-500/40 transition-all"
+                className="w-full px-3.5 py-3 rounded-xl bg-white border border-gray-200 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-gray-400/40 transition-all"
               >
                 <option value="free">Free</option>
                 <option value="pilot">Pilot</option>
@@ -710,7 +710,7 @@ export default function TeamManagement() {
                 type="date"
                 value={planExpiry}
                 onChange={(e) => setPlanExpiry(e.target.value)}
-                className="w-full px-3.5 py-3 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-sm focus:outline-none focus:ring-2 focus:ring-gold-500/40 transition-all"
+                className="w-full px-3.5 py-3 rounded-xl bg-white border border-gray-200 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-gray-400/40 transition-all"
               />
             </div>
           </div>
@@ -762,7 +762,7 @@ export default function TeamManagement() {
                   type="number"
                   value={orgSettings.baseSpreadBps ?? 200}
                   onChange={(e) => setOrgSettings(s => ({ ...s, baseSpreadBps: parseInt(e.target.value) || 0 }))}
-                  className="w-full px-3.5 py-3 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-sm focus:outline-none focus:ring-2 focus:ring-gold-500/40 transition-all"
+                  className="w-full px-3.5 py-3 rounded-xl bg-white border border-gray-200 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-gray-400/40 transition-all"
                 />
                 <p className="text-[9px] text-slate-600 mt-1">Default: 200 bps for equipment, 250 for AR, 275 for inventory</p>
               </div>
@@ -772,7 +772,7 @@ export default function TeamManagement() {
                   type="number"
                   value={orgSettings.creditSpreadStrong ?? -75}
                   onChange={(e) => setOrgSettings(s => ({ ...s, creditSpreadStrong: parseInt(e.target.value) || 0 }))}
-                  className="w-full px-3.5 py-3 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-sm focus:outline-none focus:ring-2 focus:ring-gold-500/40 transition-all"
+                  className="w-full px-3.5 py-3 rounded-xl bg-white border border-gray-200 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-gray-400/40 transition-all"
                 />
               </div>
             </div>
@@ -783,7 +783,7 @@ export default function TeamManagement() {
                   type="number"
                   value={orgSettings.creditSpreadWeak ?? 200}
                   onChange={(e) => setOrgSettings(s => ({ ...s, creditSpreadWeak: parseInt(e.target.value) || 0 }))}
-                  className="w-full px-3.5 py-3 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-sm focus:outline-none focus:ring-2 focus:ring-gold-500/40 transition-all"
+                  className="w-full px-3.5 py-3 rounded-xl bg-white border border-gray-200 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-gray-400/40 transition-all"
                 />
               </div>
               <div>
@@ -792,7 +792,7 @@ export default function TeamManagement() {
                   type="number"
                   value={orgSettings.maxAdvanceRateAR ?? 85}
                   onChange={(e) => setOrgSettings(s => ({ ...s, maxAdvanceRateAR: parseInt(e.target.value) || 0 }))}
-                  className="w-full px-3.5 py-3 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-sm focus:outline-none focus:ring-2 focus:ring-gold-500/40 transition-all"
+                  className="w-full px-3.5 py-3 rounded-xl bg-white border border-gray-200 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-gray-400/40 transition-all"
                   max="100"
                 />
               </div>
@@ -847,7 +847,7 @@ export default function TeamManagement() {
                 value={brandingLogoUrl}
                 onChange={(e) => setBrandingLogoUrl(e.target.value)}
                 placeholder="https://yourfirm.com/logo.png"
-                className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-sm placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-gold-500/40 focus:border-gold-500/40 transition-all"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-gray-200 text-gray-900 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-400/40 focus:border-gold-500/40 transition-all"
               />
               <p className="text-[10px] text-slate-600 mt-1">Appears in the top-right corner of exported memos. Max height: 40px.</p>
               {brandingLogoUrl && (
@@ -872,7 +872,7 @@ export default function TeamManagement() {
                     type="text"
                     value={brandingAccentColor}
                     onChange={(e) => setBrandingAccentColor(e.target.value)}
-                    className="flex-1 px-3 py-2 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-sm font-mono focus:outline-none focus:ring-2 focus:ring-gold-500/40 transition-all"
+                    className="flex-1 px-3 py-2 rounded-xl bg-white border border-gray-200 text-gray-900 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-gray-400/40 transition-all"
                   />
                 </div>
               </div>
@@ -883,7 +883,7 @@ export default function TeamManagement() {
                   value={brandingMemoTitle}
                   onChange={(e) => setBrandingMemoTitle(e.target.value)}
                   placeholder="e.g. Credit Screening Memo"
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-sm placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-gold-500/40 transition-all"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-gray-200 text-gray-900 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-400/40 transition-all"
                 />
               </div>
             </div>
@@ -895,7 +895,7 @@ export default function TeamManagement() {
                 value={brandingFooterText}
                 onChange={(e) => setBrandingFooterText(e.target.value)}
                 placeholder="e.g. Confidential — Internal Use Only"
-                className="w-full px-3.5 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.08] text-white text-sm placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-gold-500/40 transition-all"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-gray-200 text-gray-900 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-400/40 transition-all"
               />
             </div>
 
