@@ -317,12 +317,17 @@ function AuthenticatedApp({ profile, user }) {
         if (draft.activeDeal !== undefined) setActiveDeal(draft.activeDeal);
         if (Array.isArray(draft.recentDeals)) setRecentDeals(draft.recentDeals);
       }
+      if (Array.isArray(data?.deal_templates)) {
+        setDealTemplates(data.deal_templates);
+      }
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
 
   // Debounced save draft state to Supabase (2s delay)
   const [draftStatus, setDraftStatus] = useState(null); // null | 'saving' | 'saved'
+  const [dealTemplates, setDealTemplates] = useState([]);
+  const [showTemplateMenu, setShowTemplateMenu] = useState(false);
   useEffect(() => {
     if (!userId) return;
     setDraftStatus('saving');
@@ -563,6 +568,76 @@ function AuthenticatedApp({ profile, user }) {
             {activeTab === 'screening' && (
               <>
                 <div className="ml-auto flex items-center gap-2">
+                  {/* Templates */}
+                  <div className="relative">
+                    <button
+                      onClick={() => setShowTemplateMenu(!showTemplateMenu)}
+                      className="pill-btn px-3 py-2 rounded-lg text-[11px] font-medium text-gray-500 hover:text-gray-700 flex items-center gap-1.5"
+                    >
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                        <line x1="3" y1="9" x2="21" y2="9" />
+                        <line x1="9" y1="21" x2="9" y2="9" />
+                      </svg>
+                      Templates
+                    </button>
+                    {showTemplateMenu && (
+                      <>
+                        <div className="fixed inset-0 z-40" onClick={() => setShowTemplateMenu(false)} />
+                        <div className="absolute top-full right-0 mt-2 py-2 w-56 bg-white border border-gray-200 rounded-xl shadow-xl z-50 animate-fade-in">
+                          {/* Save current as template */}
+                          {inputs.companyName && (
+                            <button
+                              onClick={() => {
+                                const name = prompt('Template name:', `${inputs.industrySector || 'Deal'} Template`);
+                                if (!name) return;
+                                const newTemplates = [...dealTemplates, { name, inputs: { ...inputs }, module: activeModule, created: Date.now() }];
+                                setDealTemplates(newTemplates);
+                                upsertPreferences(userId, { deal_templates: newTemplates });
+                                setShowTemplateMenu(false);
+                                addToast('Template saved', 'success');
+                              }}
+                              className="w-full text-left px-4 py-2 text-[12px] text-gray-700 hover:bg-gray-50 transition-colors"
+                            >
+                              Save current as template
+                            </button>
+                          )}
+                          {dealTemplates.length > 0 && <div className="border-t border-gray-100 my-1" />}
+                          {dealTemplates.map((t, i) => (
+                            <div key={i} className="flex items-center justify-between px-4 py-1.5 hover:bg-gray-50 group">
+                              <button
+                                onClick={() => {
+                                  if (t.module && t.module !== activeModule) {
+                                    handleModuleChange(t.module);
+                                  }
+                                  setInputs(t.inputs);
+                                  setShowTemplateMenu(false);
+                                }}
+                                className="text-[12px] text-gray-600 truncate flex-1 text-left"
+                              >
+                                {t.name}
+                              </button>
+                              <button
+                                onClick={() => {
+                                  const updated = dealTemplates.filter((_, j) => j !== i);
+                                  setDealTemplates(updated);
+                                  upsertPreferences(userId, { deal_templates: updated });
+                                }}
+                                className="text-gray-300 hover:text-rose-400 opacity-0 group-hover:opacity-100 transition-all ml-2"
+                              >
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                  <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                                </svg>
+                              </button>
+                            </div>
+                          ))}
+                          {dealTemplates.length === 0 && !inputs.companyName && (
+                            <p className="px-4 py-2 text-[11px] text-gray-400">No templates saved. Fill in a deal form to save one.</p>
+                          )}
+                        </div>
+                      </>
+                    )}
+                  </div>
                   {valid && <ExportPanel summaryText={summaryText} inputs={inputs} metrics={metrics} riskScore={riskScore} recommendation={recommendation} screeningResult={screeningResult} profile={profile} moduleLabel={moduleLabel} />}
                   {activePipelineDealId && valid && (
                     <button
