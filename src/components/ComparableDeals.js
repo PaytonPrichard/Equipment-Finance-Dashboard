@@ -15,22 +15,22 @@ function proximityScore(a, b, tolerance) {
 function scoreSimilarity(current, candidate) {
   let score = 0;
 
-  // Industry match (30 pts) — exact match only
+  // Industry match (30 pts).exact match only
   if (current.industrySector === candidate.industrySector) score += 30;
 
   // Equipment type match (20 pts)
   if (current.equipmentType === candidate.equipmentType) score += 20;
 
-  // Revenue proximity (15 pts) — continuous decay, half-score at 3x difference
+  // Revenue proximity (15 pts).continuous decay, half-score at 3x difference
   score += proximityScore(current.annualRevenue, candidate.annualRevenue, 3) * 15;
 
-  // EBITDA proximity (10 pts) — half-score at 3x difference
+  // EBITDA proximity (10 pts).half-score at 3x difference
   score += proximityScore(current.ebitda, candidate.ebitda, 3) * 10;
 
-  // Equipment cost proximity (10 pts) — half-score at 2.5x difference
+  // Equipment cost proximity (10 pts).half-score at 2.5x difference
   score += proximityScore(current.equipmentCost, candidate.equipmentCost, 2.5) * 10;
 
-  // Credit rating match (10 pts) — partial credit for adjacent ratings
+  // Credit rating match (10 pts).partial credit for adjacent ratings
   const CREDIT_ORDER = ['Strong', 'Adequate', 'Weak', 'Not Rated'];
   const ci = CREDIT_ORDER.indexOf(current.creditRating);
   const cj = CREDIT_ORDER.indexOf(candidate.creditRating);
@@ -89,7 +89,7 @@ export default function ComparableDeals({ inputs, metrics, riskScore, sofr = DEF
           Comparable Historical Deals
         </h3>
         <p className="text-[11px] text-gray-400">
-          Most similar deals from portfolio history — matched by industry, equipment, size, and credit
+          Most similar deals from portfolio history, matched by industry, equipment, size, and credit
         </p>
       </div>
 
@@ -109,13 +109,13 @@ export default function ComparableDeals({ inputs, metrics, riskScore, sofr = DEF
           <path d="M12 16v-4M12 8h.01" />
         </svg>
         <p className={`text-[12px] leading-relaxed ${
-          performingCount > troubledCount ? 'text-emerald-300' : troubledCount > performingCount ? 'text-amber-300' : 'text-gray-700'
+          performingCount > troubledCount ? 'text-emerald-700' : troubledCount > performingCount ? 'text-amber-700' : 'text-gray-700'
         }`}>
           {performingCount > troubledCount
-            ? `${performingCount} of ${comparables.length} comparable deals are performing or paid off — favorable precedent for this profile.`
+            ? `${performingCount} of ${comparables.length} comparable deals are performing or paid off. Favorable precedent for this profile.`
             : troubledCount > performingCount
-            ? `${troubledCount} of ${comparables.length} comparable deals are on watchlist or defaulted — exercise caution with similar profiles.`
-            : `Mixed outcomes among comparable deals — results vary for this profile type.`}
+            ? `${troubledCount} of ${comparables.length} comparable deals are on watchlist or defaulted. Exercise caution with similar profiles.`
+            : `Mixed outcomes among comparable deals. Results vary for this profile type.`}
         </p>
       </div>
 
@@ -123,10 +123,10 @@ export default function ComparableDeals({ inputs, metrics, riskScore, sofr = DEF
       <div className="space-y-2.5">
         {comparables.map((deal) => {
           const os = OUTCOME_STYLES[deal.outcome.status] || OUTCOME_STYLES['Performing'];
-          const scoreDelta = riskScore.composite - deal.rs.composite;
+          const scoreDelta = deal.rs.composite - riskScore.composite;
 
           return (
-            <div key={deal.id} className="bg-gray-50 rounded-xl border border-gray-200 p-4 hover:border-white/[0.1] transition-all">
+            <div key={deal.id} className="bg-gray-50 rounded-xl border border-gray-200 p-4 hover:border-gray-300 transition-all">
               <div className="flex items-start justify-between mb-3">
                 <div>
                   <div className="flex items-center gap-2 mb-1">
@@ -154,8 +154,8 @@ export default function ComparableDeals({ inputs, metrics, riskScore, sofr = DEF
                   <p className="font-mono text-sm font-semibold text-gray-800">
                     {deal.rs.composite}
                     {scoreDelta !== 0 && (
-                      <span className={`text-[10px] ml-1 ${scoreDelta > 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                        {scoreDelta > 0 ? '+' : ''}{scoreDelta} vs yours
+                      <span className={`text-[10px] ml-1 ${scoreDelta > 0 ? 'text-emerald-500' : scoreDelta < 0 ? 'text-rose-500' : 'text-gray-400'}`}>
+                        ({scoreDelta > 0 ? '+' : ''}{scoreDelta} vs your {riskScore.composite})
                       </span>
                     )}
                   </p>
