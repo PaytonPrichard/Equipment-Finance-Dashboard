@@ -307,6 +307,38 @@ export default function LandingPage({ onGetStarted, onSignIn }) {
             </div>
           ))}
         </div>
+
+        {/* Integration callout */}
+        <div className="max-w-3xl mx-auto mt-10 p-6 rounded-2xl bg-gray-800/40 border border-gray-700/40">
+          <div className="flex items-start gap-4">
+            <div className="w-10 h-10 rounded-xl bg-gray-700/50 flex items-center justify-center text-gray-400 flex-shrink-0 mt-0.5">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <polyline points="16 18 22 12 16 6" />
+                <polyline points="8 6 2 12 8 18" />
+              </svg>
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-white mb-1">Already tracking deals in a CRM?</h3>
+              <p className="text-[13px] text-gray-400 leading-relaxed mb-3">
+                Connect Salesforce, HubSpot, or any system with the Tranche API. Deals flow in automatically, scores flow back. No CSV needed. Your team starts screening without changing how they work.
+              </p>
+              <div className="flex items-center gap-4 text-[11px] text-gray-500">
+                <span className="flex items-center gap-1.5">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12" /></svg>
+                  REST API
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12" /></svg>
+                  Webhooks
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12" /></svg>
+                  HMAC-signed payloads
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
         </div>
       </section>
 
