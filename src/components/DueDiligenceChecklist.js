@@ -214,10 +214,10 @@ function generateChecklist(inputs, metrics, riskScore) {
 }
 
 const PRIORITY_STYLES = {
-  required: { label: 'Required', bg: 'bg-gold-500/10', border: 'border-gold-500/20', text: 'text-gold-400' },
+  required: { label: 'Required', bg: 'bg-gold-500/10', border: 'border-gold-500/20', text: 'text-gray-600' },
   high: { label: 'High', bg: 'bg-rose-500/10', border: 'border-rose-500/20', text: 'text-rose-400' },
   medium: { label: 'Medium', bg: 'bg-amber-500/10', border: 'border-amber-500/20', text: 'text-amber-400' },
-  low: { label: 'Low', bg: 'bg-slate-500/10', border: 'border-slate-500/20', text: 'text-slate-400' },
+  low: { label: 'Low', bg: 'bg-slate-500/10', border: 'border-slate-500/20', text: 'text-gray-500' },
 };
 
 const CATEGORY_ICONS = {
@@ -263,23 +263,23 @@ export default function DueDiligenceChecklist({ inputs, metrics, riskScore }) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">
+          <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">
             Due Diligence Checklist
           </h3>
-          <p className="text-[11px] text-slate-500">
+          <p className="text-[11px] text-gray-400">
             Probing questions and information requests based on this deal's risk profile
           </p>
         </div>
         <div className="text-right">
-          <span className="text-lg font-bold font-mono text-slate-200">
+          <span className="text-lg font-bold font-mono text-gray-800">
             {completedCount}/{totalCount}
           </span>
-          <p className="text-[10px] text-slate-600">completed</p>
+          <p className="text-[10px] text-gray-400">completed</p>
         </div>
       </div>
 
       {/* Progress bar */}
-      <div className="h-1.5 bg-white/[0.04] rounded-full overflow-hidden">
+      <div className="h-1.5 bg-gray-50 rounded-full overflow-hidden">
         <div
           className="h-full rounded-full transition-all duration-500 ease-out"
           style={{
@@ -302,14 +302,14 @@ export default function DueDiligenceChecklist({ inputs, metrics, riskScore }) {
               key={cat}
               onClick={() => setFilterCategory(cat)}
               className={`pill-btn px-2.5 py-1 rounded-lg text-[10px] font-medium flex items-center gap-1.5 ${
-                filterCategory === cat ? 'pill-btn-active' : 'text-slate-500'
+                filterCategory === cat ? 'pill-btn-active' : 'text-gray-400'
               }`}
             >
               {cat !== 'All' && (
-                <span className="text-slate-500">{CATEGORY_ICONS[cat]}</span>
+                <span className="text-gray-400">{CATEGORY_ICONS[cat]}</span>
               )}
               {cat}
-              <span className="text-[9px] text-slate-600">{count}</span>
+              <span className="text-[9px] text-gray-400">{count}</span>
             </button>
           );
         })}
@@ -327,8 +327,8 @@ export default function DueDiligenceChecklist({ inputs, metrics, riskScore }) {
               key={item.id}
               className={`rounded-xl border transition-all duration-200 ${
                 isChecked
-                  ? 'bg-white/[0.01] border-white/[0.04] opacity-60'
-                  : 'bg-white/[0.02] border-white/[0.06] hover:border-white/[0.1]'
+                  ? 'bg-white/[0.01] border-gray-200 opacity-60'
+                  : 'bg-gray-50 border-gray-200 hover:border-white/[0.1]'
               }`}
             >
               <div className="flex items-start gap-3 px-4 py-3">
@@ -354,12 +354,12 @@ export default function DueDiligenceChecklist({ inputs, metrics, riskScore }) {
                     <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider ${ps.bg} ${ps.text} border ${ps.border}`}>
                       {ps.label}
                     </span>
-                    <span className="text-[10px] text-slate-600 flex items-center gap-1">
+                    <span className="text-[10px] text-gray-400 flex items-center gap-1">
                       {CATEGORY_ICONS[item.category]}
                       {item.category}
                     </span>
                   </div>
-                  <p className={`text-[13px] leading-relaxed ${isChecked ? 'text-slate-500 line-through' : 'text-slate-300'}`}>
+                  <p className={`text-[13px] leading-relaxed ${isChecked ? 'text-gray-400 line-through' : 'text-gray-700'}`}>
                     {item.question}
                   </p>
                 </div>
@@ -367,7 +367,7 @@ export default function DueDiligenceChecklist({ inputs, metrics, riskScore }) {
                 {/* Expand button */}
                 <button
                   onClick={() => setExpandedId(isExpanded ? null : item.id)}
-                  className="mt-0.5 text-slate-600 hover:text-slate-400 transition-colors flex-shrink-0"
+                  className="mt-0.5 text-gray-400 hover:text-gray-500 transition-colors flex-shrink-0"
                 >
                   <svg
                     width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
@@ -381,9 +381,9 @@ export default function DueDiligenceChecklist({ inputs, metrics, riskScore }) {
               {/* Expanded rationale */}
               {isExpanded && (
                 <div className="px-4 pb-3 pl-12 animate-fade-in">
-                  <div className="rounded-lg bg-white/[0.02] px-3 py-2.5">
-                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Why this matters</span>
-                    <p className="text-[12px] text-slate-400 mt-1 leading-relaxed">{item.why}</p>
+                  <div className="rounded-lg bg-gray-50 px-3 py-2.5">
+                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Why this matters</span>
+                    <p className="text-[12px] text-gray-500 mt-1 leading-relaxed">{item.why}</p>
                   </div>
                 </div>
               )}
@@ -400,7 +400,7 @@ export default function DueDiligenceChecklist({ inputs, metrics, riskScore }) {
           </svg>
           <div>
             <p className="text-sm font-semibold text-emerald-400">All items addressed</p>
-            <p className="text-[11px] text-slate-500">Due diligence checklist complete for this screening</p>
+            <p className="text-[11px] text-gray-400">Due diligence checklist complete for this screening</p>
           </div>
         </div>
       )}

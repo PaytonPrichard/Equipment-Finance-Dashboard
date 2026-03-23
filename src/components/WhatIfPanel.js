@@ -12,7 +12,7 @@ function ScoreBadge({ score, baseScore }) {
   return (
     <div className="text-center">
       <span className={`text-3xl font-bold font-mono ${color}`}>{score}</span>
-      <span className="text-sm text-slate-500 font-mono">/100</span>
+      <span className="text-sm text-gray-400 font-mono">/100</span>
       {delta !== 0 && (
         <div className={`text-sm font-mono font-semibold mt-0.5 ${delta > 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
           {delta > 0 ? '+' : ''}{delta} pts
@@ -27,15 +27,15 @@ function SliderRow({ label, value, min, max, step, formatFn, onChange, originalV
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">{label}</span>
+        <span className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">{label}</span>
         <div className="flex items-center gap-2">
-          <span className={`text-sm font-mono font-semibold ${changed ? 'text-gold-400' : 'text-slate-300'}`}>
+          <span className={`text-sm font-mono font-semibold ${changed ? 'text-gray-600' : 'text-gray-700'}`}>
             {formatFn(value)}
           </span>
           {changed && (
             <button
               onClick={() => onChange(originalValue)}
-              className="text-[10px] text-slate-600 hover:text-slate-400 transition-colors"
+              className="text-[10px] text-gray-400 hover:text-gray-500 transition-colors"
               title="Reset to original"
             >
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -58,7 +58,7 @@ function SliderRow({ label, value, min, max, step, formatFn, onChange, originalV
           background: `linear-gradient(to right, rgba(59,130,246,0.5) 0%, rgba(59,130,246,0.5) ${((value - min) / (max - min)) * 100}%, rgba(148,163,184,0.1) ${((value - min) / (max - min)) * 100}%, rgba(148,163,184,0.1) 100%)`,
         }}
       />
-      <div className="flex justify-between text-[9px] text-slate-700">
+      <div className="flex justify-between text-[9px] text-gray-300">
         <span>{formatFn(min)}</span>
         <span>{formatFn(max)}</span>
       </div>
@@ -116,7 +116,7 @@ export default function WhatIfPanel({ inputs, metrics: baseMetrics, riskScore: b
       {/* Collapsed header / toggle */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full px-6 py-4 flex items-center justify-between hover:bg-white/[0.02] transition-colors"
+        className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
       >
         <div className="flex items-center gap-3">
           <div className="w-7 h-7 rounded-lg bg-violet-500/10 flex items-center justify-center">
@@ -125,10 +125,10 @@ export default function WhatIfPanel({ inputs, metrics: baseMetrics, riskScore: b
             </svg>
           </div>
           <div className="text-left">
-            <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+            <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
               What-If Scenarios
             </h3>
-            <p className="text-[11px] text-slate-500">
+            <p className="text-[11px] text-gray-400">
               Adjust key parameters and see how the score changes
             </p>
           </div>
@@ -140,7 +140,7 @@ export default function WhatIfPanel({ inputs, metrics: baseMetrics, riskScore: b
             </span>
           )}
           <svg
-            width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-slate-500"
+            width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-gray-400"
             strokeWidth="2"
             style={{ transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s ease' }}
           >
@@ -155,16 +155,16 @@ export default function WhatIfPanel({ inputs, metrics: baseMetrics, riskScore: b
           {/* Score comparison */}
           <div className="grid grid-cols-3 gap-4 items-center">
             <div className="text-center">
-              <p className="text-[10px] text-slate-600 uppercase tracking-wider mb-1">Current</p>
+              <p className="text-[10px] text-gray-400 uppercase tracking-wider mb-1">Current</p>
               <ScoreBadge score={baseRiskScore.composite} baseScore={baseRiskScore.composite} />
             </div>
             <div className="flex justify-center">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-slate-600" strokeWidth="1.5">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-gray-400" strokeWidth="1.5">
                 <path d="M5 12h14M12 5l7 7-7 7" />
               </svg>
             </div>
             <div className="text-center">
-              <p className="text-[10px] text-slate-600 uppercase tracking-wider mb-1">Adjusted</p>
+              <p className="text-[10px] text-gray-400 uppercase tracking-wider mb-1">Adjusted</p>
               <ScoreBadge score={adjRiskScore.composite} baseScore={baseRiskScore.composite} />
             </div>
           </div>
@@ -239,15 +239,15 @@ export default function WhatIfPanel({ inputs, metrics: baseMetrics, riskScore: b
                 const improved = m.better(m.adj, m.base);
                 const changed = Math.abs(m.adj - m.base) > 0.005;
                 return (
-                  <div key={m.label} className="bg-white/[0.02] rounded-xl px-3 py-2.5">
-                    <span className="text-[10px] text-slate-600">{m.label}</span>
+                  <div key={m.label} className="bg-gray-50 rounded-xl px-3 py-2.5">
+                    <span className="text-[10px] text-gray-400">{m.label}</span>
                     <p className={`font-mono text-sm font-semibold ${
-                      !changed ? 'text-slate-300' : improved ? 'text-emerald-400' : 'text-rose-400'
+                      !changed ? 'text-gray-700' : improved ? 'text-emerald-400' : 'text-rose-400'
                     }`}>
                       {m.format(m.adj)}
                     </p>
                     {changed && (
-                      <p className="text-[10px] text-slate-600 font-mono">
+                      <p className="text-[10px] text-gray-400 font-mono">
                         was {m.format(m.base)}
                       </p>
                     )}
@@ -262,7 +262,7 @@ export default function WhatIfPanel({ inputs, metrics: baseMetrics, riskScore: b
             <div className="flex justify-end">
               <button
                 onClick={resetAll}
-                className="pill-btn px-3 py-1.5 rounded-lg text-[11px] font-medium text-slate-500 hover:text-slate-300 flex items-center gap-1.5"
+                className="pill-btn px-3 py-1.5 rounded-lg text-[11px] font-medium text-gray-400 hover:text-gray-700 flex items-center gap-1.5"
               >
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                   <polyline points="1 4 1 10 7 10" />

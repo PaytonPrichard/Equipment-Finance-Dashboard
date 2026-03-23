@@ -42,10 +42,10 @@ export default function StressTestPanel({ stressResults }) {
     <div className="glass-card rounded-2xl p-6">
       {/* Header */}
       <div className="mb-5">
-        <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">
+        <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">
           Sensitivity Analysis
         </h3>
-        <p className="text-[11px] text-slate-500">
+        <p className="text-[11px] text-gray-400">
           EBITDA stress scenarios — same debt service obligations
         </p>
       </div>
@@ -54,11 +54,11 @@ export default function StressTestPanel({ stressResults }) {
       <div className="space-y-2">
         {/* Column Headers */}
         <div className="grid grid-cols-[1.4fr_0.9fr_0.7fr_0.6fr_0.3fr] gap-3 px-3 pb-1">
-          <span className="text-[10px] text-slate-600">Scenario</span>
-          <span className="text-[10px] text-slate-600">EBITDA</span>
-          <span className="text-[10px] text-slate-600">DSCR</span>
-          <span className="text-[10px] text-slate-600">Score</span>
-          <span className="text-[10px] text-slate-600 text-center">Status</span>
+          <span className="text-[10px] text-gray-400">Scenario</span>
+          <span className="text-[10px] text-gray-400">EBITDA</span>
+          <span className="text-[10px] text-gray-400">DSCR</span>
+          <span className="text-[10px] text-gray-400">Score</span>
+          <span className="text-[10px] text-gray-400 text-center">Status</span>
         </div>
 
         {/* Rows */}
@@ -67,25 +67,25 @@ export default function StressTestPanel({ stressResults }) {
           return (
             <div
               key={i}
-              className="bg-white/[0.02] rounded-xl grid grid-cols-[1.4fr_0.9fr_0.7fr_0.6fr_0.3fr] gap-3 items-center px-3 py-2.5"
+              className="bg-gray-50 rounded-xl grid grid-cols-[1.4fr_0.9fr_0.7fr_0.6fr_0.3fr] gap-3 items-center px-3 py-2.5"
             >
               <div>
-                <span className="font-mono font-semibold text-sm text-slate-200">
+                <span className="font-mono font-semibold text-sm text-gray-800">
                   {row.label}
                 </span>
                 {row.decline > 0 && (
-                  <span className="text-[10px] text-slate-600 ml-1.5">
+                  <span className="text-[10px] text-gray-400 ml-1.5">
                     -{(row.decline * 100).toFixed(0)}%
                   </span>
                 )}
               </div>
-              <span className="font-mono font-semibold text-sm text-slate-200">
+              <span className="font-mono font-semibold text-sm text-gray-800">
                 {formatCurrency(row.ebitda)}
               </span>
               <span className={`font-mono font-semibold text-sm ${color.text}`}>
                 {row.dscr.toFixed(2)}x
               </span>
-              <span className="font-mono font-semibold text-sm text-slate-200">
+              <span className="font-mono font-semibold text-sm text-gray-800">
                 {row.score}
               </span>
               <div className="flex justify-center">
@@ -98,7 +98,7 @@ export default function StressTestPanel({ stressResults }) {
 
       {/* Mini Bar Chart */}
       <div className="mt-6 mb-2">
-        <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3">
+        <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">
           DSCR Comparison
         </h4>
         <div className="space-y-2">
@@ -107,10 +107,10 @@ export default function StressTestPanel({ stressResults }) {
             const widthPct = Math.max((row.dscr / maxDscr) * 100, 2);
             return (
               <div key={i} className="flex items-center gap-3">
-                <span className="text-[10px] text-slate-600 w-28 truncate flex-shrink-0">
+                <span className="text-[10px] text-gray-400 w-28 truncate flex-shrink-0">
                   {row.label}
                 </span>
-                <div className="flex-1 h-5 bg-white/[0.02] rounded-lg overflow-hidden relative">
+                <div className="flex-1 h-5 bg-gray-50 rounded-lg overflow-hidden relative">
                   <div
                     className={`h-full ${color.bar} rounded-lg`}
                     style={{ width: `${widthPct}%`, transition: 'width 0.6s ease' }}
@@ -136,7 +136,7 @@ export default function StressTestPanel({ stressResults }) {
           <div className="flex-1 relative">
             {maxDscr > 0 && (
               <span
-                className="absolute text-[9px] text-slate-600 -translate-x-1/2"
+                className="absolute text-[9px] text-gray-400 -translate-x-1/2"
                 style={{ left: `${(1.0 / maxDscr) * 100}%` }}
               >
                 1.0x
@@ -148,8 +148,8 @@ export default function StressTestPanel({ stressResults }) {
       </div>
 
       {/* Note */}
-      <div className="mt-4 px-3 py-2 rounded-lg bg-white/[0.02]">
-        <p className="text-[10px] text-slate-600">
+      <div className="mt-4 px-3 py-2 rounded-lg bg-gray-50">
+        <p className="text-[10px] text-gray-400">
           DSCR below 1.0x indicates inability to service debt from operating cash flow
         </p>
       </div>

@@ -86,14 +86,14 @@ function CustomTooltip({ active, payload, variable }) {
   const data = payload[0].payload;
   const scoreColor = getScoreColor(data.score);
   return (
-    <div className="bg-slate-800 border border-slate-700/50 rounded-xl px-3 py-2.5 shadow-2xl">
-      <p className="text-xs font-semibold text-slate-200">
+    <div className="bg-gray-100 border border-gray-200/50 rounded-xl px-3 py-2.5 shadow-2xl">
+      <p className="text-xs font-semibold text-gray-800">
         {variable.label}: {formatAdjustedValue(variable, data.adjustedValue)}
       </p>
-      <p className="text-xs text-slate-400 mt-0.5">
-        Adjustment: <span className="text-gold-400 font-mono font-medium">{data.label}</span>
+      <p className="text-xs text-gray-500 mt-0.5">
+        Adjustment: <span className="text-gray-600 font-mono font-medium">{data.label}</span>
       </p>
-      <p className="text-xs text-slate-400 mt-0.5">
+      <p className="text-xs text-gray-500 mt-0.5">
         Risk Score:{' '}
         <span className="font-mono font-semibold" style={{ color: scoreColor }}>
           {data.score}
@@ -168,10 +168,10 @@ export default function SensitivityChart({ inputs, sofr = DEFAULT_SOFR }) {
     <div className="glass-card rounded-2xl p-6">
       {/* Header */}
       <div className="mb-5">
-        <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">
+        <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">
           Risk Score Sensitivity
         </h3>
-        <p className="text-[11px] text-slate-500">
+        <p className="text-[11px] text-gray-400">
           How the risk score changes as a key variable is adjusted
         </p>
       </div>
@@ -184,8 +184,8 @@ export default function SensitivityChart({ inputs, sofr = DEFAULT_SOFR }) {
             onClick={() => setSelectedVar(v.key)}
             className={`px-3 py-1.5 rounded-lg text-[11px] font-medium transition-all ${
               selectedVar === v.key
-                ? 'bg-gold-500/20 text-gold-400 border border-gold-500/30'
-                : 'bg-white/[0.03] text-slate-500 border border-transparent hover:bg-white/[0.05] hover:text-slate-400'
+                ? 'bg-gold-500/20 text-gray-600 border border-gold-500/30'
+                : 'bg-gray-50 text-gray-400 border border-transparent hover:bg-white/[0.05] hover:text-gray-500'
             }`}
           >
             {v.label}
@@ -306,13 +306,13 @@ export default function SensitivityChart({ inputs, sofr = DEFAULT_SOFR }) {
 
       {/* Sensitivity Summary */}
       {sensitivity && (
-        <div className="mt-4 px-3 py-2.5 rounded-lg bg-white/[0.02]">
-          <p className="text-[11px] text-slate-400">
-            <span className="text-slate-300 font-medium">
+        <div className="mt-4 px-3 py-2.5 rounded-lg bg-gray-50">
+          <p className="text-[11px] text-gray-500">
+            <span className="text-gray-700 font-medium">
               Most sensitive to {sensitivity.variable.label}:
             </span>{' '}
             score drops from{' '}
-            <span className="font-mono font-semibold text-gold-400">
+            <span className="font-mono font-semibold text-gray-600">
               {sensitivity.baseScore}
             </span>{' '}
             to{' '}

@@ -149,10 +149,7 @@ body {
   box-shadow: 0 0 30px rgba(212, 168, 67, 0.1), 0 0 60px rgba(212, 168, 67, 0.05);
 }
 
-.glow-score-strong { box-shadow: 0 0 40px rgba(16,185,129,0.1); }
-.glow-score-moderate { box-shadow: 0 0 40px rgba(132,204,22,0.1); }
-.glow-score-borderline { box-shadow: 0 0 40px rgba(245,158,11,0.1); }
-.glow-score-weak { box-shadow: 0 0 40px rgba(239,68,68,0.1); }
+/* Glow classes removed (light theme) */
 
 /* ---- Company search dropdown ---- */
 .company-dropdown {

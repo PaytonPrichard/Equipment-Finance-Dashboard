@@ -48,7 +48,7 @@ function scoreSimilarity(current, candidate) {
 
 const OUTCOME_STYLES = {
   Performing: { bg: 'bg-emerald-500/10', text: 'text-emerald-400', border: 'border-emerald-500/20' },
-  'Paid Off': { bg: 'bg-gold-500/10', text: 'text-gold-400', border: 'border-gold-500/20' },
+  'Paid Off': { bg: 'bg-gold-500/10', text: 'text-gray-600', border: 'border-gold-500/20' },
   Watchlist: { bg: 'bg-amber-500/10', text: 'text-amber-400', border: 'border-amber-500/20' },
   Defaulted: { bg: 'bg-rose-500/10', text: 'text-rose-400', border: 'border-rose-500/20' },
 };
@@ -85,10 +85,10 @@ export default function ComparableDeals({ inputs, metrics, riskScore, sofr = DEF
   return (
     <div className="glass-card rounded-2xl p-6 space-y-5">
       <div>
-        <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">
+        <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">
           Comparable Historical Deals
         </h3>
-        <p className="text-[11px] text-slate-500">
+        <p className="text-[11px] text-gray-400">
           Most similar deals from portfolio history — matched by industry, equipment, size, and credit
         </p>
       </div>
@@ -102,14 +102,14 @@ export default function ComparableDeals({ inputs, metrics, riskScore, sofr = DEF
           : 'bg-gold-500/[0.06] border border-gold-500/15'
       }`}>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-          className={performingCount > troubledCount ? 'text-emerald-400' : troubledCount > performingCount ? 'text-amber-400' : 'text-gold-400'}
+          className={performingCount > troubledCount ? 'text-emerald-400' : troubledCount > performingCount ? 'text-amber-400' : 'text-gray-600'}
           strokeWidth="2"
         >
           <circle cx="12" cy="12" r="10" />
           <path d="M12 16v-4M12 8h.01" />
         </svg>
         <p className={`text-[12px] leading-relaxed ${
-          performingCount > troubledCount ? 'text-emerald-300' : troubledCount > performingCount ? 'text-amber-300' : 'text-gold-300'
+          performingCount > troubledCount ? 'text-emerald-300' : troubledCount > performingCount ? 'text-amber-300' : 'text-gray-700'
         }`}>
           {performingCount > troubledCount
             ? `${performingCount} of ${comparables.length} comparable deals are performing or paid off — favorable precedent for this profile.`
@@ -126,23 +126,23 @@ export default function ComparableDeals({ inputs, metrics, riskScore, sofr = DEF
           const scoreDelta = riskScore.composite - deal.rs.composite;
 
           return (
-            <div key={deal.id} className="bg-white/[0.02] rounded-xl border border-white/[0.06] p-4 hover:border-white/[0.1] transition-all">
+            <div key={deal.id} className="bg-gray-50 rounded-xl border border-gray-200 p-4 hover:border-white/[0.1] transition-all">
               <div className="flex items-start justify-between mb-3">
                 <div>
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="text-sm font-semibold text-slate-200">{deal.inputs.companyName || deal.id}</span>
+                    <span className="text-sm font-semibold text-gray-800">{deal.inputs.companyName || deal.id}</span>
                     <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold uppercase ${os.bg} ${os.text} border ${os.border}`}>
                       {deal.outcome.status}
                     </span>
                   </div>
-                  <p className="text-[11px] text-slate-500">
+                  <p className="text-[11px] text-gray-400">
                     {deal.inputs.industrySector} &middot; {deal.inputs.equipmentType} &middot; {formatCurrency(deal.inputs.equipmentCost)}
                   </p>
                 </div>
                 <div className="text-right">
                   <div className="flex items-center gap-1">
-                    <span className="text-[10px] text-slate-600">Match</span>
-                    <span className="text-sm font-bold font-mono text-slate-300">{deal.similarity}%</span>
+                    <span className="text-[10px] text-gray-400">Match</span>
+                    <span className="text-sm font-bold font-mono text-gray-700">{deal.similarity}%</span>
                   </div>
                 </div>
               </div>
@@ -150,8 +150,8 @@ export default function ComparableDeals({ inputs, metrics, riskScore, sofr = DEF
               {/* Metric comparison */}
               <div className="grid grid-cols-4 gap-3">
                 <div>
-                  <span className="text-[10px] text-slate-600">Score</span>
-                  <p className="font-mono text-sm font-semibold text-slate-200">
+                  <span className="text-[10px] text-gray-400">Score</span>
+                  <p className="font-mono text-sm font-semibold text-gray-800">
                     {deal.rs.composite}
                     {scoreDelta !== 0 && (
                       <span className={`text-[10px] ml-1 ${scoreDelta > 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
@@ -161,22 +161,22 @@ export default function ComparableDeals({ inputs, metrics, riskScore, sofr = DEF
                   </p>
                 </div>
                 <div>
-                  <span className="text-[10px] text-slate-600">DSCR</span>
-                  <p className="font-mono text-sm font-semibold text-slate-200">{formatRatio(deal.m.dscr)}</p>
+                  <span className="text-[10px] text-gray-400">DSCR</span>
+                  <p className="font-mono text-sm font-semibold text-gray-800">{formatRatio(deal.m.dscr)}</p>
                 </div>
                 <div>
-                  <span className="text-[10px] text-slate-600">Leverage</span>
-                  <p className="font-mono text-sm font-semibold text-slate-200">{formatRatio(deal.m.leverage)}</p>
+                  <span className="text-[10px] text-gray-400">Leverage</span>
+                  <p className="font-mono text-sm font-semibold text-gray-800">{formatRatio(deal.m.leverage)}</p>
                 </div>
                 <div>
-                  <span className="text-[10px] text-slate-600">Revenue</span>
-                  <p className="font-mono text-sm font-semibold text-slate-200">{formatCurrency(deal.inputs.annualRevenue)}</p>
+                  <span className="text-[10px] text-gray-400">Revenue</span>
+                  <p className="font-mono text-sm font-semibold text-gray-800">{formatCurrency(deal.inputs.annualRevenue)}</p>
                 </div>
               </div>
 
               {/* Closure date if available */}
               {deal.closedDate && (
-                <p className="text-[10px] text-slate-600 mt-2">
+                <p className="text-[10px] text-gray-400 mt-2">
                   Closed: {deal.closedDate}
                 </p>
               )}
@@ -185,7 +185,7 @@ export default function ComparableDeals({ inputs, metrics, riskScore, sofr = DEF
         })}
       </div>
 
-      <p className="text-[10px] text-slate-600 italic">
+      <p className="text-[10px] text-gray-400 italic">
         Comparability scored by industry, equipment type, deal size, credit rating, and revenue scale. Past performance is not indicative of future outcomes.
       </p>
     </div>

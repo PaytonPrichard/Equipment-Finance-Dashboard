@@ -45,7 +45,7 @@ function getMetricColor(status) {
     default:
       return {
         label: '',
-        text: 'text-slate-400',
+        text: 'text-gray-500',
         bg: 'bg-slate-500/[0.06]',
         border: 'border-slate-500/15',
         dot: 'bg-slate-400',
@@ -61,7 +61,7 @@ export default function MetricCard({ title, value, subtitle, status, flag, thres
   return (
     <div className={`metric-card rounded-2xl p-5 border ${c.bg} ${c.border}`}>
       <div className="flex items-start justify-between mb-1.5">
-        <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">
+        <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
           {title}
         </span>
         {c.label && (
@@ -74,12 +74,12 @@ export default function MetricCard({ title, value, subtitle, status, flag, thres
         {value}
       </p>
       {threshold && (
-        <p className="text-[10px] text-slate-600 font-mono mb-1">
+        <p className="text-[10px] text-gray-400 font-mono mb-1">
           {threshold}
         </p>
       )}
       {subtitle && (
-        <p className="text-[11px] text-slate-500 leading-snug">{subtitle}</p>
+        <p className="text-[11px] text-gray-400 leading-snug">{subtitle}</p>
       )}
       {flag && (
         <div className="mt-2.5 flex items-center gap-1.5 px-2 py-1 rounded-lg bg-amber-500/[0.06]">

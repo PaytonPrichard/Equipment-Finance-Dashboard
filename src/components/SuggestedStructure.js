@@ -7,37 +7,37 @@ export default function SuggestedStructure({ structure, sofr, sofrDate, sofrSour
 
   return (
     <div className="glass-card rounded-2xl p-6 space-y-5">
-      <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+      <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
         Suggested Deal Structure
       </h3>
 
       {/* Rate */}
       <div>
-        <span className="text-[11px] text-slate-500 font-medium">Screening Rate</span>
+        <span className="text-[11px] text-gray-400 font-medium">Screening Rate</span>
         <div className="flex items-baseline gap-3 mt-1">
           <span className="text-2xl font-bold font-mono text-gold-400">
             {(structure.screeningRate * 100).toFixed(2)}%
           </span>
-          <span className="text-xs text-slate-500">all-in</span>
+          <span className="text-xs text-gray-400">all-in</span>
         </div>
         {ri && (
           <div className="mt-3 grid grid-cols-2 md:grid-cols-4 gap-2">
             {[
-              { label: 'SOFR', value: `${((sofr || ri.sofr) * 100).toFixed(2)}%`, color: 'text-slate-300' },
-              { label: 'Base Spread', value: `+${ri.baseSpread} bps`, color: 'text-slate-300' },
+              { label: 'SOFR', value: `${((sofr || ri.sofr) * 100).toFixed(2)}%`, color: 'text-gray-700' },
+              { label: 'Base Spread', value: `+${ri.baseSpread} bps`, color: 'text-gray-700' },
               { label: 'Credit Adj.', value: `${ri.creditAdj >= 0 ? '+' : ''}${ri.creditAdj} bps`, color: ri.creditAdj <= 0 ? 'text-emerald-400' : 'text-amber-400' },
               { label: 'Industry Adj.', value: `${ri.industryAdj >= 0 ? '+' : ''}${ri.industryAdj} bps`, color: ri.industryAdj <= 0 ? 'text-emerald-400' : 'text-amber-400' },
             ].map((item) => (
-              <div key={item.label} className="bg-white/[0.02] rounded-xl px-3 py-2">
-                <span className="text-[10px] text-slate-600">{item.label}</span>
+              <div key={item.label} className="bg-gray-50 rounded-xl px-3 py-2">
+                <span className="text-[10px] text-gray-400">{item.label}</span>
                 <p className={`font-mono text-sm font-medium ${item.color}`}>{item.value}</p>
               </div>
             ))}
           </div>
         )}
-        <p className="text-xs text-slate-500 mt-2">
+        <p className="text-xs text-gray-400 mt-2">
           Indicative range:{' '}
-          <span className="font-mono text-slate-400">
+          <span className="font-mono text-gray-500">
             {(structure.rateRange[0] * 100).toFixed(2)}% – {(structure.rateRange[1] * 100).toFixed(2)}%
           </span>
         </p>
@@ -46,14 +46,14 @@ export default function SuggestedStructure({ structure, sofr, sofrDate, sofrSour
       {/* Structure Type */}
       <div>
         <div className="flex items-center gap-2 mb-1.5">
-          <span className="text-[11px] text-slate-500 font-medium">Structure</span>
+          <span className="text-[11px] text-gray-400 font-medium">Structure</span>
           {structure.structureType && (
             <span className="px-2 py-0.5 rounded-md bg-gold-500/10 border border-gold-500/15 text-[10px] font-bold text-gold-400 uppercase tracking-wider">
               {structure.structureType}
             </span>
           )}
         </div>
-        <p className="text-[13px] text-slate-300 leading-relaxed">
+        <p className="text-[13px] text-gray-700 leading-relaxed">
           {structure.structure}
         </p>
       </div>
@@ -61,10 +61,10 @@ export default function SuggestedStructure({ structure, sofr, sofrDate, sofrSour
       {/* Enhancements */}
       {structure.enhancements?.length > 0 && (
         <div>
-          <span className="text-[11px] text-slate-500 font-medium">Recommended Enhancements</span>
+          <span className="text-[11px] text-gray-400 font-medium">Recommended Enhancements</span>
           <ul className="mt-2 space-y-2">
             {structure.enhancements.map((enh, i) => (
-              <li key={i} className="flex items-start gap-2.5 text-[13px] text-slate-300">
+              <li key={i} className="flex items-start gap-2.5 text-[13px] text-gray-700">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-gold-400 mt-0.5 flex-shrink-0" strokeWidth="2.5">
                   <polyline points="9 11 12 14 22 4" />
                   <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
@@ -92,7 +92,7 @@ export default function SuggestedStructure({ structure, sofr, sofrDate, sofrSour
       )}
 
       {/* Footnote */}
-      <div className="text-[10px] text-slate-600 pt-3 border-t border-white/[0.04] space-y-1">
+      <div className="text-[10px] text-gray-400 pt-3 border-t border-gray-200 space-y-1">
         <p className="italic">
           Preliminary screening only. Final terms subject to full underwriting, credit committee approval, and documentation.
         </p>

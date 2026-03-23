@@ -36,10 +36,10 @@ function WeightSlider({ factorKey, label, value, onChange }) {
   return (
     <div className="space-y-1.5">
       <div className="flex items-center justify-between">
-        <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+        <span className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">
           {label}
         </span>
-        <span className="text-sm font-mono font-semibold text-slate-300">
+        <span className="text-sm font-mono font-semibold text-gray-700">
           {value}%
         </span>
       </div>
@@ -55,7 +55,7 @@ function WeightSlider({ factorKey, label, value, onChange }) {
           background: `linear-gradient(to right, rgba(212,168,67,0.5) 0%, rgba(212,168,67,0.5) ${pct}%, rgba(148,163,184,0.1) ${pct}%, rgba(148,163,184,0.1) 100%)`,
         }}
       />
-      <div className="flex justify-between text-[9px] text-slate-700">
+      <div className="flex justify-between text-[9px] text-gray-300">
         <span>0%</span>
         <span>40%</span>
       </div>
@@ -74,7 +74,7 @@ function ScorePreview({ score, baseScore }) {
   return (
     <div className="text-center">
       <span className={`text-3xl font-bold font-mono ${color}`}>{score}</span>
-      <span className="text-sm text-slate-500 font-mono">/100</span>
+      <span className="text-sm text-gray-400 font-mono">/100</span>
       {delta !== 0 && (
         <div className={`text-sm font-mono font-semibold mt-0.5 ${delta > 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
           {delta > 0 ? '+' : ''}{delta} pts
@@ -178,32 +178,32 @@ export default function ScoringWeights({ inputs, metrics, riskScore, onWeightsCh
       {/* Collapsed header / toggle */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full px-6 py-4 flex items-center justify-between hover:bg-white/[0.02] transition-colors"
+        className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
       >
         <div className="flex items-center gap-3">
           <div className="w-7 h-7 rounded-lg bg-gold-500/10 flex items-center justify-center">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-gold-400" strokeWidth="2">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-gray-600" strokeWidth="2">
               <circle cx="12" cy="12" r="3" />
               <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
             </svg>
           </div>
           <div className="text-left">
-            <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+            <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
               Scoring Weights
             </h3>
-            <p className="text-[11px] text-slate-500">
+            <p className="text-[11px] text-gray-400">
               Customize how risk factors contribute to the composite score
             </p>
           </div>
         </div>
         <div className="flex items-center gap-3">
           {hasCustom && !isOpen && (
-            <span className="text-[10px] font-semibold text-gold-400 bg-gold-500/10 px-2 py-0.5 rounded-full">
+            <span className="text-[10px] font-semibold text-gray-600 bg-gold-500/10 px-2 py-0.5 rounded-full">
               Custom
             </span>
           )}
           <svg
-            width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-slate-500"
+            width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-gray-400"
             strokeWidth="2"
             style={{ transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s ease' }}
           >
@@ -219,16 +219,16 @@ export default function ScoringWeights({ inputs, metrics, riskScore, onWeightsCh
           {riskScore && previewScore && (
             <div className="grid grid-cols-3 gap-4 items-center">
               <div className="text-center">
-                <p className="text-[10px] text-slate-600 uppercase tracking-wider mb-1">Default</p>
+                <p className="text-[10px] text-gray-400 uppercase tracking-wider mb-1">Default</p>
                 <ScorePreview score={riskScore.composite} baseScore={riskScore.composite} />
               </div>
               <div className="flex justify-center">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-slate-600" strokeWidth="1.5">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-gray-400" strokeWidth="1.5">
                   <path d="M5 12h14M12 5l7 7-7 7" />
                 </svg>
               </div>
               <div className="text-center">
-                <p className="text-[10px] text-slate-600 uppercase tracking-wider mb-1">Weighted</p>
+                <p className="text-[10px] text-gray-400 uppercase tracking-wider mb-1">Weighted</p>
                 <ScorePreview score={previewScore.composite} baseScore={riskScore.composite} />
               </div>
             </div>
@@ -240,7 +240,7 @@ export default function ScoringWeights({ inputs, metrics, riskScore, onWeightsCh
               ? 'bg-emerald-500/5 border border-emerald-500/20'
               : 'bg-amber-500/5 border border-amber-500/20'
           }`}>
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-500">
               Total Weight
             </span>
             <div className="flex items-center gap-2">
@@ -287,12 +287,12 @@ export default function ScoringWeights({ inputs, metrics, riskScore, onWeightsCh
                   factorScore >= 35 ? 'text-amber-400' :
                   'text-rose-400';
                 return (
-                  <div key={key} className="bg-white/[0.02] rounded-xl px-3 py-2.5">
-                    <span className="text-[10px] text-slate-600">{FACTOR_LABELS[key]}</span>
+                  <div key={key} className="bg-gray-50 rounded-xl px-3 py-2.5">
+                    <span className="text-[10px] text-gray-400">{FACTOR_LABELS[key]}</span>
                     <p className={`font-mono text-sm font-semibold ${color}`}>
                       {factorScore}
                     </p>
-                    <p className="text-[10px] text-slate-600 font-mono">
+                    <p className="text-[10px] text-gray-400 font-mono">
                       {weights[key]}% weight
                     </p>
                   </div>
@@ -306,7 +306,7 @@ export default function ScoringWeights({ inputs, metrics, riskScore, onWeightsCh
             <div className="flex justify-end">
               <button
                 onClick={resetDefaults}
-                className="pill-btn px-3 py-1.5 rounded-lg text-[11px] font-medium text-slate-500 hover:text-slate-300 flex items-center gap-1.5"
+                className="pill-btn px-3 py-1.5 rounded-lg text-[11px] font-medium text-gray-400 hover:text-gray-700 flex items-center gap-1.5"
               >
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                   <polyline points="1 4 1 10 7 10" />

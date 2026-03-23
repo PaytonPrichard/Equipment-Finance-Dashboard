@@ -7,11 +7,11 @@ function CriteriaInput({ label, value, onChange, suffix, min, max, step, tip }) 
   return (
     <div>
       <div className="flex items-center justify-between mb-1.5">
-        <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider">{label}</span>
+        <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">{label}</span>
         {tip && (
           <span className="relative group">
-            <span className="w-3.5 h-3.5 rounded-full bg-slate-700/60 text-slate-500 text-[9px] font-bold inline-flex items-center justify-center cursor-help hover:text-gold-400 transition-colors">?</span>
-            <span className="absolute bottom-full right-0 mb-2 px-2.5 py-2 rounded-lg bg-slate-800 border border-slate-700/50 text-[10px] text-slate-300 w-48 leading-relaxed shadow-xl opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity z-50">
+            <span className="w-3.5 h-3.5 rounded-full bg-gray-200/60 text-gray-400 text-[9px] font-bold inline-flex items-center justify-center cursor-help hover:text-gray-600 transition-colors">?</span>
+            <span className="absolute bottom-full right-0 mb-2 px-2.5 py-2 rounded-lg bg-gray-100 border border-gray-200/50 text-[10px] text-gray-700 w-48 leading-relaxed shadow-xl opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity z-50">
               {tip}
             </span>
           </span>
@@ -29,7 +29,7 @@ function CriteriaInput({ label, value, onChange, suffix, min, max, step, tip }) 
           style={suffix ? { paddingRight: '2.5rem' } : undefined}
         />
         {suffix && (
-          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs font-medium">{suffix}</span>
+          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs font-medium">{suffix}</span>
         )}
       </div>
     </div>
@@ -88,32 +88,32 @@ export default function ScreeningCriteria({ activeModule, onCriteriaChange }) {
     <div className="glass-card rounded-2xl overflow-hidden">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full px-6 py-4 flex items-center justify-between hover:bg-white/[0.02] transition-colors"
+        className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
       >
         <div className="flex items-center gap-3">
           <div className="w-7 h-7 rounded-lg bg-gold-500/10 flex items-center justify-center">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-gold-400" strokeWidth="2">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-gray-600" strokeWidth="2">
               <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
               <polyline points="22 4 12 14.01 9 11.01" />
             </svg>
           </div>
           <div className="text-left">
-            <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+            <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
               Screening Policy
             </h3>
-            <p className="text-[11px] text-slate-500">
+            <p className="text-[11px] text-gray-400">
               Configure pass/flag/fail thresholds for deal screening
             </p>
           </div>
         </div>
         <div className="flex items-center gap-3">
           {hasCustom && !isOpen && (
-            <span className="text-[10px] font-semibold text-gold-400 bg-gold-500/10 px-2 py-0.5 rounded-full">
+            <span className="text-[10px] font-semibold text-gray-600 bg-gold-500/10 px-2 py-0.5 rounded-full">
               Custom
             </span>
           )}
           <svg
-            width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-slate-500"
+            width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-gray-400"
             strokeWidth="2"
             style={{ transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s ease' }}
           >
@@ -126,7 +126,7 @@ export default function ScreeningCriteria({ activeModule, onCriteriaChange }) {
         <div className="px-6 pb-6 space-y-5 animate-fade-in">
           {/* Score Thresholds */}
           <div>
-            <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">
+            <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3">
               Score Thresholds
             </h4>
             <div className="grid grid-cols-2 gap-4">
@@ -146,7 +146,7 @@ export default function ScreeningCriteria({ activeModule, onCriteriaChange }) {
               />
             </div>
             {/* Visual threshold bar */}
-            <div className="mt-3 h-2 rounded-full bg-slate-800 relative overflow-hidden">
+            <div className="mt-3 h-2 rounded-full bg-gray-100 relative overflow-hidden">
               <div
                 className="absolute left-0 top-0 h-full bg-rose-500/40 rounded-l-full"
                 style={{ width: `${criteria.flagScore}%` }}
@@ -169,7 +169,7 @@ export default function ScreeningCriteria({ activeModule, onCriteriaChange }) {
 
           {/* Shared Metric Limits */}
           <div>
-            <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">
+            <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3">
               Credit Policy Limits
             </h4>
             <div className="grid grid-cols-2 gap-4">
@@ -207,7 +207,7 @@ export default function ScreeningCriteria({ activeModule, onCriteriaChange }) {
           {/* Module-specific limits */}
           {isEquipment && (
             <div>
-              <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">
+              <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3">
                 Equipment Limits
               </h4>
               <div className="grid grid-cols-2 gap-4">
@@ -231,7 +231,7 @@ export default function ScreeningCriteria({ activeModule, onCriteriaChange }) {
 
           {isAR && (
             <div>
-              <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">
+              <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3">
                 Receivables Limits
               </h4>
               <div className="grid grid-cols-2 gap-4">
@@ -255,7 +255,7 @@ export default function ScreeningCriteria({ activeModule, onCriteriaChange }) {
 
           {isInventory && (
             <div>
-              <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">
+              <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3">
                 Inventory Limits
               </h4>
               <div className="grid grid-cols-2 gap-4">
@@ -282,7 +282,7 @@ export default function ScreeningCriteria({ activeModule, onCriteriaChange }) {
             <div className="flex justify-end">
               <button
                 onClick={resetDefaults}
-                className="pill-btn px-3 py-1.5 rounded-lg text-[11px] font-medium text-slate-500 hover:text-slate-300 flex items-center gap-1.5"
+                className="pill-btn px-3 py-1.5 rounded-lg text-[11px] font-medium text-gray-400 hover:text-gray-700 flex items-center gap-1.5"
               >
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                   <polyline points="1 4 1 10 7 10" />

@@ -71,14 +71,14 @@ export default function IndustryBenchmarks({ inputs, metrics, riskScore, sofr = 
   if (!industryAverages) {
     return (
       <div className="glass-card rounded-2xl p-6">
-        <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">
+        <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">
           Industry Benchmarks
         </h3>
-        <div className="mt-4 rounded-xl bg-white/[0.02] border border-white/[0.06] p-4 text-center">
-          <p className="text-sm text-slate-400">
-            No historical data for <span className="font-semibold text-slate-300">{industry}</span>
+        <div className="mt-4 rounded-xl bg-gray-50 border border-gray-200 p-4 text-center">
+          <p className="text-sm text-gray-500">
+            No historical data for <span className="font-semibold text-gray-700">{industry}</span>
           </p>
-          <p className="text-[11px] text-slate-600 mt-1">
+          <p className="text-[11px] text-gray-400 mt-1">
             Benchmarks will appear once comparable deals exist in the portfolio.
           </p>
         </div>
@@ -90,12 +90,12 @@ export default function IndustryBenchmarks({ inputs, metrics, riskScore, sofr = 
     <div className="glass-card rounded-2xl p-6 space-y-5">
       {/* Header */}
       <div>
-        <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">
+        <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">
           Industry Benchmarks
         </h3>
-        <p className="text-[11px] text-slate-500">
+        <p className="text-[11px] text-gray-400">
           Comparison against {dealCount} historical {industry} deal{dealCount !== 1 ? 's' : ''} in the portfolio
-          {currentName && <span className="text-slate-600"> (excluding current company)</span>}
+          {currentName && <span className="text-gray-400"> (excluding current company)</span>}
         </p>
         {smallSample && (
           <div className="mt-2 flex items-center gap-2 px-3 py-2 rounded-lg bg-amber-500/[0.06] border border-amber-500/15">
@@ -115,10 +115,10 @@ export default function IndustryBenchmarks({ inputs, metrics, riskScore, sofr = 
       <div className="space-y-2">
         {/* Column Headers */}
         <div className="grid grid-cols-[1.2fr_0.8fr_0.8fr_0.5fr] gap-3 px-3 pb-1">
-          <span className="text-[10px] text-slate-600">Metric</span>
-          <span className="text-[10px] text-slate-600 text-right">This Deal</span>
-          <span className="text-[10px] text-slate-600 text-right">Industry Avg</span>
-          <span className="text-[10px] text-slate-600 text-center">vs Avg</span>
+          <span className="text-[10px] text-gray-400">Metric</span>
+          <span className="text-[10px] text-gray-400 text-right">This Deal</span>
+          <span className="text-[10px] text-gray-400 text-right">Industry Avg</span>
+          <span className="text-[10px] text-gray-400 text-center">vs Avg</span>
         </div>
 
         {/* Rows */}
@@ -132,7 +132,7 @@ export default function IndustryBenchmarks({ inputs, metrics, riskScore, sofr = 
 
           let arrowColor, arrowChar;
           if (isNeutral) {
-            arrowColor = 'text-slate-500';
+            arrowColor = 'text-gray-400';
             arrowChar = '—';
           } else if (isBetter) {
             arrowColor = 'text-emerald-400';
@@ -152,13 +152,13 @@ export default function IndustryBenchmarks({ inputs, metrics, riskScore, sofr = 
           return (
             <div
               key={def.key}
-              className="bg-white/[0.02] rounded-xl grid grid-cols-[1.2fr_0.8fr_0.8fr_0.5fr] gap-3 items-center px-3 py-2.5"
+              className="bg-gray-50 rounded-xl grid grid-cols-[1.2fr_0.8fr_0.8fr_0.5fr] gap-3 items-center px-3 py-2.5"
             >
-              <span className="text-sm text-slate-300 font-medium">{def.label}</span>
-              <span className="font-mono font-semibold text-sm text-slate-200 text-right">
+              <span className="text-sm text-gray-700 font-medium">{def.label}</span>
+              <span className="font-mono font-semibold text-sm text-gray-800 text-right">
                 {def.format(current)}
               </span>
-              <span className="font-mono font-semibold text-sm text-slate-400 text-right">
+              <span className="font-mono font-semibold text-sm text-gray-500 text-right">
                 {def.format(avg)}
               </span>
               <div className="flex justify-center">
@@ -175,20 +175,20 @@ export default function IndustryBenchmarks({ inputs, metrics, riskScore, sofr = 
       <div className="flex items-center gap-4 px-3 pt-1">
         <div className="flex items-center gap-1.5">
           <span className="text-emerald-400 font-mono text-xs font-bold">{'\u25B2'}</span>
-          <span className="text-[10px] text-slate-600">Better than avg</span>
+          <span className="text-[10px] text-gray-400">Better than avg</span>
         </div>
         <div className="flex items-center gap-1.5">
           <span className="text-rose-400 font-mono text-xs font-bold">{'\u25BC'}</span>
-          <span className="text-[10px] text-slate-600">Worse than avg</span>
+          <span className="text-[10px] text-gray-400">Worse than avg</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="text-slate-500 font-mono text-xs font-bold">—</span>
-          <span className="text-[10px] text-slate-600">At average</span>
+          <span className="text-gray-400 font-mono text-xs font-bold">—</span>
+          <span className="text-[10px] text-gray-400">At average</span>
         </div>
       </div>
 
       {/* Footnote */}
-      <p className="text-[10px] text-slate-600 italic">
+      <p className="text-[10px] text-gray-400 italic">
         Averages based on {dealCount} historical {industry} deal{dealCount !== 1 ? 's' : ''}. Benchmarks are for screening context only and do not constitute credit guidance.
       </p>
     </div>
