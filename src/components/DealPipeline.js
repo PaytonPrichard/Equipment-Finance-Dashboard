@@ -414,7 +414,7 @@ export default function DealPipeline({ onLoadDeal, currentInputs, currentScore, 
       <div className="flex gap-3 overflow-x-auto pb-2" style={{ minHeight: 320 }}>
         {STAGES.map((stage) => {
           const ss = STAGE_STYLES[stage.key];
-          const allColumnDeals = grouped[stage.key];
+          const allColumnDeals = grouped[stage.key] || [];
           const isExpanded = expandedStages[stage.key];
           const columnDeals = isExpanded ? allColumnDeals : allColumnDeals.slice(0, DEALS_PER_STAGE);
           const hasMore = allColumnDeals.length > DEALS_PER_STAGE && !isExpanded;
@@ -437,8 +437,9 @@ export default function DealPipeline({ onLoadDeal, currentInputs, currentScore, 
                 </div>
                 {(() => {
                   const colValue = allColumnDeals.reduce((sum, d) => {
-                    const v = d.inputs?.equipmentCost || d.inputs?.totalAROutstanding || d.inputs?.totalInventory || 0;
-                    return sum + v;
+                    if (!d.inputs) return sum;
+                    const v = d.inputs.equipmentCost || d.inputs.totalAROutstanding || d.inputs.totalInventory || 0;
+                    return sum + (typeof v === 'number' ? v : 0);
                   }, 0);
                   return colValue > 0 ? (
                     <p className="text-[9px] text-gray-400 mt-1 font-mono">
