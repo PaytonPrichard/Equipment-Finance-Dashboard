@@ -160,8 +160,8 @@ export default function App() {
       <div className="min-h-screen bg-[#f8f9fa] flex flex-col items-center justify-center">
         <h1 className="text-2xl font-extrabold text-gray-900 tracking-tight mb-6">Tranche</h1>
         <div className="flex items-center gap-3">
-          <div className="w-5 h-5 border-2 border-gold-500/30 border-t-gold-500 rounded-full animate-spin" />
-          <span className="text-sm text-slate-400 font-medium">Loading...</span>
+          <div className="w-5 h-5 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin" />
+          <span className="text-sm text-gray-400 font-medium">Loading...</span>
         </div>
       </div>
     );
