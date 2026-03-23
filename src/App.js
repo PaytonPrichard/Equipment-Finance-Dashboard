@@ -822,6 +822,7 @@ function AuthenticatedApp({ profile, user }) {
                       <TutorialBeacon id="score" title="Risk Score" description="75+ is strong, 55-74 moderate, below 35 weak." position="left" />
                     </div>
                     <div className={`glass-card rounded-2xl p-5 flex flex-col items-center justify-center ${getScoreGlow(riskScore.composite)}`}>
+                      <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Risk Score</h3>
                       <RiskScoreGauge score={riskScore.composite} />
                     </div>
                     <div className="glass-card rounded-2xl p-5">

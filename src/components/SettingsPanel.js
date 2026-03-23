@@ -45,6 +45,8 @@ export default function SettingsPanel({ isOpen, onClose, onCriteriaChange, activ
   const userId = user?.id;
   const orgId = profile?.org_id;
   const isAdmin = can('org.manage_users');
+  const [editingName, setEditingName] = useState(false);
+  const [nameValue, setNameValue] = useState('');
 
   // Team state
   const [members, setMembers] = useState([]);
@@ -216,7 +218,45 @@ export default function SettingsPanel({ isOpen, onClose, onCriteriaChange, activ
                 <div className="space-y-3">
                   <div className="flex items-center justify-between py-2">
                     <span className="text-[12px] text-slate-400">Name</span>
-                    <span className="text-[12px] text-white font-medium">{profile?.full_name || 'Not set'}</span>
+                    {editingName ? (
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          value={nameValue}
+                          onChange={(e) => setNameValue(e.target.value)}
+                          className="px-2 py-1 rounded-lg bg-white/[0.06] border border-white/[0.1] text-white text-[12px] focus:outline-none w-40"
+                          autoFocus
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              if (supabase && userId && nameValue.trim()) {
+                                supabase.from('profiles').update({ full_name: nameValue.trim() }).eq('id', userId).then(() => {
+                                  refreshProfile();
+                                  try { localStorage.removeItem('efd_profile_cache'); } catch (err) { /* */ }
+                                });
+                              }
+                              setEditingName(false);
+                            }
+                            if (e.key === 'Escape') setEditingName(false);
+                          }}
+                        />
+                        <button onClick={() => {
+                          if (supabase && userId && nameValue.trim()) {
+                            supabase.from('profiles').update({ full_name: nameValue.trim() }).eq('id', userId).then(() => {
+                              refreshProfile();
+                              try { localStorage.removeItem('efd_profile_cache'); } catch (err) { /* */ }
+                            });
+                          }
+                          setEditingName(false);
+                        }} className="text-[10px] text-emerald-400">Save</button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => { setNameValue(profile?.full_name || ''); setEditingName(true); }}
+                        className="text-[12px] text-white font-medium hover:text-slate-300 transition-colors"
+                      >
+                        {profile?.full_name || 'Click to set name'}
+                      </button>
+                    )}
                   </div>
                   <div className="flex items-center justify-between py-2 border-t border-white/[0.04]">
                     <span className="text-[12px] text-slate-400">Email</span>
@@ -233,7 +273,7 @@ export default function SettingsPanel({ isOpen, onClose, onCriteriaChange, activ
                   <div className="flex items-center justify-between py-2 border-t border-white/[0.04]">
                     <span className="text-[12px] text-slate-400">Plan</span>
                     <div className="flex items-center gap-2">
-                      <span className="text-[12px] text-white font-medium capitalize">{plan || 'Free'}</span>
+                      <span className="text-[12px] text-white font-medium capitalize">{(plan || 'Free').replace(/_/g, ' ')}</span>
                       {daysRemaining != null && <span className="text-[10px] text-slate-500">{daysRemaining} days left</span>}
                       {isExpired && <span className="text-[10px] text-rose-400">Expired</span>}
                     </div>
