@@ -322,12 +322,17 @@ function AuthenticatedApp({ profile, user }) {
   }, [userId]);
 
   // Debounced save draft state to Supabase (2s delay)
+  const [draftStatus, setDraftStatus] = useState(null); // null | 'saving' | 'saved'
   useEffect(() => {
     if (!userId) return;
+    setDraftStatus('saving');
     if (draftSaveTimer.current) clearTimeout(draftSaveTimer.current);
     draftSaveTimer.current = setTimeout(() => {
       upsertPreferences(userId, {
         draft_inputs: { inputs, activeDeal, recentDeals, activeModule },
+      }).then(() => {
+        setDraftStatus('saved');
+        setTimeout(() => setDraftStatus(null), 3000);
       });
     }, 2000);
     return () => { if (draftSaveTimer.current) clearTimeout(draftSaveTimer.current); };
@@ -606,6 +611,7 @@ function AuthenticatedApp({ profile, user }) {
                 sofrSource={sofrSource}
                 analystName={profile?.full_name || user?.user_metadata?.full_name || ''}
                 analystEmail={user?.email || ''}
+                draftStatus={draftStatus}
               />
             </div>
 

@@ -581,7 +581,7 @@ function renderFieldsLayout(fields, inputs, onChange, schema, pipelineDeals, mis
 
 // ============ MAIN FORM ============
 
-export default function DealInputForm({ inputs, onChange, schema, modules, activeModule, onModuleChange, pipelineDeals, sofr, sofrSource, analystName, analystEmail }) {
+export default function DealInputForm({ inputs, onChange, schema, modules, activeModule, onModuleChange, pipelineDeals, sofr, sofrSource, analystName, analystEmail, draftStatus }) {
   // Guard: if equipment module has TRAC selected but equipment type doesn't support it
   if (schema.equipmentDefaults && inputs.financingType === 'TRAC') {
     const ftField = schema.sections.flatMap(s => s.fields).find(f => f.key === 'financingType');
@@ -608,14 +608,19 @@ export default function DealInputForm({ inputs, onChange, schema, modules, activ
             </span>
           )}
         </div>
-        {sofr > 0 && (
-          <span className="text-[10px] text-gray-400 font-mono">
-            SOFR {(sofr * 100).toFixed(2)}%
-            <span className={`ml-1 text-[9px] ${sofrSource?.includes('live') ? 'text-emerald-500' : 'text-gray-300'}`}>
-              {sofrSource?.includes('live') ? 'live' : 'cached'}
+        <div className="flex items-center gap-3">
+          {draftStatus === 'saved' && (
+            <span className="text-[9px] text-emerald-500 animate-fade-in">Draft saved</span>
+          )}
+          {sofr > 0 && (
+            <span className="text-[10px] text-gray-400 font-mono">
+              SOFR {(sofr * 100).toFixed(2)}%
+              <span className={`ml-1 text-[9px] ${sofrSource?.includes('live') ? 'text-emerald-500' : 'text-gray-300'}`}>
+                {sofrSource?.includes('live') ? 'live' : 'cached'}
+              </span>
             </span>
-          </span>
-        )}
+          )}
+        </div>
       </div>
 
       {/* Asset Class Selector */}
