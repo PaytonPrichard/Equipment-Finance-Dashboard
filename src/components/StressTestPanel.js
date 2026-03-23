@@ -33,7 +33,7 @@ function StatusIcon({ dscr }) {
   );
 }
 
-export default function StressTestPanel({ stressResults }) {
+export default function StressTestPanel({ stressResults, beaconSlot }) {
   if (!stressResults || stressResults.length === 0) return null;
 
   const maxDscr = Math.max(...stressResults.map((r) => r.dscr), 1);
@@ -42,8 +42,9 @@ export default function StressTestPanel({ stressResults }) {
     <div className="glass-card rounded-2xl p-6">
       {/* Header */}
       <div className="mb-5">
-        <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">
+        <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1 flex items-center gap-2">
           Sensitivity Analysis
+          {beaconSlot}
         </h3>
         <p className="text-[11px] text-gray-400">
           EBITDA stress scenarios — same debt service obligations

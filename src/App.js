@@ -881,12 +881,12 @@ function AuthenticatedApp({ profile, user }) {
                   <ExecutiveSummary inputs={inputs} metrics={metrics} riskScore={riskScore} recommendation={recommendation} />
 
                   {/* Gauge + Radar */}
-                  <div id="sec-score" className="grid grid-cols-1 md:grid-cols-2 gap-6 scroll-mt-20 relative">
-                    <div className="absolute -top-1 right-0">
-                      <TutorialBeacon id="score" title="Risk Score" description="75+ is strong, 55-74 moderate, below 35 weak." position="left" />
-                    </div>
+                  <div id="sec-score" className="grid grid-cols-1 md:grid-cols-2 gap-6 scroll-mt-20">
                     <div className="glass-card rounded-2xl p-5">
-                      <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3">Risk Score</h3>
+                      <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3 flex items-center gap-2">
+                        Risk Score
+                        <TutorialBeacon id="score" title="Risk Score" description="75+ is strong, 55-74 moderate, below 35 weak." position="bottom" />
+                      </h3>
                       <div className="flex items-center justify-center">
                         <RiskScoreGauge score={riskScore.composite} />
                       </div>
@@ -1074,11 +1074,8 @@ function AuthenticatedApp({ profile, user }) {
                   )}
 
                   {/* Stress Test */}
-                  <div id="sec-stress" className="scroll-mt-20 relative">
-                    <div className="absolute top-4 right-4">
-                      <TutorialBeacon id="stress" title="Stress Test" description="See how the deal holds up under revenue declines." position="left" />
-                    </div>
-                    <StressTestPanel stressResults={stressResults} />
+                  <div id="sec-stress" className="scroll-mt-20">
+                    <StressTestPanel stressResults={stressResults} beaconSlot={<TutorialBeacon id="stress" title="Stress Test" description="See how the deal holds up under revenue declines." position="bottom" />} />
                   </div>
 
                   <div id="sec-recommendation" className="scroll-mt-20">
