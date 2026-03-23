@@ -43,6 +43,7 @@ function SliderRow({ label, value, min, max, step, formatFn, onChange, originalV
               onClick={() => onChange(originalValue)}
               className="text-[10px] text-gray-400 hover:text-gray-600 transition-colors"
               title="Reset to original"
+              aria-label="Reset to original value"
             >
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <polyline points="1 4 1 10 7 10" />

@@ -515,7 +515,7 @@ function AuthenticatedApp({ profile, user }) {
       {/* Toolbar */}
       {(activeTab === 'screening' || activeTab === 'batch') && (
       <div className="border-b border-gray-200 bg-white/80 backdrop-blur-sm">
-        <div className="max-w-[1600px] mx-auto px-6 py-2">
+        <div className="max-w-[1600px] mx-auto px-3 md:px-6 py-2">
           <div className="flex items-center gap-2">
             {/* Single / Batch toggle */}
             <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-0.5">
@@ -640,7 +640,7 @@ function AuthenticatedApp({ profile, user }) {
       )}
 
       {/* Main */}
-      <div className="max-w-[1600px] mx-auto px-6 py-8">
+      <div className="max-w-[1600px] mx-auto px-3 md:px-6 py-4 md:py-8">
         {activeTab === 'batch' ? (
           <ErrorBoundary><Suspense fallback={<LazyFallback />}>
             <BatchScreening

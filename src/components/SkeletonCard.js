@@ -28,7 +28,7 @@ export function SkeletonPipelineCard() {
 
 export function SkeletonPipelineColumn() {
   return (
-    <div className="flex-1 min-w-[220px] flex flex-col">
+    <div className="flex-1 min-w-[160px] flex flex-col">
       <SkeletonPulse className="h-10 rounded-xl mb-2" />
       <div className="space-y-2">
         <SkeletonPipelineCard />

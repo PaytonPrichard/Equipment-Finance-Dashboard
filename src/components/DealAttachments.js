@@ -147,6 +147,7 @@ export default function DealAttachments({ dealId, dealType }) {
                     onClick={() => handleDelete(att)}
                     className="text-gray-300 hover:text-rose-400 opacity-0 group-hover:opacity-100 transition-all flex-shrink-0"
                     title="Delete"
+                    aria-label="Delete attachment"
                   >
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <line x1="18" y1="6" x2="6" y2="18" />

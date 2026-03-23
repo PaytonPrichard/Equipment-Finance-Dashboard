@@ -555,7 +555,9 @@ export default function ExportPanel({ summaryText, inputs, metrics, riskScore, r
     w.print();
   };
 
-  const handleDownloadPdf = () => {
+  const [pdfLoading, setPdfLoading] = useState(false);
+
+  const handleDownloadPdf = async () => {
     const orgName = profile?.organizations?.name || '';
     const analystName = profile?.full_name || profile?.email || '';
     const branding = profile?.organizations?.branding || {};
@@ -563,11 +565,42 @@ export default function ExportPanel({ summaryText, inputs, metrics, riskScore, r
       summaryText, inputs, metrics, riskScore, recommendation, screeningResult,
       orgName, analystName, moduleLabel: moduleLabel || 'Equipment Finance', branding,
     });
-    const w = window.open('', '_blank');
-    w.document.write(html);
-    w.document.close();
-    w.focus();
-    setTimeout(() => w.print(), 400);
+
+    setPdfLoading(true);
+    try {
+      const html2pdf = (await import('html2pdf.js')).default;
+      const container = document.createElement('div');
+      container.innerHTML = html;
+      // Extract body content from the full HTML document
+      const bodyMatch = html.match(/<body[^>]*>([\s\S]*)<\/body>/i);
+      if (bodyMatch) container.innerHTML = bodyMatch[1];
+      container.style.width = '780px';
+      document.body.appendChild(container);
+
+      const companyName = (inputs?.companyName || 'Deal').replace(/[^a-zA-Z0-9]/g, '_');
+      const date = new Date().toISOString().slice(0, 10);
+
+      await html2pdf().set({
+        margin: [10, 10, 10, 10],
+        filename: `${companyName}_screening_memo_${date}.pdf`,
+        image: { type: 'jpeg', quality: 0.95 },
+        html2canvas: { scale: 2, useCORS: true, letterRendering: true },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        pagebreak: { mode: ['css', 'legacy'] },
+      }).from(container).save();
+
+      document.body.removeChild(container);
+    } catch (err) {
+      // Fallback to print dialog if html2pdf fails
+      console.warn('PDF generation failed, falling back to print:', err);
+      const w = window.open('', '_blank');
+      w.document.write(html);
+      w.document.close();
+      w.focus();
+      setTimeout(() => w.print(), 400);
+    } finally {
+      setPdfLoading(false);
+    }
   };
 
   const btnBase = 'px-3 py-1.5 rounded-lg text-[11px] font-medium border transition-all flex items-center gap-1.5';
@@ -584,14 +617,21 @@ export default function ExportPanel({ summaryText, inputs, metrics, riskScore, r
         </svg>
         {copied ? 'Copied!' : 'Copy Summary'}
       </button>
-      <button onClick={handleDownloadPdf} className={`${btnBase} ${btnPdf}`}>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-          <polyline points="14 2 14 8 20 8"/>
-          <line x1="12" y1="18" x2="12" y2="12"/>
-          <polyline points="9 15 12 18 15 15"/>
-        </svg>
-        Download PDF
+      <button onClick={handleDownloadPdf} disabled={pdfLoading} className={`${btnBase} ${btnPdf} ${pdfLoading ? 'opacity-50 cursor-not-allowed' : ''}`}>
+        {pdfLoading ? (
+          <svg className="animate-spin h-3.5 w-3.5" viewBox="0 0 24 24" fill="none">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+          </svg>
+        ) : (
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="12" y1="18" x2="12" y2="12"/>
+            <polyline points="9 15 12 18 15 15"/>
+          </svg>
+        )}
+        {pdfLoading ? 'Generating...' : 'Download PDF'}
       </button>
       {metrics && riskScore && (
         <button

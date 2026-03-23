@@ -12,6 +12,7 @@ import {
 import { SkeletonPipeline } from './SkeletonCard';
 import { exportPipelineCsv } from '../utils/csvExport';
 import DealAttachments from './DealAttachments';
+import { notifyStageChange } from '../lib/notifications';
 
 const STAGES = [
   { key: 'Screening', color: 'gold' },
@@ -211,6 +212,9 @@ export default function DealPipeline({ onLoadDeal, currentInputs, currentScore, 
           d.id === id ? { ...d, stage: deal.stage, updated_at: deal.updated_at } : d
         )
       );
+    } else {
+      // Fire-and-forget email notification to team
+      notifyStageChange({ dealName: deal.name, oldStage: deal.stage, newStage, orgId });
     }
   };
 
@@ -422,7 +426,7 @@ export default function DealPipeline({ onLoadDeal, currentInputs, currentScore, 
           return (
             <div
               key={stage.key}
-              className="flex-1 min-w-[220px] flex flex-col"
+              className="flex-1 min-w-[160px] flex flex-col"
             >
               {/* Column header */}
               <div className={`rounded-xl px-3 py-2.5 mb-2 border ${ss.bg} ${ss.border}`}>
@@ -471,6 +475,7 @@ export default function DealPipeline({ onLoadDeal, currentInputs, currentScore, 
                         <button
                           className="text-sm font-semibold text-gray-800 truncate text-left hover:text-gray-600 transition-colors leading-tight"
                           title="Load deal into screening form"
+                          aria-label="Load deal into screening"
                           onClick={() => handleLoadDeal(deal)}
                         >
                           {deal.name}
@@ -479,6 +484,7 @@ export default function DealPipeline({ onLoadDeal, currentInputs, currentScore, 
                           <button
                             className="text-gray-300 hover:text-rose-400 text-sm leading-none opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 mt-0.5"
                             title="Remove from pipeline"
+                            aria-label="Delete deal"
                             onClick={() => handleDelete(deal.id)}
                           >
                             &times;
@@ -585,6 +591,7 @@ export default function DealPipeline({ onLoadDeal, currentInputs, currentScore, 
                           }`}
                           disabled={!canMoveBack}
                           title={canMoveBack ? `Move to ${stageKeys[stageIdx - 1]}` : ''}
+                          aria-label="Move to previous stage"
                           onClick={() => canMoveBack && handleMove(deal.id, -1)}
                         >
                           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="inline -mt-px">
@@ -601,6 +608,7 @@ export default function DealPipeline({ onLoadDeal, currentInputs, currentScore, 
                           }`}
                           disabled={!canMoveForward}
                           title={canMoveForward ? `Move to ${stageKeys[stageIdx + 1]}` : ''}
+                          aria-label="Move to next stage"
                           onClick={() => canMoveForward && handleMove(deal.id, 1)}
                         >
                           {canMoveForward && <span className="mr-0.5">{stageKeys[stageIdx + 1]}</span>}
