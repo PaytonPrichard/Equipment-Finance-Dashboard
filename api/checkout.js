@@ -53,6 +53,12 @@ module.exports = async function handler(req, res) {
     const stripe = require('stripe')(stripeKey);
     const { plan = 'pro_monthly' } = req.body || {};
 
+    // Validate plan parameter
+    const VALID_PLANS = ['pro_monthly', 'pro_annual', 'analyst_monthly', 'analyst_annual', 'enterprise_monthly', 'enterprise_annual'];
+    if (!VALID_PLANS.includes(plan)) {
+      return res.status(400).json({ error: `Invalid plan: ${plan}` });
+    }
+
     // Map plan to Stripe Price ID
     const priceMap = {
       pro_monthly: process.env.STRIPE_PRICE_PRO_MONTHLY,

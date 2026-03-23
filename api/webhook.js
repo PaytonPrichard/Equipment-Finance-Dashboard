@@ -71,11 +71,36 @@ async function handler(req, res) {
     }
 
     case 'customer.subscription.deleted': {
-      // Subscription cancelled — downgrade to free_trial
+      // Subscription cancelled — downgrade to free
       const subscription = event.data.object;
-      // Look up org by Stripe customer ID or metadata
-      // For now, log it — full implementation needs customer<->org mapping
-      console.log('Subscription cancelled:', subscription.id);
+      const customerEmail = subscription.customer_email || subscription.metadata?.email;
+
+      if (customerEmail) {
+        // Find org by matching the email to a profile
+        const { data: profile } = await supabaseAdmin
+          .from('profiles')
+          .select('org_id')
+          .eq('email', customerEmail)
+          .single();
+
+        if (profile?.org_id) {
+          const { error } = await supabaseAdmin
+            .from('organizations')
+            .update({
+              plan: 'free',
+              plan_expires_at: new Date().toISOString(),
+            })
+            .eq('id', profile.org_id);
+
+          if (error) {
+            console.error('Failed to downgrade plan:', error);
+          } else {
+            console.log(`Plan downgraded to free for org ${profile.org_id}`);
+          }
+        }
+      } else {
+        console.warn('Subscription cancelled but no customer email found:', subscription.id);
+      }
       break;
     }
 

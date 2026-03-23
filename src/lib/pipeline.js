@@ -97,6 +97,13 @@ export async function updatePipelineNotes(dealId, notes) {
 export async function updatePipelineDeal(dealId, inputs, score, userId, orgId) {
   if (!supabase) return { data: null, error: null };
 
+  // Fetch current state for audit trail
+  const { data: existing } = await supabase
+    .from('pipeline_deals')
+    .select('inputs, score')
+    .eq('id', dealId)
+    .single();
+
   const { data, error } = await supabase
     .from('pipeline_deals')
     .update({ inputs, score, updated_at: new Date().toISOString() })
@@ -105,7 +112,10 @@ export async function updatePipelineDeal(dealId, inputs, score, userId, orgId) {
     .single();
 
   if (!error && data) {
-    logAudit(userId, orgId, 'update_inputs', 'pipeline_deal', dealId, null, { score });
+    logAudit(userId, orgId, 'update_inputs', 'pipeline_deal', dealId,
+      { score: existing?.score, inputs: existing?.inputs },
+      { score, inputs }
+    );
   }
 
   return { data, error };
