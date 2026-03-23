@@ -3,7 +3,7 @@ import { formatCurrency } from '../utils/calculations';
 
 function getDscrColor(dscr) {
   if (dscr >= 1.5) return { text: 'text-emerald-400', bg: 'bg-emerald-500', bar: 'bg-emerald-500/60', label: 'Strong' };
-  if (dscr >= 1.25) return { text: 'text-gold-400', bg: 'bg-gold-500', bar: 'bg-gold-500/60', label: 'Adequate' };
+  if (dscr >= 1.25) return { text: 'text-gray-600', bg: 'bg-gray-500', bar: 'bg-gray-400', label: 'Adequate' };
   if (dscr >= 1.0) return { text: 'text-amber-400', bg: 'bg-amber-500', bar: 'bg-amber-500/60', label: 'Warning' };
   return { text: 'text-rose-400', bg: 'bg-rose-500', bar: 'bg-rose-500/60', label: 'Danger' };
 }

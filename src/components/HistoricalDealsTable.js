@@ -9,7 +9,7 @@ import {
 
 const STATUS_STYLE = {
   Performing: { bg: 'bg-emerald-500/[0.08]', border: 'border-emerald-500/15', text: 'text-emerald-400' },
-  'Paid Off': { bg: 'bg-gold-500/[0.08]', border: 'border-gold-500/15', text: 'text-gray-600' },
+  'Paid Off': { bg: 'bg-gray-100', border: 'border-gray-200', text: 'text-gray-600' },
   Watchlist: { bg: 'bg-amber-500/[0.08]', border: 'border-amber-500/15', text: 'text-amber-400' },
   Defaulted: { bg: 'bg-rose-500/[0.08]', border: 'border-rose-500/15', text: 'text-rose-400' },
 };
@@ -68,7 +68,7 @@ export default function HistoricalDealsTable({ deals, sofr = DEFAULT_SOFR }) {
           { v: stats.t, l: 'Historical Deals', c: 'text-gray-900', bg: 'glass-card' },
           { v: `${stats.correct + stats.conservative}/${stats.t}`, l: 'Directionally Correct', c: 'text-emerald-400', bg: 'bg-emerald-500/[0.06] border border-emerald-500/15' },
           { v: `${stats.caught}/${stats.defaults}`, l: 'Defaults Flagged', c: 'text-rose-400', bg: 'bg-rose-500/[0.06] border border-rose-500/15' },
-          { v: `${Math.round(((stats.correct + stats.conservative) / stats.t) * 100)}%`, l: 'Model Accuracy', c: 'text-gray-600', bg: 'bg-gold-500/[0.06] border border-gold-500/15' },
+          { v: `${Math.round(((stats.correct + stats.conservative) / stats.t) * 100)}%`, l: 'Model Accuracy', c: 'text-gray-600', bg: 'bg-gray-50 border border-gray-200' },
         ].map((s) => (
           <div key={s.l} className={`${s.bg} rounded-2xl p-5 text-center`}>
             <p className={`text-2xl font-bold font-mono ${s.c}`}>{s.v}</p>
@@ -104,7 +104,7 @@ export default function HistoricalDealsTable({ deals, sofr = DEFAULT_SOFR }) {
             : 0;
 
           return (
-            <div key={deal.id} className={`glass-card rounded-2xl overflow-hidden transition-all ${exp ? 'ring-1 ring-gold-500/20' : ''}`}>
+            <div key={deal.id} className={`glass-card rounded-2xl overflow-hidden transition-all ${exp ? 'ring-1 ring-gray-200' : ''}`}>
               <button
                 onClick={() => setExpandedId(exp ? null : deal.id)}
                 className="w-full px-5 py-4 flex items-center gap-4 text-left hover:bg-gray-50 transition-colors"

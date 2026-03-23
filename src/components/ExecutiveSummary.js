@@ -141,7 +141,7 @@ function generateTakeaways(inputs, metrics, riskScore, recommendation) {
 
 const TYPE_STYLES = {
   positive: { icon: 'text-emerald-400', bg: 'bg-emerald-500/[0.04]' },
-  neutral: { icon: 'text-gold-400', bg: 'bg-gold-500/[0.04]' },
+  neutral: { icon: 'text-gray-600', bg: 'bg-gray-50' },
   caution: { icon: 'text-amber-400', bg: 'bg-amber-500/[0.04]' },
   negative: { icon: 'text-rose-400', bg: 'bg-rose-500/[0.04]' },
 };

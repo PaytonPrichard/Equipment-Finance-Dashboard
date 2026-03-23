@@ -284,7 +284,7 @@ export default function TeamManagement() {
     return (
       <div className="glass-card rounded-2xl p-12 flex items-center justify-center">
         <div className="flex items-center gap-3">
-          <div className="w-4 h-4 border-2 border-gold-500/30 border-t-gold-400 rounded-full animate-spin" />
+          <div className="w-4 h-4 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin" />
           <span className="text-[12px] text-slate-500">Loading team data...</span>
         </div>
       </div>
@@ -557,7 +557,7 @@ export default function TeamManagement() {
           <button
             type="submit"
             disabled={creatingInvite}
-            className="pill-btn px-4 py-2.5 rounded-xl text-[12px] font-semibold bg-gradient-to-r from-gold-500 to-gold-600 text-white shadow-lg shadow-gold-500/20 hover:shadow-gold-500/30 hover:from-gold-400 hover:to-gold-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            className="pill-btn px-4 py-2.5 rounded-xl text-[12px] font-semibold bg-gradient-to-r from-gray-800 to-gray-900 text-white shadow-lg shadow-gray-300/20 hover:shadow-gray-300/30 hover:from-gray-700 hover:to-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           >
             {creatingInvite ? 'Creating...' : 'Generate Invite'}
           </button>
@@ -598,7 +598,7 @@ export default function TeamManagement() {
                   className="grid grid-cols-[120px_1fr_120px_120px_140px] gap-2 px-5 py-3 items-center"
                 >
                   {/* Code */}
-                  <div className="text-[12px] text-gold-400 font-mono font-bold tracking-wider">
+                  <div className="text-[12px] text-gray-600 font-mono font-bold tracking-wider">
                     {invite.invite_code}
                   </div>
 
@@ -675,8 +675,8 @@ export default function TeamManagement() {
       {can('org.manage_users') && (
         <div className="glass-card rounded-2xl p-6">
           <div className="flex items-center gap-2.5 mb-5">
-            <div className="w-7 h-7 rounded-lg bg-gold-500/10 flex items-center justify-center">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-gold-400" strokeWidth="2">
+            <div className="w-7 h-7 rounded-lg bg-gray-100 flex items-center justify-center">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-gray-600" strokeWidth="2">
                 <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
                 <line x1="16" y1="2" x2="16" y2="6" />
                 <line x1="8" y1="2" x2="8" y2="6" />
@@ -732,7 +732,7 @@ export default function TeamManagement() {
               else addToast('Plan updated', 'success');
             }}
             disabled={savingPlan}
-            className="px-4 py-2.5 rounded-xl text-[12px] font-semibold bg-gradient-to-r from-gold-500 to-gold-600 text-white shadow-lg shadow-gold-500/20 hover:shadow-gold-500/30 disabled:opacity-50 transition-all"
+            className="px-4 py-2.5 rounded-xl text-[12px] font-semibold bg-gradient-to-r from-gray-800 to-gray-900 text-white shadow-lg shadow-gray-300/20 hover:shadow-gray-300/30 disabled:opacity-50 transition-all"
           >
             {savingPlan ? 'Saving...' : 'Save Plan'}
           </button>
@@ -743,8 +743,8 @@ export default function TeamManagement() {
       {can('org.manage_users') && (
         <div className="glass-card rounded-2xl p-6">
           <div className="flex items-center gap-2.5 mb-5">
-            <div className="w-7 h-7 rounded-lg bg-gold-500/10 flex items-center justify-center">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-gold-400" strokeWidth="2">
+            <div className="w-7 h-7 rounded-lg bg-gray-100 flex items-center justify-center">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-gray-600" strokeWidth="2">
                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
               </svg>
             </div>
@@ -814,7 +814,7 @@ export default function TeamManagement() {
                 }
               }}
               disabled={savingSettings}
-              className="px-4 py-2.5 rounded-xl text-[12px] font-semibold bg-gradient-to-r from-gold-500 to-gold-600 text-white shadow-lg shadow-gold-500/20 hover:shadow-gold-500/30 disabled:opacity-50 transition-all"
+              className="px-4 py-2.5 rounded-xl text-[12px] font-semibold bg-gradient-to-r from-gray-800 to-gray-900 text-white shadow-lg shadow-gray-300/20 hover:shadow-gray-300/30 disabled:opacity-50 transition-all"
             >
               {savingSettings ? 'Saving...' : 'Save Credit Policy'}
             </button>
@@ -826,8 +826,8 @@ export default function TeamManagement() {
       {can('org.manage_users') && (
         <div className="glass-card rounded-2xl p-6">
           <div className="flex items-center gap-2.5 mb-5">
-            <div className="w-7 h-7 rounded-lg bg-gold-500/10 flex items-center justify-center">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-gold-400" strokeWidth="2">
+            <div className="w-7 h-7 rounded-lg bg-gray-100 flex items-center justify-center">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-gray-600" strokeWidth="2">
                 <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
                 <circle cx="8.5" cy="8.5" r="1.5" />
                 <polyline points="21 15 16 10 5 21" />
@@ -847,7 +847,7 @@ export default function TeamManagement() {
                 value={brandingLogoUrl}
                 onChange={(e) => setBrandingLogoUrl(e.target.value)}
                 placeholder="https://yourfirm.com/logo.png"
-                className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-gray-200 text-gray-900 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-400/40 focus:border-gold-500/40 transition-all"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-gray-200 text-gray-900 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-400/40 focus:border-gray-300 transition-all"
               />
               <p className="text-[10px] text-slate-600 mt-1">Appears in the top-right corner of exported memos. Max height: 40px.</p>
               {brandingLogoUrl && (
@@ -926,7 +926,7 @@ export default function TeamManagement() {
                 }
               }}
               disabled={savingBranding}
-              className="pill-btn px-4 py-2.5 rounded-xl text-[12px] font-semibold bg-gradient-to-r from-gold-500 to-gold-600 text-white shadow-lg shadow-gold-500/20 hover:shadow-gold-500/30 hover:from-gold-400 hover:to-gold-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              className="pill-btn px-4 py-2.5 rounded-xl text-[12px] font-semibold bg-gradient-to-r from-gray-800 to-gray-900 text-white shadow-lg shadow-gray-300/20 hover:shadow-gray-300/30 hover:from-gray-700 hover:to-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
             >
               {savingBranding ? 'Saving...' : 'Save Branding'}
             </button>

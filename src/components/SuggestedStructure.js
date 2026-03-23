@@ -15,7 +15,7 @@ export default function SuggestedStructure({ structure, sofr, sofrDate, sofrSour
       <div>
         <span className="text-[11px] text-gray-400 font-medium">Screening Rate</span>
         <div className="flex items-baseline gap-3 mt-1">
-          <span className="text-2xl font-bold font-mono text-gold-400">
+          <span className="text-2xl font-bold font-mono text-gray-600">
             {(structure.screeningRate * 100).toFixed(2)}%
           </span>
           <span className="text-xs text-gray-400">all-in</span>
@@ -48,7 +48,7 @@ export default function SuggestedStructure({ structure, sofr, sofrDate, sofrSour
         <div className="flex items-center gap-2 mb-1.5">
           <span className="text-[11px] text-gray-400 font-medium">Structure</span>
           {structure.structureType && (
-            <span className="px-2 py-0.5 rounded-md bg-gold-500/10 border border-gold-500/15 text-[10px] font-bold text-gold-400 uppercase tracking-wider">
+            <span className="px-2 py-0.5 rounded-md bg-gray-100 border border-gray-200 text-[10px] font-bold text-gray-600 uppercase tracking-wider">
               {structure.structureType}
             </span>
           )}
@@ -65,7 +65,7 @@ export default function SuggestedStructure({ structure, sofr, sofrDate, sofrSour
           <ul className="mt-2 space-y-2">
             {structure.enhancements.map((enh, i) => (
               <li key={i} className="flex items-start gap-2.5 text-[13px] text-gray-700">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-gold-400 mt-0.5 flex-shrink-0" strokeWidth="2.5">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-gray-600 mt-0.5 flex-shrink-0" strokeWidth="2.5">
                   <polyline points="9 11 12 14 22 4" />
                   <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
                 </svg>

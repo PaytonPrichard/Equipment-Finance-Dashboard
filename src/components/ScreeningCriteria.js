@@ -91,7 +91,7 @@ export default function ScreeningCriteria({ activeModule, onCriteriaChange }) {
         className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
       >
         <div className="flex items-center gap-3">
-          <div className="w-7 h-7 rounded-lg bg-gold-500/10 flex items-center justify-center">
+          <div className="w-7 h-7 rounded-lg bg-gray-100 flex items-center justify-center">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-gray-600" strokeWidth="2">
               <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
               <polyline points="22 4 12 14.01 9 11.01" />
@@ -108,7 +108,7 @@ export default function ScreeningCriteria({ activeModule, onCriteriaChange }) {
         </div>
         <div className="flex items-center gap-3">
           {hasCustom && !isOpen && (
-            <span className="text-[10px] font-semibold text-gray-600 bg-gold-500/10 px-2 py-0.5 rounded-full">
+            <span className="text-[10px] font-semibold text-gray-600 bg-gray-100 px-2 py-0.5 rounded-full">
               Custom
             </span>
           )}

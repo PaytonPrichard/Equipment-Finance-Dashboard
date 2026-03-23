@@ -22,7 +22,7 @@ const STAGES = [
 ];
 
 const STAGE_STYLES = {
-  Screening:      { bg: 'bg-gold-500/[0.08]',    border: 'border-gray-200',    text: 'text-gray-600',    dot: 'bg-gold-400' },
+  Screening:      { bg: 'bg-gray-100',    border: 'border-gray-200',    text: 'text-gray-600',    dot: 'bg-gray-400' },
   'Under Review': { bg: 'bg-amber-500/[0.08]',   border: 'border-amber-500/20',   text: 'text-amber-400',   dot: 'bg-amber-400' },
   Approved:       { bg: 'bg-emerald-500/[0.08]',  border: 'border-emerald-500/20', text: 'text-emerald-400', dot: 'bg-emerald-400' },
   Funded:         { bg: 'bg-teal-500/[0.08]',     border: 'border-teal-500/20',    text: 'text-teal-400',    dot: 'bg-teal-400' },

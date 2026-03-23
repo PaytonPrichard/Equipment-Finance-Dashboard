@@ -97,7 +97,7 @@ export default function BillingPage() {
             <div className="flex items-center gap-3 mt-1">
               <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider ${
                 currentPlan === 'free' ? 'bg-slate-500/15 text-gray-500 border border-slate-500/30' :
-                currentPlan === 'pilot' ? 'bg-gold-500/15 text-gray-600 border border-gray-300' :
+                currentPlan === 'pilot' ? 'bg-gray-200 text-gray-600 border border-gray-300' :
                 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
               }`}>
                 {currentPlan === 'free' ? 'Free' : currentPlan}
@@ -139,7 +139,7 @@ export default function BillingPage() {
         <button
           onClick={() => setBillingCycle('monthly')}
           className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
-            billingCycle === 'monthly' ? 'bg-gold-500/15 text-gray-600 border border-gray-300' : 'text-gray-400 hover:text-gray-700'
+            billingCycle === 'monthly' ? 'bg-gray-200 text-gray-600 border border-gray-300' : 'text-gray-400 hover:text-gray-700'
           }`}
         >
           Monthly
@@ -147,7 +147,7 @@ export default function BillingPage() {
         <button
           onClick={() => setBillingCycle('annual')}
           className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all flex items-center gap-2 ${
-            billingCycle === 'annual' ? 'bg-gold-500/15 text-gray-600 border border-gray-300' : 'text-gray-400 hover:text-gray-700'
+            billingCycle === 'annual' ? 'bg-gray-200 text-gray-600 border border-gray-300' : 'text-gray-400 hover:text-gray-700'
           }`}
         >
           Annual
@@ -173,12 +173,12 @@ export default function BillingPage() {
               key={p.key}
               className={`rounded-2xl p-6 ${
                 p.highlight
-                  ? 'bg-gradient-to-b from-gold-500/[0.08] to-transparent border-2 border-gray-300 relative'
+                  ? 'bg-gradient-to-b from-gray-100 to-transparent border-2 border-gray-300 relative'
                   : 'glass-card'
               }`}
             >
               {p.highlight && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full bg-gold-500 text-[10px] font-bold text-gray-900 uppercase tracking-wider">
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full bg-gray-700 text-[10px] font-bold text-gray-900 uppercase tracking-wider">
                   Most Popular
                 </div>
               )}

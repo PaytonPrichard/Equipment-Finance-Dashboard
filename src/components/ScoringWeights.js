@@ -52,7 +52,7 @@ function WeightSlider({ factorKey, label, value, onChange }) {
         onChange={(e) => onChange(factorKey, parseInt(e.target.value, 10))}
         className="w-full h-1.5 rounded-full appearance-none cursor-pointer scoring-weight-slider"
         style={{
-          background: `linear-gradient(to right, rgba(212,168,67,0.5) 0%, rgba(212,168,67,0.5) ${pct}%, rgba(148,163,184,0.1) ${pct}%, rgba(148,163,184,0.1) 100%)`,
+          background: `linear-gradient(to right, rgba(17,24,39,0.3) 0%, rgba(17,24,39,0.3) ${pct}%, rgba(229,231,235,0.5) ${pct}%, rgba(229,231,235,0.5) 100%)`,
         }}
       />
       <div className="flex justify-between text-[9px] text-gray-300">
@@ -181,7 +181,7 @@ export default function ScoringWeights({ inputs, metrics, riskScore, onWeightsCh
         className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
       >
         <div className="flex items-center gap-3">
-          <div className="w-7 h-7 rounded-lg bg-gold-500/10 flex items-center justify-center">
+          <div className="w-7 h-7 rounded-lg bg-gray-100 flex items-center justify-center">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-gray-600" strokeWidth="2">
               <circle cx="12" cy="12" r="3" />
               <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
@@ -198,7 +198,7 @@ export default function ScoringWeights({ inputs, metrics, riskScore, onWeightsCh
         </div>
         <div className="flex items-center gap-3">
           {hasCustom && !isOpen && (
-            <span className="text-[10px] font-semibold text-gray-600 bg-gold-500/10 px-2 py-0.5 rounded-full">
+            <span className="text-[10px] font-semibold text-gray-600 bg-gray-100 px-2 py-0.5 rounded-full">
               Custom
             </span>
           )}

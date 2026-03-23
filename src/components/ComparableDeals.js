@@ -48,7 +48,7 @@ function scoreSimilarity(current, candidate) {
 
 const OUTCOME_STYLES = {
   Performing: { bg: 'bg-emerald-500/10', text: 'text-emerald-400', border: 'border-emerald-500/20' },
-  'Paid Off': { bg: 'bg-gold-500/10', text: 'text-gray-600', border: 'border-gold-500/20' },
+  'Paid Off': { bg: 'bg-gray-100', text: 'text-gray-600', border: 'border-gray-200' },
   Watchlist: { bg: 'bg-amber-500/10', text: 'text-amber-400', border: 'border-amber-500/20' },
   Defaulted: { bg: 'bg-rose-500/10', text: 'text-rose-400', border: 'border-rose-500/20' },
 };
@@ -99,7 +99,7 @@ export default function ComparableDeals({ inputs, metrics, riskScore, sofr = DEF
           ? 'bg-emerald-500/[0.06] border border-emerald-500/15'
           : troubledCount > performingCount
           ? 'bg-amber-500/[0.06] border border-amber-500/15'
-          : 'bg-gold-500/[0.06] border border-gold-500/15'
+          : 'bg-gray-50 border border-gray-200'
       }`}>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
           className={performingCount > troubledCount ? 'text-emerald-400' : troubledCount > performingCount ? 'text-amber-400' : 'text-gray-600'}

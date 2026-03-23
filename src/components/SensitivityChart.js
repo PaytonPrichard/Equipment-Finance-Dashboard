@@ -184,7 +184,7 @@ export default function SensitivityChart({ inputs, sofr = DEFAULT_SOFR }) {
             onClick={() => setSelectedVar(v.key)}
             className={`px-3 py-1.5 rounded-lg text-[11px] font-medium transition-all ${
               selectedVar === v.key
-                ? 'bg-gold-500/20 text-gray-600 border border-gold-500/30'
+                ? 'bg-gray-200 text-gray-600 border border-gray-300'
                 : 'bg-gray-50 text-gray-400 border border-transparent hover:bg-white/[0.05] hover:text-gray-500'
             }`}
           >

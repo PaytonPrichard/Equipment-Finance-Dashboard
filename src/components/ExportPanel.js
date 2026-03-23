@@ -573,7 +573,7 @@ export default function ExportPanel({ summaryText, inputs, metrics, riskScore, r
   const btnBase = 'px-3 py-1.5 rounded-lg text-[11px] font-medium border transition-all flex items-center gap-1.5';
   const btnDefault = 'bg-white/[0.03] border-white/[0.04] text-slate-400 hover:text-slate-200 hover:border-white/[0.08]';
   const btnCopied = 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400';
-  const btnPdf = 'bg-gold-500/[0.07] border-gold-500/20 text-gold-400 hover:text-gold-300 hover:border-gold-500/40';
+  const btnPdf = 'bg-gray-100 border-gray-200 text-gray-600 hover:text-gray-700 hover:border-gray-300';
 
   return (
     <div className="flex items-center gap-2">
