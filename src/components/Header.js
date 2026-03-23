@@ -34,7 +34,7 @@ export default function Header({ activeTab, onTabChange, onOpenGuide, onOpenSett
                 onClick={() => onTabChange(tab.id)}
                 className={`px-4 py-2 rounded-lg text-xs font-semibold transition-all ${
                   activeTab === tab.id
-                    ? 'bg-white text-gray-900 shadow-sm'
+                    ? 'bg-white text-gray-900 shadow-sm border border-gray-200'
                     : 'text-gray-500 hover:text-gray-900'
                 }`}
               >

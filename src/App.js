@@ -365,6 +365,7 @@ function AuthenticatedApp({ profile, user }) {
   };
 
   const valid = mod.isInputValid(inputs);
+  const partialValid = (inputs.annualRevenue || 0) > 0 && (inputs.ebitda || 0) > 0;
 
   // Org credit policy overrides
   const orgSettings = useMemo(() => profile?.organizations?.org_settings || {}, [profile?.organizations?.org_settings]);
@@ -517,25 +518,7 @@ function AuthenticatedApp({ profile, user }) {
         onManagePlan={() => setActiveTab('team')}
       />
 
-      {/* SOFR Rate Indicator */}
-      <div className="bg-gray-50 border-b border-gray-200">
-        <div className="max-w-[1600px] mx-auto px-6 py-1.5 flex items-center gap-3">
-          <span className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">SOFR</span>
-          <span className="font-mono text-[11px] text-gray-700 font-semibold">{(sofr * 100).toFixed(2)}%</span>
-          <span className={`text-[9px] px-1.5 py-0.5 rounded font-medium ${
-            sofrSource.includes('live') ? 'bg-emerald-50 text-emerald-600' :
-            sofrSource.includes('cached') ? 'bg-gray-100 text-gray-500' :
-            'bg-amber-50 text-amber-600'
-          }`}>
-            {sofrSource}
-          </span>
-          {sofrDate && (
-            <span className="text-[10px] text-gray-400">as of {sofrDate}</span>
-          )}
-        </div>
-      </div>
-
-      {/* SOFR Change Alert Banner */}
+      {/* SOFR Change Alert Banner (only shows when rate moves >25bps) */}
       {sofrAlert && lastAcknowledgedSofr !== null && (
         <div className="bg-amber-500/10 border-b border-amber-500/20">
           <div className="max-w-[1600px] mx-auto px-6 py-2 flex items-center justify-between gap-4">
@@ -625,12 +608,14 @@ function AuthenticatedApp({ profile, user }) {
                 activeModule={activeModule}
                 onModuleChange={handleModuleChange}
                 pipelineDeals={pipelineDealsList}
+                sofr={sofr}
+                sofrSource={sofrSource}
               />
             </div>
 
             {/* Right: Results — independent scroll on desktop */}
             <div className="lg:col-span-7 xl:col-span-8 lg:overflow-y-auto lg:pl-2">
-              {!valid ? (
+              {!valid && !partialValid ? (
                 <div className="flex flex-col items-center justify-center min-h-[520px] text-center">
                   <div className="w-16 h-16 rounded-2xl bg-gray-100 border border-gray-200 flex items-center justify-center mb-5">
                     <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-gray-400" strokeWidth="1.5">
@@ -700,6 +685,26 @@ function AuthenticatedApp({ profile, user }) {
                       </div>
                     </div>
                   )}
+                </div>
+              ) : !valid && partialValid ? (
+                /* Partial preview: show preliminary metrics when revenue + EBITDA are filled */
+                <div className="space-y-4 animate-fade-in-up">
+                  <div className="glass-card rounded-2xl p-5">
+                    <p className="text-[11px] text-gray-400 uppercase tracking-wider font-semibold mb-3">Preliminary Preview</p>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <p className="text-[11px] text-gray-400">DSCR</p>
+                        <p className="text-lg font-bold font-mono text-gray-800">{metrics.dscr ? metrics.dscr.toFixed(2) + 'x' : 'N/A'}</p>
+                      </div>
+                      <div>
+                        <p className="text-[11px] text-gray-400">Leverage</p>
+                        <p className="text-lg font-bold font-mono text-gray-800">{metrics.leverage ? metrics.leverage.toFixed(2) + 'x' : 'N/A'}</p>
+                      </div>
+                    </div>
+                    <p className="text-[11px] text-gray-400 mt-4">
+                      Fill in {isEquipment ? 'equipment cost, useful life, and term' : activeModule === 'accounts_receivable' ? 'total AR outstanding' : 'total inventory'} to see full screening results.
+                    </p>
+                  </div>
                 </div>
               ) : (
                 <div className="space-y-6 animate-fade-in-up">
