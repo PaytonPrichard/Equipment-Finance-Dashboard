@@ -24,18 +24,24 @@ function ScoreBadge({ score, baseScore }) {
 
 function SliderRow({ label, value, min, max, step, formatFn, onChange, originalValue }) {
   const changed = value !== originalValue;
+  const pct = ((value - min) / (max - min)) * 100;
+  const origPct = ((originalValue - min) / (max - min)) * 100;
+
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
         <span className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider">{label}</span>
         <div className="flex items-center gap-2">
-          <span className={`text-sm font-mono font-semibold ${changed ? 'text-gray-600' : 'text-gray-700'}`}>
+          {changed && (
+            <span className="text-[10px] text-gray-400 font-mono">was {formatFn(originalValue)}</span>
+          )}
+          <span className={`text-sm font-mono font-semibold ${changed ? 'text-blue-600' : 'text-gray-700'}`}>
             {formatFn(value)}
           </span>
           {changed && (
             <button
               onClick={() => onChange(originalValue)}
-              className="text-[10px] text-gray-400 hover:text-gray-500 transition-colors"
+              className="text-[10px] text-gray-400 hover:text-gray-600 transition-colors"
               title="Reset to original"
             >
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -46,18 +52,34 @@ function SliderRow({ label, value, min, max, step, formatFn, onChange, originalV
           )}
         </div>
       </div>
-      <input
-        type="range"
-        min={min}
-        max={max}
-        step={step}
-        value={value}
-        onChange={(e) => onChange(parseFloat(e.target.value))}
-        className="w-full h-1.5 rounded-full appearance-none cursor-pointer what-if-slider"
-        style={{
-          background: `linear-gradient(to right, rgba(59,130,246,0.5) 0%, rgba(59,130,246,0.5) ${((value - min) / (max - min)) * 100}%, rgba(148,163,184,0.1) ${((value - min) / (max - min)) * 100}%, rgba(148,163,184,0.1) 100%)`,
-        }}
-      />
+      <div className="relative">
+        <input
+          type="range"
+          min={min}
+          max={max}
+          step={step}
+          value={value}
+          onChange={(e) => onChange(parseFloat(e.target.value))}
+          className="w-full h-1.5 rounded-full appearance-none cursor-pointer what-if-slider relative z-10"
+          style={{
+            background: `linear-gradient(to right, rgba(59,130,246,0.4) 0%, rgba(59,130,246,0.4) ${pct}%, rgba(229,231,235,0.8) ${pct}%, rgba(229,231,235,0.8) 100%)`,
+          }}
+        />
+        {/* Original value notch marker */}
+        <div
+          className="absolute top-0 w-0.5 h-3 bg-gray-900 rounded-full pointer-events-none z-20"
+          style={{ left: `${origPct}%`, transform: 'translateX(-50%)' }}
+          title={`Current: ${formatFn(originalValue)}`}
+        />
+        {changed && (
+          <div
+            className="absolute top-4 text-[8px] text-gray-400 pointer-events-none"
+            style={{ left: `${origPct}%`, transform: 'translateX(-50%)' }}
+          >
+            current
+          </div>
+        )}
+      </div>
       <div className="flex justify-between text-[9px] text-gray-300">
         <span>{formatFn(min)}</span>
         <span>{formatFn(max)}</span>
