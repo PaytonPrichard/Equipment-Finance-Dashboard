@@ -6,6 +6,7 @@ import {
   fetchPipelineDeals,
   createPipelineDeal,
   updatePipelineStage,
+  updatePipelineName,
   updatePipelineNotes,
   deletePipelineDeal,
 } from '../lib/pipeline';
@@ -79,6 +80,9 @@ export default function DealPipeline({ onLoadDeal, currentInputs, currentScore, 
   const [isAdding, setIsAdding] = useState(false);
   const [editingNoteId, setEditingNoteId] = useState(null);
   const [noteText, setNoteText] = useState('');
+  const [renamingId, setRenamingId] = useState(null);
+  const [renameText, setRenameText] = useState('');
+  const renameInputRef = useRef();
   const addInputRef = useRef();
   const noteInputRef = useRef();
 
@@ -215,6 +219,29 @@ export default function DealPipeline({ onLoadDeal, currentInputs, currentScore, 
     } else {
       // Fire-and-forget email notification to team
       notifyStageChange({ dealName: deal.name, oldStage: deal.stage, newStage, orgId });
+    }
+  };
+
+  const startRename = (deal) => {
+    setRenamingId(deal.id);
+    setRenameText(deal.name);
+    setTimeout(() => renameInputRef.current?.select(), 0);
+  };
+
+  const commitRename = async () => {
+    const trimmed = renameText.trim();
+    if (!trimmed || !renamingId) { setRenamingId(null); return; }
+    const oldName = deals.find(d => d.id === renamingId)?.name;
+    if (trimmed === oldName) { setRenamingId(null); return; }
+
+    // Optimistic update
+    setDeals(prev => prev.map(d => d.id === renamingId ? { ...d, name: trimmed } : d));
+    setRenamingId(null);
+
+    const { error } = await updatePipelineName(renamingId, trimmed);
+    if (error) {
+      addToast('Failed to rename deal', 'error');
+      setDeals(prev => prev.map(d => d.id === renamingId ? { ...d, name: oldName } : d));
     }
   };
 
@@ -472,14 +499,28 @@ export default function DealPipeline({ onLoadDeal, currentInputs, currentScore, 
                     >
                       {/* Company name + delete */}
                       <div className="flex items-start justify-between gap-1 mb-1.5">
-                        <button
-                          className="text-sm font-semibold text-gray-800 truncate text-left hover:text-gray-600 transition-colors leading-tight"
-                          title="Load deal into screening form"
-                          aria-label="Load deal into screening"
-                          onClick={() => handleLoadDeal(deal)}
-                        >
-                          {deal.name}
-                        </button>
+                        {renamingId === deal.id ? (
+                          <input
+                            ref={renameInputRef}
+                            type="text"
+                            value={renameText}
+                            onChange={(e) => setRenameText(e.target.value)}
+                            onBlur={commitRename}
+                            onKeyDown={(e) => { if (e.key === 'Enter') commitRename(); if (e.key === 'Escape') setRenamingId(null); }}
+                            className="text-sm font-semibold text-gray-800 bg-white border border-gray-300 rounded px-1.5 py-0.5 w-full focus:outline-none focus:ring-2 focus:ring-gray-400/40"
+                            autoFocus
+                          />
+                        ) : (
+                          <button
+                            className="text-sm font-semibold text-gray-800 truncate text-left hover:text-gray-600 transition-colors leading-tight"
+                            title="Click to load deal. Double-click to rename."
+                            aria-label="Load deal into screening"
+                            onClick={() => handleLoadDeal(deal)}
+                            onDoubleClick={(e) => { e.preventDefault(); startRename(deal); }}
+                          >
+                            {deal.name}
+                          </button>
+                        )}
                         {showDelete && (
                           <button
                             className="text-gray-300 hover:text-rose-400 text-sm leading-none opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 mt-0.5"

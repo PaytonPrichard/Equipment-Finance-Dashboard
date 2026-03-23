@@ -76,6 +76,22 @@ export async function updatePipelineStage(dealId, newStage, userId, orgId) {
 }
 
 /**
+ * Rename a pipeline deal.
+ */
+export async function updatePipelineName(dealId, name) {
+  if (!supabase) return { data: null, error: null };
+
+  const { data, error } = await supabase
+    .from('pipeline_deals')
+    .update({ name, updated_at: new Date().toISOString() })
+    .eq('id', dealId)
+    .select()
+    .single();
+
+  return { data, error };
+}
+
+/**
  * Update notes on a pipeline deal (no audit logging for notes).
  */
 export async function updatePipelineNotes(dealId, notes) {
