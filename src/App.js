@@ -74,7 +74,7 @@ function LazyFallback() {
     <div className="flex items-center justify-center py-20">
       <div className="flex items-center gap-3">
         <div className="w-5 h-5 border-2 border-gold-500/30 border-t-gold-500 rounded-full animate-spin" />
-        <span className="text-sm text-slate-500">Loading...</span>
+        <span className="text-sm text-gray-500">Loading...</span>
       </div>
     </div>
   );
@@ -101,11 +101,11 @@ class ErrorBoundary extends React.Component {
               <circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" />
             </svg>
           </div>
-          <p className="text-sm text-slate-300 mb-1">Something went wrong</p>
-          <p className="text-[11px] text-slate-500 mb-4">This section failed to load.</p>
+          <p className="text-sm text-gray-700 mb-1">Something went wrong</p>
+          <p className="text-[11px] text-gray-500 mb-4">This section failed to load.</p>
           <button
             onClick={() => this.setState({ hasError: false })}
-            className="px-4 py-2 rounded-xl bg-white/[0.04] border border-white/[0.08] text-sm text-white hover:bg-white/[0.08] transition-all"
+            className="px-4 py-2 rounded-xl bg-white/[0.04] border border-white/[0.08] text-sm text-gray-900 hover:bg-white/[0.08] transition-all"
           >
             Try again
           </button>
@@ -163,8 +163,8 @@ export default function App() {
   // Show loading screen while auth initializes
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-[#141210] flex flex-col items-center justify-center">
-        <h1 className="text-2xl font-extrabold text-white tracking-tight mb-6">Tranche</h1>
+      <div className="min-h-screen bg-[#f8f9fa] flex flex-col items-center justify-center">
+        <h1 className="text-2xl font-extrabold text-gray-900 tracking-tight mb-6">Tranche</h1>
         <div className="flex items-center gap-3">
           <div className="w-5 h-5 border-2 border-gold-500/30 border-t-gold-500 rounded-full animate-spin" />
           <span className="text-sm text-slate-400 font-medium">Loading...</span>
@@ -188,7 +188,7 @@ export default function App() {
   // Block unverified email users
   if (session && !emailVerified) {
     return (
-      <div className="min-h-screen bg-[#141210] flex items-center justify-center px-4">
+      <div className="min-h-screen bg-[#f8f9fa] flex items-center justify-center px-4">
         <div className="w-full max-w-md text-center">
           {/* Progress */}
           <div className="flex items-center justify-center gap-2 mb-8">
@@ -197,7 +197,7 @@ export default function App() {
             <div className="w-2 h-2 rounded-full bg-gold-500 animate-pulse" />
             <div className="w-8 h-0.5 bg-slate-700" />
             <div className="w-2 h-2 rounded-full bg-slate-700" />
-            <span className="text-[10px] text-slate-600 ml-2">Step 2 of 3</span>
+            <span className="text-[10px] text-gray-400 ml-2">Step 2 of 3</span>
           </div>
           <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/20 mb-4">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-amber-400" strokeWidth="2">
@@ -205,11 +205,11 @@ export default function App() {
               <polyline points="22,6 12,13 2,6" />
             </svg>
           </div>
-          <h2 className="text-lg font-semibold text-white mb-2">Check your inbox</h2>
+          <h2 className="text-lg font-semibold text-gray-900 mb-2">Check your inbox</h2>
           <p className="text-sm text-slate-400 mb-2">
-            We sent a verification link to <span className="text-white font-medium">{user?.email}</span>.
+            We sent a verification link to <span className="text-gray-900 font-medium">{user?.email}</span>.
           </p>
-          <p className="text-[11px] text-slate-500 mb-6">
+          <p className="text-[11px] text-gray-500 mb-6">
             Check your spam folder if you don't see it. Usually arrives within 1–2 minutes.
           </p>
           <div className="flex items-center justify-center gap-4">
@@ -222,13 +222,13 @@ export default function App() {
                 }
               }}
               id="resend-btn"
-              className="px-4 py-2 rounded-xl bg-white/[0.04] border border-white/[0.08] text-sm text-white font-medium hover:bg-white/[0.08] transition-all"
+              className="px-4 py-2 rounded-xl bg-white/[0.04] border border-white/[0.08] text-sm text-gray-900 font-medium hover:bg-white/[0.08] transition-all"
             >
               Resend email
             </button>
             <button
               onClick={signOut}
-              className="text-sm text-slate-500 hover:text-slate-300 font-medium transition-colors"
+              className="text-sm text-gray-500 hover:text-gray-700 font-medium transition-colors"
             >
               Sign out
             </button>
@@ -530,7 +530,7 @@ function AuthenticatedApp({ profile, user }) {
             {sofrSource}
           </span>
           {sofrDate && (
-            <span className="text-[10px] text-slate-600">as of {sofrDate}</span>
+            <span className="text-[10px] text-gray-400">as of {sofrDate}</span>
           )}
         </div>
       </div>
@@ -599,7 +599,7 @@ function AuthenticatedApp({ profile, user }) {
                   )}
                   <button
                     onClick={clearForm}
-                    className="pill-btn px-3 py-2 rounded-lg text-[11px] font-medium text-slate-600 hover:text-slate-400"
+                    className="pill-btn px-3 py-2 rounded-lg text-[11px] font-medium text-gray-400 hover:text-slate-400"
                   >
                     Clear
                   </button>
@@ -662,7 +662,7 @@ function AuthenticatedApp({ profile, user }) {
                   {isEquipment && exampleDeals.length > 0 && (
                     <button
                       onClick={() => loadExample(exampleDeals[0])}
-                      className="mt-6 px-5 py-2.5 rounded-xl bg-gray-900 text-sm text-white font-medium hover:bg-gray-800 transition-all"
+                      className="mt-6 px-5 py-2.5 rounded-xl bg-gray-900 text-sm text-gray-900 font-medium hover:bg-gray-800 transition-all"
                     >
                       Load example: $5M Heavy Machinery, Manufacturing
                     </button>
@@ -670,7 +670,7 @@ function AuthenticatedApp({ profile, user }) {
                   {/* Recently Screened Deals */}
                   {recentDeals.length > 0 && (
                     <div className="mt-8 max-w-lg w-full">
-                      <span className="text-[10px] font-semibold text-slate-600 uppercase tracking-widest">
+                      <span className="text-[10px] font-semibold text-gray-400 uppercase tracking-widest">
                         Recently Screened
                       </span>
                       <div className="flex flex-wrap gap-2 mt-2">
@@ -687,10 +687,10 @@ function AuthenticatedApp({ profile, user }) {
                             <button
                               key={deal.id}
                               onClick={() => loadRecentDeal(deal)}
-                              className="pill-btn px-3 py-1.5 rounded-lg text-[11px] font-medium flex items-center gap-1.5 text-slate-500 hover:text-slate-300 transition-colors"
+                              className="pill-btn px-3 py-1.5 rounded-lg text-[11px] font-medium flex items-center gap-1.5 text-gray-500 hover:text-gray-700 transition-colors"
                               title={`${deal.industry} — Score ${s} — ${new Date(deal.timestamp).toLocaleDateString()}`}
                             >
-                              <span className={`inline-flex items-center justify-center w-4 h-4 rounded-full text-[8px] font-bold leading-none text-white ${chipColor}`}>
+                              <span className={`inline-flex items-center justify-center w-4 h-4 rounded-full text-[8px] font-bold leading-none text-gray-900 ${chipColor}`}>
                                 {s}
                               </span>
                               {deal.name}
@@ -717,7 +717,7 @@ function AuthenticatedApp({ profile, user }) {
                       <button
                         key={s.id}
                         onClick={() => document.getElementById(s.id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
-                        className="px-2.5 py-1 rounded-lg text-[10px] font-semibold text-slate-500 hover:text-slate-300 bg-white/[0.02] border border-white/[0.04] hover:border-white/[0.08] transition-all"
+                        className="px-2.5 py-1 rounded-lg text-[10px] font-semibold text-gray-500 hover:text-gray-700 bg-gray-50 border border-gray-200 hover:border-gray-300 transition-all"
                       >
                         {s.label}
                       </button>
@@ -728,9 +728,9 @@ function AuthenticatedApp({ profile, user }) {
                   <div id="sec-summary" className="flex items-center justify-between flex-wrap gap-3 scroll-mt-20">
                     <div>
                       {inputs.companyName && (
-                        <h2 className="text-xl font-bold text-white">{inputs.companyName}</h2>
+                        <h2 className="text-xl font-bold text-gray-900">{inputs.companyName}</h2>
                       )}
-                      <p className="text-sm text-slate-500 mt-0.5">
+                      <p className="text-sm text-gray-500 mt-0.5">
                         {inputs.industrySector}
                         {isEquipment && <> &middot; {inputs.equipmentType} &middot; {inputs.equipmentCondition} &middot; {ftLabel}</>}
                         {!isEquipment && <> &middot; {moduleLabel}</>}
@@ -739,42 +739,42 @@ function AuthenticatedApp({ profile, user }) {
                       <div className="flex items-center gap-3 mt-2">
                         {isEquipment && metrics.ebitdaMargin !== undefined && (
                           <>
-                            <span className="text-[11px] text-slate-500">
-                              EBITDA Margin <span className="font-mono font-semibold text-slate-300">{formatPercent(metrics.ebitdaMargin)}</span>
+                            <span className="text-[11px] text-gray-500">
+                              EBITDA Margin <span className="font-mono font-semibold text-gray-700">{formatPercent(metrics.ebitdaMargin)}</span>
                             </span>
-                            <span className="text-slate-700">&middot;</span>
-                            <span className="text-[11px] text-slate-500">
-                              Debt Yield <span className="font-mono font-semibold text-slate-300">{formatPercent(metrics.debtYield)}</span>
+                            <span className="text-gray-300">&middot;</span>
+                            <span className="text-[11px] text-gray-500">
+                              Debt Yield <span className="font-mono font-semibold text-gray-700">{formatPercent(metrics.debtYield)}</span>
                             </span>
                           </>
                         )}
                         {activeModule === 'accounts_receivable' && metrics.dso !== undefined && (
                           <>
-                            <span className="text-[11px] text-slate-500">
-                              DSO <span className="font-mono font-semibold text-slate-300">{Math.round(metrics.dso)} days</span>
+                            <span className="text-[11px] text-gray-500">
+                              DSO <span className="font-mono font-semibold text-gray-700">{Math.round(metrics.dso)} days</span>
                             </span>
-                            <span className="text-slate-700">&middot;</span>
-                            <span className="text-[11px] text-slate-500">
-                              Advance Rate <span className="font-mono font-semibold text-slate-300">{formatPercent(metrics.advanceRate * 100)}</span>
+                            <span className="text-gray-300">&middot;</span>
+                            <span className="text-[11px] text-gray-500">
+                              Advance Rate <span className="font-mono font-semibold text-gray-700">{formatPercent(metrics.advanceRate * 100)}</span>
                             </span>
                           </>
                         )}
                         {activeModule === 'inventory_finance' && metrics.turnoverRatio !== undefined && (
                           <>
-                            <span className="text-[11px] text-slate-500">
-                              Turnover <span className="font-mono font-semibold text-slate-300">{metrics.turnoverRatio.toFixed(1)}x</span>
+                            <span className="text-[11px] text-gray-500">
+                              Turnover <span className="font-mono font-semibold text-gray-700">{metrics.turnoverRatio.toFixed(1)}x</span>
                             </span>
-                            <span className="text-slate-700">&middot;</span>
-                            <span className="text-[11px] text-slate-500">
-                              Days on Hand <span className="font-mono font-semibold text-slate-300">{Math.round(metrics.daysOnHand)}</span>
+                            <span className="text-gray-300">&middot;</span>
+                            <span className="text-[11px] text-gray-500">
+                              Days on Hand <span className="font-mono font-semibold text-gray-700">{Math.round(metrics.daysOnHand)}</span>
                             </span>
                           </>
                         )}
                         {inputs.yearsInBusiness > 0 && (
                           <>
-                            <span className="text-slate-700">&middot;</span>
-                            <span className="text-[11px] text-slate-500">
-                              Est. <span className="font-mono font-semibold text-slate-300">{inputs.yearsInBusiness}</span> yrs
+                            <span className="text-gray-300">&middot;</span>
+                            <span className="text-[11px] text-gray-500">
+                              Est. <span className="font-mono font-semibold text-gray-700">{inputs.yearsInBusiness}</span> yrs
                             </span>
                           </>
                         )}
@@ -793,7 +793,7 @@ function AuthenticatedApp({ profile, user }) {
                             className={`px-2 py-0.5 rounded text-[9px] font-semibold transition-colors ${
                               activeModule === m.key
                                 ? 'bg-gold-500/15 text-gold-400 border border-gold-500/30'
-                                : 'text-slate-600 hover:text-slate-400 border border-transparent'
+                                : 'text-gray-400 hover:text-slate-400 border border-transparent'
                             }`}
                           >
                             {m.name.replace(' Finance', '')}
@@ -820,7 +820,7 @@ function AuthenticatedApp({ profile, user }) {
                       <RiskScoreGauge score={riskScore.composite} />
                     </div>
                     <div className="glass-card rounded-2xl p-5">
-                      <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Risk Factor Breakdown</h3>
+                      <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2">Risk Factor Breakdown</h3>
                       <RiskRadarChart factors={riskScore.factors} />
                     </div>
                   </div>
@@ -932,7 +932,7 @@ function AuthenticatedApp({ profile, user }) {
                   {/* Debt Service — Equipment only */}
                   {isEquipment && (
                     <div id="sec-debt" className="glass-card rounded-2xl p-5 scroll-mt-20">
-                      <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4">
+                      <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-4">
                         Debt Service Summary
                         {ft !== 'EFA' && (
                           <span className="ml-2 text-gold-400 normal-case font-medium text-[11px]">
@@ -954,8 +954,8 @@ function AuthenticatedApp({ profile, user }) {
                           { label: `Annual DS (Existing)${!metrics.debtServiceEstimated ? '' : ' est.'}`, value: formatCurrencyFull(metrics.existingDebtService) },
                         ].map((item) => (
                           <div key={item.label}>
-                            <span className="text-[10px] text-slate-600">{item.label}</span>
-                            <p className="text-sm text-slate-200 font-mono font-semibold mt-0.5">{item.value}</p>
+                            <span className="text-[10px] text-gray-400">{item.label}</span>
+                            <p className="text-sm text-gray-800 font-mono font-semibold mt-0.5">{item.value}</p>
                           </div>
                         ))}
                       </div>
@@ -965,7 +965,7 @@ function AuthenticatedApp({ profile, user }) {
                   {/* Facility Summary — AR & Inventory */}
                   {!isEquipment && (
                     <div id="sec-facility" className="glass-card rounded-2xl p-5 scroll-mt-20">
-                      <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4">
+                      <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-4">
                         Revolving Facility Summary
                         {!metrics.debtServiceEstimated && (
                           <span className="ml-2 text-emerald-400 normal-case font-medium text-[11px]">
@@ -982,8 +982,8 @@ function AuthenticatedApp({ profile, user }) {
                           { label: `Annual DS (Existing)${!metrics.debtServiceEstimated ? '' : ' est.'}`, value: formatCurrencyFull(metrics.existingDebtService || 0) },
                         ].map((item) => (
                           <div key={item.label}>
-                            <span className="text-[10px] text-slate-600">{item.label}</span>
-                            <p className="text-sm text-slate-200 font-mono font-semibold mt-0.5">{item.value}</p>
+                            <span className="text-[10px] text-gray-400">{item.label}</span>
+                            <p className="text-sm text-gray-800 font-mono font-semibold mt-0.5">{item.value}</p>
                           </div>
                         ))}
                       </div>
