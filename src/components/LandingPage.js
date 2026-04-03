@@ -184,10 +184,12 @@ export default function LandingPage({ onGetStarted, onSignIn }) {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {FEATURES.map((f) => (
               <div key={f.title} className="bg-white rounded-xl border border-gray-200/80 p-6 hover:border-gray-300 hover:shadow-sm transition-all">
-                <div className="w-10 h-10 rounded-lg flex items-center justify-center mb-4" style={{ backgroundColor: GOLD_LIGHT, color: GOLD }}>
-                  {f.icon}
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: GOLD_LIGHT, color: GOLD }}>
+                    {f.icon}
+                  </div>
+                  <h3 className="text-base font-semibold text-gray-900">{f.title}</h3>
                 </div>
-                <h3 className="text-base font-semibold text-gray-900 mb-2">{f.title}</h3>
                 <p className="text-[15px] text-gray-500 leading-relaxed">{f.description}</p>
               </div>
             ))}
