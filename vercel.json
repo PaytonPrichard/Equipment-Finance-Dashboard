@@ -1,5 +1,10 @@
 {
   "framework": "create-react-app",
+  "functions": {
+    "api/*.js": {
+      "includeFiles": "server-lib/**"
+    }
+  },
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/$1" }
   ],
