@@ -4,6 +4,7 @@ import { useRole } from '../hooks/useRole';
 import { useToast } from '../contexts/ToastContext';
 import { supabase } from '../lib/supabase';
 import { ROLE_LABELS } from '../lib/permissions';
+import { sendInviteEmail } from '../lib/notifications';
 
 const ROLES = ['analyst', 'senior_analyst', 'credit_committee', 'admin'];
 
@@ -210,12 +211,28 @@ export default function TeamManagement() {
 
     if (error) {
       addToast('Failed to create invite: ' + error.message, 'error');
+      setCreatingInvite(false);
+      return;
+    }
+
+    if (payload.email) {
+      const result = await sendInviteEmail({
+        inviteCode: invite_code,
+        email: payload.email,
+        role: payload.role,
+        orgId,
+      });
+      if (result.ok) {
+        addToast(`Invite sent to ${payload.email}`, 'success');
+      } else {
+        addToast(`Invite created (${invite_code}) but email failed. Share the code manually.`, 'warning');
+      }
     } else {
       addToast(`Invite created: ${invite_code}`, 'success');
-      setInviteEmail('');
-      setInviteRole('analyst');
-      fetchData();
     }
+    setInviteEmail('');
+    setInviteRole('analyst');
+    fetchData();
     setCreatingInvite(false);
   };
 

@@ -7,6 +7,14 @@ const { supabaseAdmin } = require('../server-lib/supabaseAdmin');
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const FROM_EMAIL = process.env.NOTIFICATION_FROM_EMAIL || 'Tranche <notifications@gettranche.app>';
+const APP_URL = process.env.APP_URL || 'https://gettranche.app';
+
+const ROLE_LABELS = {
+  analyst: 'Analyst',
+  senior_analyst: 'Senior Analyst',
+  credit_committee: 'Credit Committee',
+  admin: 'Administrator',
+};
 
 async function sendEmail(to, subject, html) {
   if (!RESEND_API_KEY) {
@@ -30,6 +38,38 @@ async function sendEmail(to, subject, html) {
   }
 
   return { success: true };
+}
+
+function inviteEmail({ inviteCode, role, orgName, inviterName }) {
+  const subject = `You've been invited to join ${orgName} on Tranche`;
+  const roleLabel = ROLE_LABELS[role] || 'Team Member';
+  const signupUrl = `${APP_URL}/?invite=${encodeURIComponent(inviteCode)}`;
+  const html = `
+    <div style="font-family: -apple-system, system-ui, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px;">
+      <div style="border-bottom: 1px solid #e5e7eb; padding-bottom: 12px; margin-bottom: 20px;">
+        <strong style="font-size: 16px; color: #111827;">Tranche</strong>
+      </div>
+      <p style="color: #111827; font-size: 16px; font-weight: 600; margin: 0 0 8px;">
+        You've been invited to ${orgName}.
+      </p>
+      <p style="color: #374151; font-size: 14px; margin: 0 0 16px;">
+        ${inviterName ? `${inviterName} invited you` : 'You were invited'} to join as <strong>${roleLabel}</strong> on Tranche, the deal screening platform for asset-based lenders.
+      </p>
+      <div style="margin: 20px 0;">
+        <a href="${signupUrl}" style="display: inline-block; background: #D4A843; color: #141210; text-decoration: none; font-weight: 600; font-size: 14px; padding: 10px 20px; border-radius: 8px;">
+          Accept invitation
+        </a>
+      </div>
+      <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px 16px; margin: 16px 0;">
+        <span style="font-size: 11px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em;">Invite Code</span>
+        <p style="font-family: monospace; font-size: 16px; font-weight: 600; color: #111827; margin: 4px 0 0; letter-spacing: 0.05em;">${inviteCode}</p>
+      </div>
+      <p style="color: #6b7280; font-size: 12px; margin: 16px 0 0;">
+        If the button doesn't work, paste the code above on the join screen at <a href="${APP_URL}" style="color: #6b7280;">${APP_URL.replace(/^https?:\/\//, '')}</a>.
+      </p>
+    </div>
+  `;
+  return { subject, html };
 }
 
 function stageChangeEmail({ dealName, oldStage, newStage, movedBy, orgName }) {
@@ -74,52 +114,75 @@ module.exports = async function handler(req, res) {
     return res.status(401).json({ error: 'Invalid token' });
   }
 
-  const { type, dealName, oldStage, newStage, orgId } = req.body;
+  const { type, orgId } = req.body;
 
-  if (type !== 'stage_change' || !dealName || !newStage || !orgId) {
+  if (!type || !orgId) {
     return res.status(400).json({ error: 'Missing required fields' });
   }
 
   try {
-    // Get the mover's name
-    const { data: moverProfile } = await supabaseAdmin
-      .from('profiles')
-      .select('full_name, email')
-      .eq('id', user.id)
-      .single();
+    // Look up sender profile + org name (used by all notification types)
+    const [{ data: senderProfile }, { data: org }] = await Promise.all([
+      supabaseAdmin
+        .from('profiles')
+        .select('full_name, email')
+        .eq('id', user.id)
+        .single(),
+      supabaseAdmin
+        .from('organizations')
+        .select('name')
+        .eq('id', orgId)
+        .single(),
+    ]);
 
-    const movedBy = moverProfile?.full_name || moverProfile?.email || '';
-
-    // Get org name
-    const { data: org } = await supabaseAdmin
-      .from('organizations')
-      .select('name')
-      .eq('id', orgId)
-      .single();
-
+    const senderName = senderProfile?.full_name || senderProfile?.email || '';
     const orgName = org?.name || '';
 
-    // Get all team members in the org (exclude the person who moved it)
-    const { data: members } = await supabaseAdmin
-      .from('profiles')
-      .select('email, full_name')
-      .eq('org_id', orgId)
-      .neq('id', user.id);
+    if (type === 'stage_change') {
+      const { dealName, oldStage, newStage } = req.body;
+      if (!dealName || !newStage) {
+        return res.status(400).json({ error: 'Missing required fields' });
+      }
 
-    if (!members || members.length === 0) {
-      return res.status(200).json({ sent: 0, message: 'No other team members to notify' });
+      const { data: members } = await supabaseAdmin
+        .from('profiles')
+        .select('email, full_name')
+        .eq('org_id', orgId)
+        .neq('id', user.id);
+
+      if (!members || members.length === 0) {
+        return res.status(200).json({ sent: 0, message: 'No other team members to notify' });
+      }
+
+      const { subject, html } = stageChangeEmail({
+        dealName, oldStage, newStage, movedBy: senderName, orgName,
+      });
+
+      const results = await Promise.allSettled(
+        members.map((m) => sendEmail(m.email, subject, html))
+      );
+      const sent = results.filter((r) => r.status === 'fulfilled' && r.value?.success).length;
+      return res.status(200).json({ sent, total: members.length });
     }
 
-    const { subject, html } = stageChangeEmail({ dealName, oldStage, newStage, movedBy, orgName });
+    if (type === 'invite') {
+      const { inviteCode, email, role } = req.body;
+      if (!inviteCode || !email) {
+        return res.status(400).json({ error: 'Missing required fields' });
+      }
 
-    // Send to all team members
-    const results = await Promise.allSettled(
-      members.map((m) => sendEmail(m.email, subject, html))
-    );
+      const { subject, html } = inviteEmail({
+        inviteCode, role, orgName, inviterName: senderName,
+      });
 
-    const sent = results.filter((r) => r.status === 'fulfilled' && r.value?.success).length;
+      const result = await sendEmail(email, subject, html);
+      if (!result.success) {
+        return res.status(502).json({ error: 'Email send failed', reason: result.reason });
+      }
+      return res.status(200).json({ sent: 1 });
+    }
 
-    return res.status(200).json({ sent, total: members.length });
+    return res.status(400).json({ error: 'Unknown notification type' });
   } catch (err) {
     console.error('[notify] Error:', err);
     return res.status(500).json({ error: 'Notification failed' });
