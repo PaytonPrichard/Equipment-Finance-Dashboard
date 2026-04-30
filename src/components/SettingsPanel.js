@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import TrancheLogo from './TrancheLogo';
 import { useAuth } from '../contexts/AuthContext';
 import { useRole } from '../hooks/useRole';
 import { useOrgPlan } from '../hooks/useOrgPlan';
@@ -176,7 +177,10 @@ export default function SettingsPanel({ isOpen, onClose, onCriteriaChange, activ
       <div className="relative w-full max-w-3xl max-h-[85vh] mx-4 rounded-2xl border border-gray-200 overflow-hidden animate-fade-in-up flex bg-white">
         {/* Sidebar */}
         <div className="w-48 flex-shrink-0 border-r border-gray-200 bg-gray-50 py-4 flex flex-col">
-          <h2 className="text-sm font-bold text-gray-900 px-4 mb-4">Settings</h2>
+          <h2 className="text-sm font-bold text-gray-900 px-4 mb-4 flex items-center gap-2">
+            <TrancheLogo size={18} />
+            Settings
+          </h2>
           <nav className="flex-1 space-y-0.5 px-2">
             {visibleNav.map(item => (
               <button

@@ -2,6 +2,7 @@ import React from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import TutorialBeacon from './TutorialBeacon';
 import { useTutorial } from '../contexts/TutorialContext';
+import TrancheLogo from './TrancheLogo';
 
 export default function Header({ activeTab, onTabChange, onOpenGuide, onOpenSettings }) {
   const { profile } = useAuth();
@@ -12,7 +13,7 @@ export default function Header({ activeTab, onTabChange, onOpenGuide, onOpenSett
     screening: 'screening', batch: 'screening',
     pipeline: 'pipeline',
     dashboard: 'dashboard', compare: 'dashboard', historical: 'dashboard', audit: 'dashboard',
-    team: 'dashboard', billing: 'dashboard',
+    team: 'dashboard',
   };
   const activeParent = parentTab[activeTab] || activeTab;
 
@@ -20,8 +21,10 @@ export default function Header({ activeTab, onTabChange, onOpenGuide, onOpenSett
     <header className="border-b border-gray-200 bg-white/90 backdrop-blur-md sticky top-0 z-50">
       <div className="max-w-[1600px] mx-auto px-3 md:px-6 py-2 md:py-3 flex items-center justify-between gap-2">
         {/* Logo */}
-        <h1 className="text-base md:text-lg font-extrabold tracking-tight text-gray-900 flex-shrink-0">
-          Tranche
+        <h1 className="text-base md:text-lg font-extrabold tracking-tight text-gray-900 flex-shrink-0 flex items-center gap-2">
+          <TrancheLogo size={24} className="md:hidden" />
+          <TrancheLogo size={28} className="hidden md:block" />
+          <span>Tranche</span>
         </h1>
 
         {/* Tabs */}
@@ -65,7 +68,7 @@ export default function Header({ activeTab, onTabChange, onOpenGuide, onOpenSett
           )}
           <button
             onClick={onOpenGuide}
-            className="w-7 h-7 md:w-8 md:h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-900 hover:bg-gray-100 border border-gray-200 hover:border-gray-300 transition-all"
+            className="w-7 h-7 md:w-8 md:h-8 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-900 hover:bg-gray-100 border border-gray-200 hover:border-gray-300 transition-all"
             title="Help"
             aria-label="Help guide"
           >
@@ -76,8 +79,8 @@ export default function Header({ activeTab, onTabChange, onOpenGuide, onOpenSett
             </svg>
           </button>
           <a
-            href="mailto:team@usetranche.com"
-            className="w-7 h-7 md:w-8 md:h-8 rounded-lg hidden sm:flex items-center justify-center text-gray-400 hover:text-gray-900 hover:bg-gray-100 border border-gray-200 hover:border-gray-300 transition-all"
+            href="mailto:team@gettranche.app"
+            className="w-7 h-7 md:w-8 md:h-8 rounded-lg hidden sm:flex items-center justify-center text-gray-500 hover:text-gray-900 hover:bg-gray-100 border border-gray-200 hover:border-gray-300 transition-all"
             title="Contact us"
             aria-label="Contact us by email"
           >
@@ -89,7 +92,7 @@ export default function Header({ activeTab, onTabChange, onOpenGuide, onOpenSett
           <TutorialBeacon id="guide" title="Full Guide" description="Tap here anytime for help on every feature." position="bottom" />
           <button
             onClick={onOpenSettings}
-            className="w-7 h-7 md:w-8 md:h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-900 hover:bg-gray-100 border border-gray-200 hover:border-gray-300 transition-all"
+            className="w-7 h-7 md:w-8 md:h-8 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-900 hover:bg-gray-100 border border-gray-200 hover:border-gray-300 transition-all"
             title="Settings"
             aria-label="Open settings"
           >

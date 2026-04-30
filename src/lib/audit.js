@@ -1,7 +1,9 @@
 import { supabase } from './supabase';
+import { isDemoMode } from './demoMode';
 
 // Fire-and-forget audit logging — never block the UI
 export function logAudit(userId, orgId, action, entityType, entityId, oldValues, newValues, metadata) {
+  if (isDemoMode()) return;
   if (!supabase) return;
   supabase.from('audit_log').insert({
     user_id: userId,

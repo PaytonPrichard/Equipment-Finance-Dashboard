@@ -1,13 +1,14 @@
 import React from 'react';
+import TrancheLogo from './TrancheLogo';
 
 // ── Brand color ──────────────────────────────────────────────
-const GOLD = '#C8A54A';
+const GOLD = '#D4A843';
 const GOLD_LIGHT = '#F5EDD6';
 
 const FEATURES = [
   {
     title: 'Instant Risk Scoring',
-    description: 'Pass/flag/fail verdict with composite score in under 2 minutes. DSCR, leverage, collateral coverage, and 7 other factors scored automatically.',
+    description: 'Pass/flag/fail verdict with composite score in under 2 minutes. DSCR, leverage, LTV, industry risk, and three other factors scored automatically.',
     icon: (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
         <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
@@ -106,13 +107,17 @@ export default function LandingPage({ onGetStarted, onSignIn }) {
       {/* Nav */}
       <nav className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-100">
         <div className="max-w-[1200px] mx-auto px-6 h-16 flex items-center justify-between">
-          <span className="text-xl font-extrabold text-gray-900 tracking-tight">Tranche</span>
+          <span className="flex items-center gap-2.5 text-xl font-extrabold text-gray-900 tracking-tight">
+            <TrancheLogo size={32} />
+            Tranche
+          </span>
           <div className="hidden md:flex items-center gap-8">
             <button onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })} className="text-[15px] text-gray-500 hover:text-gray-900 transition-colors">Features</button>
             <button onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })} className="text-[15px] text-gray-500 hover:text-gray-900 transition-colors">Pricing</button>
             <button onClick={() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })} className="text-[15px] text-gray-500 hover:text-gray-900 transition-colors">Contact</button>
           </div>
           <div className="flex items-center gap-3">
+            <a href="?demo=1" className="hidden md:inline-block px-4 py-2 rounded-lg text-[15px] font-medium text-gray-600 hover:text-gray-900 transition-colors">View Demo</a>
             <button onClick={onSignIn} className="px-4 py-2 rounded-lg text-[15px] font-medium text-gray-600 hover:text-gray-900 transition-colors">Sign In</button>
             <button onClick={onGetStarted} className="px-5 py-2.5 rounded-lg text-[15px] font-semibold text-white hover:opacity-90 transition-all" style={{ backgroundColor: GOLD }}>Get Started</button>
           </div>
@@ -133,15 +138,15 @@ export default function LandingPage({ onGetStarted, onSignIn }) {
           <p className="text-lg md:text-xl text-gray-500 max-w-2xl mx-auto mb-10 leading-relaxed">
             Automated risk scoring, configurable credit policy, and branded screening memos. Replace the spreadsheet your team uses to screen ABL deals.
           </p>
-          <div className="flex items-center justify-center gap-4 mb-4">
-            <button onClick={onGetStarted} className="px-7 py-3.5 rounded-lg text-[16px] font-semibold text-white shadow-lg hover:opacity-90 transition-all" style={{ backgroundColor: GOLD, boxShadow: '0 4px 24px rgba(200, 165, 74, 0.3)' }}>
+          <div className="flex items-center justify-center gap-4 mb-4 flex-wrap">
+            <button onClick={onGetStarted} className="px-7 py-3.5 rounded-lg text-[16px] font-semibold text-white shadow-lg hover:opacity-90 transition-all" style={{ backgroundColor: GOLD, boxShadow: '0 4px 24px rgba(212, 168, 67, 0.3)' }}>
               Start 14-Day Free Trial
             </button>
-            <button onClick={() => document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' })} className="px-7 py-3.5 rounded-lg text-[16px] font-semibold text-gray-700 border border-gray-300 hover:border-gray-400 transition-all">
-              See How It Works
-            </button>
+            <a href="?demo=1" className="px-7 py-3.5 rounded-lg text-[16px] font-semibold text-gray-700 border border-gray-300 hover:border-gray-400 transition-all">
+              View Demo
+            </a>
           </div>
-          <p className="text-sm text-gray-400">No credit card required. Full access for 14 days.</p>
+          <p className="text-sm text-gray-500">No credit card required. Live demo with sample deals, no signup needed.</p>
         </div>
       </section>
 
@@ -168,7 +173,7 @@ export default function LandingPage({ onGetStarted, onSignIn }) {
               {i > 0 && <span className="hidden md:inline text-gray-200 text-lg select-none">/</span>}
               <div className="text-center">
                 <span className="text-base font-semibold text-gray-900">{p.title}</span>
-                <span className="text-base text-gray-400 ml-2">{p.desc}</span>
+                <span className="text-base text-gray-500 ml-2">{p.desc}</span>
               </div>
             </React.Fragment>
           ))}
@@ -257,7 +262,7 @@ export default function LandingPage({ onGetStarted, onSignIn }) {
             ].map((item, idx) => (
               <div key={item.title} className="bg-gray-800/60 rounded-xl border border-gray-700/50 p-6 relative">
                 <div className="flex items-center gap-2.5 mb-4">
-                  <div className="w-9 h-9 rounded-lg flex items-center justify-center" style={{ backgroundColor: 'rgba(200,165,74,0.15)', color: GOLD }}>
+                  <div className="w-9 h-9 rounded-lg flex items-center justify-center" style={{ backgroundColor: 'rgba(212,168,67,0.15)', color: GOLD }}>
                     {item.icon}
                   </div>
                   <span className="text-[11px] font-bold uppercase tracking-wider" style={{ color: GOLD }}>{item.time}</span>
@@ -278,7 +283,7 @@ export default function LandingPage({ onGetStarted, onSignIn }) {
           {/* Integration callout */}
           <div className="max-w-3xl mx-auto mt-12 p-6 rounded-2xl bg-gray-800/40 border border-gray-700/40">
             <div className="flex items-start gap-4">
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5" style={{ backgroundColor: 'rgba(200,165,74,0.15)', color: GOLD }}>
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5" style={{ backgroundColor: 'rgba(212,168,67,0.15)', color: GOLD }}>
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                   <polyline points="16 18 22 12 16 6" />
                   <polyline points="8 6 2 12 8 18" />
@@ -369,7 +374,7 @@ export default function LandingPage({ onGetStarted, onSignIn }) {
         <div className="max-w-[1200px] mx-auto px-6 py-20 md:py-24 text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-4 tracking-tight">Ready to screen your first deal?</h2>
           <p className="text-gray-400 mb-8 text-lg">Set up in 5 minutes. Screen your first deal in 2. No credit card, no contracts.</p>
-          <button onClick={onGetStarted} className="px-8 py-4 rounded-lg text-[16px] font-semibold text-gray-900 hover:opacity-90 transition-all shadow-lg" style={{ backgroundColor: GOLD, boxShadow: '0 4px 24px rgba(200, 165, 74, 0.25)' }}>
+          <button onClick={onGetStarted} className="px-8 py-4 rounded-lg text-[16px] font-semibold text-gray-900 hover:opacity-90 transition-all shadow-lg" style={{ backgroundColor: GOLD, boxShadow: '0 4px 24px rgba(212, 168, 67, 0.25)' }}>
             Start Your Free Trial
           </button>
         </div>
@@ -381,15 +386,15 @@ export default function LandingPage({ onGetStarted, onSignIn }) {
           <h2 className="text-2xl font-bold text-white mb-3">Get in touch</h2>
           <p className="text-gray-400 text-base mb-6">Questions about Tranche, pricing, or pilot programs? We respond within one business day.</p>
           <a
-            href="mailto:team@usetranche.com"
+            href="mailto:team@gettranche.app"
             className="inline-flex items-center gap-2.5 px-6 py-3 rounded-lg border text-base font-medium text-white hover:bg-gray-800 transition-all"
-            style={{ borderColor: 'rgba(200,165,74,0.3)' }}
+            style={{ borderColor: 'rgba(212,168,67,0.3)' }}
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={GOLD} strokeWidth="1.5">
               <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
               <polyline points="22,6 12,13 2,6" />
             </svg>
-            team@usetranche.com
+            team@gettranche.app
           </a>
         </div>
       </section>
@@ -416,7 +421,10 @@ export default function LandingPage({ onGetStarted, onSignIn }) {
       {/* Footer */}
       <footer style={{ backgroundColor: '#0F0E0C' }} className="border-t border-gray-800">
         <div className="max-w-[1200px] mx-auto px-6 py-8 flex items-center justify-between">
-          <span className="text-sm font-bold text-gray-500 tracking-tight">Tranche</span>
+          <span className="flex items-center gap-2 text-sm font-bold text-gray-500 tracking-tight">
+            <TrancheLogo size={20} framed={false} />
+            Tranche
+          </span>
           <span className="text-xs text-gray-600">&copy; {new Date().getFullYear()}</span>
         </div>
       </footer>

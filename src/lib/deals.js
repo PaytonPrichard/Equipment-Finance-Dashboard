@@ -1,10 +1,12 @@
 import { supabase } from './supabase';
 import { logAudit } from './audit';
+import { isDemoMode } from './demoMode';
 
 /**
  * Fetch all saved deals for an organization, newest first.
  */
 export async function fetchSavedDeals(orgId) {
+  if (isDemoMode()) return { data: [], error: null };
   if (!supabase) return { data: [], error: null };
 
   const { data, error } = await supabase

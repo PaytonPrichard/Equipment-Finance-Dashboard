@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
+import TrancheLogo from './TrancheLogo';
+
+const GOLD = '#D4A843';
 
 export default function LoginPage({ passwordRecovery, onBackToLanding }) {
   const { signIn, signUp } = useAuth();
@@ -129,9 +132,12 @@ export default function LoginPage({ passwordRecovery, onBackToLanding }) {
               <span className="text-[10px] text-gray-400 ml-2">Step 1 of 3</span>
             </div>
           )}
-          <h1 className="text-2xl font-extrabold text-gray-900 tracking-tight mb-1">
-            Tranche
-          </h1>
+          <div className="flex items-center justify-center gap-2.5 mb-1">
+            <TrancheLogo size={36} />
+            <h1 className="text-2xl font-extrabold text-gray-900 tracking-tight">
+              Tranche
+            </h1>
+          </div>
           <p className="text-sm text-gray-400 mt-1">
             ABL deal screening for credit teams
           </p>
@@ -254,7 +260,8 @@ export default function LoginPage({ passwordRecovery, onBackToLanding }) {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-2.5 rounded-xl bg-gradient-to-r from-gray-800 to-gray-900 text-white text-sm font-semibold shadow-lg shadow-gray-300/20 hover:shadow-gray-300/30 hover:from-gray-700 hover:to-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+              className="w-full py-2.5 rounded-xl text-gray-900 text-sm font-semibold shadow-lg hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+              style={{ backgroundColor: GOLD, boxShadow: '0 4px 16px rgba(212,168,67,0.3)' }}
             >
               {loading ? (
                 <>

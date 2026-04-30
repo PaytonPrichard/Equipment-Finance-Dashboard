@@ -6,6 +6,8 @@ import LandingPage from './components/LandingPage';
 import OrgSetup from './components/OrgSetup';
 import useSofrRate from './hooks/useSofrRate';
 import { useIdleTimeout } from './hooks/useIdleTimeout';
+import { isDemoMode } from './lib/demoMode';
+import DemoBanner from './components/DemoBanner';
 import { useToast } from './contexts/ToastContext';
 import { TutorialProvider, useTutorial } from './contexts/TutorialContext';
 import WelcomeTutorial from './components/WelcomeTutorial';
@@ -25,8 +27,6 @@ import ScreeningCriteria from './components/ScreeningCriteria';
 import { DEFAULT_CRITERIA, evaluateScreening } from './lib/screeningCriteria';
 import StressTestPanel from './components/StressTestPanel';
 import ExportPanel from './components/ExportPanel';
-// import SavedDeals from './components/SavedDeals'; // Hidden — pipeline replaces save library
-// import CsvImport from './components/CsvImport'; // Moved to batch tab
 import ExecutiveSummary from './components/ExecutiveSummary';
 import { fetchSavedDeals } from './lib/deals';
 import { updatePipelineDeal } from './lib/pipeline';
@@ -58,7 +58,6 @@ const AuditLogViewer = lazy(() => import('./components/AuditLogViewer'));
 const TeamManagement = lazy(() => import('./components/TeamManagement'));
 const PipelineDashboard = lazy(() => import('./components/PipelineDashboard'));
 const InfoGuide = lazy(() => import('./components/InfoGuide'));
-const BillingPage = lazy(() => import('./components/BillingPage'));
 const SettingsPanel = lazy(() => import('./components/SettingsPanel'));
 const DueDiligenceChecklist = lazy(() => import('./components/DueDiligenceChecklist'));
 const ComparableDeals = lazy(() => import('./components/ComparableDeals'));
@@ -149,9 +148,9 @@ export default function App() {
   const { session, user, profile, loading: authLoading, refreshProfile, passwordRecovery, emailVerified, signOut } = useAuth();
   const [showLogin, setShowLogin] = useState(false);
 
-  // Auto sign-out after 30 minutes of inactivity
+  // Auto sign-out after 30 minutes of inactivity (skipped in demo mode)
   useIdleTimeout(() => {
-    if (session) signOut();
+    if (session && !isDemoMode()) signOut();
   });
 
   // Show loading screen while auth initializes
@@ -459,6 +458,7 @@ function AuthenticatedApp({ profile, user }) {
     <TutorialProvider userId={userId}>
     <TutorialWelcomeHandler loadExample={loadExample} exampleDeals={exampleDeals} addToast={addToast} />
     <div className="min-h-screen">
+      <DemoBanner />
       <Header activeTab={activeTab} onTabChange={setActiveTab} onOpenGuide={() => setGuideOpen(true)} onOpenSettings={() => setSettingsOpen(true)} />
       <Suspense fallback={null}>
         <InfoGuide isOpen={guideOpen} onClose={() => setGuideOpen(false)} />
@@ -1139,10 +1139,6 @@ function AuthenticatedApp({ profile, user }) {
         ) : activeTab === 'team' ? (
           <ErrorBoundary><Suspense fallback={<LazyFallback />}>
             <TeamManagement />
-          </Suspense></ErrorBoundary>
-        ) : activeTab === 'billing' ? (
-          <ErrorBoundary><Suspense fallback={<LazyFallback />}>
-            <BillingPage />
           </Suspense></ErrorBoundary>
         ) : (
           /* Dashboard group: Overview, Compare, Performance, Audit */

@@ -32,3 +32,6 @@ yarn-error.log*
 .claude/
 
 .vercel
+
+# Local-only generated assets (brand sources, screenshots, exports)
+outputs/

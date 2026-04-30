@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { fetchPreferences, upsertPreferences } from '../lib/preferences';
+import { isDemoMode } from '../lib/demoMode';
 
 const TutorialContext = createContext(null);
 
@@ -25,11 +26,11 @@ function saveCachedState(state) {
 }
 
 export function TutorialProvider({ children, userId }) {
-  const [state, setState] = useState(() => loadCachedState() || {
-    welcome_completed: false,
-    beacons_dismissed: [],
+  const [state, setState] = useState(() => {
+    if (isDemoMode()) return { welcome_completed: true, beacons_dismissed: [] };
+    return loadCachedState() || { welcome_completed: false, beacons_dismissed: [] };
   });
-  const [loaded, setLoaded] = useState(false);
+  const [loaded, setLoaded] = useState(isDemoMode());
 
   // Load from Supabase on mount
   useEffect(() => {

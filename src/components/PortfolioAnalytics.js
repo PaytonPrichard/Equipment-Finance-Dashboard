@@ -61,7 +61,16 @@ export default function PortfolioAnalytics({ scoredDeals }) {
     return { barData, confusionMatrix: { tp, tn, fp, fn } };
   }, [scoredDeals]);
 
-  if (!scoredDeals || scoredDeals.length === 0) return null;
+  if (!scoredDeals || scoredDeals.length === 0) {
+    return (
+      <div className="glass-card rounded-2xl p-10 text-center">
+        <h3 className="text-sm font-semibold text-gray-700 mb-1">No scored deals yet</h3>
+        <p className="text-sm text-gray-500">
+          Portfolio analytics populate once you screen and save deals to your pipeline.
+        </p>
+      </div>
+    );
+  }
 
   const { tp, tn, fp, fn } = confusionMatrix;
   const total = tp + tn + fp + fn;

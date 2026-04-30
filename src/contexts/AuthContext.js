@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '../lib/supabase';
 import { resolvePermissions } from '../lib/permissions';
+import { isDemoMode } from '../lib/demoMode';
+import { DEMO_PROFILE, DEMO_USER } from '../data/demoPipeline';
 
 const AuthContext = createContext(null);
 
@@ -21,6 +23,20 @@ const OFFLINE_CONTEXT = {
   signIn: async () => ({ error: { message: 'Auth unavailable in offline mode' } }),
   signUp: async () => ({ error: { message: 'Auth unavailable in offline mode' } }),
   signOut: async () => {},
+  refreshProfile: async () => {},
+};
+
+const DEMO_CONTEXT = {
+  user: DEMO_USER,
+  profile: DEMO_PROFILE,
+  session: { user: DEMO_USER, access_token: 'demo' },
+  permissions: resolvePermissions('admin', []),
+  loading: false,
+  passwordRecovery: false,
+  emailVerified: true,
+  signIn: async () => ({ error: { message: 'Sign in disabled in demo mode' } }),
+  signUp: async () => ({ error: { message: 'Sign up disabled in demo mode' } }),
+  signOut: async () => { window.location.href = '/'; },
   refreshProfile: async () => {},
 };
 
@@ -52,6 +68,21 @@ function writeCachedProfile(profile) {
 }
 
 export function AuthProvider({ children }) {
+  if (isDemoMode()) {
+    return <DemoAuthProvider>{children}</DemoAuthProvider>;
+  }
+  return <RealAuthProvider>{children}</RealAuthProvider>;
+}
+
+function DemoAuthProvider({ children }) {
+  return (
+    <AuthContext.Provider value={DEMO_CONTEXT}>
+      {children}
+    </AuthContext.Provider>
+  );
+}
+
+function RealAuthProvider({ children }) {
   const [session, setSession] = useState(null);
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
