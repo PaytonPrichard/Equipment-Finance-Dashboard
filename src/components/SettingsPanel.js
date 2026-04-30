@@ -8,6 +8,7 @@ import { supabase } from '../lib/supabase';
 import { ROLE_LABELS } from '../lib/permissions';
 import { fetchPreferences, upsertPreferences } from '../lib/preferences';
 import { DEFAULT_CRITERIA, validateCriteria } from '../lib/screeningCriteria';
+import { sendInviteEmail } from '../lib/notifications';
 
 const NAV_ITEMS = [
   { id: 'account', label: 'Account', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg> },
@@ -153,17 +154,34 @@ export default function SettingsPanel({ isOpen, onClose, onCriteriaChange, activ
   const handleCreateInvite = useCallback(async () => {
     if (!supabase || !orgId || !userId) return;
     const code = Array.from(crypto.getRandomValues(new Uint8Array(15)), b => 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'[b % 36]).join('');
+    const trimmedEmail = inviteEmail.trim();
     const { data, error } = await supabase.from('invites').insert({
       org_id: orgId,
       created_by: userId,
       invite_code: code,
-      email: inviteEmail.trim() || null,
+      email: trimmedEmail || null,
       role: inviteRole,
       status: 'pending',
       expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
     }).select().single();
-    if (error) addToast('Failed to create invite', 'error');
-    else { setInvites(prev => [data, ...prev]); setInviteEmail(''); addToast('Invite created', 'success'); }
+    if (error) {
+      addToast('Failed to create invite', 'error');
+      return;
+    }
+    setInvites(prev => [data, ...prev]);
+    setInviteEmail('');
+    if (trimmedEmail) {
+      const result = await sendInviteEmail({
+        inviteCode: code,
+        email: trimmedEmail,
+        role: inviteRole,
+        orgId,
+      });
+      if (result.ok) addToast(`Invite sent to ${trimmedEmail}`, 'success');
+      else addToast(`Invite created (${code}) but email failed. Share the code manually.`, 'warning');
+    } else {
+      addToast('Invite created', 'success');
+    }
   }, [orgId, userId, inviteEmail, inviteRole, addToast]);
 
   if (!isOpen) return null;
