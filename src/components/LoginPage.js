@@ -5,9 +5,9 @@ import TrancheLogo from './TrancheLogo';
 
 const GOLD = '#D4A843';
 
-export default function LoginPage({ passwordRecovery, onBackToLanding }) {
+export default function LoginPage({ passwordRecovery, onBackToLanding, initialMode }) {
   const { signIn, signUp } = useAuth();
-  const [mode, setMode] = useState(passwordRecovery ? 'update_password' : 'signin');
+  const [mode, setMode] = useState(passwordRecovery ? 'update_password' : (initialMode || 'signin'));
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');

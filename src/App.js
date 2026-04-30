@@ -147,6 +147,7 @@ function getRevConcStatus(p) {
 export default function App() {
   const { session, user, profile, loading: authLoading, refreshProfile, passwordRecovery, emailVerified, signOut } = useAuth();
   const [showLogin, setShowLogin] = useState(false);
+  const [loginMode, setLoginMode] = useState('signin');
 
   // Auto sign-out after 30 minutes of inactivity (skipped in demo mode)
   useIdleTimeout(() => {
@@ -173,9 +174,14 @@ export default function App() {
 
   if (!session) {
     if (showLogin) {
-      return <LoginPage onBackToLanding={() => setShowLogin(false)} />;
+      return <LoginPage initialMode={loginMode} onBackToLanding={() => setShowLogin(false)} />;
     }
-    return <LandingPage onGetStarted={() => setShowLogin(true)} onSignIn={() => setShowLogin(true)} />;
+    return (
+      <LandingPage
+        onGetStarted={() => { setLoginMode('signup'); setShowLogin(true); }}
+        onSignIn={() => { setLoginMode('signin'); setShowLogin(true); }}
+      />
+    );
   }
 
   // Block unverified email users
