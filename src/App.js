@@ -213,6 +213,7 @@ function AuthenticatedApp({ profile, user }) {
 
   const [savedDealsList, setSavedDealsList] = useState([]);
   const [pipelineDealsList, setPipelineDealsList] = useState([]);
+  const [savingToPipeline, setSavingToPipeline] = useState(false);
 
   // Fetch saved deals and pipeline deals from Supabase
   useEffect(() => {
@@ -631,6 +632,37 @@ function AuthenticatedApp({ profile, user }) {
                       className="px-4 py-2 rounded-xl bg-gold-500/15 text-[11px] font-semibold text-gold-300 border border-gold-500/30 hover:bg-gold-500/20 hover:border-gold-500/40 transition-all"
                     >
                       Update Pipeline Deal
+                    </button>
+                  )}
+                  {valid && !activePipelineDealId && (
+                    <button
+                      onClick={async () => {
+                        if (!user?.id || !profile?.org_id) {
+                          addToast('Profile is still loading. Try again in a moment.', 'warning');
+                          return;
+                        }
+                        setSavingToPipeline(true);
+                        const dealName = (inputs.companyName || '').trim() || `Untitled Deal — ${new Date().toLocaleDateString()}`;
+                        const { createPipelineDeal } = await import('./lib/pipeline');
+                        const { data, error } = await createPipelineDeal(user.id, profile.org_id, dealName, inputs, riskScore?.composite ?? null);
+                        setSavingToPipeline(false);
+                        if (error) {
+                          addToast('Failed to save to pipeline.', 'error');
+                        } else if (data) {
+                          addToast(`Saved "${dealName}" to pipeline`, 'success');
+                          setPipelineDealsList((prev) => [data, ...prev]);
+                          setActivePipelineDealId(data.id);
+                        }
+                      }}
+                      disabled={savingToPipeline}
+                      className="px-4 py-2 rounded-xl text-[11px] font-semibold text-gray-900 hover:opacity-90 disabled:opacity-50 transition-all flex items-center gap-1.5"
+                      style={{ backgroundColor: '#D4A843' }}
+                    >
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+                        <polyline points="17 21 17 13 7 13 7 21" />
+                      </svg>
+                      {savingToPipeline ? 'Saving...' : 'Save to Pipeline'}
                     </button>
                   )}
                   <button

@@ -3,6 +3,9 @@ import { formatCurrency, DEFAULT_SOFR } from '../utils/calculations';
 import { getModule, getAvailableModules } from '../modules';
 import { exportBatchCsv } from '../utils/csvExport';
 import { generateXlsxTemplate } from '../utils/templateGenerator';
+import { useAuth } from '../contexts/AuthContext';
+import { useToast } from '../contexts/ToastContext';
+import { createPipelineDeal } from '../lib/pipeline';
 
 // ── Module-specific table columns ────────────────────────────
 function getColumns(moduleKey) {
@@ -96,12 +99,16 @@ function findMissingFields(inputs, schema) {
 
 export default function BatchScreening({ sofr = DEFAULT_SOFR, onLoadDeal, activeModule: initialModule = 'equipment_finance' }) {
   const fileRef = useRef(null);
+  const { user, profile } = useAuth();
+  const { addToast } = useToast();
   const [status, setStatus] = useState(null);
   const [scoredDeals, setScoredDeals] = useState([]);
   const [incompleteDeals, setIncompleteDeals] = useState([]);
   const [sortKey, setSortKey] = useState('score');
   const [sortAsc, setSortAsc] = useState(false);
   const [batchModule, setBatchModule] = useState(initialModule);
+  const [savingAll, setSavingAll] = useState(false);
+  const [savedRowIds, setSavedRowIds] = useState(new Set());
 
   const mod = useMemo(() => getModule(batchModule), [batchModule]);
   const columns = useMemo(() => getColumns(batchModule), [batchModule]);
@@ -113,6 +120,7 @@ export default function BatchScreening({ sofr = DEFAULT_SOFR, onLoadDeal, active
     setBatchModule(key);
     setScoredDeals([]);
     setIncompleteDeals([]);
+    setSavedRowIds(new Set());
     setSortKey('score');
     setSortAsc(false);
     setStatus(null);
@@ -169,6 +177,7 @@ export default function BatchScreening({ sofr = DEFAULT_SOFR, onLoadDeal, active
 
     setScoredDeals(scored);
     setIncompleteDeals(incomplete);
+    setSavedRowIds(new Set());
 
     const moduleLabel = MODULE_LABELS[batchModule] || '';
     if (scored.length === 0 && incomplete.length > 0) {
@@ -376,22 +385,73 @@ export default function BatchScreening({ sofr = DEFAULT_SOFR, onLoadDeal, active
           </button>
 
           {scoredDeals.length > 0 && (
-            <button
-              className="pill-btn px-3 py-1.5 rounded-lg text-[11px] font-medium text-gray-500 hover:text-gray-800 flex items-center gap-1.5"
-              onClick={() => exportBatchCsv(scoredDeals.map(d => ({
-                ...d,
-                score: d.riskScore.composite,
-                recommendation: d.rec,
-                metrics: d.metrics,
-              })))}
-            >
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                <polyline points="7 10 12 15 17 10"/>
-                <line x1="12" y1="15" x2="12" y2="3"/>
-              </svg>
-              Export Results CSV
-            </button>
+            <>
+              <button
+                className="px-3 py-1.5 rounded-lg text-[11px] font-semibold text-gray-900 hover:opacity-90 disabled:opacity-50 transition-all flex items-center gap-1.5"
+                style={{ backgroundColor: '#D4A843' }}
+                disabled={savingAll || scoredDeals.every((d) => savedRowIds.has(d.id))}
+                onClick={async () => {
+                  if (!user?.id || !profile?.org_id) {
+                    setStatus({ type: 'error', message: 'Profile is still loading.' });
+                    return;
+                  }
+                  setSavingAll(true);
+                  const toSave = scoredDeals.filter((d) => !savedRowIds.has(d.id));
+                  let saved = 0;
+                  let failed = 0;
+                  const newSavedIds = new Set(savedRowIds);
+                  for (const deal of toSave) {
+                    const dealName = (deal.inputs?.companyName || '').trim() || `Untitled Deal ${deal.id}`;
+                    const { data, error } = await createPipelineDeal(
+                      user.id,
+                      profile.org_id,
+                      dealName,
+                      deal.inputs,
+                      deal.riskScore?.composite ?? null,
+                    );
+                    if (data && !error) {
+                      saved++;
+                      newSavedIds.add(deal.id);
+                    } else {
+                      failed++;
+                    }
+                  }
+                  setSavedRowIds(newSavedIds);
+                  setSavingAll(false);
+                  if (failed === 0) {
+                    addToast(`Saved ${saved} deal${saved === 1 ? '' : 's'} to pipeline`, 'success');
+                  } else {
+                    addToast(`Saved ${saved}, ${failed} failed`, 'warning');
+                  }
+                }}
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+                  <polyline points="17 21 17 13 7 13 7 21" />
+                </svg>
+                {savingAll
+                  ? 'Saving...'
+                  : scoredDeals.every((d) => savedRowIds.has(d.id))
+                    ? 'All Saved'
+                    : `Save ${scoredDeals.filter((d) => !savedRowIds.has(d.id)).length} to Pipeline`}
+              </button>
+              <button
+                className="pill-btn px-3 py-1.5 rounded-lg text-[11px] font-medium text-gray-500 hover:text-gray-800 flex items-center gap-1.5"
+                onClick={() => exportBatchCsv(scoredDeals.map(d => ({
+                  ...d,
+                  score: d.riskScore.composite,
+                  recommendation: d.rec,
+                  metrics: d.metrics,
+                })))}
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="7 10 12 15 17 10"/>
+                  <line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+                Export Results CSV
+              </button>
+            </>
           )}
 
           {status?.type === 'success' && (

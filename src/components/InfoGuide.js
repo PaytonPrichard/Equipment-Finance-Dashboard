@@ -238,26 +238,25 @@ export default function InfoGuide({ isOpen, onClose }) {
       />
 
       {/* Modal */}
-      <div className="relative w-full max-w-4xl max-h-[85vh] mx-4 rounded-2xl border border-white/[0.08] overflow-hidden animate-fade-in-up"
-        style={{ background: 'rgba(17, 17, 22, 0.97)' }}
-      >
+      <div className="relative w-full max-w-4xl max-h-[85vh] mx-4 rounded-2xl border border-gray-200 overflow-hidden animate-fade-in-up bg-white shadow-2xl">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-white/[0.06]">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-xl bg-gold-500/10 flex items-center justify-center">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-gold-400" strokeWidth="2">
+            <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ backgroundColor: 'rgba(212, 168, 67, 0.15)' }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#D4A843' }}>
                 <circle cx="12" cy="12" r="10" />
-                <path d="M12 16v-4M12 8h.01" />
+                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+                <line x1="12" y1="17" x2="12.01" y2="17" />
               </svg>
             </div>
             <div>
-              <h2 className="text-base font-bold text-white">Guide & Reference</h2>
-              <p className="text-[11px] text-slate-500">Everything this tool does, and how to use it</p>
+              <h2 className="text-base font-bold text-gray-900">Help</h2>
+              <p className="text-[11px] text-gray-500">Everything this tool does, and how to use it</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-500 hover:text-slate-300 hover:bg-white/[0.06] transition-all"
+            className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-all"
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <line x1="18" y1="6" x2="6" y2="18" />
@@ -269,18 +268,19 @@ export default function InfoGuide({ isOpen, onClose }) {
         {/* Body */}
         <div className="flex" style={{ height: 'calc(85vh - 72px)' }}>
           {/* Sidebar nav */}
-          <nav className="w-52 flex-shrink-0 border-r border-white/[0.06] py-3 overflow-y-auto">
+          <nav className="w-52 flex-shrink-0 border-r border-gray-200 py-3 overflow-y-auto bg-gray-50">
             {SECTIONS.map((section) => (
               <button
                 key={section.id}
                 onClick={() => setActiveSection(section.id)}
                 className={`w-full flex items-center gap-2.5 px-4 py-2.5 text-left transition-all ${
                   activeSection === section.id
-                    ? 'bg-gold-500/10 text-gold-300 border-r-2 border-gold-400'
-                    : 'text-slate-500 hover:text-slate-300 hover:bg-white/[0.03]'
+                    ? 'bg-white text-gray-900 border-r-2'
+                    : 'text-gray-500 hover:text-gray-900 hover:bg-white/60'
                 }`}
+                style={activeSection === section.id ? { borderRightColor: '#D4A843' } : undefined}
               >
-                <span className={activeSection === section.id ? 'text-gold-400' : 'text-slate-600'}>
+                <span style={{ color: activeSection === section.id ? '#D4A843' : '#9ca3af' }}>
                   {section.icon}
                 </span>
                 <span className="text-[12px] font-semibold">{section.title}</span>
@@ -289,20 +289,20 @@ export default function InfoGuide({ isOpen, onClose }) {
           </nav>
 
           {/* Content */}
-          <div className="flex-1 overflow-y-auto px-8 py-6">
+          <div className="flex-1 overflow-y-auto px-8 py-6 bg-white">
             <div className="flex items-center gap-3 mb-6">
-              <span className="text-gold-400">{currentSection.icon}</span>
-              <h3 className="text-lg font-bold text-white">{currentSection.title}</h3>
+              <span style={{ color: '#D4A843' }}>{currentSection.icon}</span>
+              <h3 className="text-lg font-bold text-gray-900">{currentSection.title}</h3>
             </div>
 
             <div className="space-y-6">
               {currentSection.content.map((block, i) => (
                 <div key={i}>
-                  <h4 className="text-sm font-semibold text-slate-200 mb-2 flex items-center gap-2">
-                    <span className="w-1 h-1 rounded-full bg-gold-400 flex-shrink-0" />
+                  <h4 className="text-sm font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                    <span className="w-1 h-1 rounded-full flex-shrink-0" style={{ backgroundColor: '#D4A843' }} />
                     {block.heading}
                   </h4>
-                  <p className="text-[13px] text-slate-400 leading-relaxed pl-3 whitespace-pre-line">
+                  <p className="text-[13px] text-gray-600 leading-relaxed pl-3 whitespace-pre-line">
                     {block.body}
                   </p>
                 </div>
@@ -310,12 +310,13 @@ export default function InfoGuide({ isOpen, onClose }) {
             </div>
 
             {/* Contact card */}
-            <div className="mt-8 p-4 rounded-xl bg-gold-500/[0.06] border border-gold-500/20">
-              <p className="text-[12px] font-semibold text-slate-200 mb-1">Need more help?</p>
-              <p className="text-[11px] text-slate-400 mb-3">We read every message. Expect a reply within one business day.</p>
+            <div className="mt-8 p-4 rounded-xl border" style={{ backgroundColor: 'rgba(212, 168, 67, 0.06)', borderColor: 'rgba(212, 168, 67, 0.25)' }}>
+              <p className="text-[12px] font-semibold text-gray-900 mb-1">Need more help?</p>
+              <p className="text-[11px] text-gray-500 mb-3">We read every message. Expect a reply within one business day.</p>
               <a
                 href="mailto:team@gettranche.app?subject=Tranche%20support"
-                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gold-500/15 hover:bg-gold-500/25 text-gold-300 text-[11px] font-semibold transition-colors"
+                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-colors hover:opacity-90"
+                style={{ backgroundColor: '#D4A843', color: '#141210' }}
               >
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
@@ -326,8 +327,8 @@ export default function InfoGuide({ isOpen, onClose }) {
             </div>
 
             {/* Footer in content area */}
-            <div className="mt-6 pt-4 border-t border-white/[0.04]">
-              <p className="text-[10px] text-slate-600 italic">
+            <div className="mt-6 pt-4 border-t border-gray-200">
+              <p className="text-[10px] text-gray-400 italic">
                 All screening outputs are preliminary and indicative. Not a credit decision. Final terms subject to full underwriting, credit committee approval, and documentation.
               </p>
             </div>
