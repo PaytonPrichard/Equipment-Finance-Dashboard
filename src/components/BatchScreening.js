@@ -93,7 +93,17 @@ export default function BatchScreening({ sofr = DEFAULT_SOFR, onLoadDeal, active
       setStatus({ type: 'error', message: 'File is empty.' });
       return;
     }
-    const deals = mod.parseCsvDeals(text);
+    // Strip parenthesized unit hints from the header line so labels like
+    // "Annual Revenue (USD)" still match the parser's field map.
+    const lines = text.split('\n');
+    if (lines.length > 0) {
+      lines[0] = lines[0].replace(/\s*\([^)]*\)/g, '');
+    }
+    const rawDeals = mod.parseCsvDeals(lines.join('\n'));
+    // Drop any rows that still carry the sample sentinel (user forgot to delete).
+    const deals = (rawDeals || []).filter(
+      (d) => !/\(sample/i.test(d.inputs?.companyName || ''),
+    );
     if (!deals || deals.length === 0) {
       setStatus({ type: 'error', message: 'No valid rows found in the file.' });
       return;
@@ -145,12 +155,22 @@ export default function BatchScreening({ sofr = DEFAULT_SOFR, onLoadDeal, active
         const colCount = sheet.columnCount || 0;
         const rowCount = sheet.rowCount || 0;
         const lines = [];
+        // Skip sparse rows (title + section group rows have merged cells, so
+        // most cells are blank) until we find the dense header row.
+        let foundHeaders = false;
+        const sparseThreshold = Math.max(3, Math.floor(colCount * 0.3));
         for (let r = 1; r <= rowCount; r++) {
           const row = sheet.getRow(r);
           const cells = [];
+          let nonEmpty = 0;
           for (let c = 1; c <= colCount; c++) {
-            // Strip commas to keep parser happy (parseCsvDeals uses naive split)
-            cells.push(cellToString(row.getCell(c).value).replace(/,/g, ' '));
+            const v = cellToString(row.getCell(c).value);
+            cells.push(v.replace(/,/g, ' '));
+            if (v.trim()) nonEmpty++;
+          }
+          if (!foundHeaders) {
+            if (nonEmpty < sparseThreshold) continue;
+            foundHeaders = true;
           }
           if (cells.some((v) => v.trim() !== '')) {
             lines.push(cells.join(','));
