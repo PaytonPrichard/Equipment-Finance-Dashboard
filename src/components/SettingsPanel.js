@@ -17,6 +17,44 @@ const NAV_ITEMS = [
   { id: 'branding', label: 'Branding', adminOnly: true, icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" /></svg> },
   { id: 'billing', label: 'Billing', adminOnly: true, icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2" /><line x1="1" y1="10" x2="23" y2="10" /></svg> },
   { id: 'integrations', label: 'Integrations', adminOnly: true, icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" /></svg> },
+  { id: 'help', label: 'Help', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" /><line x1="12" y1="17" x2="12.01" y2="17" /></svg> },
+];
+
+// Edit these freely. Each entry is { q, a } and renders as a collapsible row.
+// Keep answers under 3 short sentences. If something needs more, link out.
+const FAQS = [
+  {
+    q: 'How do I screen a deal?',
+    a: 'On the New Deal screen, fill in borrower financials on the left. The risk score, metrics, and recommendation appear on the right in real time. No save button needed for screening; you only save when you want to add it to your pipeline.',
+  },
+  {
+    q: 'What does the risk score mean?',
+    a: '75 or higher is strong, 55 to 74 is moderate, below 35 is weak. The score combines leverage, coverage, liquidity, and asset quality. You can configure the thresholds and weights under Settings, Screening Policy.',
+  },
+  {
+    q: 'Can I screen multiple deals at once?',
+    a: 'Yes. On the New Deal screen, switch to Bulk and paste a CSV. Templates are available per asset class. Each row gets its own screening result.',
+  },
+  {
+    q: 'How do I invite my team?',
+    a: 'Open Settings, Team. Enter their email and role, then Generate Invite. They get an email with a link to join your organization. If you skip the email field, share the code manually.',
+  },
+  {
+    q: 'How do I change the screening thresholds?',
+    a: 'Settings, Screening Policy. Adjust DSCR, leverage, advance rate, and other thresholds. Changes apply to new screenings immediately. Saved deals keep their original verdict.',
+  },
+  {
+    q: 'How do I export a screening memo?',
+    a: 'After screening a deal, click Export on the right panel. You get a branded PDF with the score, metrics, recommendation, and your firm logo. Configure the branding under Settings, Branding.',
+  },
+  {
+    q: 'Whats the difference between the modules?',
+    a: 'Equipment Finance is for term loans against equipment. Accounts Receivable is for invoice-backed lines. Inventory is for asset-backed inventory facilities. Each has its own form, scoring, and CSV template.',
+  },
+  {
+    q: 'Is my data secure?',
+    a: 'Yes. All data is encrypted in transit and at rest. Each organization is isolated via row-level security. We never share customer data across orgs.',
+  },
 ];
 
 function SettingsInput({ label, value, onChange, type = 'text', placeholder, hint, suffix }) {
@@ -467,7 +505,72 @@ export default function SettingsPanel({ isOpen, onClose, onCriteriaChange, activ
           {section === 'integrations' && isAdmin && (
             <IntegrationsSection addToast={addToast} />
           )}
+
+          {/* Help */}
+          {section === 'help' && (
+            <HelpSection />
+          )}
         </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Help Section (FAQ + contact) ────────────────────────────
+function HelpSection() {
+  const [openIdx, setOpenIdx] = useState(null);
+  return (
+    <div className="space-y-6">
+      <div>
+        <h3 className="text-sm font-bold text-gray-900 mb-1">Help</h3>
+        <p className="text-[12px] text-gray-500">Common questions. If yours isn't here, email us directly.</p>
+      </div>
+      <div className="space-y-2">
+        {FAQS.map((item, i) => {
+          const isOpen = openIdx === i;
+          return (
+            <div key={i} className="border border-gray-200 rounded-xl overflow-hidden">
+              <button
+                onClick={() => setOpenIdx(isOpen ? null : i)}
+                className="w-full flex items-center justify-between gap-3 px-4 py-3 text-left hover:bg-gray-50 transition-colors"
+              >
+                <span className="text-[13px] font-medium text-gray-900">{item.q}</span>
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  className={`flex-shrink-0 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+                >
+                  <polyline points="6 9 12 15 18 9" />
+                </svg>
+              </button>
+              {isOpen && (
+                <div className="px-4 pb-4 text-[12px] text-gray-600 leading-relaxed">
+                  {item.a}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+      <div className="p-4 rounded-xl bg-gray-50 border border-gray-200">
+        <h4 className="text-[13px] font-semibold text-gray-900 mb-1">Still need help?</h4>
+        <p className="text-[12px] text-gray-500 mb-3">
+          We read every message. Expect a reply within one business day.
+        </p>
+        <a
+          href="mailto:team@gettranche.app?subject=Tranche%20support"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-900 text-white text-[12px] font-semibold hover:bg-gray-800 transition-colors"
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+            <polyline points="22,6 12,13 2,6" />
+          </svg>
+          Email team@gettranche.app
+        </a>
       </div>
     </div>
   );
