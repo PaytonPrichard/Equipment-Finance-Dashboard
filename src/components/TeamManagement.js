@@ -54,11 +54,6 @@ export default function TeamManagement() {
   const [brandingMemoTitle, setBrandingMemoTitle] = useState('');
   const [savingBranding, setSavingBranding] = useState(false);
 
-  // Plan management state
-  const [planType, setPlanType] = useState('pilot');
-  const [planExpiry, setPlanExpiry] = useState('');
-  const [savingPlan, setSavingPlan] = useState(false);
-
   // Transfer admin state
   const [transferTarget, setTransferTarget] = useState(null);
   const [transferConfirmText, setTransferConfirmText] = useState('');
@@ -106,9 +101,6 @@ export default function TeamManagement() {
         addToast('Failed to load organization: ' + orgRes.error.message, 'error');
       } else {
         setOrg(orgRes.data);
-        // Load plan settings
-        setPlanType(orgRes.data?.plan || 'pilot');
-        setPlanExpiry(orgRes.data?.plan_expires_at ? orgRes.data.plan_expires_at.slice(0, 10) : '');
         setOrgSettings(orgRes.data?.org_settings || {});
         // Load branding settings
         const b = orgRes.data?.branding || {};
@@ -687,74 +679,6 @@ export default function TeamManagement() {
           </button>
         </form>
       </div>
-
-      {/* Plan Management */}
-      {can('org.manage_users') && (
-        <div className="glass-card rounded-2xl p-6">
-          <div className="flex items-center gap-2.5 mb-5">
-            <div className="w-7 h-7 rounded-lg bg-gray-100 flex items-center justify-center">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-gray-600" strokeWidth="2">
-                <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-                <line x1="16" y1="2" x2="16" y2="6" />
-                <line x1="8" y1="2" x2="8" y2="6" />
-                <line x1="3" y1="10" x2="21" y2="10" />
-              </svg>
-            </div>
-            <div>
-              <h3 className="text-sm font-semibold text-slate-200">Plan Management</h3>
-              <p className="text-[10px] text-slate-500">Set plan type and expiry for this organization</p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4 mb-4">
-            <div>
-              <label className="block text-[11px] font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">Plan Type</label>
-              <select
-                value={planType}
-                onChange={(e) => setPlanType(e.target.value)}
-                className="w-full px-3.5 py-3 rounded-xl bg-white border border-gray-200 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-gray-400/40 transition-all"
-              >
-                <option value="free">Free</option>
-                <option value="pilot">Pilot</option>
-                <option value="analyst">Analyst</option>
-                <option value="team">Team</option>
-                <option value="enterprise">Enterprise</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-[11px] font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">Expiry Date</label>
-              <input
-                type="date"
-                value={planExpiry}
-                onChange={(e) => setPlanExpiry(e.target.value)}
-                className="w-full px-3.5 py-3 rounded-xl bg-white border border-gray-200 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-gray-400/40 transition-all"
-              />
-            </div>
-          </div>
-
-          <button
-            onClick={async () => {
-              if (!supabase || !orgId) return;
-              setSavingPlan(true);
-              const { error } = await supabase
-                .from('organizations')
-                .update({
-                  plan: planType,
-                  plan_expires_at: planExpiry ? new Date(planExpiry + 'T23:59:59Z').toISOString() : null,
-                  updated_at: new Date().toISOString(),
-                })
-                .eq('id', orgId);
-              setSavingPlan(false);
-              if (error) addToast('Failed to update plan: ' + error.message, 'error');
-              else addToast('Plan updated', 'success');
-            }}
-            disabled={savingPlan}
-            className="px-4 py-2.5 rounded-xl text-[12px] font-semibold bg-gradient-to-r from-gray-800 to-gray-900 text-white shadow-lg shadow-gray-300/20 hover:shadow-gray-300/30 disabled:opacity-50 transition-all"
-          >
-            {savingPlan ? 'Saving...' : 'Save Plan'}
-          </button>
-        </div>
-      )}
 
       {/* Credit Policy Defaults */}
       {can('org.manage_users') && (

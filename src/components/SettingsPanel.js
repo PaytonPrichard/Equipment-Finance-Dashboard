@@ -105,10 +105,6 @@ export default function SettingsPanel({ isOpen, onClose, onCriteriaChange, activ
   // Screening criteria state
   const [criteria, setCriteria] = useState({ ...DEFAULT_CRITERIA });
 
-  // Plan state
-  const [planType, setPlanType] = useState('pilot');
-  const [planExpiry, setPlanExpiry] = useState('');
-
   // Org settings state
   const [orgSettings, setOrgSettings] = useState({});
 
@@ -128,8 +124,6 @@ export default function SettingsPanel({ isOpen, onClose, onCriteriaChange, activ
         if (invitesRes.data) setInvites(invitesRes.data);
         if (orgRes.data) {
           setOrg(orgRes.data);
-          setPlanType(orgRes.data.plan || 'pilot');
-          setPlanExpiry(orgRes.data.plan_expires_at ? orgRes.data.plan_expires_at.slice(0, 10) : '');
           setOrgSettings(orgRes.data.org_settings || {});
           const b = orgRes.data.branding || {};
           setBrandingLogoUrl(b.logoUrl || '');
@@ -371,30 +365,6 @@ export default function SettingsPanel({ isOpen, onClose, onCriteriaChange, activ
                   </div>
                 )}
               </div>
-              {isAdmin && (
-                <div>
-                  <h3 className="text-sm font-bold text-gray-900 mb-3">Plan Management</h3>
-                  <div className="grid grid-cols-2 gap-3 mb-3">
-                    <div>
-                      <label className="block text-[11px] font-semibold text-gray-400 mb-1 uppercase tracking-wider">Plan Type</label>
-                      <select value={planType} onChange={(e) => setPlanType(e.target.value)} className="w-full px-3 py-2.5 rounded-xl bg-gray-50 border border-gray-200 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-gray-400/40 transition-all">
-                        <option value="free">Free</option>
-                        <option value="pilot">Pilot</option>
-                        <option value="starter">Starter</option>
-                        <option value="growth">Growth</option>
-                        <option value="institution">Institution</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-[11px] font-semibold text-gray-400 mb-1 uppercase tracking-wider">Expiry</label>
-                      <input type="date" value={planExpiry} onChange={(e) => setPlanExpiry(e.target.value)} className="w-full px-3 py-2.5 rounded-xl bg-gray-50 border border-gray-200 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-gray-400/40 transition-all" />
-                    </div>
-                  </div>
-                  <button onClick={() => saveToOrg({ plan: planType, plan_expires_at: planExpiry ? new Date(planExpiry + 'T23:59:59Z').toISOString() : null })} className="px-4 py-2 rounded-lg bg-gray-100 text-gray-900 text-[12px] font-semibold hover:bg-gray-100 transition-all">
-                    Save Plan
-                  </button>
-                </div>
-              )}
             </div>
           )}
 
@@ -494,7 +464,7 @@ export default function SettingsPanel({ isOpen, onClose, onCriteriaChange, activ
                   </div>
                 </div>
                 <p className="text-[12px] text-gray-400">Stripe billing integration coming soon. Contact us for plan changes or pilot extensions.</p>
-                <a href="mailto:joelpeter617@gmail.com?subject=Tranche%20Billing" className="inline-block mt-2 text-[12px] text-gray-600 hover:text-gray-700 transition-colors">
+                <a href="mailto:team@gettranche.app?subject=Tranche%20Billing" className="inline-block mt-2 text-[12px] text-gray-600 hover:text-gray-700 transition-colors">
                   Contact about billing
                 </a>
               </div>
