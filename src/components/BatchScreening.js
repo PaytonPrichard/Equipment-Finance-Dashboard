@@ -2,22 +2,7 @@ import React, { useRef, useState, useMemo, useCallback } from 'react';
 import { formatCurrency, DEFAULT_SOFR } from '../utils/calculations';
 import { getModule, getAvailableModules } from '../modules';
 import { exportBatchCsv } from '../utils/csvExport';
-
-// ── CSV Templates per module ─────────────────────────────────
-const TEMPLATES = {
-  equipment_finance: {
-    headers: 'CompanyName,YearsInBusiness,AnnualRevenue,EBITDA,TotalExistingDebt,IndustrySector,CreditRating,EquipmentType,EquipmentCondition,EquipmentCost,DownPayment,FinancingType,UsefulLife,LoanTerm,EssentialUse',
-    row: 'Acme Corp,10,50000000,8000000,20000000,Manufacturing,Adequate,Heavy Machinery,New,5000000,500000,EFA,15,84,true',
-  },
-  accounts_receivable: {
-    headers: 'CompanyName,YearsInBusiness,AnnualRevenue,EBITDA,TotalExistingDebt,IndustrySector,CreditRating,TotalAROutstanding,ARUnder30,AROver30,AROver60,AROver90,TopCustomerConcentration,DilutionRate,IneligiblesPct,RequestedAdvanceRate,ExistingABLFacility',
-    row: 'Acme Corp,10,50000000,8000000,20000000,Manufacturing,Adequate,12000000,8000000,2500000,1000000,500000,25,3,10,80,false',
-  },
-  inventory_finance: {
-    headers: 'CompanyName,YearsInBusiness,AnnualRevenue,EBITDA,TotalExistingDebt,IndustrySector,CreditRating,TotalInventory,RawMaterials,WorkInProgress,FinishedGoods,ObsoleteInventory,InventoryTurnover,AverageDaysOnHand,RequestedAdvanceRate,NOLVPct,Perishable',
-    row: 'Acme Corp,10,50000000,8000000,20000000,Manufacturing,Adequate,15000000,4000000,3000000,7000000,1000000,6,60,50,65,false',
-  },
-};
+import { generateXlsxTemplate } from '../utils/templateGenerator';
 
 // ── Module-specific table columns ────────────────────────────
 function getColumns(moduleKey) {
@@ -102,64 +87,107 @@ export default function BatchScreening({ sofr = DEFAULT_SOFR, onLoadDeal, active
     setStatus(null);
   }, [batchModule]);
 
-  // ── CSV Upload ────────────────────────────────────────────
-  const handleFile = useCallback((e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (evt) => {
-      try {
-        const text = evt.target.result;
-        if (!text || !text.trim()) {
-          setStatus({ type: 'error', message: 'File is empty.' });
-          return;
-        }
-
-        const deals = mod.parseCsvDeals(text);
-        if (!deals || deals.length === 0) {
-          setStatus({ type: 'error', message: 'No valid rows found in CSV.' });
-          return;
-        }
-        if (deals.length > 500) {
-          setStatus({ type: 'error', message: `CSV has ${deals.length} rows. Maximum is 500 deals per batch.` });
-          return;
-        }
-
-        // Score every deal
-        const scored = deals.map((deal) => {
-          const metrics = mod.calculateMetrics(deal.inputs, sofr);
-          const riskScore = mod.calculateRiskScore(deal.inputs, metrics);
-          const rec = mod.getRecommendation(riskScore.composite);
-          return { ...deal, metrics, riskScore, rec };
-        });
-
-        setScoredDeals(scored);
-        setStatus({ type: 'success', message: `Screened ${scored.length} ${MODULE_LABELS[batchModule] || ''} deal${scored.length === 1 ? '' : 's'}` });
-        setTimeout(() => setStatus(null), 4000);
-      } catch (err) {
-        setStatus({ type: 'error', message: err.message || 'Failed to parse CSV.' });
-      }
-    };
-    reader.onerror = () => {
-      setStatus({ type: 'error', message: 'Failed to read file.' });
-    };
-    reader.readAsText(file);
-    e.target.value = '';
+  // ── File Upload (CSV or .xlsx) ────────────────────────────
+  const processCsvText = useCallback((text) => {
+    if (!text || !text.trim()) {
+      setStatus({ type: 'error', message: 'File is empty.' });
+      return;
+    }
+    const deals = mod.parseCsvDeals(text);
+    if (!deals || deals.length === 0) {
+      setStatus({ type: 'error', message: 'No valid rows found in the file.' });
+      return;
+    }
+    if (deals.length > 500) {
+      setStatus({ type: 'error', message: `File has ${deals.length} rows. Maximum is 500 deals per batch.` });
+      return;
+    }
+    const scored = deals.map((deal) => {
+      const metrics = mod.calculateMetrics(deal.inputs, sofr);
+      const riskScore = mod.calculateRiskScore(deal.inputs, metrics);
+      const rec = mod.getRecommendation(riskScore.composite);
+      return { ...deal, metrics, riskScore, rec };
+    });
+    setScoredDeals(scored);
+    setStatus({ type: 'success', message: `Screened ${scored.length} ${MODULE_LABELS[batchModule] || ''} deal${scored.length === 1 ? '' : 's'}` });
+    setTimeout(() => setStatus(null), 4000);
   }, [sofr, mod, batchModule]);
 
+  const handleFile = useCallback(async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+
+    const ext = (file.name.split('.').pop() || '').toLowerCase();
+
+    try {
+      if (ext === 'xlsx') {
+        const ExcelJS = (await import('exceljs')).default;
+        const buffer = await file.arrayBuffer();
+        const wb = new ExcelJS.Workbook();
+        await wb.xlsx.load(buffer);
+        const sheet = wb.worksheets[0];
+        if (!sheet) {
+          setStatus({ type: 'error', message: 'No sheets found in workbook.' });
+          return;
+        }
+        const cellToString = (v) => {
+          if (v == null) return '';
+          if (typeof v === 'object') {
+            if (Array.isArray(v.richText)) return v.richText.map(t => t.text).join('');
+            if (v.text != null) return String(v.text);
+            if (v.result != null) return String(v.result);
+            if (v instanceof Date) return v.toISOString();
+            return '';
+          }
+          return String(v);
+        };
+        const colCount = sheet.columnCount || 0;
+        const rowCount = sheet.rowCount || 0;
+        const lines = [];
+        for (let r = 1; r <= rowCount; r++) {
+          const row = sheet.getRow(r);
+          const cells = [];
+          for (let c = 1; c <= colCount; c++) {
+            // Strip commas to keep parser happy (parseCsvDeals uses naive split)
+            cells.push(cellToString(row.getCell(c).value).replace(/,/g, ' '));
+          }
+          if (cells.some((v) => v.trim() !== '')) {
+            lines.push(cells.join(','));
+          }
+        }
+        processCsvText(lines.join('\n'));
+        return;
+      }
+
+      // CSV path
+      const reader = new FileReader();
+      reader.onload = (evt) => processCsvText(evt.target.result);
+      reader.onerror = () => setStatus({ type: 'error', message: 'Failed to read file.' });
+      reader.readAsText(file);
+    } catch (err) {
+      setStatus({ type: 'error', message: err.message || 'Failed to read file.' });
+    }
+  }, [processCsvText]);
+
   // ── Template Download ─────────────────────────────────────
-  const downloadTemplate = useCallback(() => {
-    const tmpl = TEMPLATES[batchModule] || TEMPLATES.equipment_finance;
-    const csv = `${tmpl.headers}\n${tmpl.row}\n`;
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `batch_${batchModule}_template.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-  }, [batchModule]);
+  const [downloadingTemplate, setDownloadingTemplate] = useState(false);
+  const downloadTemplate = useCallback(async () => {
+    setDownloadingTemplate(true);
+    try {
+      const blob = await generateXlsxTemplate(batchModule, mod);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `tranche_${batchModule}_template.xlsx`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      setStatus({ type: 'error', message: 'Failed to generate template.' });
+    } finally {
+      setDownloadingTemplate(false);
+    }
+  }, [batchModule, mod]);
 
   // ── Distribution stats ────────────────────────────────────
   const distribution = useMemo(() => {
@@ -203,7 +231,7 @@ export default function BatchScreening({ sofr = DEFAULT_SOFR, onLoadDeal, active
       <div className="glass-card rounded-2xl p-6">
         <h3 className="text-sm font-semibold text-gray-800 mb-3">Batch Deal Screening</h3>
         <p className="text-[11px] text-gray-400 mb-4">
-          Upload a CSV to screen multiple deals at once. Select the asset class, then upload your file.
+          Upload an .xlsx or .csv to screen multiple deals at once. Download the template to see required columns and formats.
         </p>
 
         {/* Asset class selector */}
@@ -239,20 +267,21 @@ export default function BatchScreening({ sofr = DEFAULT_SOFR, onLoadDeal, active
             >
               <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5-5m0 0l5 5m-5-5v12" />
             </svg>
-            Upload CSV
+            Upload File
           </button>
 
           <input
             ref={fileRef}
             type="file"
-            accept=".csv"
+            accept=".csv,.xlsx"
             className="hidden"
             onChange={handleFile}
           />
 
           <button
             type="button"
-            className="pill-btn px-3 py-1.5 rounded-lg text-[11px] font-medium text-gray-600 hover:text-gray-700 flex items-center gap-1.5"
+            disabled={downloadingTemplate}
+            className="pill-btn px-3 py-1.5 rounded-lg text-[11px] font-medium text-gray-600 hover:text-gray-700 disabled:opacity-50 disabled:cursor-wait flex items-center gap-1.5"
             onClick={downloadTemplate}
           >
             <svg
@@ -265,7 +294,7 @@ export default function BatchScreening({ sofr = DEFAULT_SOFR, onLoadDeal, active
             >
               <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V3" />
             </svg>
-            Download {MODULE_LABELS[batchModule]} Template
+            {downloadingTemplate ? 'Preparing...' : `Download ${MODULE_LABELS[batchModule]} Template`}
           </button>
 
           {scoredDeals.length > 0 && (
