@@ -65,10 +65,40 @@ const MODULE_LABELS = {
   inventory_finance: 'Inventory',
 };
 
+// ── Required-field validation ────────────────────────────────
+// A required currency/number field that came back as 0 is almost certainly
+// missing from the upload (parser defaults blank cells to 0). The edge case
+// of a legitimate zero (e.g. distressed borrower with 0 EBITDA) gets flagged
+// here too — user can fix by entering 0.01 or contact support.
+function findMissingFields(inputs, schema) {
+  const missing = [];
+  // Always require a company name even if not formally marked required —
+  // can't sensibly screen a deal that can't be identified.
+  if (!inputs?.companyName || String(inputs.companyName).trim() === '') {
+    missing.push('Company Name');
+  }
+  schema.sections.forEach((section) => {
+    section.fields.forEach((field) => {
+      if (!field.required) return;
+      if (field.key === 'companyName') return; // handled above
+      const v = inputs?.[field.key];
+      const isMissing =
+        v == null ||
+        v === '' ||
+        (typeof v === 'number' && v === 0);
+      if (isMissing) {
+        missing.push(field.label || field.key);
+      }
+    });
+  });
+  return missing;
+}
+
 export default function BatchScreening({ sofr = DEFAULT_SOFR, onLoadDeal, activeModule: initialModule = 'equipment_finance' }) {
   const fileRef = useRef(null);
   const [status, setStatus] = useState(null);
   const [scoredDeals, setScoredDeals] = useState([]);
+  const [incompleteDeals, setIncompleteDeals] = useState([]);
   const [sortKey, setSortKey] = useState('score');
   const [sortAsc, setSortAsc] = useState(false);
   const [batchModule, setBatchModule] = useState(initialModule);
@@ -82,6 +112,7 @@ export default function BatchScreening({ sofr = DEFAULT_SOFR, onLoadDeal, active
     if (key === batchModule) return;
     setBatchModule(key);
     setScoredDeals([]);
+    setIncompleteDeals([]);
     setSortKey('score');
     setSortAsc(false);
     setStatus(null);
@@ -112,15 +143,41 @@ export default function BatchScreening({ sofr = DEFAULT_SOFR, onLoadDeal, active
       setStatus({ type: 'error', message: `File has ${deals.length} rows. Maximum is 500 deals per batch.` });
       return;
     }
-    const scored = deals.map((deal) => {
+
+    const validDeals = [];
+    const incomplete = [];
+    deals.forEach((deal) => {
+      const missing = findMissingFields(deal.inputs, mod.FORM_SCHEMA);
+      if (missing.length === 0) {
+        validDeals.push(deal);
+      } else {
+        incomplete.push({
+          id: deal.id,
+          companyName: deal.inputs?.companyName || '',
+          missing,
+        });
+      }
+    });
+
+    const scored = validDeals.map((deal) => {
       const metrics = mod.calculateMetrics(deal.inputs, sofr);
       const riskScore = mod.calculateRiskScore(deal.inputs, metrics);
       const rec = mod.getRecommendation(riskScore.composite);
       return { ...deal, metrics, riskScore, rec };
     });
+
     setScoredDeals(scored);
-    setStatus({ type: 'success', message: `Screened ${scored.length} ${MODULE_LABELS[batchModule] || ''} deal${scored.length === 1 ? '' : 's'}` });
-    setTimeout(() => setStatus(null), 4000);
+    setIncompleteDeals(incomplete);
+
+    const moduleLabel = MODULE_LABELS[batchModule] || '';
+    if (scored.length === 0 && incomplete.length > 0) {
+      setStatus({ type: 'error', message: `${incomplete.length} row${incomplete.length === 1 ? '' : 's'} missing required data. None were screened.` });
+    } else if (incomplete.length > 0) {
+      setStatus({ type: 'warning', message: `Screened ${scored.length} ${moduleLabel} deal${scored.length === 1 ? '' : 's'}. ${incomplete.length} skipped (missing required data).` });
+    } else {
+      setStatus({ type: 'success', message: `Screened ${scored.length} ${moduleLabel} deal${scored.length === 1 ? '' : 's'}` });
+      setTimeout(() => setStatus(null), 4000);
+    }
   }, [sofr, mod, batchModule]);
 
   const handleFile = useCallback(async (e) => {
@@ -339,11 +396,52 @@ export default function BatchScreening({ sofr = DEFAULT_SOFR, onLoadDeal, active
           {status?.type === 'success' && (
             <span className="text-emerald-400 text-[11px]">{status.message}</span>
           )}
+          {status?.type === 'warning' && (
+            <span className="text-amber-500 text-[11px]">{status.message}</span>
+          )}
           {status?.type === 'error' && (
             <span className="text-rose-400 text-[11px]">{status.message}</span>
           )}
         </div>
       </div>
+
+      {/* Needs more data — incomplete rows that couldn't be scored */}
+      {incompleteDeals.length > 0 && (
+        <div className="rounded-2xl border border-amber-500/30 bg-amber-500/[0.06] p-5">
+          <div className="flex items-start gap-3 mb-3">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-amber-500 flex-shrink-0 mt-0.5">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+              <line x1="12" y1="9" x2="12" y2="13" />
+              <line x1="12" y1="17" x2="12.01" y2="17" />
+            </svg>
+            <div>
+              <h4 className="text-[13px] font-semibold text-gray-900">
+                {incompleteDeals.length} row{incompleteDeals.length === 1 ? '' : 's'} need{incompleteDeals.length === 1 ? 's' : ''} more data
+              </h4>
+              <p className="text-[11px] text-gray-500 mt-0.5">
+                These rows weren't screened. Add the missing fields to your file and re-upload.
+              </p>
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            {incompleteDeals.slice(0, 10).map((d) => (
+              <div key={d.id} className="flex items-baseline gap-3 px-3 py-2 rounded-lg bg-white border border-amber-500/15">
+                <span className="text-[12px] font-medium text-gray-900 min-w-[140px] truncate">
+                  {d.companyName || d.id}
+                </span>
+                <span className="text-[11px] text-amber-700">
+                  Missing: {d.missing.join(', ')}
+                </span>
+              </div>
+            ))}
+            {incompleteDeals.length > 10 && (
+              <div className="text-[11px] text-gray-500 px-3 pt-1">
+                And {incompleteDeals.length - 10} more.
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Summary dashboard — only show after deals are screened */}
       {total > 0 && (
