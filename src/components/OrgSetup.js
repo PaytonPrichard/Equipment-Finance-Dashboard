@@ -48,7 +48,14 @@ export default function OrgSetup({ profile, onComplete }) {
       });
 
       if (rpcError) {
-        setError(rpcError.message);
+        const isDuplicate =
+          rpcError.code === '23505' ||
+          /organizations_(slug|name)_key/.test(rpcError.message || '');
+        setError(
+          isDuplicate
+            ? 'An organization with that name already exists. Please choose a different name.'
+            : rpcError.message,
+        );
         setLoading(false);
         return;
       }
