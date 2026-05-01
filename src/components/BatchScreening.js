@@ -131,9 +131,10 @@ export default function BatchScreening({ sofr = DEFAULT_SOFR, onLoadDeal, active
       lines[0] = lines[0].replace(/\s*\([^)]*\)/g, '');
     }
     const rawDeals = mod.parseCsvDeals(lines.join('\n'));
-    // Drop any rows that still carry the sample sentinel (user forgot to delete).
+    // Drop any rows that still carry the sample sentinel (user forgot to
+    // delete). Catches "(sample)", "SAMPLE — delete this row", etc.
     const deals = (rawDeals || []).filter(
-      (d) => !/\(sample/i.test(d.inputs?.companyName || ''),
+      (d) => !/sample/i.test(d.inputs?.companyName || ''),
     );
     if (!deals || deals.length === 0) {
       setStatus({ type: 'error', message: 'No valid rows found in the file.' });

@@ -22,6 +22,51 @@ const SECTIONS = [
     ],
   },
   {
+    id: 'faq',
+    title: 'Common Questions',
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <circle cx="12" cy="12" r="10" />
+        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" strokeLinecap="round" />
+        <line x1="12" y1="17" x2="12.01" y2="17" strokeLinecap="round" />
+      </svg>
+    ),
+    content: [
+      {
+        heading: 'How do I screen a deal?',
+        body: 'Two ways. For a single deal, fill in borrower financials and collateral details on the left side of the New Deal screen. Score, metrics, and recommendation update live on the right. For many deals at once, switch to Bulk and download the Excel template, fill in your roster, and upload. Each row gets its own screening result. No save button needed for screening; you only save when you want to add a deal to your pipeline.',
+      },
+      {
+        heading: 'Is my data secure?',
+        body: 'Yes. All data is encrypted in transit and at rest. Each organization is isolated via Postgres row-level security, so no firm can access another firm\'s deals. We never share customer data across orgs, and we don\'t train models on your inputs.',
+      },
+      {
+        heading: 'Can I screen multiple deals at once?',
+        body: 'Yes. On the New Deal screen, switch to Bulk and download the Excel template. It includes column descriptions in cell comments (hover any header), dropdowns for industry and equipment type, and required fields marked with a red asterisk. Fill it in, upload, and each row gets a screening result. Templates are specific per asset class.',
+      },
+      {
+        heading: 'What if my deal\'s industry or equipment type isn\'t listed?',
+        body: 'Pick the closest match. For Industry, "Other" is treated as moderate-risk. For Equipment Type, "Other" uses default useful life and advance rate assumptions. Reach out if you keep hitting unsupported categories and we\'ll add them.',
+      },
+      {
+        heading: 'How do I change the screening thresholds?',
+        body: 'Open Settings, Screening Policy. Adjust pass/flag/fail score thresholds, DSCR, leverage, advance rate, and other criteria. Changes apply to your future screenings immediately. Saved deals keep their original verdict. Note: each user currently has their own settings. We\'re moving to admin-controlled, firm-wide policy with optional user "what-if" overlays soon.',
+      },
+      {
+        heading: 'What does the risk score mean?',
+        body: '75 or higher is strong, 55 to 74 is moderate, 35 to 54 is borderline, below 35 is weak. The composite combines leverage, coverage, liquidity, asset quality, and collateral metrics on a 0-100 scale. Configure the weighting under Settings, Screening Policy.',
+      },
+      {
+        heading: 'How do I export a screening memo?',
+        body: 'After screening, click Export. You get a branded PDF with your firm logo at the top, plus the score, metrics, recommendation, and stress test results. Set logo, accent color, memo title, and footer text in Settings, Branding.',
+      },
+      {
+        heading: 'How do I invite my team?',
+        body: 'Settings, Team. Enter the email and role, then click Generate Invite. They get an email with a link to join your organization. If you skip the email field, copy the code and share it manually.',
+      },
+    ],
+  },
+  {
     id: 'new-deal',
     title: 'New Deal Screening',
     icon: (
@@ -260,8 +305,24 @@ export default function InfoGuide({ isOpen, onClose }) {
               ))}
             </div>
 
+            {/* Contact card */}
+            <div className="mt-8 p-4 rounded-xl bg-gold-500/[0.06] border border-gold-500/20">
+              <p className="text-[12px] font-semibold text-slate-200 mb-1">Need more help?</p>
+              <p className="text-[11px] text-slate-400 mb-3">We read every message. Expect a reply within one business day.</p>
+              <a
+                href="mailto:team@gettranche.app?subject=Tranche%20support"
+                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gold-500/15 hover:bg-gold-500/25 text-gold-300 text-[11px] font-semibold transition-colors"
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                  <polyline points="22,6 12,13 2,6" />
+                </svg>
+                Email team@gettranche.app
+              </a>
+            </div>
+
             {/* Footer in content area */}
-            <div className="mt-10 pt-4 border-t border-white/[0.04]">
+            <div className="mt-6 pt-4 border-t border-white/[0.04]">
               <p className="text-[10px] text-slate-600 italic">
                 All screening outputs are preliminary and indicative. Not a credit decision. Final terms subject to full underwriting, credit committee approval, and documentation.
               </p>

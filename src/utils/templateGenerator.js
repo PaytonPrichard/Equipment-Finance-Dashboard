@@ -86,7 +86,8 @@ const COLOR = {
   HEADER_BG: 'FFF3F4F6',
   SECTION_BG: 'FF374151',
   SECTION_FG: 'FFFFFFFF',
-  SAMPLE_TINT: 'FFFEF3C7',
+  SAMPLE_TINT: 'FFFDE68A', // deeper amber so the sample row is unmistakable
+  SAMPLE_TEXT: 'FF92400E', // dark amber/orange for sample row text
   REQUIRED_BLANK: 'FFFEE2E2',
   BAND: 'FFFAFAFA',
   BORDER: 'FFE5E7EB',
@@ -185,7 +186,9 @@ export async function generateXlsxTemplate(moduleKey, mod) {
   wb.created = new Date();
 
   const sheet = wb.addWorksheet('Template', {
-    views: [{ state: 'frozen', ySplit: HEADER_ROW }],
+    // Freeze the header rows AND the first column (Company Name) so users
+    // can scroll horizontally without losing context on which row is which.
+    views: [{ state: 'frozen', xSplit: 1, ySplit: HEADER_ROW }],
     properties: { defaultRowHeight: 18 },
   });
 
@@ -214,14 +217,16 @@ export async function generateXlsxTemplate(moduleKey, mod) {
       { text: '   ·   ', font: { color: { argb: COLOR.HINT }, size: 14 } },
       { text: moduleName, font: { bold: true, color: { argb: COLOR.CHARCOAL }, size: 13 } },
       { text: '   ·   Batch Screening Template', font: { color: { argb: COLOR.MUTED }, size: 12 } },
+      { text: '\n', font: { size: 6 } },
+      { text: 'Hover any header for the field definition. Required fields marked with a red asterisk.', font: { italic: true, color: { argb: COLOR.HINT }, size: 9 } },
     ],
   };
-  titleCell.alignment = { vertical: 'middle', horizontal: 'left', indent: 1 };
+  titleCell.alignment = { vertical: 'middle', horizontal: 'left', indent: 1, wrapText: true };
   titleCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFFFFF' } };
   titleCell.border = {
     bottom: { style: 'thick', color: { argb: COLOR.GOLD_BORDER } },
   };
-  sheet.getRow(TITLE_ROW).height = 30;
+  sheet.getRow(TITLE_ROW).height = 42;
 
   // ── Row 2: section group headers ────────────────────────────
   sections.forEach((sec) => {
@@ -254,7 +259,7 @@ export async function generateXlsxTemplate(moduleKey, mod) {
       cell.value = {
         richText: [
           { text: labelText, font: { bold: true, color: { argb: COLOR.CHARCOAL }, size: 11 } },
-          { text: ' *', font: { bold: true, color: { argb: COLOR.RED }, size: 11 } },
+          { text: '  *', font: { bold: true, color: { argb: COLOR.RED }, size: 16 } },
         ],
       };
     } else {
@@ -290,25 +295,32 @@ export async function generateXlsxTemplate(moduleKey, mod) {
   sheet.getRow(HEADER_ROW).height = 30;
 
   // ── Row 4: sample row ───────────────────────────────────────
+  // Make this row visually unmistakable. Deeper amber fill, dark amber italic
+  // text, thick red top/bottom borders, and column A overrides the company
+  // name with a loud sentinel so users can't miss that it needs deleting.
   fields.forEach((f, i) => {
     const cell = sheet.getCell(SAMPLE_ROW, i + 1);
     const v = sample[f.key];
     if (v !== undefined) cell.value = v;
-    cell.font = { italic: true, color: { argb: COLOR.MUTED }, size: 10 };
+    cell.font = { italic: true, color: { argb: COLOR.SAMPLE_TEXT }, size: 10 };
     cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: COLOR.SAMPLE_TINT } };
     cell.alignment = { vertical: 'middle', horizontal: 'left', indent: 1 };
     cell.border = {
-      bottom: { style: 'thin', color: { argb: COLOR.BORDER } },
+      top: { style: 'medium', color: { argb: COLOR.RED } },
+      bottom: { style: 'medium', color: { argb: COLOR.RED } },
       right: { style: 'hair', color: { argb: COLOR.BORDER } },
     };
     const fmt = fieldNumberFormat(f);
     if (fmt) cell.numFmt = fmt;
   });
-  // Add a note on the sample-row first cell so users know to delete it.
-  sheet.getCell(SAMPLE_ROW, 1).note = {
-    texts: [{ text: 'This is a sample row showing realistic data. Overwrite or delete it before uploading.' }],
+  // Override column A with a loud sentinel + overwrite the company-name cell.
+  const sampleNameCell = sheet.getCell(SAMPLE_ROW, 1);
+  sampleNameCell.value = 'SAMPLE  —  delete this row';
+  sampleNameCell.font = { bold: true, italic: true, color: { argb: COLOR.RED }, size: 11 };
+  sampleNameCell.note = {
+    texts: [{ text: 'This is a sample row showing realistic data so you can see the formatting. Overwrite the cells with your real deals or delete the row before uploading. Either way works — the parser also filters out rows that still say "(sample)" as a safety net.' }],
   };
-  sheet.getRow(SAMPLE_ROW).height = 20;
+  sheet.getRow(SAMPLE_ROW).height = 22;
 
   // ── Rows 5..504: user input ────────────────────────────────
   // Apply borders, banding, number formats, and per-column dropdowns.
