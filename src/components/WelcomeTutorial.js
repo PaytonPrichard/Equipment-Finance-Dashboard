@@ -27,8 +27,35 @@ const SLIDES = [
     ),
   },
   {
-    title: 'Input Left, Results Right',
-    body: 'Fill in the left panel. Scores, metrics, and recommendations appear on the right.',
+    title: 'One deal, or a whole list',
+    body: 'Enter a single deal manually, or paste a CSV to screen many at once.',
+    visual: (
+      <div className="flex items-center justify-center gap-4 py-6">
+        <div className="w-24 rounded-xl bg-gray-50 border border-gray-200 p-3 text-center">
+          <div className="w-full h-2 bg-gray-200 rounded mb-2" />
+          <div className="w-3/4 h-2 bg-gray-200 rounded mb-2" />
+          <div className="w-full h-2 bg-gray-200 rounded mb-2" />
+          <div className="w-1/2 h-2 bg-gray-200 rounded" />
+          <p className="text-[8px] text-gray-400 mt-2">SINGLE</p>
+        </div>
+        <span className="text-[10px] font-semibold text-gray-300 uppercase tracking-widest">or</span>
+        <div className="w-24 rounded-xl bg-gray-50 border border-gray-200 p-3 text-center">
+          <div className="space-y-1 mb-1">
+            {[0, 1, 2, 3, 4].map((i) => (
+              <div key={i} className="flex items-center gap-1">
+                <div className="w-2 h-1.5 bg-gray-300 rounded-sm flex-shrink-0" />
+                <div className="flex-1 h-1.5 bg-gray-200 rounded" />
+              </div>
+            ))}
+          </div>
+          <p className="text-[8px] text-gray-400 mt-2">CSV BULK</p>
+        </div>
+      </div>
+    ),
+  },
+  {
+    title: 'Score, stress-test, save',
+    body: 'Risk score and metrics on the right. Run revenue-decline scenarios. Save promising deals to your pipeline.',
     visual: (
       <div className="flex items-center justify-center gap-3 py-6">
         <div className="w-24 rounded-xl bg-gray-50 border border-gray-200 p-3 text-center">
@@ -53,8 +80,8 @@ const SLIDES = [
     ),
   },
   {
-    title: 'Track, Compare, Export',
-    body: 'Save deals to your pipeline. Compare side by side. Export branded screening memos.',
+    title: 'Track, compare, export',
+    body: 'Move deals across 5 pipeline stages. Compare side by side. Export branded screening memos.',
     visual: (
       <div className="flex items-center justify-center gap-6 py-6">
         {[
