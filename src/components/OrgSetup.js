@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { supabase } from '../lib/supabase';
-import { peekPendingInvite, consumePendingInvite } from '../lib/pendingInvite';
 import TrancheLogo from './TrancheLogo';
 
 export default function OrgSetup({ profile, onComplete }) {
@@ -10,15 +9,6 @@ export default function OrgSetup({ profile, onComplete }) {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [joinSuccess, setJoinSuccess] = useState(false);
-
-  // If user arrived via an invite link, jump straight to join mode with code pre-filled.
-  useEffect(() => {
-    const pending = peekPendingInvite();
-    if (pending) {
-      setInviteCode(pending);
-      setMode('join');
-    }
-  }, []);
 
   const generateSlug = (name) => {
     return name
@@ -234,7 +224,6 @@ export default function OrgSetup({ profile, onComplete }) {
                   } else if (data?.error) {
                     setError(data.error);
                   } else {
-                    consumePendingInvite();
                     setJoinSuccess(true);
                     setTimeout(() => { if (onComplete) onComplete(); }, 1500);
                   }

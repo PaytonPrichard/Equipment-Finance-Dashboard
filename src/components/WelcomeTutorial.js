@@ -28,7 +28,7 @@ const SLIDES = [
   },
   {
     title: 'One deal, or a whole list',
-    body: 'Enter a single deal manually, or paste a CSV to screen many at once.',
+    body: 'Enter a single deal manually, or fill an Excel template to screen many at once.',
     visual: (
       <div className="flex items-center justify-center gap-4 py-6">
         <div className="w-24 rounded-xl bg-gray-50 border border-gray-200 p-3 text-center">
@@ -81,7 +81,7 @@ const SLIDES = [
   },
   {
     title: 'Track, compare, export',
-    body: 'Move deals across 5 pipeline stages. Compare side by side. Export branded screening memos.',
+    body: 'Move deals through 5 pipeline stages. Compare side by side. Export branded memos to bring into investment meetings in seconds.',
     visual: (
       <div className="flex items-center justify-center gap-6 py-6">
         {[
@@ -129,6 +129,19 @@ export default function WelcomeTutorial({ onComplete, onSkip }) {
 
       {/* Modal */}
       <div className="relative w-full max-w-md bg-white border border-gray-200 rounded-2xl shadow-2xl animate-fade-in-up">
+        {/* Skip / close */}
+        <button
+          onClick={onSkip}
+          aria-label="Skip tour"
+          title="Skip tour"
+          className="absolute top-3 right-3 p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+
         <div className="p-8 text-center">
           {/* Visual */}
           {slide.visual}
@@ -154,12 +167,6 @@ export default function WelcomeTutorial({ onComplete, onSkip }) {
 
           {/* Actions */}
           <div className="flex items-center gap-3">
-            <button
-              onClick={onSkip}
-              className="text-[11px] text-gray-400 hover:text-gray-600 transition-colors"
-            >
-              Skip tour
-            </button>
             {step > 0 && (
               <button
                 onClick={() => setStep(s => s - 1)}
