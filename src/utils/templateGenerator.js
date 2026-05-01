@@ -388,6 +388,13 @@ export async function generateXlsxTemplate(moduleKey, mod) {
     });
   });
 
+  // AutoFilter on the header row — every column gets a filter dropdown.
+  // Standard analyst keystroke: select header, Alt+Down opens the filter.
+  sheet.autoFilter = {
+    from: { row: HEADER_ROW, column: 1 },
+    to: { row: LAST_USER_ROW, column: lastCol },
+  };
+
   // Outer thick border around the entire input area for "workpaper" feel.
   // ExcelJS doesn't have a single-call "outer border" helper, so apply edges.
   const lastRow = LAST_USER_ROW;
