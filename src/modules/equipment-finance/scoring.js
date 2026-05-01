@@ -550,6 +550,12 @@ export function parseCsvDeals(csvText) {
     annualrevenue: 'annualRevenue', revenue: 'annualRevenue',
     ebitda: 'ebitda',
     totalexistingdebt: 'totalExistingDebt', existingdebt: 'totalExistingDebt', debt: 'totalExistingDebt',
+    actualannualdebtservice: 'actualAnnualDebtService', annualdebtservice: 'actualAnnualDebtService', debtservice: 'actualAnnualDebtService',
+    maintenancecapex: 'maintenanceCapex', maintcapex: 'maintenanceCapex', capex: 'maintenanceCapex',
+    cashonhand: 'cashOnHand', cash: 'cashOnHand',
+    availableliquidity: 'availableLiquidity', otheravailableliquidity: 'availableLiquidity', liquidity: 'availableLiquidity', revolver: 'availableLiquidity',
+    prioryearrevenue: 'priorYearRevenue', priorrevenue: 'priorYearRevenue', lastyearrevenue: 'priorYearRevenue',
+    prioryearebitda: 'priorYearEbitda', priorebitda: 'priorYearEbitda', lastyearebitda: 'priorYearEbitda',
     industrysector: 'industrySector', industry: 'industrySector',
     creditrating: 'creditRating', credit: 'creditRating',
     equipmenttype: 'equipmentType',
@@ -564,6 +570,8 @@ export function parseCsvDeals(csvText) {
 
   const numericFields = new Set([
     'yearsInBusiness', 'annualRevenue', 'ebitda', 'totalExistingDebt',
+    'actualAnnualDebtService', 'maintenanceCapex', 'cashOnHand', 'availableLiquidity',
+    'priorYearRevenue', 'priorYearEbitda',
     'equipmentCost', 'downPayment', 'usefulLife', 'loanTerm',
   ]);
 
@@ -572,6 +580,9 @@ export function parseCsvDeals(csvText) {
     const inputs = {
       companyName: '',
       yearsInBusiness: 0, annualRevenue: 0, ebitda: 0, totalExistingDebt: 0,
+      actualAnnualDebtService: 0, maintenanceCapex: 0,
+      cashOnHand: 0, availableLiquidity: 0,
+      priorYearRevenue: 0, priorYearEbitda: 0,
       industrySector: 'Manufacturing', creditRating: 'Adequate',
       equipmentType: 'Heavy Machinery', equipmentCondition: 'New',
       equipmentCost: 0, downPayment: 0, financingType: 'EFA',

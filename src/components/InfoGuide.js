@@ -57,6 +57,10 @@ const SECTIONS = [
         body: '75 or higher is strong, 55 to 74 is moderate, 35 to 54 is borderline, below 35 is weak. The composite combines leverage, coverage, liquidity, asset quality, and collateral metrics on a 0-100 scale. Configure the weighting under Settings, Screening Policy.',
       },
       {
+        heading: 'How are FCCR, Liquidity, and Revenue Growth calculated?',
+        body: 'FCCR = (EBITDA − Maintenance Capex) / Annual Debt Service. We deliberately exclude taxes and dividends from fixed charges in v1 to keep the calc transparent. If you leave Maintenance Capex blank, we estimate at 3% of revenue.\n\nLiquidity = Cash on Hand + Other Available Liquidity (e.g., undrawn revolver). The "months of debt service coverage" subtitle divides total liquidity by monthly debt service.\n\nRevenue Growth = (Current Year Revenue − Prior Year Revenue) / Prior Year Revenue. The margin trend in the subtitle is the change in EBITDA-as-percent-of-revenue between the two years, expressed in basis points.\n\nThese three metrics are display-only in v1 — they don\'t feed into the composite risk score yet.',
+      },
+      {
         heading: 'How do I export a screening memo?',
         body: 'After screening, click Export. You get a branded PDF with your firm logo at the top, plus the score, metrics, recommendation, and stress test results. Set logo, accent color, memo title, and footer text in Settings, Branding.',
       },

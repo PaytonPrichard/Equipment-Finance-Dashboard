@@ -40,6 +40,7 @@ import {
   formatCurrency,
 } from './utils/format';
 import { getModule, getAvailableModules, DEFAULT_MODULE } from './modules';
+import { computeBorrowerExtras, fccrStatus, liquidityCoverageStatus, revenueGrowthStatus } from './utils/borrowerMetrics';
 import { FINANCING_TYPES } from './modules/equipment-finance/constants';
 import {
   calculateMetrics as eqCalculateMetrics,
@@ -358,6 +359,7 @@ function AuthenticatedApp({ profile, user }) {
     return baseMetrics;
   }, [inputs, sofr, mod, orgSettings]);
   const baseRiskScore = useMemo(() => mod.calculateRiskScore(inputs, metrics), [inputs, metrics, mod]);
+  const borrowerExtras = useMemo(() => computeBorrowerExtras(inputs, metrics), [inputs, metrics]);
 
   // Apply custom weights if set (re-weight the factor scores)
   const riskScore = useMemo(() => {
@@ -920,6 +922,50 @@ function AuthenticatedApp({ profile, user }) {
                         status={getLeverageStatus(metrics.leverage)}
                         threshold="Target < 3.5x · Max 5.0x"
                         flag={metrics.leverage > 5.0 ? 'Elevated' : null}
+                      />
+                    </div>
+
+                    {/* Coverage & Liquidity & Trend (universal across modules) */}
+                    <div className="grid grid-cols-3 gap-3">
+                      <MetricCard
+                        title="FCCR"
+                        value={borrowerExtras.fccr != null ? formatRatio(borrowerExtras.fccr) : '—'}
+                        subtitle={
+                          borrowerExtras.fccr != null
+                            ? `(EBITDA − ${formatCurrency(borrowerExtras.maintenanceCapex)}) / DS${borrowerExtras.maintCapexUserProvided ? '' : ' · capex est. 3% of rev'}`
+                            : 'Needs EBITDA + debt service'
+                        }
+                        status={fccrStatus(borrowerExtras.fccr)}
+                        threshold="Min 1.0x · Target 1.25x+"
+                        flag={borrowerExtras.fccr != null && borrowerExtras.fccr < 1.0 ? 'Below 1.0x' : null}
+                      />
+                      <MetricCard
+                        title="Liquidity"
+                        value={borrowerExtras.totalLiquidity > 0 ? formatCurrency(borrowerExtras.totalLiquidity) : '—'}
+                        subtitle={
+                          borrowerExtras.monthsOfDebtServiceCoverage != null
+                            ? `${borrowerExtras.monthsOfDebtServiceCoverage.toFixed(1)} months of debt service`
+                            : 'Cash + available revolver'
+                        }
+                        status={liquidityCoverageStatus(borrowerExtras.monthsOfDebtServiceCoverage)}
+                        threshold="Target 6+ months"
+                        flag={borrowerExtras.monthsOfDebtServiceCoverage != null && borrowerExtras.monthsOfDebtServiceCoverage < 3 ? 'Thin' : null}
+                      />
+                      <MetricCard
+                        title="Revenue Growth"
+                        value={
+                          borrowerExtras.revenueGrowth != null
+                            ? `${borrowerExtras.revenueGrowth >= 0 ? '+' : ''}${(borrowerExtras.revenueGrowth * 100).toFixed(1)}%`
+                            : '—'
+                        }
+                        subtitle={
+                          borrowerExtras.marginTrendBps != null
+                            ? `Margin ${borrowerExtras.marginTrendBps >= 0 ? '+' : ''}${Math.round(borrowerExtras.marginTrendBps)} bps YoY`
+                            : 'Enter prior year revenue + EBITDA'
+                        }
+                        status={revenueGrowthStatus(borrowerExtras.revenueGrowth)}
+                        threshold="Growth + margin expansion"
+                        flag={borrowerExtras.revenueGrowth != null && borrowerExtras.revenueGrowth < -0.05 ? 'Declining' : null}
                       />
                     </div>
 
