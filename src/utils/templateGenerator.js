@@ -197,7 +197,6 @@ export async function generateXlsxTemplate(moduleKey, mod) {
   // Append a free-text Notes column at the end.
   const notesCol = fields.length + 1;
   const lastCol = notesCol;
-  const lastColLetter = colLetter(lastCol);
 
   // ── Column widths ───────────────────────────────────────────
   fields.forEach((f, i) => {
