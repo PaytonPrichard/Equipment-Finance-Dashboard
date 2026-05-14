@@ -1,8 +1,26 @@
 import React, { useState } from 'react';
 import { exportScreeningCsv } from '../utils/csvExport';
 
+// Escapes for HTML text content AND attribute values. Quote-escaping is what
+// makes interpolation into src="...", alt="...", etc. safe.
 function esc(str) {
-  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  return String(str ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+// Branding values land in CSS/attribute positions where esc() alone isn't
+// enough. Validate them: a real color or a real https URL, or fall back.
+function safeColor(value, fallback) {
+  return /^#[0-9a-fA-F]{3,8}$/.test(String(value || '')) ? value : fallback;
+}
+
+function safeUrl(value) {
+  const s = String(value || '').trim();
+  return /^https:\/\//i.test(s) ? s : '';
 }
 
 // eslint-disable-next-line no-unused-vars
@@ -361,8 +379,8 @@ function generateBrandedPdfHtml({ summaryText, inputs, metrics, riskScore, recom
   const score = riskScore?.composite ?? 0;
   const verdict = screeningResult?.verdict?.toUpperCase() || '';
   const b = branding || {};
-  const accentColor = b.accentColor || '#d4a843';
-  const logoUrl = b.logoUrl || '';
+  const accentColor = safeColor(b.accentColor, '#d4a843');
+  const logoUrl = safeUrl(b.logoUrl);
   const footerText = b.footerText || '';
   const memoTitle = b.memoTitle || '';
 
