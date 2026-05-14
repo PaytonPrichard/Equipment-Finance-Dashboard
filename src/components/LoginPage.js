@@ -32,8 +32,9 @@ export default function LoginPage({ passwordRecovery, onBackToLanding, initialMo
   const [signUpSuccess, setSignUpSuccess] = useState(false);
   const [resetSent, setResetSent] = useState(false);
 
-  // Invite-code signup state
-  const [inviteCode, setInviteCode] = useState(() => getCodeFromUrl());
+  // Invite-code signup state. Code comes from the URL once on mount and
+  // never changes, so no setter is needed.
+  const [inviteCode] = useState(() => getCodeFromUrl());
   const [inviteMeta, setInviteMeta] = useState(null); // { valid, org_name, plan, email_bound, reason }
   const [inviteLoading, setInviteLoading] = useState(false);
 
