@@ -6,17 +6,21 @@
 const store = new Map();
 
 const LIMITS = {
-  default: { windowMs: 60 * 1000, max: 60 },       // 60 req/min
-  auth: { windowMs: 60 * 1000, max: 10 },           // 10 req/min for auth
-  checkout: { windowMs: 60 * 1000, max: 5 },        // 5 req/min for checkout
-  webhook: { windowMs: 60 * 1000, max: 100 },       // 100 req/min for webhooks
-  api: { windowMs: 60 * 1000, max: 120 },             // 120 req/min for public API
+  default: { windowMs: 60 * 1000, max: 60 },           // 60 req/min
+  auth: { windowMs: 60 * 1000, max: 10 },              // 10 req/min for auth
+  checkout: { windowMs: 60 * 1000, max: 5 },           // 5 req/min for checkout
+  webhook: { windowMs: 60 * 1000, max: 100 },          // 100 req/min for webhooks
+  api: { windowMs: 60 * 1000, max: 120 },              // 120 req/min for public API
+  requestAccess: { windowMs: 60 * 60 * 1000, max: 5 }, // 5 req/hr for public access-request form
 };
 
 function cleanup() {
   const now = Date.now();
   for (const [key, entry] of store) {
-    if (now - entry.start > 120000) {
+    // Only evict entries whose own window has fully expired.
+    // (Long-window tiers like requestAccess need this — a fixed 2min cutoff
+    // would prematurely reset 1-hour limits.)
+    if (now - entry.start > (entry.windowMs || 120000)) {
       store.delete(key);
     }
   }
@@ -40,7 +44,7 @@ function checkRateLimit(req, res, tier = 'default') {
 
   let entry = store.get(key);
   if (!entry || now - entry.start > windowMs) {
-    entry = { start: now, count: 0 };
+    entry = { start: now, count: 0, windowMs };
     store.set(key, entry);
   }
 

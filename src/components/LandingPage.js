@@ -80,7 +80,7 @@ const PRICING = [
     period: '/mo',
     who: 'For individual analysts',
     features: ['1 user', 'All asset classes', 'Pass/flag/fail screening', 'Deal pipeline', 'CSV & PDF export', '50 active deals'],
-    cta: 'Start Free Trial',
+    cta: 'Request a Trial',
   },
   {
     name: 'Growth',
@@ -88,7 +88,7 @@ const PRICING = [
     period: '/mo',
     who: 'For credit teams of 2-10',
     features: ['Up to 10 users', 'Everything in Starter', 'Unlimited deals', 'Firm-branded memos', 'Shared pipeline & audit trail', 'Custom scoring weights', 'API & webhook integrations'],
-    cta: 'Start Free Trial',
+    cta: 'Request a Trial',
     highlight: true,
   },
   {
@@ -140,7 +140,7 @@ export default function LandingPage({ onGetStarted, onSignIn }) {
           </p>
           <div className="flex items-center justify-center gap-4 mb-4 flex-wrap">
             <button onClick={onGetStarted} className="px-7 py-3.5 rounded-lg text-[16px] font-semibold text-white shadow-lg hover:opacity-90 transition-all" style={{ backgroundColor: GOLD, boxShadow: '0 4px 24px rgba(212, 168, 67, 0.3)' }}>
-              Start 14-Day Free Trial
+              Request a Trial
             </button>
             <a href="?demo=1" className="px-7 py-3.5 rounded-lg text-[16px] font-semibold text-gray-700 border border-gray-300 hover:border-gray-400 transition-all">
               View Demo
@@ -375,7 +375,7 @@ export default function LandingPage({ onGetStarted, onSignIn }) {
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-4 tracking-tight">Ready to screen your first deal?</h2>
           <p className="text-gray-400 mb-8 text-lg">Set up in 5 minutes. Screen your first deal in 2. No credit card, no contracts.</p>
           <button onClick={onGetStarted} className="px-8 py-4 rounded-lg text-[16px] font-semibold text-gray-900 hover:opacity-90 transition-all shadow-lg" style={{ backgroundColor: GOLD, boxShadow: '0 4px 24px rgba(212, 168, 67, 0.25)' }}>
-            Start Your Free Trial
+            Request a Trial
           </button>
         </div>
       </section>

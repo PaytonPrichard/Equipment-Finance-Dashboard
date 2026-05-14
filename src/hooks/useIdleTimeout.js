@@ -1,6 +1,6 @@
 import { useEffect, useRef, useCallback } from 'react';
 
-const IDLE_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
+const IDLE_TIMEOUT_MS = 8 * 60 * 60 * 1000; // 8 hours
 const EVENTS = ['mousedown', 'keydown', 'scroll', 'touchstart'];
 
 /**

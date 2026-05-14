@@ -3,6 +3,7 @@ import { useAuth } from './contexts/AuthContext';
 import { supabase } from './lib/supabase';
 import LoginPage from './components/LoginPage';
 import LandingPage from './components/LandingPage';
+import RequestAccessPage from './components/RequestAccessPage';
 import OrgSetup from './components/OrgSetup';
 import useSofrRate from './hooks/useSofrRate';
 import { useIdleTimeout } from './hooks/useIdleTimeout';
@@ -149,6 +150,7 @@ export default function App() {
   const { session, user, profile, loading: authLoading, refreshProfile, passwordRecovery, emailVerified, signOut } = useAuth();
   const [showLogin, setShowLogin] = useState(false);
   const [loginMode, setLoginMode] = useState('signin');
+  const [showRequestAccess, setShowRequestAccess] = useState(false);
 
   // Auto sign-out after 30 minutes of inactivity (skipped in demo mode)
   useIdleTimeout(() => {
@@ -174,12 +176,26 @@ export default function App() {
   }
 
   if (!session) {
+    if (showRequestAccess) {
+      return (
+        <RequestAccessPage
+          onBackToLanding={() => setShowRequestAccess(false)}
+          onSignIn={() => { setShowRequestAccess(false); setLoginMode('signin'); setShowLogin(true); }}
+        />
+      );
+    }
     if (showLogin) {
-      return <LoginPage initialMode={loginMode} onBackToLanding={() => setShowLogin(false)} />;
+      return (
+        <LoginPage
+          initialMode={loginMode}
+          onBackToLanding={() => setShowLogin(false)}
+          onRequestAccess={() => { setShowLogin(false); setShowRequestAccess(true); }}
+        />
+      );
     }
     return (
       <LandingPage
-        onGetStarted={() => { setLoginMode('signup'); setShowLogin(true); }}
+        onGetStarted={() => setShowRequestAccess(true)}
         onSignIn={() => { setLoginMode('signin'); setShowLogin(true); }}
       />
     );

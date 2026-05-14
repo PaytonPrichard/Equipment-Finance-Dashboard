@@ -1,11 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import TrancheLogo from './TrancheLogo';
 
 const GOLD = '#D4A843';
 
-export default function LoginPage({ passwordRecovery, onBackToLanding, initialMode }) {
+function hasInviteCodeInUrl() {
+  if (typeof window === 'undefined') return false;
+  const params = new URLSearchParams(window.location.search);
+  return Boolean(params.get('code'));
+}
+
+export default function LoginPage({ passwordRecovery, onBackToLanding, initialMode, onRequestAccess }) {
   const { signIn, signUp } = useAuth();
   const [mode, setMode] = useState(passwordRecovery ? 'update_password' : (initialMode || 'signin'));
   const [email, setEmail] = useState('');
@@ -22,6 +28,19 @@ export default function LoginPage({ passwordRecovery, onBackToLanding, initialMo
     setSignUpSuccess(false);
     setResetSent(false);
   };
+
+  // Signup is invite-only. If we land in signup mode without an invite code
+  // in the URL, bounce to the public Request Access form. Phase 2 will wire
+  // the code to actual validation; for Phase 1 the gate is "code presence."
+  useEffect(() => {
+    if (mode === 'signup' && !hasInviteCodeInUrl()) {
+      if (onRequestAccess) {
+        onRequestAccess();
+      } else {
+        setMode('signin');
+      }
+    }
+  }, [mode, onRequestAccess]);
 
   const passwordChecks = [
     { key: 'length', label: 'At least 10 characters', test: (p) => p.length >= 10 },
@@ -282,8 +301,11 @@ export default function LoginPage({ passwordRecovery, onBackToLanding, initialMo
             {mode === 'signin' && (
               <div>
                 <span className="text-sm text-gray-400">Don't have an account? </span>
-                <button onClick={() => switchMode('signup')} className="text-sm text-gray-600 hover:text-gray-900 font-medium transition-colors">
-                  Sign Up
+                <button
+                  onClick={() => onRequestAccess && onRequestAccess()}
+                  className="text-sm text-gray-600 hover:text-gray-900 font-medium transition-colors"
+                >
+                  Request access
                 </button>
               </div>
             )}
