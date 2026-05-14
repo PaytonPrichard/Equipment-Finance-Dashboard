@@ -272,6 +272,22 @@ function AuthenticatedApp({ profile, user }) {
   const [activeDeal, setActiveDeal] = useState(null);
   const [activePipelineDealId, setActivePipelineDealId] = useState(null);
   const [activeTab, setActiveTab] = useState('screening');
+
+  // New Deal layout prefs — persisted so the user's choice sticks across sessions.
+  // formFocus: hide the results pane and give the form full width for data entry.
+  // paneLabelsHidden: hide the "Deal Inputs" / "Screening Results" pane labels.
+  const [formFocus, setFormFocus] = useState(() => {
+    try { return localStorage.getItem('efd_new_deal_form_focus') === '1'; } catch { return false; }
+  });
+  const [paneLabelsHidden, setPaneLabelsHidden] = useState(() => {
+    try { return localStorage.getItem('efd_new_deal_labels_hidden') === '1'; } catch { return false; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem('efd_new_deal_form_focus', formFocus ? '1' : '0'); } catch { /* ignore */ }
+  }, [formFocus]);
+  useEffect(() => {
+    try { localStorage.setItem('efd_new_deal_labels_hidden', paneLabelsHidden ? '1' : '0'); } catch { /* ignore */ }
+  }, [paneLabelsHidden]);
   const [importedDeals, setImportedDeals] = useState([]);
   const [guideOpen, setGuideOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -700,7 +716,7 @@ function AuthenticatedApp({ profile, user }) {
       )}
 
       {/* Main */}
-      <div className="max-w-[1600px] mx-auto px-3 md:px-6 py-4 md:py-8">
+      <div className="max-w-[1600px] mx-auto px-3 md:px-6 pt-3 md:pt-4 pb-4 md:pb-8">
         {activeTab === 'batch' ? (
           <ErrorBoundary><Suspense fallback={<LazyFallback />}>
             <BatchScreening
@@ -712,7 +728,37 @@ function AuthenticatedApp({ profile, user }) {
         ) : activeTab === 'screening' ? (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:h-[calc(100vh-160px)]">
             {/* Left: Form — independent scroll on desktop */}
-            <div className="lg:col-span-4 lg:overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
+            <div className={`${formFocus ? 'lg:col-span-12' : 'lg:col-span-5'} lg:overflow-y-auto`}>
+              {/* Pane header */}
+              <div className="lg:sticky lg:top-0 z-20 flex items-center gap-2 mb-3 pb-2 border-b border-gray-200 bg-[#f8f9fa]/95 backdrop-blur-sm">
+                {!paneLabelsHidden && (
+                  <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">Deal Inputs</span>
+                )}
+                <div className="ml-auto flex items-center gap-1.5">
+                  <button
+                    onClick={() => setPaneLabelsHidden(!paneLabelsHidden)}
+                    title={paneLabelsHidden ? 'Show panel labels' : 'Hide panel labels'}
+                    aria-label={paneLabelsHidden ? 'Show panel labels' : 'Hide panel labels'}
+                    className="p-1 rounded text-gray-300 hover:text-gray-500 hover:bg-gray-100 transition-colors"
+                  >
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" />
+                      <line x1="7" y1="7" x2="7.01" y2="7" />
+                    </svg>
+                  </button>
+                  {formFocus && (
+                    <button
+                      onClick={() => setFormFocus(false)}
+                      className="flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-semibold text-gray-600 bg-white border border-gray-200 hover:border-gray-300 transition-all"
+                    >
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                        <polyline points="15 18 9 12 15 6" />
+                      </svg>
+                      Show results
+                    </button>
+                  )}
+                </div>
+              </div>
               <DealInputForm
                 inputs={inputs}
                 onChange={setInputs}
@@ -730,7 +776,24 @@ function AuthenticatedApp({ profile, user }) {
             </div>
 
             {/* Right: Results — independent scroll on desktop */}
-            <div className="lg:col-span-8 lg:overflow-y-auto">
+            {!formFocus && (
+            <div className="lg:col-span-7 lg:overflow-y-auto">
+              {/* Pane header */}
+              <div className="lg:sticky lg:top-0 z-20 flex items-center gap-2 mb-3 pb-2 border-b border-gray-200 bg-[#f8f9fa]/95 backdrop-blur-sm">
+                {!paneLabelsHidden && (
+                  <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">Screening Results</span>
+                )}
+                <button
+                  onClick={() => setFormFocus(true)}
+                  title="Collapse results, expand the form"
+                  className="ml-auto flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-semibold text-gray-600 bg-white border border-gray-200 hover:border-gray-300 transition-all"
+                >
+                  Collapse
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <polyline points="9 18 15 12 9 6" />
+                  </svg>
+                </button>
+              </div>
               {!valid && !partialValid ? (
                 <div className="flex flex-col items-center justify-center min-h-[520px] text-center">
                   <div className="w-16 h-16 rounded-2xl bg-gray-100 border border-gray-200 flex items-center justify-center mb-5">
@@ -1230,6 +1293,7 @@ function AuthenticatedApp({ profile, user }) {
                 </div>
               )}
             </div>
+            )}
           </div>
         ) : activeTab === 'pipeline' ? (
           <ErrorBoundary><Suspense fallback={<LazyFallback />}>
