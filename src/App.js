@@ -729,6 +729,9 @@ function AuthenticatedApp({ profile, user }) {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:h-[calc(100vh-160px)]">
             {/* Left: Form — independent scroll on desktop */}
             <div className={`${formFocus ? 'lg:col-span-12' : 'lg:col-span-5'} lg:overflow-y-auto`}>
+              {/* In form-focus mode the pane is full width; cap + center the
+                  content so input fields don't stretch absurdly wide. */}
+              <div className={formFocus ? 'max-w-5xl mx-auto' : ''}>
               {/* Pane header */}
               <div className="lg:sticky lg:top-0 z-20 flex items-center gap-2 mb-3 pb-2 border-b border-gray-200 bg-[#f8f9fa]/95 backdrop-blur-sm">
                 {!paneLabelsHidden && (
@@ -773,6 +776,7 @@ function AuthenticatedApp({ profile, user }) {
                 analystEmail={user?.email || ''}
                 draftStatus={draftStatus}
               />
+              </div>
             </div>
 
             {/* Right: Results — independent scroll on desktop */}
