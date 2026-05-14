@@ -12,6 +12,7 @@ const LIMITS = {
   webhook: { windowMs: 60 * 1000, max: 100 },          // 100 req/min for webhooks
   api: { windowMs: 60 * 1000, max: 120 },              // 120 req/min for public API
   requestAccess: { windowMs: 60 * 60 * 1000, max: 5 }, // 5 req/hr for public access-request form
+  signup: { windowMs: 60 * 60 * 1000, max: 5 },        // 5 req/hr for invite-code signup
 };
 
 function cleanup() {

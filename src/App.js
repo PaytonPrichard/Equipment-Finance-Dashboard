@@ -148,8 +148,12 @@ function getRevConcStatus(p) {
 
 export default function App() {
   const { session, user, profile, loading: authLoading, refreshProfile, passwordRecovery, emailVerified, signOut } = useAuth();
-  const [showLogin, setShowLogin] = useState(false);
-  const [loginMode, setLoginMode] = useState('signin');
+  // If the URL has ?code=, the user is arriving from an invite link.
+  // Route them straight into the LoginPage signup flow (avoids a landing-page flash).
+  const hasInviteCode = typeof window !== 'undefined'
+    && new URLSearchParams(window.location.search).get('code');
+  const [showLogin, setShowLogin] = useState(Boolean(hasInviteCode));
+  const [loginMode, setLoginMode] = useState(hasInviteCode ? 'signup' : 'signin');
   const [showRequestAccess, setShowRequestAccess] = useState(false);
 
   // Auto sign-out after 30 minutes of inactivity (skipped in demo mode)
