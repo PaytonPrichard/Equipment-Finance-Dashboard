@@ -92,13 +92,6 @@ module.exports = async function handler(req, res) {
   }
 
   // ----- Create the auth user -----
-  // TEMP DEBUG: `debug` fields in the error responses below are a temporary
-  // troubleshooting aid. Strip them before the final commit.
-  const envDebug = {
-    has_url: Boolean(process.env.REACT_APP_SUPABASE_URL || process.env.SUPABASE_URL),
-    has_service_key: Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY),
-  };
-
   let createdUserId = null;
   try {
     const { data, error } = await supabaseAdmin.auth.admin.createUser({
@@ -113,31 +106,13 @@ module.exports = async function handler(req, res) {
         return res.status(409).json({ error: 'An account with this email already exists. Try signing in instead.' });
       }
       console.error('[signup-with-code] createUser error:', error);
-      return res.status(500).json({
-        error: 'Could not create account. Please try again.',
-        debug: {
-          stage: 'createUser',
-          message: error.message,
-          status: error.status,
-          code: error.code,
-          name: error.name,
-          env: envDebug,
-        },
-      });
+      return res.status(500).json({ error: 'Could not create account. Please try again.' });
     }
     createdUserId = data?.user?.id;
     if (!createdUserId) throw new Error('createUser returned no user id');
   } catch (err) {
     console.error('[signup-with-code] createUser exception:', err);
-    return res.status(500).json({
-      error: 'Could not create account. Please try again.',
-      debug: {
-        stage: 'createUser_exception',
-        message: err?.message,
-        name: err?.name,
-        env: envDebug,
-      },
-    });
+    return res.status(500).json({ error: 'Could not create account. Please try again.' });
   }
 
   // ----- Redeem the code (atomic: creates org + promotes user) -----

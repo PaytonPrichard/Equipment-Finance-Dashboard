@@ -135,9 +135,7 @@ export default function LoginPage({ passwordRecovery, onBackToLanding, initialMo
         });
         const data = await res.json().catch(() => ({}));
         if (!res.ok) {
-          // TEMP DEBUG: append server debug detail to the error. Strip before final commit.
-          const debugStr = data.debug ? ` [debug: ${JSON.stringify(data.debug)}]` : '';
-          setError((data.error || 'Could not create account. Please try again.') + debugStr);
+          setError(data.error || 'Could not create account. Please try again.');
           return;
         }
 
