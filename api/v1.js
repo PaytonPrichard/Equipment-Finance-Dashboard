@@ -59,7 +59,7 @@ async function handleDeals(req, res) {
       .select().single();
     if (error) return res.status(500).json({ error: 'Failed to create deal', details: error.message });
 
-    dispatchWebhooks(orgId, 'deal.created', { id: data.id, name, stage: 'Screening', score });
+    await dispatchWebhooks(orgId, 'deal.created', { id: data.id, name, stage: 'Screening', score });
     return res.status(201).json({ id: data.id, name: data.name, stage: data.stage, score, created_at: data.created_at });
   }
 
@@ -102,7 +102,7 @@ async function handleDeals(req, res) {
     if (error) return res.status(500).json({ error: 'Failed to update deal', details: error.message });
 
     if (stage && stage !== existing.stage) {
-      dispatchWebhooks(orgId, 'pipeline.stage_changed', { id: data.id, name: existing.name, previous_stage: existing.stage, new_stage: stage });
+      await dispatchWebhooks(orgId, 'pipeline.stage_changed', { id: data.id, name: existing.name, previous_stage: existing.stage, new_stage: stage });
     }
     return res.status(200).json({ id: data.id, name: data.name, stage: data.stage, score: data.score, updated_at: data.updated_at });
   }

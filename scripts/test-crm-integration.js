@@ -197,10 +197,10 @@ function section(title) {
   // ── PATCH stage (fires webhook) ─────────────────────────
   section('Update: stage change');
   const stageStart = Date.now();
-  const patchStage = await api('PATCH', `/api/v1?resource=deals&id=${dealId}`, { stage: 'Underwriting' });
+  const patchStage = await api('PATCH', `/api/v1?resource=deals&id=${dealId}`, { stage: 'Under Review' });
   log(
     'PATCH stage returns 200 with new stage',
-    patchStage.status === 200 && patchStage.data?.stage === 'Underwriting',
+    patchStage.status === 200 && patchStage.data?.stage === 'Under Review',
     `status=${patchStage.status}, stage="${patchStage.data?.stage}"`,
     patchStage.status !== 200 ? patchStage.data : null,
   );
@@ -215,7 +215,7 @@ function section(title) {
   if (stageWebhook) {
     let body;
     try { body = JSON.parse(stageWebhook.content); } catch { body = null; }
-    log('Stage webhook body has previous_stage and new_stage', body?.data?.previous_stage === 'Screening' && body?.data?.new_stage === 'Underwriting');
+    log('Stage webhook body has previous_stage and new_stage', body?.data?.previous_stage === 'Screening' && body?.data?.new_stage === 'Under Review');
 
     if (WEBHOOK_SECRET) {
       const sig = headerValue(stageWebhook.headers, 'x-tranche-signature');
