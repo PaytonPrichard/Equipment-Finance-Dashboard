@@ -129,7 +129,10 @@ function section(title) {
     score: 75,
   };
   const createStart = Date.now();
-  const create = await api('POST', '/api/v1?resource=deals', createPayload);
+  const create = await api('POST', '/api/v1?resource=deals&debug=1', createPayload);
+  if (create.data?._webhook_dispatch) {
+    console.log(`  (dispatch: ${JSON.stringify(create.data._webhook_dispatch)})`);
+  }
   const dealId = create.data?.id != null ? String(create.data.id) : null;
   log(
     'POST /api/v1?resource=deals returns 201 with id',
@@ -197,7 +200,10 @@ function section(title) {
   // ── PATCH stage (fires webhook) ─────────────────────────
   section('Update: stage change');
   const stageStart = Date.now();
-  const patchStage = await api('PATCH', `/api/v1?resource=deals&id=${dealId}`, { stage: 'Under Review' });
+  const patchStage = await api('PATCH', `/api/v1?resource=deals&id=${dealId}&debug=1`, { stage: 'Under Review' });
+  if (patchStage.data?._webhook_dispatch) {
+    console.log(`  (dispatch: ${JSON.stringify(patchStage.data._webhook_dispatch)})`);
+  }
   log(
     'PATCH stage returns 200 with new stage',
     patchStage.status === 200 && patchStage.data?.stage === 'Under Review',

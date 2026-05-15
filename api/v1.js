@@ -59,8 +59,9 @@ async function handleDeals(req, res) {
       .select().single();
     if (error) return res.status(500).json({ error: 'Failed to create deal', details: error.message });
 
-    await dispatchWebhooks(orgId, 'deal.created', { id: data.id, name, stage: 'Screening', score });
-    return res.status(201).json({ id: data.id, name: data.name, stage: data.stage, score, created_at: data.created_at });
+    const dispatchResult = await dispatchWebhooks(orgId, 'deal.created', { id: data.id, name, stage: 'Screening', score });
+    const debug = req.query?.debug === '1' ? { _webhook_dispatch: dispatchResult } : {};
+    return res.status(201).json({ id: data.id, name: data.name, stage: data.stage, score, created_at: data.created_at, ...debug });
   }
 
   if (req.method === 'GET') {
@@ -101,10 +102,12 @@ async function handleDeals(req, res) {
       .from('pipeline_deals').update(updates).eq('id', id).select().single();
     if (error) return res.status(500).json({ error: 'Failed to update deal', details: error.message });
 
+    let dispatchResult = null;
     if (stage && stage !== existing.stage) {
-      await dispatchWebhooks(orgId, 'pipeline.stage_changed', { id: data.id, name: existing.name, previous_stage: existing.stage, new_stage: stage });
+      dispatchResult = await dispatchWebhooks(orgId, 'pipeline.stage_changed', { id: data.id, name: existing.name, previous_stage: existing.stage, new_stage: stage });
     }
-    return res.status(200).json({ id: data.id, name: data.name, stage: data.stage, score: data.score, updated_at: data.updated_at });
+    const debug = req.query?.debug === '1' ? { _webhook_dispatch: dispatchResult } : {};
+    return res.status(200).json({ id: data.id, name: data.name, stage: data.stage, score: data.score, updated_at: data.updated_at, ...debug });
   }
 
   return res.status(405).json({ error: 'Method not allowed' });
