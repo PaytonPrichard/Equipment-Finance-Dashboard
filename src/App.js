@@ -274,17 +274,21 @@ function AuthenticatedApp({ profile, user }) {
   const [activeTab, setActiveTab] = useState('screening');
 
   // New Deal layout prefs — persisted so the user's choice sticks across sessions.
-  // formFocus: hide the results pane and give the form full width for data entry.
+  // paneMode: 'split' (both panes), 'form' (results collapsed to a rail),
+  //           'results' (deal inputs collapsed to a rail).
   // paneLabelsHidden: hide the "Deal Inputs" / "Screening Results" pane labels.
-  const [formFocus, setFormFocus] = useState(() => {
-    try { return localStorage.getItem('efd_new_deal_form_focus') === '1'; } catch { return false; }
+  const [paneMode, setPaneMode] = useState(() => {
+    try {
+      const v = localStorage.getItem('efd_new_deal_pane_mode');
+      return v === 'form' || v === 'results' ? v : 'split';
+    } catch { return 'split'; }
   });
   const [paneLabelsHidden, setPaneLabelsHidden] = useState(() => {
     try { return localStorage.getItem('efd_new_deal_labels_hidden') === '1'; } catch { return false; }
   });
   useEffect(() => {
-    try { localStorage.setItem('efd_new_deal_form_focus', formFocus ? '1' : '0'); } catch { /* ignore */ }
-  }, [formFocus]);
+    try { localStorage.setItem('efd_new_deal_pane_mode', paneMode); } catch { /* ignore */ }
+  }, [paneMode]);
   useEffect(() => {
     try { localStorage.setItem('efd_new_deal_labels_hidden', paneLabelsHidden ? '1' : '0'); } catch { /* ignore */ }
   }, [paneLabelsHidden]);
@@ -557,9 +561,9 @@ function AuthenticatedApp({ profile, user }) {
         </div>
       )}
 
-      {/* Toolbar */}
+      {/* Toolbar — pinned below the app header so its actions stay reachable */}
       {(activeTab === 'screening' || activeTab === 'batch') && (
-      <div className="border-b border-gray-200 bg-white/80 backdrop-blur-sm">
+      <div className="sticky top-11 md:top-14 z-30 border-b border-gray-200 bg-white/95 backdrop-blur-sm">
         <div className="max-w-[1600px] mx-auto px-3 md:px-6 py-2">
           <div className="flex items-center gap-2">
             {/* Single / Batch toggle */}
@@ -726,77 +730,104 @@ function AuthenticatedApp({ profile, user }) {
             />
           </Suspense></ErrorBoundary>
         ) : activeTab === 'screening' ? (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            {/* Left: Form. Whole page scrolls; no independent pane scroll. */}
-            <div className={formFocus ? 'lg:col-span-12' : 'lg:col-span-5'}>
-              {/* In form-focus mode the pane is full width; cap + center the
-                  content so input fields don't stretch absurdly wide. */}
-              <div className={formFocus ? 'max-w-5xl mx-auto' : ''}>
-              {/* Pane header */}
-              <div className="flex items-center gap-2 mb-3 pb-2 border-b border-gray-200">
-                {!paneLabelsHidden && (
-                  <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">Deal Inputs</span>
-                )}
-                <div className="ml-auto flex items-center gap-1.5">
-                  <button
-                    onClick={() => setPaneLabelsHidden(!paneLabelsHidden)}
-                    title={paneLabelsHidden ? 'Show panel labels' : 'Hide panel labels'}
-                    aria-label={paneLabelsHidden ? 'Show panel labels' : 'Hide panel labels'}
-                    className="p-1 rounded text-gray-300 hover:text-gray-500 hover:bg-gray-100 transition-colors"
-                  >
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" />
-                      <line x1="7" y1="7" x2="7.01" y2="7" />
-                    </svg>
-                  </button>
-                  {formFocus && (
-                    <button
-                      onClick={() => setFormFocus(false)}
-                      className="flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-semibold text-gray-600 bg-white border border-gray-200 hover:border-gray-300 transition-all"
-                    >
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                        <polyline points="15 18 9 12 15 6" />
-                      </svg>
-                      Show results
-                    </button>
-                  )}
+          <div className="flex flex-col lg:flex-row gap-6">
+            {/* FORM PANE — a thin rail when collapsed (paneMode 'results') */}
+            {paneMode === 'results' ? (
+              <button
+                onClick={() => setPaneMode('split')}
+                title="Expand deal inputs"
+                className="lg:w-10 lg:flex-shrink-0 rounded-2xl border border-gray-200 bg-white hover:bg-gray-50 transition-colors flex lg:flex-col items-center justify-center gap-2 py-2.5 lg:py-4 text-gray-400 hover:text-gray-600"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <polyline points="9 18 15 12 9 6" />
+                </svg>
+                <span className="text-[10px] font-semibold uppercase tracking-wider lg:[writing-mode:vertical-rl]">Deal Inputs</span>
+              </button>
+            ) : (
+              <div className={paneMode === 'form' ? 'lg:flex-1' : 'lg:w-5/12'}>
+                {/* In form-focus mode the pane is full width; cap + center the
+                    content so input fields don't stretch absurdly wide. */}
+                <div className={paneMode === 'form' ? 'max-w-5xl mx-auto' : ''}>
+                  {/* Pane header */}
+                  <div className="flex items-center gap-2 mb-3 pb-2 border-b border-gray-200">
+                    {!paneLabelsHidden && (
+                      <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">Deal Inputs</span>
+                    )}
+                    <div className="ml-auto flex items-center gap-1.5">
+                      <button
+                        onClick={() => setPaneLabelsHidden(!paneLabelsHidden)}
+                        title={paneLabelsHidden ? 'Show panel labels' : 'Hide panel labels'}
+                        aria-label={paneLabelsHidden ? 'Show panel labels' : 'Hide panel labels'}
+                        className="p-1 rounded text-gray-300 hover:text-gray-500 hover:bg-gray-100 transition-colors"
+                      >
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" />
+                          <line x1="7" y1="7" x2="7.01" y2="7" />
+                        </svg>
+                      </button>
+                      {paneMode === 'split' && (
+                        <button
+                          onClick={() => setPaneMode('results')}
+                          title="Collapse deal inputs"
+                          className="flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-semibold text-gray-600 bg-white border border-gray-200 hover:border-gray-300 transition-all"
+                        >
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                            <polyline points="15 18 9 12 15 6" />
+                          </svg>
+                          Collapse
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  <DealInputForm
+                    inputs={inputs}
+                    onChange={setInputs}
+                    schema={mod.FORM_SCHEMA}
+                    modules={modules}
+                    activeModule={activeModule}
+                    onModuleChange={handleModuleChange}
+                    pipelineDeals={pipelineDealsList}
+                    sofr={sofr}
+                    sofrSource={sofrSource}
+                    analystName={profile?.full_name || user?.user_metadata?.full_name || ''}
+                    analystEmail={user?.email || ''}
+                    draftStatus={draftStatus}
+                  />
                 </div>
               </div>
-              <DealInputForm
-                inputs={inputs}
-                onChange={setInputs}
-                schema={mod.FORM_SCHEMA}
-                modules={modules}
-                activeModule={activeModule}
-                onModuleChange={handleModuleChange}
-                pipelineDeals={pipelineDealsList}
-                sofr={sofr}
-                sofrSource={sofrSource}
-                analystName={profile?.full_name || user?.user_metadata?.full_name || ''}
-                analystEmail={user?.email || ''}
-                draftStatus={draftStatus}
-              />
-              </div>
-            </div>
+            )}
 
-            {/* Right: Results */}
-            {!formFocus && (
-            <div className="lg:col-span-7">
+            {/* RESULTS PANE — a thin rail when collapsed (paneMode 'form') */}
+            {paneMode === 'form' ? (
+              <button
+                onClick={() => setPaneMode('split')}
+                title="Expand screening results"
+                className="lg:w-10 lg:flex-shrink-0 rounded-2xl border border-gray-200 bg-white hover:bg-gray-50 transition-colors flex lg:flex-col items-center justify-center gap-2 py-2.5 lg:py-4 text-gray-400 hover:text-gray-600"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <polyline points="15 18 9 12 15 6" />
+                </svg>
+                <span className="text-[10px] font-semibold uppercase tracking-wider lg:[writing-mode:vertical-rl]">Screening Results</span>
+              </button>
+            ) : (
+            <div className={paneMode === 'results' ? 'lg:flex-1' : 'lg:w-7/12'}>
               {/* Pane header */}
               <div className="flex items-center gap-2 mb-3 pb-2 border-b border-gray-200">
                 {!paneLabelsHidden && (
                   <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">Screening Results</span>
                 )}
-                <button
-                  onClick={() => setFormFocus(true)}
-                  title="Collapse results, expand the form"
-                  className="ml-auto flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-semibold text-gray-600 bg-white border border-gray-200 hover:border-gray-300 transition-all"
-                >
-                  Collapse
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                    <polyline points="9 18 15 12 9 6" />
-                  </svg>
-                </button>
+                {paneMode === 'split' && (
+                  <button
+                    onClick={() => setPaneMode('form')}
+                    title="Collapse screening results"
+                    className="ml-auto flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-semibold text-gray-600 bg-white border border-gray-200 hover:border-gray-300 transition-all"
+                  >
+                    Collapse
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                      <polyline points="9 18 15 12 9 6" />
+                    </svg>
+                  </button>
+                )}
               </div>
               {!valid && !partialValid ? (
                 <div className="flex flex-col items-center justify-center min-h-[520px] text-center">
@@ -899,9 +930,13 @@ function AuthenticatedApp({ profile, user }) {
                 </div>
               ) : (
                 <div className="space-y-6 animate-fade-in-up">
-                  {/* Section Nav (simplified) */}
-                  <nav className="flex flex-wrap gap-1.5 pb-1 items-center">
+                  {/* Section Nav — sticky so the score and jump links stay visible while scrolling */}
+                  <nav className="lg:sticky lg:top-[104px] z-10 flex flex-wrap gap-1.5 items-center bg-[#f8f9fa]/95 backdrop-blur-sm py-2">
                     <TutorialBeacon id="nav" title="Jump To" description="Click any label to scroll to that section." position="bottom" />
+                    <span className={`px-2.5 py-1 rounded-lg text-[10px] font-bold border ${recommendation.bgClass} ${recommendation.textClass}`}>
+                      {riskScore.composite}/100
+                    </span>
+                    <span className="w-px h-4 bg-gray-200 mx-0.5" />
                     {[
                       { id: 'sec-score', label: 'Score' },
                       { id: 'sec-metrics', label: 'Metrics' },
@@ -920,8 +955,8 @@ function AuthenticatedApp({ profile, user }) {
                     ))}
                   </nav>
 
-                  {/* Company header — sticky so the score stays visible while scrolling */}
-                  <div id="sec-summary" className="lg:sticky lg:top-16 z-10 flex items-center justify-between flex-wrap gap-3 scroll-mt-20 bg-[#f8f9fa]/95 backdrop-blur-sm py-2">
+                  {/* Company header */}
+                  <div id="sec-summary" className="flex items-center justify-between flex-wrap gap-3 scroll-mt-[150px]">
                     <div>
                       {inputs.companyName && (
                         <h2 className="text-xl font-bold text-gray-900">{inputs.companyName}</h2>
@@ -1008,7 +1043,7 @@ function AuthenticatedApp({ profile, user }) {
                   <ExecutiveSummary inputs={inputs} metrics={metrics} riskScore={riskScore} recommendation={recommendation} />
 
                   {/* Gauge + Radar */}
-                  <div id="sec-score" className="grid grid-cols-1 md:grid-cols-2 gap-6 scroll-mt-20">
+                  <div id="sec-score" className="grid grid-cols-1 md:grid-cols-2 gap-6 scroll-mt-[150px]">
                     <div className="glass-card rounded-2xl p-5">
                       <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3 flex items-center gap-2">
                         Risk Score
@@ -1025,7 +1060,7 @@ function AuthenticatedApp({ profile, user }) {
                   </div>
 
                   {/* Metrics */}
-                  <div id="sec-metrics" className="space-y-3 scroll-mt-20">
+                  <div id="sec-metrics" className="space-y-3 scroll-mt-[150px]">
                     {/* Primary metrics: DSCR & Leverage (always prominent) */}
                     <div className="grid grid-cols-2 gap-3">
                       <MetricCard
@@ -1174,7 +1209,7 @@ function AuthenticatedApp({ profile, user }) {
 
                   {/* Debt Service — Equipment only */}
                   {isEquipment && (
-                    <div id="sec-debt" className="glass-card rounded-2xl p-5 scroll-mt-20">
+                    <div id="sec-debt" className="glass-card rounded-2xl p-5 scroll-mt-[150px]">
                       <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-4">
                         Debt Service Summary
                         {ft !== 'EFA' && (
@@ -1207,7 +1242,7 @@ function AuthenticatedApp({ profile, user }) {
 
                   {/* Facility Summary — AR & Inventory */}
                   {!isEquipment && (
-                    <div id="sec-facility" className="glass-card rounded-2xl p-5 scroll-mt-20">
+                    <div id="sec-facility" className="glass-card rounded-2xl p-5 scroll-mt-[150px]">
                       <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-4">
                         Revolving Facility Summary
                         {!metrics.debtServiceEstimated && (
@@ -1245,14 +1280,14 @@ function AuthenticatedApp({ profile, user }) {
                   )}
 
                   {/* Stress Test */}
-                  <div id="sec-stress" className="scroll-mt-20">
+                  <div id="sec-stress" className="scroll-mt-[150px]">
                     <StressTestPanel stressResults={stressResults} beaconSlot={<TutorialBeacon id="stress" title="Stress Test" description="See how the deal holds up under revenue declines." position="bottom" />} />
                   </div>
 
-                  <div id="sec-recommendation" className="scroll-mt-20">
+                  <div id="sec-recommendation" className="scroll-mt-[150px]">
                     <DealRecommendation recommendation={recommendation} commentary={commentary} />
                   </div>
-                  <div id="sec-structure" className="scroll-mt-20">
+                  <div id="sec-structure" className="scroll-mt-[150px]">
                     <SuggestedStructure structure={structure} sofr={sofr} sofrDate={sofrDate} sofrSource={sofrSource} />
                   </div>
 
@@ -1260,27 +1295,27 @@ function AuthenticatedApp({ profile, user }) {
                   <ErrorBoundary><Suspense fallback={<LazyFallback />}>
                     {isEquipment && (
                       <>
-                        <div id="sec-whatif" className="scroll-mt-20">
+                        <div id="sec-whatif" className="scroll-mt-[150px]">
                           <WhatIfPanel inputs={inputs} metrics={metrics} riskScore={riskScore} sofr={sofr} />
                         </div>
-                        <div id="sec-comps" className="scroll-mt-20">
+                        <div id="sec-comps" className="scroll-mt-[150px]">
                           <ComparableDeals inputs={inputs} metrics={metrics} riskScore={riskScore} sofr={sofr} />
                         </div>
-                        <div id="sec-benchmarks" className="scroll-mt-20">
+                        <div id="sec-benchmarks" className="scroll-mt-[150px]">
                           <IndustryBenchmarks inputs={inputs} metrics={metrics} riskScore={riskScore} sofr={sofr} />
                         </div>
-                        <div id="sec-sensitivity" className="scroll-mt-20">
+                        <div id="sec-sensitivity" className="scroll-mt-[150px]">
                           <SensitivityChart inputs={inputs} sofr={sofr} />
                         </div>
                       </>
                     )}
 
-                    <div id="sec-weights" className="scroll-mt-20">
+                    <div id="sec-weights" className="scroll-mt-[150px]">
                       <ScoringWeights inputs={inputs} metrics={metrics} riskScore={baseRiskScore} onWeightsChange={setCustomWeights} />
                     </div>
                   </Suspense></ErrorBoundary>
 
-                  <div id="sec-policy" className="scroll-mt-20">
+                  <div id="sec-policy" className="scroll-mt-[150px]">
                     <ScreeningCriteria
                       activeModule={activeModule}
                       onCriteriaChange={setScreeningCriteria}
@@ -1289,7 +1324,7 @@ function AuthenticatedApp({ profile, user }) {
 
                   {isEquipment && (
                     <ErrorBoundary><Suspense fallback={<LazyFallback />}>
-                      <div id="sec-checklist" className="scroll-mt-20">
+                      <div id="sec-checklist" className="scroll-mt-[150px]">
                         <DueDiligenceChecklist inputs={inputs} metrics={metrics} riskScore={riskScore} />
                       </div>
                     </Suspense></ErrorBoundary>
