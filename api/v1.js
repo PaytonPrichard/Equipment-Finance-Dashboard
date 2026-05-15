@@ -99,7 +99,7 @@ async function handleDeals(req, res) {
 
     const { data, error } = await supabaseAdmin
       .from('pipeline_deals').update(updates).eq('id', id).select().single();
-    if (error) return res.status(500).json({ error: 'Failed to update deal' });
+    if (error) return res.status(500).json({ error: 'Failed to update deal', details: error.message });
 
     if (stage && stage !== existing.stage) {
       dispatchWebhooks(orgId, 'pipeline.stage_changed', { id: data.id, name: existing.name, previous_stage: existing.stage, new_stage: stage });
