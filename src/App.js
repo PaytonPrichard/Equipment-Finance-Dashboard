@@ -726,14 +726,14 @@ function AuthenticatedApp({ profile, user }) {
             />
           </Suspense></ErrorBoundary>
         ) : activeTab === 'screening' ? (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:h-[calc(100vh-160px)]">
-            {/* Left: Form — independent scroll on desktop */}
-            <div className={`${formFocus ? 'lg:col-span-12' : 'lg:col-span-5'} lg:overflow-y-auto`}>
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            {/* Left: Form. Whole page scrolls; no independent pane scroll. */}
+            <div className={formFocus ? 'lg:col-span-12' : 'lg:col-span-5'}>
               {/* In form-focus mode the pane is full width; cap + center the
                   content so input fields don't stretch absurdly wide. */}
               <div className={formFocus ? 'max-w-5xl mx-auto' : ''}>
               {/* Pane header */}
-              <div className="lg:sticky lg:top-0 z-20 flex items-center gap-2 mb-3 pb-2 border-b border-gray-200 bg-[#f8f9fa]/95 backdrop-blur-sm">
+              <div className="flex items-center gap-2 mb-3 pb-2 border-b border-gray-200">
                 {!paneLabelsHidden && (
                   <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">Deal Inputs</span>
                 )}
@@ -779,11 +779,11 @@ function AuthenticatedApp({ profile, user }) {
               </div>
             </div>
 
-            {/* Right: Results — independent scroll on desktop */}
+            {/* Right: Results */}
             {!formFocus && (
-            <div className="lg:col-span-7 lg:overflow-y-auto">
+            <div className="lg:col-span-7">
               {/* Pane header */}
-              <div className="lg:sticky lg:top-0 z-20 flex items-center gap-2 mb-3 pb-2 border-b border-gray-200 bg-[#f8f9fa]/95 backdrop-blur-sm">
+              <div className="flex items-center gap-2 mb-3 pb-2 border-b border-gray-200">
                 {!paneLabelsHidden && (
                   <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">Screening Results</span>
                 )}
@@ -920,8 +920,8 @@ function AuthenticatedApp({ profile, user }) {
                     ))}
                   </nav>
 
-                  {/* Company header */}
-                  <div id="sec-summary" className="flex items-center justify-between flex-wrap gap-3 scroll-mt-20">
+                  {/* Company header — sticky so the score stays visible while scrolling */}
+                  <div id="sec-summary" className="lg:sticky lg:top-16 z-10 flex items-center justify-between flex-wrap gap-3 scroll-mt-20 bg-[#f8f9fa]/95 backdrop-blur-sm py-2">
                     <div>
                       {inputs.companyName && (
                         <h2 className="text-xl font-bold text-gray-900">{inputs.companyName}</h2>
