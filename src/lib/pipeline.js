@@ -27,35 +27,50 @@ export async function fetchPipelineDeals(orgId) {
   return { data: data || [], error };
 }
 
+// Wrap a fetch to /api/score-deal so callers keep the {data, error} shape.
+// The endpoint writes the deal, the audit row, and fires deal.created /
+// deal.scored webhooks server-side. Browser-side score writes go through here
+// instead of Supabase direct so the dispatch path can't be skipped.
+async function callScoreDeal(method, path, body) {
+  const { data: sessionData } = await supabase.auth.getSession();
+  const token = sessionData?.session?.access_token;
+  if (!token) return { data: null, error: { message: 'Not authenticated' } };
+
+  let res;
+  try {
+    res = await fetch(path, {
+      method,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+      },
+      body: JSON.stringify(body),
+    });
+  } catch (err) {
+    return { data: null, error: { message: err.message || 'Network error' } };
+  }
+
+  let payload = null;
+  try { payload = await res.json(); } catch { payload = null; }
+
+  if (!res.ok) {
+    return { data: null, error: { message: payload?.error || `HTTP ${res.status}`, details: payload?.details } };
+  }
+  return { data: payload?.deal || null, error: null };
+}
+
 /**
  * Create a new pipeline deal in the initial 'Screening' stage.
+ * Server derives user_id and org_id from the JWT.
  */
-export async function createPipelineDeal(userId, orgId, name, inputs, score) {
+export async function createPipelineDeal(name, inputs, score) {
   if (isDemoMode()) {
     const deal = createDemoPipelineDeal({ name, inputs, score });
     return { data: deal, error: null };
   }
   if (!supabase) return { data: null, error: null };
 
-  const { data, error } = await supabase
-    .from('pipeline_deals')
-    .insert({
-      user_id: userId,
-      org_id: orgId,
-      name,
-      stage: 'Screening',
-      inputs,
-      score,
-      notes: '',
-    })
-    .select()
-    .single();
-
-  if (!error && data) {
-    logAudit(userId, orgId, 'create', 'pipeline_deal', data.id, null, { name, stage: 'Screening', inputs, score });
-  }
-
-  return { data, error };
+  return callScoreDeal('POST', '/api/score-deal', { name, inputs, score, notes: '' });
 }
 
 /**
@@ -136,36 +151,16 @@ export async function updatePipelineNotes(dealId, notes) {
 
 /**
  * Update inputs and score on a pipeline deal (e.g. after re-screening).
+ * Server derives user_id and org_id from the JWT.
  */
-export async function updatePipelineDeal(dealId, inputs, score, userId, orgId) {
+export async function updatePipelineDeal(dealId, inputs, score) {
   if (isDemoMode()) {
     const deal = updateDemoPipelineInputs(dealId, inputs, score);
     return { data: deal, error: deal ? null : { message: 'Deal not found' } };
   }
   if (!supabase) return { data: null, error: null };
 
-  // Fetch current state for audit trail
-  const { data: existing } = await supabase
-    .from('pipeline_deals')
-    .select('inputs, score')
-    .eq('id', dealId)
-    .single();
-
-  const { data, error } = await supabase
-    .from('pipeline_deals')
-    .update({ inputs, score, updated_at: new Date().toISOString() })
-    .eq('id', dealId)
-    .select()
-    .single();
-
-  if (!error && data) {
-    logAudit(userId, orgId, 'update_inputs', 'pipeline_deal', dealId,
-      { score: existing?.score, inputs: existing?.inputs },
-      { score, inputs }
-    );
-  }
-
-  return { data, error };
+  return callScoreDeal('PATCH', `/api/score-deal?id=${encodeURIComponent(dealId)}`, { inputs, score });
 }
 
 /**

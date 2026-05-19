@@ -403,8 +403,6 @@ export default function BatchScreening({ sofr = DEFAULT_SOFR, onLoadDeal, active
                   for (const deal of toSave) {
                     const dealName = (deal.inputs?.companyName || '').trim() || `Untitled Deal ${deal.id}`;
                     const { data, error } = await createPipelineDeal(
-                      user.id,
-                      profile.org_id,
                       dealName,
                       deal.inputs,
                       deal.riskScore?.composite ?? null,

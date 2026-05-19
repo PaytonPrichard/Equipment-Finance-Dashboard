@@ -144,7 +144,7 @@ export default function DealPipeline({ onLoadDeal, currentInputs, currentScore, 
     setIsAdding(false);
     setAddingName('');
 
-    const { data, error } = await createPipelineDeal(userId, orgId, name, currentInputs || {}, currentScore ?? null);
+    const { data, error } = await createPipelineDeal(name, currentInputs || {}, currentScore ?? null);
     if (error) {
       addToast('Failed to add deal to pipeline', 'error');
       setDeals((prev) => prev.filter((d) => d.id !== tempId));

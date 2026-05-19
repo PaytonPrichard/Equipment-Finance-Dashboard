@@ -662,7 +662,7 @@ function AuthenticatedApp({ profile, user }) {
                   {activePipelineDealId && valid && (
                     <button
                       onClick={async () => {
-                        const { error } = await updatePipelineDeal(activePipelineDealId, inputs, riskScore.composite, user?.id, profile?.org_id);
+                        const { error } = await updatePipelineDeal(activePipelineDealId, inputs, riskScore.composite);
                         if (error) {
                           addToast('Failed to update deal', 'error');
                         } else {
@@ -684,7 +684,7 @@ function AuthenticatedApp({ profile, user }) {
                         setSavingToPipeline(true);
                         const dealName = (inputs.companyName || '').trim() || `Untitled Deal — ${new Date().toLocaleDateString()}`;
                         const { createPipelineDeal } = await import('./lib/pipeline');
-                        const { data, error } = await createPipelineDeal(user.id, profile.org_id, dealName, inputs, riskScore?.composite ?? null);
+                        const { data, error } = await createPipelineDeal(dealName, inputs, riskScore?.composite ?? null);
                         setSavingToPipeline(false);
                         if (error) {
                           addToast('Failed to save to pipeline.', 'error');

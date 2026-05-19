@@ -4,6 +4,9 @@
 // HMAC signature presence (and verification if WEBHOOK_SECRET provided),
 // auth failure paths.
 //
+// Scope: this tests the public X-API-Key surface only. The in-app browser
+// scoring path (JWT-authenticated, hits /api/score-deal) is not covered here.
+//
 // Usage:
 //   TRANCHE_API_KEY=trn_... \
 //   WEBHOOK_SITE_TOKEN=<webhook.site uuid> \
@@ -179,6 +182,23 @@ function section(title) {
     }
   }
 
+  // ── Webhook: deal.scored on creation (score present) ─────
+  section('Webhook delivery: deal.scored on create');
+  const scoredOnCreate = await waitForWebhook((r) => {
+    const event = headerValue(r.headers, 'x-tranche-event');
+    const ts = new Date(r.created_at).getTime();
+    if (event !== 'deal.scored' || ts < createStart - 5000) return false;
+    let body;
+    try { body = JSON.parse(r.content); } catch { return false; }
+    return String(body?.data?.id) === dealId;
+  }, 'deal.scored (on create)');
+  log('deal.scored webhook delivered on POST with score', !!scoredOnCreate);
+  if (scoredOnCreate) {
+    let body;
+    try { body = JSON.parse(scoredOnCreate.content); } catch { body = null; }
+    log('Scored webhook (create) body has score=75', body?.data?.score === 75);
+  }
+
   // ── GET deal ────────────────────────────────────────────
   section('Read');
   const getOne = await api('GET', `/api/v1?resource=deals&id=${dealId}`);
@@ -242,14 +262,53 @@ function section(title) {
     `webhooks_before=${beforeNotes}, after=${afterNotes}`,
   );
 
-  // ── Confirm gap: deal.scored is never fired ─────────────
-  section('Documented gap: deal.scored');
-  const allDeliveries = await getWebhookDeliveries();
-  const scoredEvents = allDeliveries.filter((r) => headerValue(r.headers, 'x-tranche-event') === 'deal.scored');
+  // ── PATCH score change (fires deal.scored) ──────────────
+  section('Update: score change');
+  const scoreStart = Date.now();
+  const newScore = 82;
+  const patchScore = await api('PATCH', `/api/v1?resource=deals&id=${dealId}&debug=1`, { score: newScore });
+  if (patchScore.data?._webhook_dispatch) {
+    console.log(`  (dispatch: ${JSON.stringify(patchScore.data._webhook_dispatch)})`);
+  }
   log(
-    'deal.scored is never fired (confirms code review finding)',
-    scoredEvents.length === 0,
-    `deliveries_with_event_deal.scored=${scoredEvents.length}`,
+    'PATCH score returns 200 with new score',
+    patchScore.status === 200 && patchScore.data?.score === newScore,
+    `status=${patchScore.status}, score=${patchScore.data?.score}`,
+    patchScore.status !== 200 ? patchScore.data : null,
+  );
+
+  const scoreWebhook = await waitForWebhook((r) => {
+    const event = headerValue(r.headers, 'x-tranche-event');
+    const ts = new Date(r.created_at).getTime();
+    if (event !== 'deal.scored' || ts < scoreStart - 1000) return false;
+    let body;
+    try { body = JSON.parse(r.content); } catch { return false; }
+    return String(body?.data?.id) === dealId && body?.data?.score === newScore;
+  }, 'deal.scored (on PATCH)');
+  log('deal.scored webhook delivered on PATCH', !!scoreWebhook);
+
+  if (scoreWebhook) {
+    let body;
+    try { body = JSON.parse(scoreWebhook.content); } catch { body = null; }
+    log('Scored webhook (patch) body has new score', body?.data?.score === newScore);
+
+    if (WEBHOOK_SECRET) {
+      const sig = headerValue(scoreWebhook.headers, 'x-tranche-signature');
+      const ok = sig && verifySignature(scoreWebhook.content, sig, WEBHOOK_SECRET);
+      log('Scored webhook (patch) HMAC verifies', ok);
+    }
+  }
+
+  // ── PATCH score to the same value (no webhook expected) ──
+  section('Update: score unchanged (no webhook expected)');
+  const beforeUnchanged = (await getWebhookDeliveries()).length;
+  await api('PATCH', `/api/v1?resource=deals&id=${dealId}`, { score: newScore });
+  await new Promise((r) => setTimeout(r, 4000));
+  const afterUnchanged = (await getWebhookDeliveries()).length;
+  log(
+    'PATCH with unchanged score does not fire deal.scored',
+    afterUnchanged === beforeUnchanged,
+    `webhooks_before=${beforeUnchanged}, after=${afterUnchanged}`,
   );
 
   // ── Summary ─────────────────────────────────────────────

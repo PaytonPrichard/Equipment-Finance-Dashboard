@@ -59,8 +59,13 @@ async function handleDeals(req, res) {
       .select().single();
     if (error) return res.status(500).json({ error: 'Failed to create deal', details: error.message });
 
-    const dispatchResult = await dispatchWebhooks(orgId, 'deal.created', { id: data.id, name, stage: 'Screening', score });
-    const debug = req.query?.debug === '1' ? { _webhook_dispatch: dispatchResult } : {};
+    const payload = { id: data.id, name, stage: 'Screening', score };
+    const createdResult = await dispatchWebhooks(orgId, 'deal.created', payload);
+    let scoredResult = null;
+    if (score !== null && score !== undefined) {
+      scoredResult = await dispatchWebhooks(orgId, 'deal.scored', payload);
+    }
+    const debug = req.query?.debug === '1' ? { _webhook_dispatch: { created: createdResult, ...(scoredResult ? { scored: scoredResult } : {}) } } : {};
     return res.status(201).json({ id: data.id, name: data.name, stage: data.stage, score, created_at: data.created_at, ...debug });
   }
 
@@ -86,27 +91,41 @@ async function handleDeals(req, res) {
 
   if (req.method === 'PATCH') {
     const { id } = req.query || {};
-    const { stage, notes } = req.body || {};
+    const { stage, notes, score, inputs } = req.body || {};
     if (!id) return res.status(400).json({ error: 'id query parameter is required' });
-    if (!stage && notes === undefined) return res.status(400).json({ error: 'stage or notes is required' });
+    if (!stage && notes === undefined && score === undefined && inputs === undefined) {
+      return res.status(400).json({ error: 'stage, notes, score, or inputs is required' });
+    }
+    if (score !== undefined && score !== null && (typeof score !== 'number' || !Number.isFinite(score))) {
+      return res.status(400).json({ error: 'score must be a number or null' });
+    }
+    if (inputs !== undefined && (typeof inputs !== 'object' || inputs === null)) {
+      return res.status(400).json({ error: 'inputs must be an object' });
+    }
 
     const { data: existing, error: fetchErr } = await supabaseAdmin
-      .from('pipeline_deals').select('id, stage, name').eq('id', id).eq('org_id', orgId).single();
+      .from('pipeline_deals').select('id, stage, name, score').eq('id', id).eq('org_id', orgId).single();
     if (fetchErr || !existing) return res.status(404).json({ error: 'Deal not found' });
 
     const updates = { updated_at: new Date().toISOString() };
     if (stage) updates.stage = stage;
     if (notes !== undefined) updates.notes = notes;
+    if (score !== undefined) updates.score = score;
+    if (inputs !== undefined) updates.inputs = inputs;
 
     const { data, error } = await supabaseAdmin
       .from('pipeline_deals').update(updates).eq('id', id).select().single();
     if (error) return res.status(500).json({ error: 'Failed to update deal', details: error.message });
 
-    let dispatchResult = null;
+    let stageResult = null;
+    let scoredResult = null;
     if (stage && stage !== existing.stage) {
-      dispatchResult = await dispatchWebhooks(orgId, 'pipeline.stage_changed', { id: data.id, name: existing.name, previous_stage: existing.stage, new_stage: stage });
+      stageResult = await dispatchWebhooks(orgId, 'pipeline.stage_changed', { id: data.id, name: existing.name, previous_stage: existing.stage, new_stage: stage });
     }
-    const debug = req.query?.debug === '1' ? { _webhook_dispatch: dispatchResult } : {};
+    if (score !== undefined && score !== existing.score) {
+      scoredResult = await dispatchWebhooks(orgId, 'deal.scored', { id: data.id, name: data.name, stage: data.stage, score: data.score });
+    }
+    const debug = req.query?.debug === '1' ? { _webhook_dispatch: { stage_changed: stageResult, scored: scoredResult } } : {};
     return res.status(200).json({ id: data.id, name: data.name, stage: data.stage, score: data.score, updated_at: data.updated_at, ...debug });
   }
 
