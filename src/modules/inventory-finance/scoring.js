@@ -67,36 +67,47 @@ export function calculateMetrics(inputs, sofr = DEFAULT_SOFR) {
   const rate = rateInfo.allInRate;
 
   // --- Inventory composition ---
+  // Composition inputs (rawMaterials, workInProgress, finishedGoods,
+  // obsoleteInventory) are percentages of total inventory in 0-100 form.
+  // Convert to fractions (0-1) and dollars when needed.
   const totalInv = totalInventory || 0;
-  const raw = rawMaterials || 0;
-  const wip = workInProgress || 0;
-  const finished = finishedGoods || 0;
-  const obsolete = obsoleteInventory || 0;
+  const rawPctFrac = (rawMaterials || 0) / 100;
+  const wipPctFrac = (workInProgress || 0) / 100;
+  const finishedPctFrac = (finishedGoods || 0) / 100;
+  const obsoletePctFrac = (obsoleteInventory || 0) / 100;
 
-  // Composition percentages (of total)
+  // Dollar amounts derived from total inventory
+  const rawDollars = totalInv * rawPctFrac;
+  const wipDollars = totalInv * wipPctFrac;
+  const finishedDollars = totalInv * finishedPctFrac;
+  const obsoleteDollars = totalInv * obsoletePctFrac;
+
+  // Composition fractions for downstream use (stored as 0-1)
   const compositionMix = {
-    rawPct: totalInv > 0 ? raw / totalInv : 0,
-    wipPct: totalInv > 0 ? wip / totalInv : 0,
-    finishedPct: totalInv > 0 ? finished / totalInv : 0,
-    obsoletePct: totalInv > 0 ? obsolete / totalInv : 0,
+    rawPct: rawPctFrac,
+    wipPct: wipPctFrac,
+    finishedPct: finishedPctFrac,
+    obsoletePct: obsoletePctFrac,
   };
 
-  // Obsolescence rate
-  const obsolescenceRate = totalInv > 0 ? obsolete / totalInv : 0;
+  // Obsolescence rate (0-1)
+  const obsolescenceRate = obsoletePctFrac;
 
   // --- Eligible inventory ---
-  // Exclude obsolete inventory entirely.
-  // WIP gets a haircut — only the portion within WIP advance rate is eligible.
-  const eligibleWip = wip * MAX_ADVANCE_RATE_WIP / MAX_ADVANCE_RATE_FINISHED; // haircut WIP relative to finished
-  const eligibleInventory = Math.max(totalInv - obsolete - (wip - eligibleWip), 0);
+  // Exclude obsolete entirely. WIP gets a haircut: only the portion that fits
+  // within the WIP advance rate (relative to the finished-goods cap) counts.
+  const eligibleWipDollars = wipDollars * MAX_ADVANCE_RATE_WIP / MAX_ADVANCE_RATE_FINISHED;
+  const eligibleInventory = Math.max(totalInv - obsoleteDollars - (wipDollars - eligibleWipDollars), 0);
 
   // --- Blended advance rate based on composition ---
-  // Each category has its own max advance rate; blend by eligible amounts.
-  const rawContribution = raw * MAX_ADVANCE_RATE_RAW;
-  const wipContribution = wip * MAX_ADVANCE_RATE_WIP;
-  const finishedContribution = finished * MAX_ADVANCE_RATE_FINISHED;
+  // Weight each category's max advance rate by its dollar share of non-obsolete
+  // inventory. (Equivalent to weighting by percentage share; the ratio is
+  // invariant in either basis.)
+  const rawContribution = rawDollars * MAX_ADVANCE_RATE_RAW;
+  const wipContribution = wipDollars * MAX_ADVANCE_RATE_WIP;
+  const finishedContribution = finishedDollars * MAX_ADVANCE_RATE_FINISHED;
   const totalEligibleValue = rawContribution + wipContribution + finishedContribution;
-  const totalNonObsolete = raw + wip + finished;
+  const totalNonObsolete = rawDollars + wipDollars + finishedDollars;
   const blendedAdvanceRate = totalNonObsolete > 0
     ? totalEligibleValue / totalNonObsolete
     : 0;
@@ -349,20 +360,20 @@ export function generateCommentary(inputs, metrics, riskScore) {
     );
   }
 
-  // Liquidation value
-  const nolv = (inputs.nolvPct || 0) > 0 ? inputs.nolvPct : null;
-  if (nolv !== null) {
-    if (nolv >= 0.65) {
+  // Liquidation value — nolvPct input is in 0-100; convert to fraction.
+  const nolvFrac = (inputs.nolvPct || 0) > 0 ? inputs.nolvPct / 100 : null;
+  if (nolvFrac !== null) {
+    if (nolvFrac >= 0.65) {
       comments.push(
-        `Net orderly liquidation value of ${(nolv * 100).toFixed(0)}% is strong — collateral recovery expectations support the proposed advance rate.`
+        `Net orderly liquidation value of ${(nolvFrac * 100).toFixed(0)}% is strong — collateral recovery expectations support the proposed advance rate.`
       );
-    } else if (nolv >= 0.45) {
+    } else if (nolvFrac >= 0.45) {
       comments.push(
-        `NOLV of ${(nolv * 100).toFixed(0)}% is within typical range for this inventory type; advance rate appropriately capped at NOLV.`
+        `NOLV of ${(nolvFrac * 100).toFixed(0)}% is within typical range for this inventory type; advance rate appropriately capped at NOLV.`
       );
     } else {
       comments.push(
-        `NOLV of ${(nolv * 100).toFixed(0)}% is below average — low liquidation recovery increases loss severity in default; consider reducing advance rate or requiring additional collateral.`
+        `NOLV of ${(nolvFrac * 100).toFixed(0)}% is below average — low liquidation recovery increases loss severity in default; consider reducing advance rate or requiring additional collateral.`
       );
     }
   }
@@ -412,14 +423,16 @@ export function getSuggestedStructure(inputs, metrics, compositeScore, sofr = DE
   suggestions.maxCommitment = metrics.borrowingBase;
   suggestions.advanceRate = metrics.appliedAdvanceRate;
 
-  // Sublimits by inventory category
-  const raw = inputs.rawMaterials || 0;
-  const wip = inputs.workInProgress || 0;
-  const finished = inputs.finishedGoods || 0;
+  // Sublimits by inventory category — convert composition percentages to
+  // dollar amounts using total inventory, then multiply by the category cap.
+  const totalInv = inputs.totalInventory || 0;
+  const rawDollars = totalInv * ((inputs.rawMaterials || 0) / 100);
+  const wipDollars = totalInv * ((inputs.workInProgress || 0) / 100);
+  const finishedDollars = totalInv * ((inputs.finishedGoods || 0) / 100);
   suggestions.sublimits = {
-    rawMaterials: { amount: raw * MAX_ADVANCE_RATE_RAW, advanceRate: MAX_ADVANCE_RATE_RAW },
-    workInProgress: { amount: wip * MAX_ADVANCE_RATE_WIP, advanceRate: MAX_ADVANCE_RATE_WIP },
-    finishedGoods: { amount: finished * MAX_ADVANCE_RATE_FINISHED, advanceRate: MAX_ADVANCE_RATE_FINISHED },
+    rawMaterials: { amount: rawDollars * MAX_ADVANCE_RATE_RAW, advanceRate: MAX_ADVANCE_RATE_RAW },
+    workInProgress: { amount: wipDollars * MAX_ADVANCE_RATE_WIP, advanceRate: MAX_ADVANCE_RATE_WIP },
+    finishedGoods: { amount: finishedDollars * MAX_ADVANCE_RATE_FINISHED, advanceRate: MAX_ADVANCE_RATE_FINISHED },
   };
 
   // Structure description
@@ -514,17 +527,20 @@ export function getSuggestedStructure(inputs, metrics, compositeScore, sofr = DE
 // ------- Stress Testing -------
 
 export function runStressTest(inputs, sofr = DEFAULT_SOFR) {
+  // obsoleteInventory input is a percentage (0-100). Scenarios shift it in
+  // percentage-point terms. turnoverDecline is a fractional reduction on the
+  // turnover ratio (a multiplier), unchanged from before.
   const scenarios = [
-    { label: 'Base Case', ebitdaDecline: 0, obsolescenceIncrease: 0, turnoverDecline: 0 },
-    { label: 'Mild Stress', ebitdaDecline: 0.10, obsolescenceIncrease: 0.05, turnoverDecline: 0.15 },
-    { label: 'Moderate Stress', ebitdaDecline: 0.20, obsolescenceIncrease: 0.10, turnoverDecline: 0.25 },
-    { label: 'Severe Stress', ebitdaDecline: 0.30, obsolescenceIncrease: 0.15, turnoverDecline: 0.40 },
+    { label: 'Base Case', ebitdaDecline: 0, obsolescenceIncreasePp: 0, turnoverDecline: 0 },
+    { label: 'Mild Stress', ebitdaDecline: 0.10, obsolescenceIncreasePp: 5, turnoverDecline: 0.15 },
+    { label: 'Moderate Stress', ebitdaDecline: 0.20, obsolescenceIncreasePp: 10, turnoverDecline: 0.25 },
+    { label: 'Severe Stress', ebitdaDecline: 0.30, obsolescenceIncreasePp: 15, turnoverDecline: 0.40 },
   ];
 
   return scenarios.map((scenario) => {
     const stressedObsolete = Math.min(
-      (inputs.obsoleteInventory || 0) + (inputs.totalInventory || 0) * scenario.obsolescenceIncrease,
-      inputs.totalInventory || 0
+      (inputs.obsoleteInventory || 0) + scenario.obsolescenceIncreasePp,
+      100
     );
     const stressedTurnover = (inputs.inventoryTurnover || 0) > 0
       ? inputs.inventoryTurnover * (1 - scenario.turnoverDecline)
@@ -543,7 +559,7 @@ export function runStressTest(inputs, sofr = DEFAULT_SOFR) {
     return {
       label: scenario.label,
       ebitdaDecline: scenario.ebitdaDecline,
-      obsolescenceIncrease: scenario.obsolescenceIncrease,
+      obsolescenceIncreasePp: scenario.obsolescenceIncreasePp,
       turnoverDecline: scenario.turnoverDecline,
       ebitda: stressed.ebitda,
       borrowingBase: m.borrowingBase,
@@ -582,16 +598,18 @@ export function generateExportSummary(inputs, metrics, riskScore, recommendation
   lines.push('-'.repeat(60));
   lines.push('INVENTORY PROFILE');
   lines.push('-'.repeat(60));
-  lines.push(`Total Inventory:  ${formatCurrencyFull(inputs.totalInventory)}`);
-  lines.push(`  Raw Materials:  ${formatCurrencyFull(inputs.rawMaterials)} (${(metrics.compositionMix.rawPct * 100).toFixed(1)}%)`);
-  lines.push(`  Work-in-Progress: ${formatCurrencyFull(inputs.workInProgress)} (${(metrics.compositionMix.wipPct * 100).toFixed(1)}%)`);
-  lines.push(`  Finished Goods: ${formatCurrencyFull(inputs.finishedGoods)} (${(metrics.compositionMix.finishedPct * 100).toFixed(1)}%)`);
-  lines.push(`  Obsolete:       ${formatCurrencyFull(inputs.obsoleteInventory)} (${(metrics.obsolescenceRate * 100).toFixed(1)}%)`);
+  // Composition inputs are percentages; show dollar equivalents derived from total inventory.
+  const totalInv = inputs.totalInventory || 0;
+  lines.push(`Total Inventory:  ${formatCurrencyFull(totalInv)}`);
+  lines.push(`  Raw Materials:  ${formatCurrencyFull(totalInv * metrics.compositionMix.rawPct)} (${(metrics.compositionMix.rawPct * 100).toFixed(1)}%)`);
+  lines.push(`  Work-in-Progress: ${formatCurrencyFull(totalInv * metrics.compositionMix.wipPct)} (${(metrics.compositionMix.wipPct * 100).toFixed(1)}%)`);
+  lines.push(`  Finished Goods: ${formatCurrencyFull(totalInv * metrics.compositionMix.finishedPct)} (${(metrics.compositionMix.finishedPct * 100).toFixed(1)}%)`);
+  lines.push(`  Obsolete:       ${formatCurrencyFull(totalInv * metrics.obsolescenceRate)} (${(metrics.obsolescenceRate * 100).toFixed(1)}%)`);
   lines.push(`Perishable:       ${inputs.perishable ? 'Yes' : 'No'}`);
   lines.push(`Turnover Ratio:   ${metrics.turnoverRatio.toFixed(1)}x`);
   lines.push(`Days on Hand:     ${Math.round(metrics.daysOnHand)} days`);
   if ((inputs.nolvPct || 0) > 0) {
-    lines.push(`NOLV %:           ${(inputs.nolvPct * 100).toFixed(0)}%`);
+    lines.push(`NOLV %:           ${inputs.nolvPct.toFixed(0)}%`);
   }
   lines.push('');
   lines.push('-'.repeat(60));
