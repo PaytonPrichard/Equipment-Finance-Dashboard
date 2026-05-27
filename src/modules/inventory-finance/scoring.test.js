@@ -205,6 +205,17 @@ describe('Inventory Finance Scoring', () => {
         expect(s.score).toBeLessThanOrEqual(100);
       }
     });
+
+    test('every scenario reports a finite FCCR', () => {
+      for (const s of stress) {
+        expect(typeof s.fccr).toBe('number');
+        expect(Number.isFinite(s.fccr)).toBe(true);
+      }
+    });
+
+    test('severe stress FCCR is lower than base case', () => {
+      expect(stress[3].fccr).toBeLessThan(stress[0].fccr);
+    });
   });
 
   describe('generateCommentary', () => {

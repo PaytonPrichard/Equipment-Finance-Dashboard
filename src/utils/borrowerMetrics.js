@@ -20,7 +20,7 @@ export function computeBorrowerExtras(inputs, metrics) {
   const userMaintCapex = Number(inputs?.maintenanceCapex);
   const maintCapex = userMaintCapex > 0 ? userMaintCapex : revenue * 0.03;
   const maintCapexUserProvided = userMaintCapex > 0;
-  const fccr = debtService > 0 ? (ebitda - maintCapex) / debtService : null;
+  const fccr = computeFccr(ebitda, maintCapex, debtService);
 
   const monthsOfDebtServiceCoverage =
     debtService > 0 ? totalLiquidity / (debtService / 12) : null;
@@ -49,6 +49,15 @@ export function computeBorrowerExtras(inputs, metrics) {
     priorMargin,
     marginTrendBps,
   };
+}
+
+// Shared FCCR formula. Used by both the base-case borrower metrics and the
+// per-scenario stress tests in each scoring module.
+//   FCCR = (EBITDA − Maintenance Capex) / Annual Debt Service
+// Returns null when debt service is missing.
+export function computeFccr(ebitda, maintCapex, debtService) {
+  if (!debtService || debtService <= 0) return null;
+  return ((ebitda || 0) - (maintCapex || 0)) / debtService;
 }
 
 export function fccrStatus(fccr) {

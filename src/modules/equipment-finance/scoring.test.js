@@ -4,6 +4,7 @@ import {
   getRecommendation,
   isInputValid,
   getScreeningRate,
+  runStressTest,
 } from './scoring';
 import { INITIAL_INPUTS } from './constants';
 
@@ -144,6 +145,27 @@ describe('Equipment Finance Scoring', () => {
 
     test('<35 is Weak Prospect', () => {
       expect(getRecommendation(20).category).toBe('Weak Prospect');
+    });
+  });
+
+  describe('runStressTest FCCR', () => {
+    const stress = runStressTest(validInputs);
+
+    test('every scenario reports a finite FCCR', () => {
+      for (const s of stress) {
+        expect(typeof s.fccr).toBe('number');
+        expect(Number.isFinite(s.fccr)).toBe(true);
+      }
+    });
+
+    test('severe stress FCCR is lower than base case', () => {
+      expect(stress[3].fccr).toBeLessThan(stress[0].fccr);
+    });
+
+    test('FCCR degrades monotonically with EBITDA decline', () => {
+      expect(stress[0].fccr).toBeGreaterThan(stress[1].fccr);
+      expect(stress[1].fccr).toBeGreaterThan(stress[2].fccr);
+      expect(stress[2].fccr).toBeGreaterThan(stress[3].fccr);
     });
   });
 });

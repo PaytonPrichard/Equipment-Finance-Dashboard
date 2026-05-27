@@ -196,6 +196,17 @@ describe('Accounts Receivable Scoring', () => {
     test('severe stress shrinks borrowing base (more ineligibles)', () => {
       expect(stress[3].borrowingBase).toBeLessThan(stress[0].borrowingBase);
     });
+
+    test('every scenario reports a finite FCCR', () => {
+      for (const s of stress) {
+        expect(typeof s.fccr).toBe('number');
+        expect(Number.isFinite(s.fccr)).toBe(true);
+      }
+    });
+
+    test('severe stress FCCR is lower than base case', () => {
+      expect(stress[3].fccr).toBeLessThan(stress[0].fccr);
+    });
   });
 
   describe('generateCommentary', () => {

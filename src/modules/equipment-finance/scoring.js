@@ -11,6 +11,7 @@ import {
   formatPercent,
   formatRatio,
 } from '../../utils/format';
+import { computeFccr } from '../../utils/borrowerMetrics';
 
 import {
   DEFAULT_SOFR,
@@ -460,12 +461,20 @@ export function runStressTest(inputs, sofr = DEFAULT_SOFR) {
     };
     const m = calculateMetrics(stressed, sofr);
     const rs = calculateRiskScore(stressed, m);
+    const maintCapex = (stressed.maintenanceCapex || 0) > 0
+      ? stressed.maintenanceCapex
+      : (stressed.annualRevenue || 0) * 0.03;
+    const debtService = (stressed.actualAnnualDebtService || 0) > 0
+      ? stressed.actualAnnualDebtService
+      : (m.existingDebtService || 0) + (m.newAnnualDebtService || 0);
+    const fccr = computeFccr(stressed.ebitda, maintCapex, debtService);
     return {
       label: labels[i],
       decline: pct,
       ebitda: stressed.ebitda,
       dscr: m.dscr,
       leverage: m.leverage,
+      fccr,
       score: rs.composite,
     };
   });
