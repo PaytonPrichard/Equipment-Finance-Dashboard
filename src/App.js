@@ -658,7 +658,7 @@ function AuthenticatedApp({ profile, user }) {
                       </>
                     )}
                   </div>
-                  {valid && <ExportPanel summaryText={summaryText} inputs={inputs} metrics={metrics} riskScore={riskScore} recommendation={recommendation} screeningResult={screeningResult} profile={profile} moduleLabel={moduleLabel} moduleKey={activeModule} factors={mod.describeFactors ? mod.describeFactors(inputs, metrics, riskScore) : []} structure={structure} stressResults={stressResults} borrowerExtras={borrowerExtras} />}
+                  {valid && <ExportPanel summaryText={summaryText} inputs={inputs} metrics={metrics} riskScore={riskScore} recommendation={recommendation} screeningResult={screeningResult} profile={profile} moduleLabel={moduleLabel} moduleKey={activeModule} factors={mod.describeFactors ? mod.describeFactors(inputs, metrics, riskScore) : []} structure={structure} stressResults={stressResults} borrowerExtras={borrowerExtras} criteria={screeningCriteria} />}
                   {activePipelineDealId && valid && (
                     <button
                       onClick={async () => {

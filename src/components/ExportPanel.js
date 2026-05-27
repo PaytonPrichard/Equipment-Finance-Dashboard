@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { exportScreeningCsv } from '../utils/csvExport';
+import { DEFAULT_CRITERIA } from '../lib/screeningCriteria';
 
 // Escapes for HTML text content AND attribute values. Quote-escaping is what
 // makes interpolation into src="...", alt="...", etc. safe.
@@ -373,7 +374,7 @@ function parseSummaryToPdfHtml(summaryText, inputs) {
 </html>`;
 }
 
-function generateBrandedPdfHtml({ summaryText, inputs, metrics, riskScore, recommendation, screeningResult, orgName, analystName, moduleLabel, branding, factors = [], structure = null, stressResults = [], moduleKey = 'equipment_finance', borrowerExtras = null }) {
+function generateBrandedPdfHtml({ summaryText, inputs, metrics, riskScore, recommendation, screeningResult, orgName, analystName, moduleLabel, branding, factors = [], structure = null, stressResults = [], moduleKey = 'equipment_finance', borrowerExtras = null, criteria = null }) {
   const companyName = inputs?.companyName || 'N/A';
   const date = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
   const score = riskScore?.composite ?? 0;
@@ -580,6 +581,17 @@ function generateBrandedPdfHtml({ summaryText, inputs, metrics, riskScore, recom
     </div>` : ''}
   </div>
 
+  ${(() => {
+    const c = { ...DEFAULT_CRITERIA, ...(criteria || {}) };
+    const verdictLabel = (verdict || (screeningResult?.verdict || '')).toUpperCase() || '—';
+    return `<div style="display:flex;flex-wrap:wrap;gap:14px;margin-bottom:18px;padding:10px 14px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;font-size:11px;color:#475569">
+      <span>Composite: <strong style="color:#1f2937">${score}</strong></span>
+      <span>Firm pass threshold: <strong style="color:#1f2937">${c.passScore}</strong></span>
+      <span>Firm flag threshold: <strong style="color:#1f2937">${c.flagScore}</strong></span>
+      <span>Verdict: <strong style="color:${verdictColor}">${esc(verdictLabel)}</strong></span>
+    </div>`;
+  })()}
+
   ${reasonsHtml ? `<div style="margin-bottom:20px;padding:10px 14px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px">${reasonsHtml}</div>` : ''}
 
   ${redFlagsHtml}
@@ -660,7 +672,7 @@ function generateBrandedPdfHtml({ summaryText, inputs, metrics, riskScore, recom
 </html>`;
 }
 
-export default function ExportPanel({ summaryText, inputs, metrics, riskScore, recommendation, screeningResult, profile, moduleLabel, moduleKey, factors, structure, stressResults, borrowerExtras }) {
+export default function ExportPanel({ summaryText, inputs, metrics, riskScore, recommendation, screeningResult, profile, moduleLabel, moduleKey, factors, structure, stressResults, borrowerExtras, criteria }) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
@@ -688,7 +700,7 @@ export default function ExportPanel({ summaryText, inputs, metrics, riskScore, r
     const html = generateBrandedPdfHtml({
       summaryText, inputs, metrics, riskScore, recommendation, screeningResult,
       orgName, analystName, moduleLabel: moduleLabel || 'Equipment Finance', branding,
-      moduleKey, factors, structure, stressResults, borrowerExtras,
+      moduleKey, factors, structure, stressResults, borrowerExtras, criteria,
     });
 
     setPdfLoading(true);
