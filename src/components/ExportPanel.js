@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { exportScreeningCsv } from '../utils/csvExport';
 import { DEFAULT_CRITERIA } from '../lib/screeningCriteria';
+import packageJson from '../../package.json';
+
+const APP_VERSION = process.env.REACT_APP_VERSION || packageJson.version || 'dev';
 
 // Escapes for HTML text content AND attribute values. Quote-escaping is what
 // makes interpolation into src="...", alt="...", etc. safe.
@@ -658,13 +661,15 @@ function generateBrandedPdfHtml({ summaryText, inputs, metrics, riskScore, recom
   </div>` : ''}
 
   <!-- Footer -->
-  <div style="margin-top:30px;padding-top:12px;border-top:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:center">
-    <div style="font-size:9px;color:#94a3b8;max-width:500px">
+  <div style="margin-top:30px;padding-top:12px;border-top:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:flex-end;gap:24px">
+    <div style="font-size:9px;color:#94a3b8;max-width:420px">
       Preliminary screening only. Not a credit decision. Final terms subject to full underwriting, credit committee approval, and documentation.
     </div>
-    <div style="font-size:9px;color:#94a3b8;text-align:right">
+    <div style="font-size:9px;color:#94a3b8;text-align:right;line-height:1.5">
       ${footerText ? '<div>' + esc(footerText) + '</div>' : ''}
-      ${orgName ? esc(orgName) + ' &middot; ' : ''}${esc(date)}
+      ${analystName ? `<div>Prepared by: ${esc(analystName)}</div>` : ''}
+      <div>Inputs entered${analystName ? ' by ' + esc(analystName) : ''} on ${esc(date)}</div>
+      <div>${orgName ? esc(orgName) + ' &middot; ' : ''}Tranche v${esc(APP_VERSION)}</div>
     </div>
   </div>
 </div>
