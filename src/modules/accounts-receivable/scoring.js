@@ -50,8 +50,6 @@ export function calculateMetrics(inputs, sofr = DEFAULT_SOFR) {
     creditRating,
     industrySector,
     totalAROutstanding,
-    // eslint-disable-next-line no-unused-vars
-    arOver30 = 0, arOver60 = 0, arOver90 = 0,
     topCustomerConcentration = 0,
     dilutionRate = 0,
     ineligiblesPct = 0,
@@ -224,11 +222,10 @@ export function getRecommendation(compositeScore) {
 export function generateCommentary(inputs, metrics, riskScore) {
   const comments = [];
 
-  // AR Aging Quality
-  const totalAR = inputs.totalAROutstanding || 0;
-  const pctOver90 = totalAR > 0 ? ((inputs.arOver90 || 0) / totalAR) * 100 : 0;
-  const pctOver60 = totalAR > 0 ? (((inputs.arOver60 || 0) + (inputs.arOver90 || 0)) / totalAR) * 100 : 0;
-  const pctOver30 = totalAR > 0 ? (((inputs.arOver30 || 0) + (inputs.arOver60 || 0) + (inputs.arOver90 || 0)) / totalAR) * 100 : 0;
+  // AR Aging Quality (aging inputs are already percentages, 0-100)
+  const pctOver90 = inputs.arOver90 || 0;
+  const pctOver60 = (inputs.arOver60 || 0) + (inputs.arOver90 || 0);
+  const pctOver30 = (inputs.arOver30 || 0) + (inputs.arOver60 || 0) + (inputs.arOver90 || 0);
 
   if (pctOver90 > 10) {
     comments.push(
@@ -441,30 +438,36 @@ export function getSuggestedStructure(inputs, metrics, compositeScore, sofr = DE
 // ------- Stress Testing -------
 
 export function runStressTest(inputs, sofr = DEFAULT_SOFR) {
+  // All AR aging / dilution / ineligibles inputs are percentages (0-100).
+  // Stress scenarios shift them in percentage-point terms.
   const scenarios = [
-    { label: 'Base Case', ebitdaDecline: 0, agingStress: 0, dilutionStress: 0 },
-    { label: 'Mild Stress', ebitdaDecline: 0.10, agingStress: 0.10, dilutionStress: 0.02 },
-    { label: 'Moderate Stress', ebitdaDecline: 0.20, agingStress: 0.20, dilutionStress: 0.04 },
-    { label: 'Severe Stress', ebitdaDecline: 0.30, agingStress: 0.30, dilutionStress: 0.06 },
+    { label: 'Base Case', ebitdaDecline: 0, agingShiftPp: 0, dilutionShiftPp: 0 },
+    { label: 'Mild Stress', ebitdaDecline: 0.10, agingShiftPp: 10, dilutionShiftPp: 2 },
+    { label: 'Moderate Stress', ebitdaDecline: 0.20, agingShiftPp: 20, dilutionShiftPp: 4 },
+    { label: 'Severe Stress', ebitdaDecline: 0.30, agingShiftPp: 30, dilutionShiftPp: 6 },
   ];
 
   return scenarios.map((scenario) => {
-    const totalAR = inputs.totalAROutstanding || 0;
-    // Stress aging: shift a portion of current AR into over-30
-    const agingShift = totalAR * scenario.agingStress;
-    const stressedArOver30 = (inputs.arOver30 || 0) + agingShift;
+    // Shift percentage points from arUnder30 into arOver30 — invoices that
+    // were current now linger into the 31-60 bucket. Can't shift more than
+    // currently sits in arUnder30.
+    const currentUnder30 = inputs.arUnder30 || 0;
+    const shift = Math.min(scenario.agingShiftPp, currentUnder30);
+    const stressedArUnder30 = currentUnder30 - shift;
+    const stressedArOver30 = (inputs.arOver30 || 0) + shift;
 
-    // Stress dilution: add percentage points
-    const stressedDilution = (inputs.dilutionRate || 0) + scenario.dilutionStress * 100;
+    const stressedDilution = (inputs.dilutionRate || 0) + scenario.dilutionShiftPp;
 
     const stressed = {
       ...inputs,
       ebitda: (inputs.ebitda || 0) * (1 - scenario.ebitdaDecline),
+      arUnder30: stressedArUnder30,
       arOver30: stressedArOver30,
       dilutionRate: stressedDilution,
-      // Increase ineligibles under stress as aged AR becomes ineligible
+      // Aged AR becomes partly ineligible under stress: ~0.15 pp ineligibles
+      // per pp of aging shift, capped at 60%.
       ineligiblesPct: Math.min(
-        (inputs.ineligiblesPct || 0) + scenario.agingStress * 15,
+        (inputs.ineligiblesPct || 0) + scenario.agingShiftPp * 0.15,
         60
       ),
     };
@@ -516,10 +519,10 @@ export function generateExportSummary(inputs, metrics, riskScore, recommendation
   lines.push('RECEIVABLES PROFILE');
   lines.push('-'.repeat(60));
   lines.push(`Total AR:         ${formatCurrencyFull(inputs.totalAROutstanding)}`);
-  lines.push(`AR Under 30:      ${formatCurrencyFull(inputs.arUnder30)}`);
-  lines.push(`AR 30-60 Days:    ${formatCurrencyFull(inputs.arOver30)}`);
-  lines.push(`AR 60-90 Days:    ${formatCurrencyFull(inputs.arOver60)}`);
-  lines.push(`AR Over 90 Days:  ${formatCurrencyFull(inputs.arOver90)}`);
+  lines.push(`AR Under 30:      ${formatPercent(inputs.arUnder30 || 0)}`);
+  lines.push(`AR 30-60 Days:    ${formatPercent(inputs.arOver30 || 0)}`);
+  lines.push(`AR 60-90 Days:    ${formatPercent(inputs.arOver60 || 0)}`);
+  lines.push(`AR Over 90 Days:  ${formatPercent(inputs.arOver90 || 0)}`);
   lines.push(`Ineligibles:      ${formatPercent(inputs.ineligiblesPct)}`);
   lines.push(`Eligible AR:      ${formatCurrencyFull(metrics.eligibleAR)}`);
   lines.push(`Advance Rate:     ${formatPercent(metrics.advanceRate * 100)}`);
@@ -648,7 +651,7 @@ export function parseCsvDeals(csvText) {
       industrySector: 'Manufacturing', creditRating: 'Adequate',
       totalAROutstanding: 0, arUnder30: 0, arOver30: 0, arOver60: 0, arOver90: 0,
       topCustomerConcentration: 0, dilutionRate: 0, ineligiblesPct: 0,
-      requestedAdvanceRate: 0.80, existingABLFacility: false,
+      requestedAdvanceRate: 80, existingABLFacility: false,
     };
 
     headers.forEach((h, i) => {
