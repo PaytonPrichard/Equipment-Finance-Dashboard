@@ -373,7 +373,7 @@ function parseSummaryToPdfHtml(summaryText, inputs) {
 </html>`;
 }
 
-function generateBrandedPdfHtml({ summaryText, inputs, metrics, riskScore, recommendation, screeningResult, orgName, analystName, moduleLabel, branding, factors = [], structure = null }) {
+function generateBrandedPdfHtml({ summaryText, inputs, metrics, riskScore, recommendation, screeningResult, orgName, analystName, moduleLabel, branding, factors = [], structure = null, stressResults = [], moduleKey = 'equipment_finance' }) {
   const companyName = inputs?.companyName || 'N/A';
   const date = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
   const score = riskScore?.composite ?? 0;
@@ -469,6 +469,41 @@ function generateBrandedPdfHtml({ summaryText, inputs, metrics, riskScore, recom
       <div style="font-size:10px;color:#475569;margin-top:2px">${esc(f.caption)} <span style="color:#94a3b8">· target ${esc(f.target)}</span></div>
     </div>`;
   };
+  // Sensitivity table — 4 stress scenarios with module-aware columns.
+  // EF: Score | DSCR | FCCR. AR & Inventory: + Borrowing Base.
+  const showBorrowingBase = moduleKey === 'accounts_receivable' || moduleKey === 'inventory_finance';
+  const fmtMillions = (v) => (v == null || !Number.isFinite(v)) ? '—' : `$${(v / 1_000_000).toFixed(1)}M`;
+  const fmtRatioCell = (v) => (v == null || !Number.isFinite(v)) ? '—' : `${v.toFixed(2)}x`;
+  const sensitivityHtml = (stressResults && stressResults.length > 0) ? `<div class="section" style="page-break-inside:avoid">
+    <div class="section-title">Sensitivity Analysis</div>
+    <table style="width:100%;border-collapse:collapse;font-size:11px">
+      <thead>
+        <tr style="border-bottom:2px solid #e2e8f0">
+          <th style="text-align:left;padding:6px 8px 6px 0;color:#64748b;font-weight:600">Scenario</th>
+          <th style="text-align:right;padding:6px 8px;color:#64748b;font-weight:600">Score</th>
+          <th style="text-align:right;padding:6px 8px;color:#64748b;font-weight:600">DSCR</th>
+          <th style="text-align:right;padding:6px 8px;color:#64748b;font-weight:600">FCCR</th>
+          ${showBorrowingBase ? '<th style="text-align:right;padding:6px 0 6px 8px;color:#64748b;font-weight:600">Borrowing Base</th>' : ''}
+        </tr>
+      </thead>
+      <tbody>
+        ${stressResults.map((s, i) => {
+          const isBase = i === 0;
+          const rowStyle = isBase ? 'background:#f8fafc;font-weight:600' : '';
+          const dscrColor = s.dscr < 1.0 ? '#dc2626' : s.dscr < 1.25 ? '#ea580c' : '#1f2937';
+          const fccrColor = (s.fccr != null && s.fccr < 1.0) ? '#dc2626' : (s.fccr != null && s.fccr < 1.25) ? '#ea580c' : '#1f2937';
+          return `<tr style="border-bottom:1px solid #f1f5f9;${rowStyle}">
+            <td style="padding:6px 8px 6px 0;color:#1f2937">${esc(s.label)}</td>
+            <td style="text-align:right;padding:6px 8px;color:#1f2937;font-family:monospace">${Math.round(s.score)}</td>
+            <td style="text-align:right;padding:6px 8px;color:${dscrColor};font-family:monospace">${fmtRatioCell(s.dscr)}</td>
+            <td style="text-align:right;padding:6px 8px;color:${fccrColor};font-family:monospace">${fmtRatioCell(s.fccr)}</td>
+            ${showBorrowingBase ? `<td style="text-align:right;padding:6px 0 6px 8px;color:#1f2937;font-family:monospace">${fmtMillions(s.borrowingBase)}</td>` : ''}
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>
+  </div>` : '';
+
   const strengthsConcernsHtml = (strengths.length === 0 && concerns.length === 0) ? '' : `<div class="section" style="page-break-before:always">
     <div class="section-title">Strengths &amp; Concerns</div>
     <div style="display:flex;gap:12px">
@@ -596,6 +631,8 @@ function generateBrandedPdfHtml({ summaryText, inputs, metrics, riskScore, recom
 
   ${strengthsConcernsHtml}
 
+  ${sensitivityHtml}
+
   <!-- Structure -->
   ${structureLines.length > 0 ? `<div class="section">
     <div class="section-title">Suggested Structure</div>
@@ -622,7 +659,7 @@ function generateBrandedPdfHtml({ summaryText, inputs, metrics, riskScore, recom
 </html>`;
 }
 
-export default function ExportPanel({ summaryText, inputs, metrics, riskScore, recommendation, screeningResult, profile, moduleLabel, moduleKey, factors, structure }) {
+export default function ExportPanel({ summaryText, inputs, metrics, riskScore, recommendation, screeningResult, profile, moduleLabel, moduleKey, factors, structure, stressResults }) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
@@ -650,7 +687,7 @@ export default function ExportPanel({ summaryText, inputs, metrics, riskScore, r
     const html = generateBrandedPdfHtml({
       summaryText, inputs, metrics, riskScore, recommendation, screeningResult,
       orgName, analystName, moduleLabel: moduleLabel || 'Equipment Finance', branding,
-      moduleKey, factors, structure,
+      moduleKey, factors, structure, stressResults,
     });
 
     setPdfLoading(true);
