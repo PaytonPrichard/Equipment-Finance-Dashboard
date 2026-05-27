@@ -423,19 +423,82 @@ function generateBrandedPdfHtml({ summaryText, inputs, metrics, riskScore, recom
 
   const rate = metrics?.rate || metrics?.effectiveRate || 0;
 
-  // Parse commentary and structure from summaryText
+  // Parse commentary from summaryText. Structure used to come through here as
+  // text via regex; it now comes through the structure prop as a structured
+  // object and is rendered by renderStructureSection below.
   const lines = summaryText.split('\n');
   const commentaryLines = [];
-  const structureLines = [];
-  let inCommentary = false, inStructure = false;
+  let inCommentary = false;
   for (const line of lines) {
-    if (line.includes('ASSESSMENT NOTES')) { inCommentary = true; inStructure = false; continue; }
-    if (line.includes('STRESS TEST') || line.includes('FACILITY STRUCTURE') || line.includes('SUGGESTED ENHANCEMENTS')) { inCommentary = false; }
-    if (line.includes('FACILITY STRUCTURE') || line.includes('STRUCTURE')) { inStructure = true; inCommentary = false; continue; }
-    if (line.includes('ASSESSMENT NOTES') || line.includes('STRESS TEST') || line.includes('DISCLAIMER')) { inStructure = false; }
+    if (line.includes('ASSESSMENT NOTES')) { inCommentary = true; continue; }
+    if (line.includes('STRESS TEST') || line.includes('FACILITY STRUCTURE') || line.includes('SUGGESTED ENHANCEMENTS') || line.includes('DISCLAIMER')) { inCommentary = false; }
     if (inCommentary && line.trim() && !/^[-=]+$/.test(line.trim())) commentaryLines.push(line.trim());
-    if (inStructure && line.trim() && !/^[-=]+$/.test(line.trim())) structureLines.push(line.trim());
   }
+
+  // Render the Suggested Structure section directly from the structured
+  // getSuggestedStructure output. Module-aware so AR's reporting requirements,
+  // inventory's sublimits, and EF's rate range / structure type each surface
+  // in the PDF.
+  const renderStructureSection = () => {
+    if (!structure) return '';
+    const parts = [];
+    if (structure.structureType) {
+      parts.push(`<div style="font-size:11px;margin-bottom:3px"><span style="color:#64748b">Type:</span> <span style="color:#1e293b;font-weight:500">${esc(structure.structureType)}</span></div>`);
+    }
+    if (structure.rateRange && Number.isFinite(structure.rateRange[0]) && Number.isFinite(structure.rateRange[1])) {
+      const lo = structure.rateRange[0]; const hi = structure.rateRange[1];
+      parts.push(`<div style="font-size:11px;margin-bottom:3px"><span style="color:#64748b">Indicative rate:</span> <span style="color:#1e293b;font-weight:500">${(lo * 100).toFixed(2)}–${(hi * 100).toFixed(2)}%</span></div>`);
+    }
+    if (structure.advanceRate != null) {
+      const v = typeof structure.advanceRate === 'string' ? structure.advanceRate : `${(structure.advanceRate * 100).toFixed(1)}%`;
+      parts.push(`<div style="font-size:11px;margin-bottom:3px"><span style="color:#64748b">Advance rate:</span> <span style="color:#1e293b;font-weight:500">${esc(v)}</span></div>`);
+    }
+    const facilitySize = structure.facilitySize ?? structure.maxCommitment;
+    if (facilitySize) {
+      parts.push(`<div style="font-size:11px;margin-bottom:3px"><span style="color:#64748b">Facility size:</span> <span style="color:#1e293b;font-weight:500">${fmtCurrency(facilitySize)}</span></div>`);
+    }
+    if (structure.fieldExamFrequency) {
+      parts.push(`<div style="font-size:11px;margin-bottom:3px"><span style="color:#64748b">Field exams:</span> <span style="color:#1e293b;font-weight:500">${esc(structure.fieldExamFrequency)}</span></div>`);
+    }
+    if (structure.structure) {
+      parts.push(`<p style="font-size:11px;color:#334155;margin:8px 0">${esc(structure.structure)}</p>`);
+    }
+    if (structure.sublimits) {
+      const s = structure.sublimits;
+      const row = (label, sub) => `<tr style="border-bottom:1px solid #f1f5f9">
+        <td style="padding:4px 8px 4px 0;font-size:11px;color:#1f2937">${esc(label)}</td>
+        <td style="text-align:right;padding:4px 8px;font-size:11px;color:#1f2937;font-family:monospace">${(sub.advanceRate * 100).toFixed(0)}%</td>
+        <td style="text-align:right;padding:4px 0 4px 8px;font-size:11px;color:#1f2937;font-family:monospace">${fmtCurrency(sub.amount)}</td>
+      </tr>`;
+      parts.push(`<div style="font-size:10px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:0.06em;margin-top:8px;margin-bottom:4px">Borrowing Base Sublimits</div>
+        <table style="width:100%;border-collapse:collapse;margin-bottom:8px">
+          <thead><tr style="border-bottom:2px solid #e2e8f0">
+            <th style="text-align:left;padding:4px 8px 4px 0;font-size:10px;color:#64748b;font-weight:600">Category</th>
+            <th style="text-align:right;padding:4px 8px;font-size:10px;color:#64748b;font-weight:600">Cap</th>
+            <th style="text-align:right;padding:4px 0 4px 8px;font-size:10px;color:#64748b;font-weight:600">Eligible $</th>
+          </tr></thead>
+          <tbody>
+            ${row('Raw Materials', s.rawMaterials)}
+            ${row('Work-in-Progress', s.workInProgress)}
+            ${row('Finished Goods', s.finishedGoods)}
+          </tbody>
+        </table>`);
+    }
+    if (structure.reportingRequirements && structure.reportingRequirements.length > 0) {
+      parts.push(`<div style="font-size:10px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:0.06em;margin-top:8px;margin-bottom:4px">Reporting Requirements</div>
+        <ul style="margin:0;padding-left:18px">
+          ${structure.reportingRequirements.map((r) => `<li style="font-size:11px;color:#1f2937;margin-bottom:2px">${esc(r)}</li>`).join('')}
+        </ul>`);
+    }
+    if (structure.sizingFlag) {
+      parts.push(`<div style="font-size:10px;color:#92400e;background:#fef3c7;border:1px solid #fde68a;border-radius:4px;padding:6px 8px;margin-top:8px;font-style:italic">${esc(structure.sizingFlag)}</div>`);
+    }
+    if (parts.length === 0) return '';
+    return `<div class="section">
+      <div class="section-title">Suggested Structure</div>
+      ${parts.join('')}
+    </div>`;
+  };
 
   // Verdict reasons
   const reasonsHtml = (screeningResult?.reasons || []).map(r => {
@@ -649,16 +712,8 @@ function generateBrandedPdfHtml({ summaryText, inputs, metrics, riskScore, recom
 
   ${sensitivityHtml}
 
-  <!-- Structure -->
-  ${structureLines.length > 0 ? `<div class="section">
-    <div class="section-title">Suggested Structure</div>
-    ${structureLines.map(l => {
-      if (l.startsWith('-') || l.startsWith('*')) return `<div style="padding-left:12px;font-size:11px;color:#334155;margin-bottom:3px">&bull; ${esc(l.replace(/^[-*]\s*/, ''))}</div>`;
-      const colonIdx = l.indexOf(':');
-      if (colonIdx > 0 && colonIdx < 25) return `<div style="font-size:11px;margin-bottom:3px"><span style="color:#64748b">${esc(l.substring(0, colonIdx))}:</span> <span style="color:#1e293b;font-weight:500">${esc(l.substring(colonIdx + 1).trim())}</span></div>`;
-      return `<p style="font-size:11px;color:#334155;margin:0 0 6px 0">${esc(l)}</p>`;
-    }).join('')}
-  </div>` : ''}
+  <!-- Suggested Structure (module-aware, structured) -->
+  ${renderStructureSection()}
 
   <!-- Footer -->
   <div style="margin-top:30px;padding-top:12px;border-top:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:flex-end;gap:24px">
