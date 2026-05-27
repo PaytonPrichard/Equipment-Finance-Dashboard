@@ -446,6 +446,42 @@ function generateBrandedPdfHtml({ summaryText, inputs, metrics, riskScore, recom
     .slice()
     .sort((a, b) => a.score - b.score)
     .slice(0, 3);
+
+  // Strengths & Concerns — page 2. Top 3 ≥75, bottom 3 <50, drawn from the
+  // same factor array but expressed for committee skim-reading.
+  const strengths = (factors || [])
+    .filter((f) => f.score >= 75)
+    .slice()
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 3);
+  const concerns = (factors || [])
+    .filter((f) => f.score < 50)
+    .slice()
+    .sort((a, b) => a.score - b.score)
+    .slice(0, 3);
+  const factorRow = (f, side) => {
+    const accent = side === 'strength' ? '#16a34a' : '#dc2626';
+    return `<div style="border-left:3px solid ${accent};padding:6px 10px;margin-bottom:6px;background:${side === 'strength' ? '#f0fdf4' : '#fef2f2'};border-radius:0 4px 4px 0">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px">
+        <span style="font-size:11px;font-weight:700;color:#1f2937">${esc(f.label)}</span>
+        <span style="font-size:10px;color:${accent};font-weight:600;flex-shrink:0">${Math.round(f.score)}/100</span>
+      </div>
+      <div style="font-size:10px;color:#475569;margin-top:2px">${esc(f.caption)} <span style="color:#94a3b8">· target ${esc(f.target)}</span></div>
+    </div>`;
+  };
+  const strengthsConcernsHtml = (strengths.length === 0 && concerns.length === 0) ? '' : `<div class="section" style="page-break-before:always">
+    <div class="section-title">Strengths &amp; Concerns</div>
+    <div style="display:flex;gap:12px">
+      <div style="flex:1">
+        <div style="font-size:10px;font-weight:700;color:#16a34a;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px">Strengths</div>
+        ${strengths.length > 0 ? strengths.map((f) => factorRow(f, 'strength')).join('') : '<div style="font-size:11px;color:#94a3b8;font-style:italic">No sub-scores above 75.</div>'}
+      </div>
+      <div style="flex:1">
+        <div style="font-size:10px;font-weight:700;color:#dc2626;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px">Concerns</div>
+        ${concerns.length > 0 ? concerns.map((f) => factorRow(f, 'concern')).join('') : '<div style="font-size:11px;color:#94a3b8;font-style:italic">No sub-scores below 50.</div>'}
+      </div>
+    </div>
+  </div>`;
   const redFlagsHtml = redFlagItems.length === 0 ? '' : `<div class="section" style="margin-bottom:18px;background:#fef2f2;border:1px solid #fecaca;border-left:4px solid #dc2626;border-radius:6px;padding:12px 16px">
     <div style="font-size:11px;font-weight:700;color:#991b1b;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">Red Flags</div>
     ${redFlagItems.map((f) => `<div style="display:flex;gap:8px;align-items:baseline;margin-bottom:4px">
@@ -557,6 +593,8 @@ function generateBrandedPdfHtml({ summaryText, inputs, metrics, riskScore, recom
       ${commentaryLines.map(l => { const m = l.match(/^\d+\.\s*(.*)/); return `<li style="margin-bottom:6px;font-size:11px;color:#334155">${esc(m ? m[1] : l)}</li>`; }).join('')}
     </ol>
   </div>` : ''}
+
+  ${strengthsConcernsHtml}
 
   <!-- Structure -->
   ${structureLines.length > 0 ? `<div class="section">
