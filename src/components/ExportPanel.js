@@ -373,7 +373,7 @@ function parseSummaryToPdfHtml(summaryText, inputs) {
 </html>`;
 }
 
-function generateBrandedPdfHtml({ summaryText, inputs, metrics, riskScore, recommendation, screeningResult, orgName, analystName, moduleLabel, branding }) {
+function generateBrandedPdfHtml({ summaryText, inputs, metrics, riskScore, recommendation, screeningResult, orgName, analystName, moduleLabel, branding, factors = [] }) {
   const companyName = inputs?.companyName || 'N/A';
   const date = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
   const score = riskScore?.composite ?? 0;
@@ -439,6 +439,21 @@ function generateBrandedPdfHtml({ summaryText, inputs, metrics, riskScore, recom
     return `<div style="display:flex;gap:6px;align-items:flex-start;margin-bottom:4px"><span style="color:${color};font-size:11px;flex-shrink:0">${icon}</span><span style="font-size:11px;color:#475569">${esc(r.text)}</span></div>`;
   }).join('');
 
+  // Red flags — bottom sub-scores under 50, paired with their underlying metric.
+  // Don't pad: show 0-3 items, sorted worst first.
+  const redFlagItems = (factors || [])
+    .filter((f) => f.score < 50)
+    .slice()
+    .sort((a, b) => a.score - b.score)
+    .slice(0, 3);
+  const redFlagsHtml = redFlagItems.length === 0 ? '' : `<div class="section" style="margin-bottom:18px;background:#fef2f2;border:1px solid #fecaca;border-left:4px solid #dc2626;border-radius:6px;padding:12px 16px">
+    <div style="font-size:11px;font-weight:700;color:#991b1b;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">Red Flags</div>
+    ${redFlagItems.map((f) => `<div style="display:flex;gap:8px;align-items:baseline;margin-bottom:4px">
+      <span style="color:#dc2626;font-size:11px;flex-shrink:0">&#10148;</span>
+      <span style="font-size:11px;color:#1f2937"><strong>${esc(f.label)}</strong> ${esc(f.caption)} — target ${esc(f.target)} <span style="color:#6b7280">(sub-score ${Math.round(f.score)}/100)</span></span>
+    </div>`).join('')}
+  </div>`;
+
   const brandingHeader = orgName || logoUrl
     ? `<div style="text-align:right">
         ${logoUrl ? `<img src="${esc(logoUrl)}" alt="${esc(orgName)}" style="max-height:40px;max-width:180px;margin-bottom:4px" />` : ''}
@@ -494,6 +509,8 @@ function generateBrandedPdfHtml({ summaryText, inputs, metrics, riskScore, recom
   </div>
 
   ${reasonsHtml ? `<div style="margin-bottom:20px;padding:10px 14px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px">${reasonsHtml}</div>` : ''}
+
+  ${redFlagsHtml}
 
   <!-- Deal Overview -->
   <div class="section">
@@ -554,7 +571,7 @@ function generateBrandedPdfHtml({ summaryText, inputs, metrics, riskScore, recom
 </html>`;
 }
 
-export default function ExportPanel({ summaryText, inputs, metrics, riskScore, recommendation, screeningResult, profile, moduleLabel }) {
+export default function ExportPanel({ summaryText, inputs, metrics, riskScore, recommendation, screeningResult, profile, moduleLabel, moduleKey, factors }) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
@@ -582,6 +599,7 @@ export default function ExportPanel({ summaryText, inputs, metrics, riskScore, r
     const html = generateBrandedPdfHtml({
       summaryText, inputs, metrics, riskScore, recommendation, screeningResult,
       orgName, analystName, moduleLabel: moduleLabel || 'Equipment Finance', branding,
+      moduleKey, factors,
     });
 
     setPdfLoading(true);

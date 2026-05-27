@@ -248,6 +248,24 @@ export function calculateRiskScore(inputs, metrics) {
   return { composite, factors };
 }
 
+// ------- Factor Descriptors -------
+// Universal shape for the PDF renderer.
+export function describeFactors(inputs, metrics, riskScore) {
+  const f = riskScore?.factors || {};
+  const tier = INDUSTRY_RISK_TIER[inputs.industrySector] || 'moderate';
+  const nolvFrac = (inputs.nolvPct || 0) / 100;
+  const finishedPct = ((metrics.compositionMix && metrics.compositionMix.finishedPct) || 0) * 100;
+  return [
+    { key: 'dscr', label: 'DSCR', score: f.dscr || 0, weight: 0.20, caption: `${(metrics.dscr || 0).toFixed(2)}x`, target: '≥ 1.25x', passed: (metrics.dscr || 0) >= 1.25 },
+    { key: 'leverage', label: 'Leverage', score: f.leverage || 0, weight: 0.15, caption: `${(metrics.leverage || 0).toFixed(1)}x`, target: '≤ 3.5x', passed: (metrics.leverage || 0) <= 3.5 },
+    { key: 'inventoryQuality', label: 'Inventory turnover & obsolescence', score: f.inventoryQuality || 0, weight: 0.20, caption: `${(metrics.turnoverRatio || 0).toFixed(1)}x turn, ${((metrics.obsolescenceRate || 0) * 100).toFixed(1)}% obsolete`, target: `≥ ${MIN_TURNOVER.toFixed(1)}x turn, < ${(OBSOLESCENCE_THRESHOLD * 100).toFixed(0)}% obsolete`, passed: (metrics.turnoverRatio || 0) >= MIN_TURNOVER && (metrics.obsolescenceRate || 0) < OBSOLESCENCE_THRESHOLD },
+    { key: 'composition', label: 'Composition (finished goods)', score: f.composition || 0, weight: 0.15, caption: `${finishedPct.toFixed(0)}% finished goods`, target: '≥ 50% finished', passed: finishedPct >= 50 },
+    { key: 'liquidationValue', label: 'NOLV', score: f.liquidationValue || 0, weight: 0.10, caption: `${(nolvFrac * 100).toFixed(0)}%`, target: '≥ 55%', passed: nolvFrac >= 0.55 },
+    { key: 'yearsInBusiness', label: 'Years in business', score: f.yearsInBusiness || 0, weight: 0.10, caption: `${inputs.yearsInBusiness || 0} yrs`, target: '≥ 5 yrs', passed: (inputs.yearsInBusiness || 0) >= 5 },
+    { key: 'industry', label: 'Industry', score: f.industry || 0, weight: 0.10, caption: `${inputs.industrySector || '—'} (${tier} risk)`, target: 'low-risk sector', passed: tier === 'low' },
+  ];
+}
+
 // ------- Recommendation -------
 
 export function getRecommendation(compositeScore) {

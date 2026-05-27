@@ -203,6 +203,23 @@ export function calculateRiskScore(inputs, metrics) {
   return { composite, factors };
 }
 
+// ------- Factor Descriptors -------
+// Pair each sub-score with the underlying metric value and target threshold,
+// in a shape the PDF renderer can dispatch on without module-specific code.
+export function describeFactors(inputs, metrics, riskScore) {
+  const f = riskScore?.factors || {};
+  const tier = INDUSTRY_RISK_TIER[inputs.industrySector] || 'moderate';
+  return [
+    { key: 'dscr', label: 'DSCR', score: f.dscr || 0, weight: 0.25, caption: `${(metrics.dscr || 0).toFixed(2)}x`, target: '≥ 1.25x', passed: (metrics.dscr || 0) >= 1.25 },
+    { key: 'leverage', label: 'Leverage', score: f.leverage || 0, weight: 0.20, caption: `${(metrics.leverage || 0).toFixed(1)}x`, target: '≤ 3.5x', passed: (metrics.leverage || 0) <= 3.5 },
+    { key: 'industry', label: 'Industry', score: f.industry || 0, weight: 0.15, caption: `${inputs.industrySector || '—'} (${tier} risk)`, target: 'low-risk sector', passed: tier === 'low' },
+    { key: 'essentiality', label: 'Essential use', score: f.essentiality || 0, weight: 0.10, caption: inputs.essentialUse ? 'Yes' : 'No', target: 'essential', passed: !!inputs.essentialUse },
+    { key: 'equipmentLtv', label: 'LTV', score: f.equipmentLtv || 0, weight: 0.10, caption: `${((metrics.ltv || 0) * 100).toFixed(0)}% (${inputs.equipmentCondition || '—'})`, target: '≤ 85%', passed: (metrics.ltv || 0) <= 0.85 },
+    { key: 'yearsInBusiness', label: 'Years in business', score: f.yearsInBusiness || 0, weight: 0.10, caption: `${inputs.yearsInBusiness || 0} yrs`, target: '≥ 5 yrs', passed: (inputs.yearsInBusiness || 0) >= 5 },
+    { key: 'termCoverage', label: 'Term coverage', score: f.termCoverage || 0, weight: 0.10, caption: `${(metrics.termCoverage || 0).toFixed(0)}% of useful life`, target: '< 80%', passed: (metrics.termCoverage || 0) < 80 },
+  ];
+}
+
 // ------- Recommendation -------
 
 export function getRecommendation(compositeScore) {
