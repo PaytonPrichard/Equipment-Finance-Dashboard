@@ -373,7 +373,7 @@ function parseSummaryToPdfHtml(summaryText, inputs) {
 </html>`;
 }
 
-function generateBrandedPdfHtml({ summaryText, inputs, metrics, riskScore, recommendation, screeningResult, orgName, analystName, moduleLabel, branding, factors = [] }) {
+function generateBrandedPdfHtml({ summaryText, inputs, metrics, riskScore, recommendation, screeningResult, orgName, analystName, moduleLabel, branding, factors = [], structure = null }) {
   const companyName = inputs?.companyName || 'N/A';
   const date = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
   const score = riskScore?.composite ?? 0;
@@ -512,6 +512,19 @@ function generateBrandedPdfHtml({ summaryText, inputs, metrics, riskScore, recom
 
   ${redFlagsHtml}
 
+  <!-- Recommended Action -->
+  <div class="section">
+    <div class="section-title">Recommended Action</div>
+    <div style="font-size:14px;font-weight:700;color:${scoreColor};margin-bottom:4px">${esc(recommendation?.category || '')}</div>
+    <div style="font-size:12px;color:#475569;margin-bottom:${(structure?.enhancements?.length || 0) > 0 ? '12px' : '0'}">${esc(recommendation?.detail || '')}</div>
+    ${(structure?.enhancements?.length || 0) > 0 ? `
+      <div style="font-size:10px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px">Conditions / Suggested Enhancements</div>
+      <ul style="margin:0;padding-left:18px">
+        ${structure.enhancements.map((e) => `<li style="font-size:11px;color:#1f2937;margin-bottom:3px">${esc(e)}</li>`).join('')}
+      </ul>
+    ` : ''}
+  </div>
+
   <!-- Deal Overview -->
   <div class="section">
     <div class="section-title">Deal Overview</div>
@@ -571,7 +584,7 @@ function generateBrandedPdfHtml({ summaryText, inputs, metrics, riskScore, recom
 </html>`;
 }
 
-export default function ExportPanel({ summaryText, inputs, metrics, riskScore, recommendation, screeningResult, profile, moduleLabel, moduleKey, factors }) {
+export default function ExportPanel({ summaryText, inputs, metrics, riskScore, recommendation, screeningResult, profile, moduleLabel, moduleKey, factors, structure }) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
@@ -599,7 +612,7 @@ export default function ExportPanel({ summaryText, inputs, metrics, riskScore, r
     const html = generateBrandedPdfHtml({
       summaryText, inputs, metrics, riskScore, recommendation, screeningResult,
       orgName, analystName, moduleLabel: moduleLabel || 'Equipment Finance', branding,
-      moduleKey, factors,
+      moduleKey, factors, structure,
     });
 
     setPdfLoading(true);
