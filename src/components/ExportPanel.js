@@ -373,7 +373,7 @@ function parseSummaryToPdfHtml(summaryText, inputs) {
 </html>`;
 }
 
-function generateBrandedPdfHtml({ summaryText, inputs, metrics, riskScore, recommendation, screeningResult, orgName, analystName, moduleLabel, branding, factors = [], structure = null, stressResults = [], moduleKey = 'equipment_finance' }) {
+function generateBrandedPdfHtml({ summaryText, inputs, metrics, riskScore, recommendation, screeningResult, orgName, analystName, moduleLabel, branding, factors = [], structure = null, stressResults = [], moduleKey = 'equipment_finance', borrowerExtras = null }) {
   const companyName = inputs?.companyName || 'N/A';
   const date = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
   const score = riskScore?.composite ?? 0;
@@ -407,6 +407,7 @@ function generateBrandedPdfHtml({ summaryText, inputs, metrics, riskScore, recom
   // Build key metrics table based on what's available
   const metricRows = [];
   if (metrics?.dscr !== undefined) metricRows.push(['DSCR', fmtRatio(metrics.dscr), metrics.dscr >= 1.25 ? '#16a34a' : metrics.dscr >= 1.0 ? '#ca8a04' : '#dc2626']);
+  if (borrowerExtras?.fccr != null) metricRows.push(['FCCR', fmtRatio(borrowerExtras.fccr), borrowerExtras.fccr >= 1.25 ? '#16a34a' : borrowerExtras.fccr >= 1.0 ? '#ca8a04' : '#dc2626']);
   if (metrics?.leverage !== undefined) metricRows.push(['Leverage', fmtRatio(metrics.leverage), metrics.leverage <= 3.5 ? '#16a34a' : metrics.leverage <= 5.0 ? '#ca8a04' : '#dc2626']);
   if (metrics?.ltv !== undefined) metricRows.push(['LTV', fmtPct(metrics.ltv), metrics.ltv <= 0.85 ? '#16a34a' : metrics.ltv <= 1.0 ? '#ca8a04' : '#dc2626']);
   if (metrics?.termCoverage !== undefined) metricRows.push(['Term Coverage', metrics.termCoverage.toFixed(0) + '%', metrics.termCoverage <= 80 ? '#16a34a' : '#dc2626']);
@@ -659,7 +660,7 @@ function generateBrandedPdfHtml({ summaryText, inputs, metrics, riskScore, recom
 </html>`;
 }
 
-export default function ExportPanel({ summaryText, inputs, metrics, riskScore, recommendation, screeningResult, profile, moduleLabel, moduleKey, factors, structure, stressResults }) {
+export default function ExportPanel({ summaryText, inputs, metrics, riskScore, recommendation, screeningResult, profile, moduleLabel, moduleKey, factors, structure, stressResults, borrowerExtras }) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
@@ -687,7 +688,7 @@ export default function ExportPanel({ summaryText, inputs, metrics, riskScore, r
     const html = generateBrandedPdfHtml({
       summaryText, inputs, metrics, riskScore, recommendation, screeningResult,
       orgName, analystName, moduleLabel: moduleLabel || 'Equipment Finance', branding,
-      moduleKey, factors, structure, stressResults,
+      moduleKey, factors, structure, stressResults, borrowerExtras,
     });
 
     setPdfLoading(true);
