@@ -13,9 +13,9 @@
 // ============================================================
 
 const MODULE_LOADERS = {
-  equipment_finance: () => import('../src/modules/equipment-finance/scoring.js'),
-  accounts_receivable: () => import('../src/modules/accounts-receivable/scoring.js'),
-  inventory_finance: () => import('../src/modules/inventory-finance/scoring.js'),
+  equipment_finance: () => import('../src/modules/equipment-finance/scoring.ts'),
+  accounts_receivable: () => import('../src/modules/accounts-receivable/scoring.ts'),
+  inventory_finance: () => import('../src/modules/inventory-finance/scoring.ts'),
 };
 
 const VALID_ASSET_CLASSES = Object.keys(MODULE_LOADERS);

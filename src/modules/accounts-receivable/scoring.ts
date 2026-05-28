@@ -11,6 +11,19 @@ import {
 } from '../../utils/format';
 import { computeFccr } from '../../utils/borrowerMetrics';
 
+import type {
+  AccountsReceivableInputs,
+  AccountsReceivableMetrics,
+  RiskScore,
+  FactorDescriptor,
+  Recommendation,
+  StressScenario,
+  RateInfo,
+  CreditRating,
+  IndustrySector,
+} from '../../types';
+import { asBps, asFraction } from '../../types';
+
 import {
   DEFAULT_SOFR,
   EXISTING_DEBT_SERVICE_RATE,
@@ -23,9 +36,28 @@ import {
   DILUTION_THRESHOLD,
 } from './constants';
 
+interface ARSuggestedStructure {
+  rateInfo: RateInfo;
+  screeningRate: number;
+  rateRange: [number, number];
+  structureType: string;
+  structure: string;
+  advanceRate: string;
+  reportingRequirements: string[];
+  enhancements: string[];
+  facilitySize: number;
+  sizingFlag?: string;
+}
+
+type ARExportCriteria = { minDscrAR?: number } | null | undefined;
+
 // ------- Rate Calculation -------
 
-export function getScreeningRate(creditRating, industrySector, sofr = DEFAULT_SOFR) {
+export function getScreeningRate(
+  creditRating: CreditRating,
+  industrySector: IndustrySector,
+  sofr: number = DEFAULT_SOFR,
+): RateInfo {
   const tier = INDUSTRY_RISK_TIER[industrySector] || 'moderate';
   const creditBps = CREDIT_SPREAD_BPS[creditRating] || 0;
   const industryBps = TIER_SPREAD_BPS[tier] || 0;
@@ -33,17 +65,20 @@ export function getScreeningRate(creditRating, industrySector, sofr = DEFAULT_SO
 
   return {
     sofr,
-    baseSpread: BASE_SPREAD_BPS,
-    creditAdj: creditBps,
-    industryAdj: industryBps,
-    totalSpread,
+    baseSpread: asBps(BASE_SPREAD_BPS),
+    creditAdj: asBps(creditBps),
+    industryAdj: asBps(industryBps),
+    totalSpread: asBps(totalSpread),
     allInRate: sofr + totalSpread / 10000,
   };
 }
 
 // ------- Core Metrics -------
 
-export function calculateMetrics(inputs, sofr = DEFAULT_SOFR) {
+export function calculateMetrics(
+  inputs: AccountsReceivableInputs,
+  sofr: number = DEFAULT_SOFR,
+): AccountsReceivableMetrics {
   const {
     annualRevenue,
     ebitda,
@@ -65,7 +100,7 @@ export function calculateMetrics(inputs, sofr = DEFAULT_SOFR) {
   const eligibleAR = Math.max((totalAROutstanding || 0) - ineligibleAmount, 0);
 
   // Advance rate: input is percentage (0-100), convert to decimal, cap at MAX
-  const advanceRate = Math.min((requestedAdvanceRate || 0) / 100, MAX_ADVANCE_RATE);
+  const advanceRate = asFraction(Math.min((requestedAdvanceRate || 0) / 100, MAX_ADVANCE_RATE));
 
   // Borrowing base = eligible AR * advance rate
   const borrowingBase = eligibleAR * advanceRate;
@@ -76,7 +111,7 @@ export function calculateMetrics(inputs, sofr = DEFAULT_SOFR) {
     : 0;
 
   // Concentration risk — top customer as a % of total AR
-  const concentrationRisk = topCustomerConcentration / 100;
+  const concentrationRisk = asFraction(topCustomerConcentration / 100);
 
   // Net availability (borrowing base minus any existing ABL draws, simplified)
   const netAvailability = borrowingBase;
@@ -105,7 +140,7 @@ export function calculateMetrics(inputs, sofr = DEFAULT_SOFR) {
     borrowingBase,
     dso,
     concentrationRisk,
-    dilutionRate: dilutionRate / 100,
+    dilutionRate: asFraction(dilutionRate / 100),
     advanceRate,
     netAvailability,
     dscr,
@@ -122,18 +157,21 @@ export function calculateMetrics(inputs, sofr = DEFAULT_SOFR) {
 
 // ------- Risk Scoring -------
 
-export function calculateRiskScore(inputs, metrics) {
-  const factors = {};
+export function calculateRiskScore(
+  inputs: AccountsReceivableInputs,
+  metrics: AccountsReceivableMetrics,
+): RiskScore {
+  const factors: Record<string, number> = {};
 
   // DSCR (25%) — higher is better
   factors.dscr = lerp(metrics.dscr, [
     [0, 5], [0.8, 15], [1.0, 25], [1.25, 50], [1.5, 72], [2.0, 90], [3.0, 100],
-  ]);
+  ] as [number, number][]);
 
   // Leverage (15%) — lower is better
   factors.leverage = lerp(metrics.leverage, [
     [0, 100], [2.0, 90], [3.5, 72], [5.0, 48], [7.0, 22], [10.0, 5],
-  ]);
+  ] as [number, number][]);
 
   // AR Quality / Aging (20%) — based on % of AR that is current (under 30 days)
   // Form inputs are percentages (0-100), convert to decimal for scoring
@@ -142,22 +180,22 @@ export function calculateRiskScore(inputs, metrics) {
   const pctCurrentClamped = Math.max(0, Math.min(1, pctCurrent));
   factors.arQuality = lerp(pctCurrentClamped, [
     [0, 5], [0.50, 20], [0.65, 40], [0.75, 60], [0.85, 80], [0.95, 95], [1.0, 100],
-  ]);
+  ] as [number, number][]);
 
   // Concentration (15%) — lower top-customer concentration is better
   factors.concentration = lerp(metrics.concentrationRisk, [
     [0, 100], [0.10, 90], [0.20, 72], [0.25, 55], [0.35, 35], [0.50, 15], [0.75, 5],
-  ]);
+  ] as [number, number][]);
 
   // Dilution (10%) — lower dilution rate is better
   factors.dilution = lerp(metrics.dilutionRate, [
     [0, 100], [0.02, 90], [0.05, 70], [0.08, 50], [0.12, 30], [0.20, 10],
-  ]);
+  ] as [number, number][]);
 
   // Years in Business (10%) — more is better
   factors.yearsInBusiness = lerp(inputs.yearsInBusiness, [
     [0, 15], [2, 40], [5, 65], [10, 85], [20, 95], [30, 100],
-  ]);
+  ] as [number, number][]);
 
   // Industry (5%) — categorical
   const tier = INDUSTRY_RISK_TIER[inputs.industrySector] || 'moderate';
@@ -181,7 +219,11 @@ export function calculateRiskScore(inputs, metrics) {
 // ------- Factor Descriptors -------
 // Universal shape for the PDF renderer to display strengths / concerns / red flags
 // without needing module-specific code paths.
-export function describeFactors(inputs, metrics, riskScore) {
+export function describeFactors(
+  inputs: AccountsReceivableInputs,
+  metrics: AccountsReceivableMetrics,
+  riskScore: RiskScore,
+): FactorDescriptor[] {
   const f = riskScore?.factors || {};
   const tier = INDUSTRY_RISK_TIER[inputs.industrySector] || 'moderate';
   const pctOver30 = (inputs.arOver30 || 0) + (inputs.arOver60 || 0) + (inputs.arOver90 || 0);
@@ -198,7 +240,7 @@ export function describeFactors(inputs, metrics, riskScore) {
 
 // ------- Recommendation -------
 
-export function getRecommendation(compositeScore) {
+export function getRecommendation(compositeScore: number): Recommendation {
   if (compositeScore >= 75)
     return {
       category: 'Strong Prospect',
@@ -238,8 +280,12 @@ export function getRecommendation(compositeScore) {
 
 // ------- Commentary -------
 
-export function generateCommentary(inputs, metrics, riskScore) {
-  const comments = [];
+export function generateCommentary(
+  inputs: AccountsReceivableInputs,
+  metrics: AccountsReceivableMetrics,
+  riskScore: RiskScore,
+): string[] {
+  const comments: string[] = [];
 
   // AR Aging Quality (aging inputs are already percentages, 0-100)
   const pctOver90 = inputs.arOver90 || 0;
@@ -340,21 +386,26 @@ export function generateCommentary(inputs, metrics, riskScore) {
 
 // ------- Suggested Structure -------
 
-export function getSuggestedStructure(inputs, metrics, compositeScore, sofr = DEFAULT_SOFR) {
-  const suggestions = {};
-
-  // Rate
-  suggestions.rateInfo = metrics.rateInfo;
-  suggestions.screeningRate = metrics.effectiveRate;
-
-  // Indicative range: +/- 50 bps from screening rate
-  suggestions.rateRange = [
-    Math.max(metrics.effectiveRate - 0.005, sofr + 0.005),
-    metrics.effectiveRate + 0.005,
-  ];
-
-  // Facility structure — always revolving for AR
-  suggestions.structureType = 'Revolving Credit Facility';
+export function getSuggestedStructure(
+  inputs: AccountsReceivableInputs,
+  metrics: AccountsReceivableMetrics,
+  compositeScore: number,
+  sofr: number = DEFAULT_SOFR,
+): ARSuggestedStructure {
+  const suggestions: ARSuggestedStructure = {
+    rateInfo: metrics.rateInfo,
+    screeningRate: metrics.effectiveRate,
+    rateRange: [
+      Math.max(metrics.effectiveRate - 0.005, sofr + 0.005),
+      metrics.effectiveRate + 0.005,
+    ],
+    structureType: 'Revolving Credit Facility',
+    structure: '',
+    advanceRate: '',
+    reportingRequirements: [],
+    enhancements: [],
+    facilitySize: metrics.borrowingBase,
+  };
 
   if (compositeScore >= 75) {
     suggestions.structure =
@@ -382,7 +433,6 @@ export function getSuggestedStructure(inputs, metrics, compositeScore, sofr = DE
   }
 
   // Reporting requirements
-  suggestions.reportingRequirements = [];
   if (compositeScore >= 75) {
     suggestions.reportingRequirements.push('Monthly borrowing base certificate');
     suggestions.reportingRequirements.push('Monthly AR aging schedule');
@@ -404,7 +454,6 @@ export function getSuggestedStructure(inputs, metrics, compositeScore, sofr = DE
   }
 
   // Enhancements
-  suggestions.enhancements = [];
   if (compositeScore < 55) {
     suggestions.enhancements.push('Personal guarantee from principal(s)');
   }
@@ -445,7 +494,6 @@ export function getSuggestedStructure(inputs, metrics, compositeScore, sofr = DE
   }
 
   // Facility sizing
-  suggestions.facilitySize = metrics.borrowingBase;
   const maxSuggested = (inputs.ebitda || 0) * 3;
   if (metrics.borrowingBase > maxSuggested && maxSuggested > 0) {
     suggestions.sizingFlag = `Borrowing base of ${formatCurrency(metrics.borrowingBase)} is large relative to borrower's ${formatCurrency(inputs.ebitda)} EBITDA (${(metrics.borrowingBase / inputs.ebitda).toFixed(1)}x). Typical ABL facilities are self-liquidating, but assess whether borrower can manage facility costs at full utilization.`;
@@ -456,7 +504,10 @@ export function getSuggestedStructure(inputs, metrics, compositeScore, sofr = DE
 
 // ------- Stress Testing -------
 
-export function runStressTest(inputs, sofr = DEFAULT_SOFR) {
+export function runStressTest(
+  inputs: AccountsReceivableInputs,
+  sofr: number = DEFAULT_SOFR,
+): StressScenario[] {
   // All AR aging / dilution / ineligibles inputs are percentages (0-100).
   // Stress scenarios shift them in percentage-point terms.
   const scenarios = [
@@ -477,7 +528,7 @@ export function runStressTest(inputs, sofr = DEFAULT_SOFR) {
 
     const stressedDilution = (inputs.dilutionRate || 0) + scenario.dilutionShiftPp;
 
-    const stressed = {
+    const stressed: AccountsReceivableInputs = {
       ...inputs,
       ebitda: (inputs.ebitda || 0) * (1 - scenario.ebitdaDecline),
       arUnder30: stressedArUnder30,
@@ -517,7 +568,7 @@ export function runStressTest(inputs, sofr = DEFAULT_SOFR) {
 
 // ------- Validation -------
 
-export function isInputValid(inputs) {
+export function isInputValid(inputs: Partial<AccountsReceivableInputs>): boolean {
   return (
     (inputs.totalAROutstanding || 0) > 0 &&
     (inputs.annualRevenue || 0) > 0 &&
@@ -527,11 +578,20 @@ export function isInputValid(inputs) {
 
 // ------- Export Summary -------
 
-export function generateExportSummary(inputs, metrics, riskScore, recommendation, commentary, structure, sofr = DEFAULT_SOFR, criteria = null) {
+export function generateExportSummary(
+  inputs: AccountsReceivableInputs,
+  metrics: AccountsReceivableMetrics,
+  riskScore: RiskScore,
+  recommendation: Recommendation,
+  commentary: string[],
+  structure: ARSuggestedStructure,
+  sofr: number = DEFAULT_SOFR,
+  criteria: ARExportCriteria = null,
+): string {
   const dscrFloor = (criteria && typeof criteria.minDscrAR === 'number')
     ? criteria.minDscrAR
     : 1.10;
-  const lines = [];
+  const lines: string[] = [];
   lines.push('ACCOUNTS RECEIVABLE ABL FACILITY SCREENING');
   lines.push('PRELIMINARY ASSESSMENT');
   lines.push('='.repeat(60));
@@ -627,12 +687,12 @@ export function generateExportSummary(inputs, metrics, riskScore, recommendation
 
 // ------- CSV Parsing -------
 
-export function parseCsvDeals(csvText) {
+export function parseCsvDeals(csvText: string): { id: string; inputs: AccountsReceivableInputs }[] {
   const lines = csvText.trim().split('\n');
   if (lines.length < 2) return [];
   const headers = lines[0].split(',').map(h => h.trim().toLowerCase().replace(/[^a-z0-9]/g, ''));
 
-  const fieldMap = {
+  const fieldMap: Record<string, string> = {
     companyname: 'companyName', company: 'companyName', name: 'companyName',
     yearsinbusiness: 'yearsInBusiness', years: 'yearsInBusiness',
     annualrevenue: 'annualRevenue', revenue: 'annualRevenue',
@@ -672,7 +732,7 @@ export function parseCsvDeals(csvText) {
 
   return lines.slice(1).filter(l => l.trim()).map((line, idx) => {
     const values = line.split(',').map(v => v.trim());
-    const inputs = {
+    const inputs: AccountsReceivableInputs = {
       companyName: '',
       yearsInBusiness: 0, annualRevenue: 0, ebitda: 0, totalExistingDebt: 0,
       actualAnnualDebtService: 0, maintenanceCapex: 0,
@@ -688,12 +748,13 @@ export function parseCsvDeals(csvText) {
       const field = fieldMap[h];
       if (!field || i >= values.length) return;
       const val = values[i];
+      const inp = inputs as unknown as Record<string, unknown>;
       if (booleanFields.has(field)) {
-        inputs[field] = ['true', 'yes', '1', 'y'].includes(val.toLowerCase());
+        inp[field] = ['true', 'yes', '1', 'y'].includes(val.toLowerCase());
       } else if (numericFields.has(field)) {
-        inputs[field] = parseFloat(val.replace(/[^0-9.-]/g, '')) || 0;
+        inp[field] = parseFloat(val.replace(/[^0-9.-]/g, '')) || 0;
       } else {
-        inputs[field] = val;
+        inp[field] = val;
       }
     });
 

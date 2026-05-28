@@ -2,20 +2,27 @@
 // Accounts Receivable Module — Constants & Configuration
 // ============================================================
 
-export const DEFAULT_SOFR = 0.0425;
-export const CURRENT_SOFR = DEFAULT_SOFR;
-export const EXISTING_DEBT_SERVICE_RATE = 0.08;
+import type {
+  CreditRating,
+  IndustrySector,
+  IndustryTier,
+  AccountsReceivableInputs,
+} from '../../types';
 
-export const BASE_SPREAD_BPS = 250;
+export const DEFAULT_SOFR: number = 0.0425;
+export const CURRENT_SOFR: number = DEFAULT_SOFR;
+export const EXISTING_DEBT_SERVICE_RATE: number = 0.08;
 
-export const CREDIT_SPREAD_BPS = {
+export const BASE_SPREAD_BPS: number = 250;
+
+export const CREDIT_SPREAD_BPS: Record<CreditRating, number> = {
   Strong: -75,
   Adequate: 0,
   Weak: 200,
   'Not Rated': 100,
 };
 
-export const INDUSTRY_RISK_TIER = {
+export const INDUSTRY_RISK_TIER: Record<IndustrySector, IndustryTier> = {
   Healthcare: 'low',
   Infrastructure: 'low',
   Manufacturing: 'low',
@@ -30,22 +37,22 @@ export const INDUSTRY_RISK_TIER = {
   Other: 'moderate',
 };
 
-export const TIER_SPREAD_BPS = { low: -25, moderate: 0, high: 75 };
+export const TIER_SPREAD_BPS: Record<IndustryTier, number> = { low: -25, moderate: 0, high: 75 };
 
-export const INDUSTRY_OPTIONS = [
+export const INDUSTRY_OPTIONS: IndustrySector[] = [
   'Manufacturing', 'Construction', 'Transportation/Logistics', 'Marine',
   'Rail', 'Energy', 'Healthcare', 'Infrastructure', 'Mining',
   'Agriculture', 'Aviation', 'Other',
 ];
 
-export const CREDIT_OPTIONS = ['Strong', 'Adequate', 'Weak', 'Not Rated'];
+export const CREDIT_OPTIONS: CreditRating[] = ['Strong', 'Adequate', 'Weak', 'Not Rated'];
 
 // AR-specific thresholds
-export const MAX_ADVANCE_RATE = 0.85;
-export const CONCENTRATION_THRESHOLD = 0.25;
-export const DILUTION_THRESHOLD = 0.05;
+export const MAX_ADVANCE_RATE: number = 0.85;
+export const CONCENTRATION_THRESHOLD: number = 0.25;
+export const DILUTION_THRESHOLD: number = 0.05;
 
-export const INITIAL_INPUTS = {
+export const INITIAL_INPUTS: AccountsReceivableInputs = {
   // Shared borrower fields
   companyName: '',
   yearsInBusiness: 0,

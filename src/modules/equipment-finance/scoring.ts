@@ -1,7 +1,3 @@
-// ============================================================
-// Equipment Finance Deal Screening — Scoring & Calculation Functions
-// ============================================================
-
 import {
   lerp,
   calculateMonthlyPayment,
@@ -12,6 +8,21 @@ import {
   formatRatio,
 } from '../../utils/format';
 import { computeFccr } from '../../utils/borrowerMetrics';
+
+import type {
+  EquipmentFinanceInputs,
+  EquipmentMetrics,
+  RiskScore,
+  FactorDescriptor,
+  Recommendation,
+  StressScenario,
+  RateInfo,
+  CreditRating,
+  IndustrySector,
+  EquipmentType,
+  FinancingType,
+} from '../../types';
+import { asBps } from '../../types';
 
 import {
   DEFAULT_SOFR,
@@ -25,9 +36,25 @@ import {
   FINANCING_TYPES,
 } from './constants';
 
+interface SuggestedStructure {
+  rateInfo: RateInfo;
+  screeningRate: number;
+  rateRange: [number, number];
+  structure: string;
+  structureType: string;
+  enhancements: string[];
+  sizingFlag?: string;
+}
+
+type ExportCriteria = { maxTermCoverage?: number; maxRevenueConcentration?: number } | null | undefined;
+
 // ------- Rate Calculation -------
 
-export function getScreeningRate(creditRating, industrySector, sofr = DEFAULT_SOFR) {
+export function getScreeningRate(
+  creditRating: CreditRating,
+  industrySector: IndustrySector,
+  sofr: number = DEFAULT_SOFR,
+): RateInfo {
   const tier = INDUSTRY_RISK_TIER[industrySector] || 'moderate';
   const creditBps = CREDIT_SPREAD_BPS[creditRating] || 0;
   const industryBps = TIER_SPREAD_BPS[tier] || 0;
@@ -35,17 +62,21 @@ export function getScreeningRate(creditRating, industrySector, sofr = DEFAULT_SO
 
   return {
     sofr,
-    baseSpread: BASE_SPREAD_BPS,
-    creditAdj: creditBps,
-    industryAdj: industryBps,
-    totalSpread,
+    baseSpread: asBps(BASE_SPREAD_BPS),
+    creditAdj: asBps(creditBps),
+    industryAdj: asBps(industryBps),
+    totalSpread: asBps(totalSpread),
     allInRate: sofr + totalSpread / 10000,
   };
 }
 
 // ------- Residual Value -------
 
-export function getResidualValue(financingType, equipmentType, equipmentCost) {
+export function getResidualValue(
+  financingType: FinancingType,
+  equipmentType: EquipmentType,
+  equipmentCost: number,
+): number {
   if (financingType === 'FMV') {
     return equipmentCost * (FMV_RESIDUAL_PCT[equipmentType] || 0.10);
   }
@@ -57,7 +88,10 @@ export function getResidualValue(financingType, equipmentType, equipmentCost) {
 
 // ------- Core Metrics -------
 
-export function calculateMetrics(inputs, sofr = DEFAULT_SOFR) {
+export function calculateMetrics(
+  inputs: EquipmentFinanceInputs,
+  sofr: number = DEFAULT_SOFR,
+): EquipmentMetrics {
   const {
     annualRevenue,
     ebitda,
@@ -76,30 +110,23 @@ export function calculateMetrics(inputs, sofr = DEFAULT_SOFR) {
   const rateInfo = getScreeningRate(creditRating, industrySector, sofr);
   const rate = rateInfo.allInRate;
 
-  // Net amount financed after equity / down payment
   const netFinanced = Math.max((equipmentCost || 0) - (downPayment || 0), 0);
 
-  // Residual reduces periodic payments for FMV / TRAC
   const residualValue = getResidualValue(
     financingType,
     equipmentType,
-    equipmentCost || 0
+    equipmentCost || 0,
   );
   const financedPrincipal =
     financingType === 'EFA'
       ? netFinanced
       : Math.max(netFinanced - residualValue, 0);
 
-  const monthlyPayment = calculateMonthlyPayment(
-    financedPrincipal,
-    rate,
-    loanTerm
-  );
+  const monthlyPayment = calculateMonthlyPayment(financedPrincipal, rate, loanTerm);
   const newAnnualDebtService = monthlyPayment * 12;
-  // Use actual debt service if provided, otherwise estimate
   const existingDebtService =
     (inputs.actualAnnualDebtService || 0) > 0
-      ? inputs.actualAnnualDebtService
+      ? inputs.actualAnnualDebtService!
       : (totalExistingDebt || 0) * EXISTING_DEBT_SERVICE_RATE;
   const debtServiceEstimated = !((inputs.actualAnnualDebtService || 0) > 0);
 
@@ -111,13 +138,11 @@ export function calculateMetrics(inputs, sofr = DEFAULT_SOFR) {
   const leverage =
     ebitda > 0 ? ((totalExistingDebt || 0) + netFinanced) / ebitda : 0;
 
-  // Equipment value — used equipment discounted 15%
   const equipmentValue =
     equipmentCondition === 'Used'
       ? (equipmentCost || 0) * 0.85
       : equipmentCost || 0;
 
-  // LTV now uses net financed (after down payment) vs equipment value
   const ltv = equipmentValue > 0 ? netFinanced / equipmentValue : 0;
 
   const termYears = (loanTerm || 0) / 12;
@@ -126,7 +151,6 @@ export function calculateMetrics(inputs, sofr = DEFAULT_SOFR) {
   const revenueConcentration =
     annualRevenue > 0 ? ((equipmentCost || 0) / annualRevenue) * 100 : 0;
 
-  // Profitability & debt yield
   const ebitdaMargin = annualRevenue > 0 ? (ebitda / annualRevenue) * 100 : 0;
   const debtYield = netFinanced > 0 ? (ebitda / netFinanced) * 100 : 0;
 
@@ -153,18 +177,21 @@ export function calculateMetrics(inputs, sofr = DEFAULT_SOFR) {
 
 // ------- Risk Scoring -------
 
-export function calculateRiskScore(inputs, metrics) {
-  const factors = {};
+export function calculateRiskScore(
+  inputs: EquipmentFinanceInputs,
+  metrics: EquipmentMetrics,
+): RiskScore {
+  const factors: Record<string, number> = {};
 
   // DSCR (25%) — higher is better
   factors.dscr = lerp(metrics.dscr, [
     [0, 5], [0.8, 15], [1.0, 25], [1.25, 50], [1.5, 72], [2.0, 90], [3.0, 100],
-  ]);
+  ] as [number, number][]);
 
   // Leverage (20%) — lower is better
   factors.leverage = lerp(metrics.leverage, [
     [0, 100], [2.0, 90], [3.5, 72], [5.0, 48], [7.0, 22], [10.0, 5],
-  ]);
+  ] as [number, number][]);
 
   // Industry (15%) — categorical, stays discrete
   const tier = INDUSTRY_RISK_TIER[inputs.industrySector] || 'moderate';
@@ -179,17 +206,17 @@ export function calculateRiskScore(inputs, metrics) {
   const conditionBonus = inputs.equipmentCondition === 'New' ? 12 : 0;
   factors.equipmentLtv = Math.min(100, conditionBonus + lerp(metrics.ltv, [
     [0, 95], [0.60, 90], [0.75, 78], [0.85, 65], [1.0, 45], [1.2, 20],
-  ]));
+  ] as [number, number][]));
 
   // Years in business (10%) — more is better
   factors.yearsInBusiness = lerp(inputs.yearsInBusiness, [
     [0, 15], [2, 40], [5, 65], [10, 85], [20, 95], [30, 100],
-  ]);
+  ] as [number, number][]);
 
   // Term coverage (10%) — lower is better
   factors.termCoverage = lerp(metrics.termCoverage, [
     [0, 100], [40, 95], [60, 78], [80, 45], [100, 15],
-  ]);
+  ] as [number, number][]);
 
   const composite = Math.round(
     factors.dscr * 0.25 +
@@ -198,16 +225,19 @@ export function calculateRiskScore(inputs, metrics) {
       factors.essentiality * 0.1 +
       factors.equipmentLtv * 0.1 +
       factors.yearsInBusiness * 0.1 +
-      factors.termCoverage * 0.1
+      factors.termCoverage * 0.1,
   );
 
   return { composite, factors };
 }
 
 // ------- Factor Descriptors -------
-// Pair each sub-score with the underlying metric value and target threshold,
-// in a shape the PDF renderer can dispatch on without module-specific code.
-export function describeFactors(inputs, metrics, riskScore) {
+
+export function describeFactors(
+  inputs: EquipmentFinanceInputs,
+  metrics: EquipmentMetrics,
+  riskScore: RiskScore,
+): FactorDescriptor[] {
   const f = riskScore?.factors || {};
   const tier = INDUSTRY_RISK_TIER[inputs.industrySector] || 'moderate';
   return [
@@ -223,7 +253,7 @@ export function describeFactors(inputs, metrics, riskScore) {
 
 // ------- Recommendation -------
 
-export function getRecommendation(compositeScore) {
+export function getRecommendation(compositeScore: number): Recommendation {
   if (compositeScore >= 75)
     return {
       category: 'Strong Prospect',
@@ -263,103 +293,101 @@ export function getRecommendation(compositeScore) {
 
 // ------- Commentary -------
 
-export function generateCommentary(inputs, metrics, riskScore, criteria = null) {
-  const comments = [];
+export function generateCommentary(
+  inputs: EquipmentFinanceInputs,
+  metrics: EquipmentMetrics,
+  riskScore: RiskScore,
+  criteria: ExportCriteria = null,
+): string[] {
+  const comments: string[] = [];
 
-  // DSCR
   if (metrics.dscr > 2.0) {
     comments.push(
-      `DSCR of ${metrics.dscr.toFixed(2)}x provides strong debt service coverage, well above typical minimum thresholds.`
+      `DSCR of ${metrics.dscr.toFixed(2)}x provides strong debt service coverage, well above typical minimum thresholds.`,
     );
   } else if (metrics.dscr >= 1.5) {
     comments.push(
-      `DSCR of ${metrics.dscr.toFixed(2)}x indicates comfortable coverage cushion for total debt service obligations.`
+      `DSCR of ${metrics.dscr.toFixed(2)}x indicates comfortable coverage cushion for total debt service obligations.`,
     );
   } else if (metrics.dscr >= 1.25) {
     comments.push(
-      `DSCR of ${metrics.dscr.toFixed(2)}x is adequate but offers limited margin; recommend interest rate sensitivity analysis.`
+      `DSCR of ${metrics.dscr.toFixed(2)}x is adequate but offers limited margin; recommend interest rate sensitivity analysis.`,
     );
   } else {
     comments.push(
-      `DSCR of ${metrics.dscr.toFixed(2)}x falls below typical minimum thresholds — borrower may struggle to service total debt obligations.`
+      `DSCR of ${metrics.dscr.toFixed(2)}x falls below typical minimum thresholds — borrower may struggle to service total debt obligations.`,
     );
   }
 
-  // Leverage
   if (metrics.leverage > 5.0) {
     comments.push(
-      `Total leverage of ${metrics.leverage.toFixed(1)}x EBITDA is elevated; assess whether asset-backed structure adequately mitigates credit risk.`
+      `Total leverage of ${metrics.leverage.toFixed(1)}x EBITDA is elevated; assess whether asset-backed structure adequately mitigates credit risk.`,
     );
   } else if (metrics.leverage > 3.5) {
     comments.push(
-      `Leverage of ${metrics.leverage.toFixed(1)}x EBITDA is moderate; structure should reflect seniority and collateral position.`
+      `Leverage of ${metrics.leverage.toFixed(1)}x EBITDA is moderate; structure should reflect seniority and collateral position.`,
     );
   } else if (metrics.leverage <= 2.0) {
     comments.push(
-      `Low leverage of ${metrics.leverage.toFixed(1)}x EBITDA indicates significant balance sheet capacity for additional debt.`
+      `Low leverage of ${metrics.leverage.toFixed(1)}x EBITDA indicates significant balance sheet capacity for additional debt.`,
     );
   }
 
-  // Industry
   const tier = INDUSTRY_RISK_TIER[inputs.industrySector] || 'moderate';
   if (tier === 'high') {
     comments.push(
-      `${inputs.industrySector} sector carries cyclical/operational risk; consider shorter tenor, step-up payments, or additional credit support.`
+      `${inputs.industrySector} sector carries cyclical/operational risk; consider shorter tenor, step-up payments, or additional credit support.`,
     );
   } else if (tier === 'low') {
     comments.push(
-      `${inputs.industrySector} sector provides relatively stable demand characteristics, supporting credit profile.`
+      `${inputs.industrySector} sector provides relatively stable demand characteristics, supporting credit profile.`,
     );
   }
 
-  // LTV
   if (metrics.ltv > 1.0) {
     comments.push(
-      `LTV of ${(metrics.ltv * 100).toFixed(0)}% exceeds equipment value — additional equity contribution or collateral should be considered.`
+      `LTV of ${(metrics.ltv * 100).toFixed(0)}% exceeds equipment value — additional equity contribution or collateral should be considered.`,
     );
   } else if (metrics.ltv <= 0.75) {
     comments.push(
-      `LTV of ${(metrics.ltv * 100).toFixed(0)}% provides strong collateral cushion, reducing loss-given-default risk.`
+      `LTV of ${(metrics.ltv * 100).toFixed(0)}% provides strong collateral cushion, reducing loss-given-default risk.`,
     );
   }
 
-  // Financing type
   const ft = inputs.financingType || 'EFA';
   if (ft === 'FMV' && metrics.residualValue > 0) {
     comments.push(
-      `FMV lease structure reduces periodic payments by ${formatCurrency(metrics.residualValue)} (estimated residual). Lessor retains residual value risk — assess remarketing outlook for ${inputs.equipmentType}.`
+      `FMV lease structure reduces periodic payments by ${formatCurrency(metrics.residualValue)} (estimated residual). Lessor retains residual value risk — assess remarketing outlook for ${inputs.equipmentType}.`,
     );
   } else if (ft === 'TRAC') {
     comments.push(
-      `TRAC lease with lessee-guaranteed residual of ${formatCurrency(metrics.residualValue)}. Residual guarantee mitigates lessor risk but shifts value risk to lessee.`
+      `TRAC lease with lessee-guaranteed residual of ${formatCurrency(metrics.residualValue)}. Residual guarantee mitigates lessor risk but shifts value risk to lessee.`,
     );
   }
 
-  // Term coverage
   if (metrics.termCoverage > 80) {
     comments.push(
-      `Loan term covers ${metrics.termCoverage.toFixed(0)}% of equipment useful life — residual value risk is elevated. Consider shorter term or residual value guarantee.`
+      `Loan term covers ${metrics.termCoverage.toFixed(0)}% of equipment useful life — residual value risk is elevated. Consider shorter term or residual value guarantee.`,
     );
   }
 
-  // Revenue concentration
-  const revConcThreshold = (criteria && typeof criteria.maxRevenueConcentration === 'number')
-    ? criteria.maxRevenueConcentration
-    : 25;
+  const revConcThreshold =
+    criteria && typeof criteria.maxRevenueConcentration === 'number'
+      ? criteria.maxRevenueConcentration
+      : 25;
   if (metrics.revenueConcentration > revConcThreshold) {
     comments.push(
-      `Equipment cost represents ${metrics.revenueConcentration.toFixed(1)}% of annual revenue — relatively concentrated exposure for the borrower's operations.`
+      `Equipment cost represents ${metrics.revenueConcentration.toFixed(1)}% of annual revenue — relatively concentrated exposure for the borrower's operations.`,
     );
   }
 
-  // Essential use
   if (inputs.essentialUse) {
     comments.push(
-      `Essential-use classification strengthens the credit profile under the essential-use doctrine; equipment is critical to borrower's revenue generation.`
+      `Essential-use classification strengthens the credit profile under the essential-use doctrine; equipment is critical to borrower's revenue generation.`,
     );
   } else {
     comments.push(
-      `Non-essential equipment may present higher recovery risk in a default scenario; consider additional collateral coverage.`
+      `Non-essential equipment may present higher recovery risk in a default scenario; consider additional collateral coverage.`,
     );
   }
 
@@ -368,21 +396,26 @@ export function generateCommentary(inputs, metrics, riskScore, criteria = null) 
 
 // ------- Suggested Structure -------
 
-export function getSuggestedStructure(inputs, metrics, compositeScore, sofr = DEFAULT_SOFR) {
-  const suggestions = {};
+export function getSuggestedStructure(
+  inputs: EquipmentFinanceInputs,
+  metrics: EquipmentMetrics,
+  compositeScore: number,
+  sofr: number = DEFAULT_SOFR,
+): SuggestedStructure {
+  const suggestions: SuggestedStructure = {
+    rateInfo: metrics.rateInfo,
+    screeningRate: metrics.rate,
+    rateRange: [
+      Math.max(metrics.rate - 0.005, sofr + 0.005),
+      metrics.rate + 0.005,
+    ],
+    structure: '',
+    structureType: '',
+    enhancements: [],
+  };
+
   const ft = inputs.financingType || 'EFA';
 
-  // Rate — use the same rate that drove DSCR calculation
-  suggestions.rateInfo = metrics.rateInfo;
-  suggestions.screeningRate = metrics.rate;
-
-  // Indicative range: +/- 50 bps from screening rate
-  suggestions.rateRange = [
-    Math.max(metrics.rate - 0.005, sofr + 0.005),
-    metrics.rate + 0.005,
-  ];
-
-  // Structure recommendation based on financing type
   if (ft === 'FMV') {
     suggestions.structure =
       'Fair Market Value lease — lessee has option to purchase at FMV, return, or renew at end of term. Lower periodic payments due to residual value assumption. Lessor bears residual risk; ensure remarketing channel for this equipment type.';
@@ -392,7 +425,6 @@ export function getSuggestedStructure(inputs, metrics, compositeScore, sofr = DE
       'TRAC lease — lessee guarantees a terminal residual value. If disposition proceeds differ from guaranteed amount, a rental adjustment (refund or additional charge) is applied. Commonly used for over-the-road vehicles and fleet assets.';
     suggestions.structureType = 'TRAC Lease';
   } else {
-    // EFA — recommend based on deal profile
     if (inputs.essentialUse && metrics.termCoverage < 80) {
       suggestions.structure =
         'Equipment Finance Agreement (EFA) recommended — borrower takes ownership, fully amortizing payments. Essential-use asset with favorable term-to-useful-life coverage supports lender recovery profile.';
@@ -406,43 +438,28 @@ export function getSuggestedStructure(inputs, metrics, compositeScore, sofr = DE
     suggestions.structureType = 'EFA';
   }
 
-  // Enhancements
-  suggestions.enhancements = [];
   if (compositeScore < 55) {
     suggestions.enhancements.push('Personal guarantee from principal(s)');
   }
   if (metrics.termCoverage > 80) {
-    suggestions.enhancements.push(
-      'Reduce term to under 80% of equipment useful life'
-    );
+    suggestions.enhancements.push('Reduce term to under 80% of equipment useful life');
   }
   if (metrics.dscr < 1.5) {
-    suggestions.enhancements.push(
-      'Cash sweep or step-up payment structure to accelerate deleveraging'
-    );
+    suggestions.enhancements.push('Cash sweep or step-up payment structure to accelerate deleveraging');
   }
   if (metrics.leverage > 4.0) {
-    suggestions.enhancements.push(
-      'Additional collateral or cross-collateralization with other assets'
-    );
+    suggestions.enhancements.push('Additional collateral or cross-collateralization with other assets');
   }
   if (compositeScore < 75 && compositeScore >= 35) {
-    suggestions.enhancements.push(
-      'Maintenance reserve account for equipment upkeep'
-    );
+    suggestions.enhancements.push('Maintenance reserve account for equipment upkeep');
   }
   if (metrics.revenueConcentration > 25) {
-    suggestions.enhancements.push(
-      'Consider phased funding or reduced deal size relative to borrower capacity'
-    );
+    suggestions.enhancements.push('Consider phased funding or reduced deal size relative to borrower capacity');
   }
   if (metrics.ltv > 0.9 && (inputs.downPayment || 0) === 0) {
-    suggestions.enhancements.push(
-      'Require minimum 10–15% equity contribution / down payment to reduce LTV'
-    );
+    suggestions.enhancements.push('Require minimum 10–15% equity contribution / down payment to reduce LTV');
   }
 
-  // Deal sizing flag
   const maxSuggested = (inputs.ebitda || 0) * 3;
   if ((inputs.equipmentCost || 0) > maxSuggested && maxSuggested > 0) {
     suggestions.sizingFlag = `Deal size of ${formatCurrency(inputs.equipmentCost)} appears large relative to borrower's ${formatCurrency(inputs.ebitda)} EBITDA (${(inputs.equipmentCost / inputs.ebitda).toFixed(1)}x). Assess whether the borrower can absorb this level of incremental debt.`;
@@ -453,23 +470,28 @@ export function getSuggestedStructure(inputs, metrics, compositeScore, sofr = DE
 
 // ------- Stress Testing -------
 
-export function runStressTest(inputs, sofr = DEFAULT_SOFR) {
+export function runStressTest(
+  inputs: EquipmentFinanceInputs,
+  sofr: number = DEFAULT_SOFR,
+): StressScenario[] {
   const declines = [0, 0.10, 0.20, 0.30];
   const labels = ['Base Case', 'Mild Stress (-10%)', 'Moderate (-20%)', 'Severe (-30%)'];
 
   return declines.map((pct, i) => {
-    const stressed = {
+    const stressed: EquipmentFinanceInputs = {
       ...inputs,
       ebitda: (inputs.ebitda || 0) * (1 - pct),
     };
     const m = calculateMetrics(stressed, sofr);
     const rs = calculateRiskScore(stressed, m);
-    const maintCapex = (stressed.maintenanceCapex || 0) > 0
-      ? stressed.maintenanceCapex
-      : (stressed.annualRevenue || 0) * 0.03;
-    const debtService = (stressed.actualAnnualDebtService || 0) > 0
-      ? stressed.actualAnnualDebtService
-      : (m.existingDebtService || 0) + (m.newAnnualDebtService || 0);
+    const maintCapex =
+      (stressed.maintenanceCapex || 0) > 0
+        ? stressed.maintenanceCapex!
+        : (stressed.annualRevenue || 0) * 0.03;
+    const debtService =
+      (stressed.actualAnnualDebtService || 0) > 0
+        ? stressed.actualAnnualDebtService!
+        : (m.existingDebtService || 0) + (m.newAnnualDebtService || 0);
     const fccr = computeFccr(stressed.ebitda, maintCapex, debtService);
     return {
       label: labels[i],
@@ -485,15 +507,26 @@ export function runStressTest(inputs, sofr = DEFAULT_SOFR) {
 
 // ------- Export Summary -------
 
-export function generateExportSummary(inputs, metrics, riskScore, recommendation, commentary, structure, sofr = DEFAULT_SOFR, criteria = null) {
-  const termCoverageTarget = (criteria && typeof criteria.maxTermCoverage === 'number')
-    ? criteria.maxTermCoverage
-    : 80;
-  const revConcTarget = (criteria && typeof criteria.maxRevenueConcentration === 'number')
-    ? criteria.maxRevenueConcentration
-    : 25;
+export function generateExportSummary(
+  inputs: EquipmentFinanceInputs,
+  metrics: EquipmentMetrics,
+  riskScore: RiskScore,
+  recommendation: Recommendation,
+  commentary: string[],
+  structure: SuggestedStructure,
+  sofr: number = DEFAULT_SOFR,
+  criteria: ExportCriteria = null,
+): string {
+  const termCoverageTarget =
+    criteria && typeof criteria.maxTermCoverage === 'number'
+      ? criteria.maxTermCoverage
+      : 80;
+  const revConcTarget =
+    criteria && typeof criteria.maxRevenueConcentration === 'number'
+      ? criteria.maxRevenueConcentration
+      : 25;
   const ft = inputs.financingType || 'EFA';
-  const lines = [];
+  const lines: string[] = [];
   lines.push('EQUIPMENT FINANCE DEAL SCREENING');
   lines.push('PRELIMINARY ASSESSMENT');
   lines.push('='.repeat(60));
@@ -538,7 +571,7 @@ export function generateExportSummary(inputs, metrics, riskScore, recommendation
     lines.push(`Residual Value:   ${formatCurrencyFull(metrics.residualValue)} (${ft})`);
   }
   const amort = generateAmortizationSchedule(metrics.financedPrincipal, metrics.rate, inputs.loanTerm);
-  if (amort && amort.totalInterest > 0) {
+  if (!Array.isArray(amort) && amort.totalInterest > 0) {
     lines.push(`Total Interest:   ${formatCurrencyFull(amort.totalInterest)}`);
     lines.push(`Total Cost:       ${formatCurrencyFull(amort.totalCost)}`);
   }
@@ -561,7 +594,7 @@ export function generateExportSummary(inputs, metrics, riskScore, recommendation
     lines.push('-'.repeat(60));
     lines.push('SUGGESTED ENHANCEMENTS');
     lines.push('-'.repeat(60));
-    structure.enhancements.forEach((e, i) => lines.push(`- ${e}`));
+    structure.enhancements.forEach((e) => lines.push(`- ${e}`));
   }
   lines.push('');
   lines.push('-'.repeat(60));
@@ -574,12 +607,12 @@ export function generateExportSummary(inputs, metrics, riskScore, recommendation
 
 // ------- CSV Parsing -------
 
-export function parseCsvDeals(csvText) {
+export function parseCsvDeals(csvText: string): { id: string; inputs: EquipmentFinanceInputs }[] {
   const lines = csvText.trim().split('\n');
   if (lines.length < 2) return [];
-  const headers = lines[0].split(',').map(h => h.trim().toLowerCase().replace(/[^a-z0-9]/g, ''));
+  const headers = lines[0].split(',').map((h) => h.trim().toLowerCase().replace(/[^a-z0-9]/g, ''));
 
-  const fieldMap = {
+  const fieldMap: Record<string, string> = {
     companyname: 'companyName', company: 'companyName', name: 'companyName',
     yearsinbusiness: 'yearsInBusiness', years: 'yearsInBusiness',
     annualrevenue: 'annualRevenue', revenue: 'annualRevenue',
@@ -610,9 +643,9 @@ export function parseCsvDeals(csvText) {
     'equipmentCost', 'downPayment', 'usefulLife', 'loanTerm',
   ]);
 
-  return lines.slice(1).filter(l => l.trim()).map((line, idx) => {
-    const values = line.split(',').map(v => v.trim());
-    const inputs = {
+  return lines.slice(1).filter((l) => l.trim()).map((line, idx) => {
+    const values = line.split(',').map((v) => v.trim());
+    const inputs: EquipmentFinanceInputs = {
       companyName: '',
       yearsInBusiness: 0, annualRevenue: 0, ebitda: 0, totalExistingDebt: 0,
       actualAnnualDebtService: 0, maintenanceCapex: 0,
@@ -628,12 +661,13 @@ export function parseCsvDeals(csvText) {
       const field = fieldMap[h];
       if (!field || i >= values.length) return;
       const val = values[i];
+      const inp = inputs as unknown as Record<string, unknown>;
       if (field === 'essentialUse') {
-        inputs[field] = ['true', 'yes', '1', 'y'].includes(val.toLowerCase());
+        inp[field] = ['true', 'yes', '1', 'y'].includes(val.toLowerCase());
       } else if (numericFields.has(field)) {
-        inputs[field] = parseFloat(val.replace(/[^0-9.-]/g, '')) || 0;
+        inp[field] = parseFloat(val.replace(/[^0-9.-]/g, '')) || 0;
       } else {
-        inputs[field] = val;
+        inp[field] = val;
       }
     });
 
@@ -643,7 +677,7 @@ export function parseCsvDeals(csvText) {
 
 // ------- Validation -------
 
-export function isInputValid(inputs) {
+export function isInputValid(inputs: Partial<EquipmentFinanceInputs>): boolean {
   return (
     (inputs.ebitda || 0) > 0 &&
     (inputs.equipmentCost || 0) > 0 &&

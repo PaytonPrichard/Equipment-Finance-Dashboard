@@ -11,6 +11,19 @@ import {
 } from '../../utils/format';
 import { computeFccr } from '../../utils/borrowerMetrics';
 
+import type {
+  InventoryFinanceInputs,
+  InventoryFinanceMetrics,
+  CompositionMix,
+  RiskScore,
+  FactorDescriptor,
+  Recommendation,
+  RateInfo,
+  CreditRating,
+  IndustrySector,
+} from '../../types';
+import { asBps } from '../../types';
+
 import {
   DEFAULT_SOFR,
   EXISTING_DEBT_SERVICE_RATE,
@@ -25,9 +38,54 @@ import {
   MIN_TURNOVER,
 } from './constants';
 
+interface InventoryStressScenario {
+  label: string;
+  ebitdaDecline: number;
+  obsolescenceIncreasePp: number;
+  turnoverDecline: number;
+  ebitda: number;
+  borrowingBase: number;
+  dscr: number;
+  leverage: number;
+  fccr: number | null;
+  obsolescenceRate: number;
+  turnoverRatio: number;
+  score: number;
+}
+
+interface SublimitEntry {
+  amount: number;
+  advanceRate: number;
+}
+
+interface InventorySuggestedStructure {
+  rateInfo: RateInfo;
+  screeningRate: number;
+  rateRange: [number, number];
+  facilityType: string;
+  structureType: string;
+  maxCommitment: number;
+  advanceRate: number;
+  sublimits: {
+    rawMaterials: SublimitEntry;
+    workInProgress: SublimitEntry;
+    finishedGoods: SublimitEntry;
+  };
+  structure: string;
+  fieldExamFrequency: string;
+  reportingFrequency: string;
+  reportingRequirements: string[];
+  enhancements: string[];
+  sizingFlag?: string;
+}
+
 // ------- Rate Calculation -------
 
-export function getScreeningRate(creditRating, industrySector, sofr = DEFAULT_SOFR) {
+export function getScreeningRate(
+  creditRating: CreditRating,
+  industrySector: IndustrySector,
+  sofr: number = DEFAULT_SOFR,
+): RateInfo {
   const tier = INDUSTRY_RISK_TIER[industrySector] || 'moderate';
   const creditBps = CREDIT_SPREAD_BPS[creditRating] || 0;
   const industryBps = TIER_SPREAD_BPS[tier] || 0;
@@ -35,17 +93,20 @@ export function getScreeningRate(creditRating, industrySector, sofr = DEFAULT_SO
 
   return {
     sofr,
-    baseSpread: BASE_SPREAD_BPS,
-    creditAdj: creditBps,
-    industryAdj: industryBps,
-    totalSpread,
+    baseSpread: asBps(BASE_SPREAD_BPS),
+    creditAdj: asBps(creditBps),
+    industryAdj: asBps(industryBps),
+    totalSpread: asBps(totalSpread),
     allInRate: sofr + totalSpread / 10000,
   };
 }
 
 // ------- Core Metrics -------
 
-export function calculateMetrics(inputs, sofr = DEFAULT_SOFR) {
+export function calculateMetrics(
+  inputs: InventoryFinanceInputs,
+  sofr: number = DEFAULT_SOFR,
+): InventoryFinanceMetrics {
   const {
     annualRevenue,
     ebitda,
@@ -84,7 +145,7 @@ export function calculateMetrics(inputs, sofr = DEFAULT_SOFR) {
   const obsoleteDollars = totalInv * obsoletePctFrac;
 
   // Composition fractions for downstream use (stored as 0-1)
-  const compositionMix = {
+  const compositionMix: CompositionMix = {
     rawPct: rawPctFrac,
     wipPct: wipPctFrac,
     finishedPct: finishedPctFrac,
@@ -183,28 +244,31 @@ export function calculateMetrics(inputs, sofr = DEFAULT_SOFR) {
 
 // ------- Risk Scoring -------
 
-export function calculateRiskScore(inputs, metrics) {
-  const factors = {};
+export function calculateRiskScore(
+  inputs: InventoryFinanceInputs,
+  metrics: InventoryFinanceMetrics,
+): RiskScore {
+  const factors: Record<string, number> = {};
 
   // DSCR (20%) — higher is better
   factors.dscr = lerp(metrics.dscr, [
     [0, 5], [0.8, 15], [1.0, 25], [1.25, 50], [1.5, 72], [2.0, 90], [3.0, 100],
-  ]);
+  ] as [number, number][]);
 
   // Leverage (15%) — lower is better
   factors.leverage = lerp(metrics.leverage, [
     [0, 100], [2.0, 90], [3.5, 72], [5.0, 48], [7.0, 22], [10.0, 5],
-  ]);
+  ] as [number, number][]);
 
   // Inventory Quality (20%) — based on turnover and obsolescence
   // Turnover component (0-100): 6x+ is strong, <4x is concerning
   const turnoverScore = lerp(metrics.turnoverRatio, [
     [0, 5], [2, 15], [4, 45], [6, 75], [8, 90], [12, 100],
-  ]);
+  ] as [number, number][]);
   // Obsolescence component (0-100): lower is better
   const obsolescenceScore = lerp(metrics.obsolescenceRate, [
     [0, 100], [0.05, 80], [0.10, 55], [0.15, 30], [0.25, 10], [0.40, 0],
-  ]);
+  ] as [number, number][]);
   factors.inventoryQuality = Math.round(turnoverScore * 0.6 + obsolescenceScore * 0.4);
 
   // Composition (15%) — penalize high WIP concentration
@@ -213,7 +277,7 @@ export function calculateRiskScore(inputs, metrics) {
   const finishedPct = metrics.compositionMix.finishedPct;
   factors.composition = lerp(wipPct, [
     [0, 90], [0.10, 80], [0.20, 65], [0.35, 45], [0.50, 25], [0.70, 10],
-  ]);
+  ] as [number, number][]);
   // Bonus for high finished goods percentage
   if (finishedPct > 0.60) {
     factors.composition = Math.min(100, factors.composition + 10);
@@ -223,12 +287,12 @@ export function calculateRiskScore(inputs, metrics) {
   const nolv = (inputs.nolvPct || 0) > 0 ? inputs.nolvPct / 100 : 0.50; // input is %, convert to decimal
   factors.liquidationValue = lerp(nolv, [
     [0, 5], [0.20, 20], [0.40, 50], [0.55, 70], [0.70, 88], [0.85, 100],
-  ]);
+  ] as [number, number][]);
 
   // Years in Business (10%) — more is better
   factors.yearsInBusiness = lerp(inputs.yearsInBusiness, [
     [0, 15], [2, 40], [5, 65], [10, 85], [20, 95], [30, 100],
-  ]);
+  ] as [number, number][]);
 
   // Industry (10%) — categorical
   const tier = INDUSTRY_RISK_TIER[inputs.industrySector] || 'moderate';
@@ -251,7 +315,11 @@ export function calculateRiskScore(inputs, metrics) {
 
 // ------- Factor Descriptors -------
 // Universal shape for the PDF renderer.
-export function describeFactors(inputs, metrics, riskScore) {
+export function describeFactors(
+  inputs: InventoryFinanceInputs,
+  metrics: InventoryFinanceMetrics,
+  riskScore: RiskScore,
+): FactorDescriptor[] {
   const f = riskScore?.factors || {};
   const tier = INDUSTRY_RISK_TIER[inputs.industrySector] || 'moderate';
   const nolvFrac = (inputs.nolvPct || 0) / 100;
@@ -269,7 +337,7 @@ export function describeFactors(inputs, metrics, riskScore) {
 
 // ------- Recommendation -------
 
-export function getRecommendation(compositeScore) {
+export function getRecommendation(compositeScore: number): Recommendation {
   if (compositeScore >= 75)
     return {
       category: 'Strong Prospect',
@@ -309,8 +377,12 @@ export function getRecommendation(compositeScore) {
 
 // ------- Commentary -------
 
-export function generateCommentary(inputs, metrics, riskScore) {
-  const comments = [];
+export function generateCommentary(
+  inputs: InventoryFinanceInputs,
+  metrics: InventoryFinanceMetrics,
+  riskScore: RiskScore,
+): string[] {
+  const comments: string[] = [];
 
   // DSCR
   if (metrics.dscr > 2.0) {
@@ -421,37 +493,45 @@ export function generateCommentary(inputs, metrics, riskScore) {
 
 // ------- Suggested Structure -------
 
-export function getSuggestedStructure(inputs, metrics, compositeScore, sofr = DEFAULT_SOFR) {
-  const suggestions = {};
-
-  // Rate
-  suggestions.rateInfo = metrics.rateInfo;
-  suggestions.screeningRate = metrics.rate;
-
-  // Indicative range: +/- 50 bps from screening rate
-  suggestions.rateRange = [
-    Math.max(metrics.rate - 0.005, sofr + 0.005),
-    metrics.rate + 0.005,
-  ];
-
-  // Facility type — revolving credit facility with inventory sublimits
-  suggestions.facilityType = 'Revolving Credit Facility';
-  suggestions.structureType = 'Inventory ABL Revolver';
-
-  // Borrowing base
-  suggestions.maxCommitment = metrics.borrowingBase;
-  suggestions.advanceRate = metrics.appliedAdvanceRate;
-
-  // Sublimits by inventory category — convert composition percentages to
-  // dollar amounts using total inventory, then multiply by the category cap.
+export function getSuggestedStructure(
+  inputs: InventoryFinanceInputs,
+  metrics: InventoryFinanceMetrics,
+  compositeScore: number,
+  sofr: number = DEFAULT_SOFR,
+): InventorySuggestedStructure {
   const totalInv = inputs.totalInventory || 0;
   const rawDollars = totalInv * ((inputs.rawMaterials || 0) / 100);
   const wipDollars = totalInv * ((inputs.workInProgress || 0) / 100);
   const finishedDollars = totalInv * ((inputs.finishedGoods || 0) / 100);
-  suggestions.sublimits = {
-    rawMaterials: { amount: rawDollars * MAX_ADVANCE_RATE_RAW, advanceRate: MAX_ADVANCE_RATE_RAW },
-    workInProgress: { amount: wipDollars * MAX_ADVANCE_RATE_WIP, advanceRate: MAX_ADVANCE_RATE_WIP },
-    finishedGoods: { amount: finishedDollars * MAX_ADVANCE_RATE_FINISHED, advanceRate: MAX_ADVANCE_RATE_FINISHED },
+
+  const reportingFrequency = compositeScore >= 55 ? 'Monthly' : 'Weekly';
+
+  const suggestions: InventorySuggestedStructure = {
+    rateInfo: metrics.rateInfo,
+    screeningRate: metrics.rate,
+    rateRange: [
+      Math.max(metrics.rate - 0.005, sofr + 0.005),
+      metrics.rate + 0.005,
+    ],
+    facilityType: 'Revolving Credit Facility',
+    structureType: 'Inventory ABL Revolver',
+    maxCommitment: metrics.borrowingBase,
+    advanceRate: metrics.appliedAdvanceRate,
+    sublimits: {
+      rawMaterials: { amount: rawDollars * MAX_ADVANCE_RATE_RAW, advanceRate: MAX_ADVANCE_RATE_RAW },
+      workInProgress: { amount: wipDollars * MAX_ADVANCE_RATE_WIP, advanceRate: MAX_ADVANCE_RATE_WIP },
+      finishedGoods: { amount: finishedDollars * MAX_ADVANCE_RATE_FINISHED, advanceRate: MAX_ADVANCE_RATE_FINISHED },
+    },
+    structure: '',
+    fieldExamFrequency: '',
+    reportingFrequency,
+    reportingRequirements: [
+      `${reportingFrequency} borrowing base certificates`,
+      'Perpetual inventory or cycle count reports',
+      'Quarterly inventory aging analysis',
+      'Annual third-party inventory appraisal',
+    ],
+    enhancements: [],
   };
 
   // Structure description
@@ -478,14 +558,7 @@ export function getSuggestedStructure(inputs, metrics, compositeScore, sofr = DE
     suggestions.fieldExamFrequency = 'Monthly during initial 6-month period, then quarterly';
   }
 
-  // Reporting requirements
-  suggestions.reportingFrequency = compositeScore >= 55 ? 'Monthly' : 'Weekly';
-  suggestions.reportingRequirements = [
-    `${suggestions.reportingFrequency} borrowing base certificates`,
-    'Perpetual inventory or cycle count reports',
-    'Quarterly inventory aging analysis',
-    'Annual third-party inventory appraisal',
-  ];
+  // Additional reporting requirements
   if (metrics.obsolescenceRate > OBSOLESCENCE_THRESHOLD) {
     suggestions.reportingRequirements.push('Monthly obsolescence / slow-moving inventory report');
   }
@@ -494,7 +567,6 @@ export function getSuggestedStructure(inputs, metrics, compositeScore, sofr = DE
   }
 
   // Enhancements
-  suggestions.enhancements = [];
   if (compositeScore < 55) {
     suggestions.enhancements.push('Personal guarantee from principal(s)');
   }
@@ -545,7 +617,10 @@ export function getSuggestedStructure(inputs, metrics, compositeScore, sofr = DE
 
 // ------- Stress Testing -------
 
-export function runStressTest(inputs, sofr = DEFAULT_SOFR) {
+export function runStressTest(
+  inputs: InventoryFinanceInputs,
+  sofr: number = DEFAULT_SOFR,
+): InventoryStressScenario[] {
   // obsoleteInventory input is a percentage (0-100). Scenarios shift it in
   // percentage-point terms. turnoverDecline is a fractional reduction on the
   // turnover ratio (a multiplier), unchanged from before.
@@ -565,7 +640,7 @@ export function runStressTest(inputs, sofr = DEFAULT_SOFR) {
       ? inputs.inventoryTurnover * (1 - scenario.turnoverDecline)
       : 0;
 
-    const stressed = {
+    const stressed: InventoryFinanceInputs = {
       ...inputs,
       ebitda: (inputs.ebitda || 0) * (1 - scenario.ebitdaDecline),
       obsoleteInventory: stressedObsolete,
@@ -601,7 +676,7 @@ export function runStressTest(inputs, sofr = DEFAULT_SOFR) {
 
 // ------- Validation -------
 
-export function isInputValid(inputs) {
+export function isInputValid(inputs: Partial<InventoryFinanceInputs>): boolean {
   return (
     (inputs.totalInventory || 0) > 0 &&
     (inputs.annualRevenue || 0) > 0 &&
@@ -611,8 +686,17 @@ export function isInputValid(inputs) {
 
 // ------- Export Summary -------
 
-export function generateExportSummary(inputs, metrics, riskScore, recommendation, commentary, structure, sofr = DEFAULT_SOFR) {
-  const lines = [];
+export function generateExportSummary(
+  inputs: InventoryFinanceInputs,
+  metrics: InventoryFinanceMetrics,
+  riskScore: RiskScore,
+  recommendation: Recommendation,
+  commentary: string[],
+  structure: InventorySuggestedStructure,
+  sofr: number = DEFAULT_SOFR,
+  criteria?: unknown,
+): string {
+  const lines: string[] = [];
   lines.push('INVENTORY FINANCE DEAL SCREENING');
   lines.push('PRELIMINARY ASSESSMENT — ABL REVOLVING FACILITY');
   lines.push('='.repeat(60));
@@ -712,12 +796,12 @@ export function generateExportSummary(inputs, metrics, riskScore, recommendation
 
 // ------- CSV Parsing -------
 
-export function parseCsvDeals(csvText) {
+export function parseCsvDeals(csvText: string): { id: string; inputs: InventoryFinanceInputs }[] {
   const lines = csvText.trim().split('\n');
   if (lines.length < 2) return [];
   const headers = lines[0].split(',').map(h => h.trim().toLowerCase().replace(/[^a-z0-9]/g, ''));
 
-  const fieldMap = {
+  const fieldMap: Record<string, string> = {
     companyname: 'companyName', company: 'companyName', name: 'companyName',
     yearsinbusiness: 'yearsInBusiness', years: 'yearsInBusiness',
     annualrevenue: 'annualRevenue', revenue: 'annualRevenue',
@@ -755,7 +839,7 @@ export function parseCsvDeals(csvText) {
 
   return lines.slice(1).filter(l => l.trim()).map((line, idx) => {
     const values = line.split(',').map(v => v.trim());
-    const deal = {
+    const deal: InventoryFinanceInputs = {
       companyName: '',
       yearsInBusiness: 0, annualRevenue: 0, ebitda: 0, totalExistingDebt: 0,
       actualAnnualDebtService: 0, maintenanceCapex: 0,
@@ -771,12 +855,13 @@ export function parseCsvDeals(csvText) {
       const field = fieldMap[h];
       if (!field || i >= values.length) return;
       const val = values[i];
+      const inp = deal as unknown as Record<string, unknown>;
       if (field === 'perishable') {
-        deal[field] = ['true', 'yes', '1', 'y'].includes(val.toLowerCase());
+        inp[field] = ['true', 'yes', '1', 'y'].includes(val.toLowerCase());
       } else if (numericFields.has(field)) {
-        deal[field] = parseFloat(val.replace(/[^0-9.-]/g, '')) || 0;
+        inp[field] = parseFloat(val.replace(/[^0-9.-]/g, '')) || 0;
       } else {
-        deal[field] = val;
+        inp[field] = val;
       }
     });
 

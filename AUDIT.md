@@ -144,6 +144,30 @@ The top-level component carries routing, auth state, all module switching, deal 
 
 **Fix.** Log full error server-side, return a stable error code + generic message client-side. `details` field only included when a debug flag is set on internal builds.
 
+### P1-9. AR aging-bucket totals not validated server-side
+
+`server-lib/validate.js:317-321` validates each of `arUnder30`, `arOver30`, `arOver60`, `arOver90` independently as 0-100 percentages but applies no cross-field sum check. A payload with all four buckets at 50 (total = 200%) passes validation and is persisted. The AR scoring module then weights these buckets in the eligibility and dilution calculations, producing a nonsensical borrowing base.
+
+**Fix.** After the four `checkPercent` calls, sum whichever buckets are present and reject if the total deviates from 100 by more than ±2pp (rounding tolerance). Only apply the check when at least one bucket is supplied — omitting all four should remain valid.
+
+### P1-10. api/deals.js and api/pipeline.js use equipment-only validator regardless of asset_class
+
+`api/deals.js:7,66` and `api/pipeline.js:7,112` import only `validateDealInputs` and call it unconditionally, ignoring any `asset_class` field in the payload. An AR deal submitted through either endpoint is validated against equipment-finance field requirements; AR-specific required fields (e.g., `totalAROutstanding`) are never checked, and AR/inventory payloads with junk equipment fields pass silently.
+
+**Fix.** Thread `asset_class` through both endpoints and dispatch to the correct validator using the same `validateInputs(assetClass, inputs)` helper pattern already used in `api/score-deal.js` and `api/v1.js`. Alternatively, if these endpoints are intentionally equipment-only, add an explicit 400 rejection for any `asset_class` value other than `equipment_finance`.
+
+### P1-11. recomputeScore failure surfaces as HTTP 400, masking server errors
+
+`server-lib/scoring.js:29-52`: when the scoring module throws (dynamic import failure, null composite, unexpected exception), `recomputeScore` returns `{ score: null, error: '...' }`. `api/score-deal.js:104-107` and `api/v1.js:72-75` forward this as HTTP 400 — a client-error status — regardless of whether the root cause is a bad request or a server-side module failure. This is how the ESM/CJS import error (`score: null, error: 'Scoring failed: ...'`) looked identical to a validation rejection for the first three production test runs before the P0-1 investigation surfaced it.
+
+**Fix.** Distinguish error categories in callers: unknown `asset_class` or validation failure → 400. Module import failure, uncaught exception inside scoring, or null composite on valid inputs → 500. The simplest approach is an `errorType` field on the `recomputeScore` return (`'client'` vs `'server'`) so API handlers can route without string-matching the error message.
+
+### P1-12. webhook.site URLs registered in production org's webhook config
+
+webhook.site endpoints were added to the production org during integration testing. Every `deal.created`, `deal.scored`, and `pipeline.stage_changed` event posts the deal name, score, and stage to a public bucket visible to anyone with the webhook.site token — and to anyone who discovers the URL. There is no automatic expiry.
+
+**Fix.** Remove any `webhook.site` (or other non-production) URLs from the production org's webhook config after each test run. Longer term, run integration tests against a dedicated test org so production webhook config is never written to. Consider adding a guard to `scripts/test-crm-integration.js` that aborts if any registered webhook URL for a non-localhost org contains `webhook.site`.
+
 ---
 
 ## P2 — Smells and Polish
@@ -184,6 +208,12 @@ Tests exist for: scoring modules (equipment, AR, inventory), `screeningCriteria.
 ### P2-5. CSV parser silently coerces invalid numbers to 0
 
 `scoring.js:625`: `parseFloat(val.replace(/[^0-9.-]/g, '')) || 0`. A CSV row with `revenue = "TBD"` becomes revenue=0, which then quietly fails screening with no surfaced reason. Better to track parse failures and surface them on the batch screening result.
+
+### P2-6. validate.js has no unit tests
+
+`server-lib/validate.js` now exports three validators (`validateDealInputs`, `validateARInputs`, `validateInventoryInputs`) plus shared helpers (`checkSize`, `checkPercent`, `checkCurrency`, `checkBorrowerCore`). None have tests. A bad merge or threshold change could silently regress validation for any asset class with no automated signal.
+
+**Fix.** Add `server-lib/validate.test.js` (Jest, `--testEnvironment node`) covering: required-field rejection, percent-range rejection (0-100 bounds), currency-range rejection (negative, over $1T), size-cap rejection (>32KB payload), and a fully valid input acceptance case for each of the three validators. The P1-9 aging-bucket sum check should get its own test once that fix is in place.
 
 ---
 
