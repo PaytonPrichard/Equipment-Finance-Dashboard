@@ -175,7 +175,7 @@ export function calculateMetrics(
     : 0;
 
   // Apply NOLV cap if provided — input is percentage (0-100), convert to decimal
-  const nolv = (nolvPct || 0) > 0 ? nolvPct / 100 : 1.0;
+  const nolv = nolvPct && nolvPct > 0 ? nolvPct / 100 : 1.0;
   const effectiveAdvanceRate = Math.min(blendedAdvanceRate, nolv);
 
   // Apply perishable discount — perishable goods get 15% haircut on advance rate
@@ -184,7 +184,7 @@ export function calculateMetrics(
     : effectiveAdvanceRate;
 
   // Cap at requested advance rate if specified (input is percentage 0-100)
-  const requestedDecimal = (requestedAdvanceRate || 0) > 0 ? requestedAdvanceRate / 100 : 0;
+  const requestedDecimal = requestedAdvanceRate && requestedAdvanceRate > 0 ? requestedAdvanceRate / 100 : 0;
   const appliedAdvanceRate = requestedDecimal > 0
     ? Math.min(finalAdvanceRate, requestedDecimal)
     : finalAdvanceRate;
@@ -195,19 +195,19 @@ export function calculateMetrics(
   // --- Turnover & days ---
   // Use provided turnover, or calculate from COGS estimate (revenue * 0.65 as proxy)
   const estimatedCOGS = annualRevenue * 0.65;
-  const turnoverRatio = (inventoryTurnover || 0) > 0
+  const turnoverRatio: number = inventoryTurnover && inventoryTurnover > 0
     ? inventoryTurnover
     : (totalInv > 0 ? estimatedCOGS / totalInv : 0);
 
-  const daysOnHand = (averageDaysOnHand || 0) > 0
+  const daysOnHand: number = averageDaysOnHand && averageDaysOnHand > 0
     ? averageDaysOnHand
     : (turnoverRatio > 0 ? 365 / turnoverRatio : 0);
 
   // --- Debt service & credit metrics ---
   // For revolving facilities, annual debt service = borrowing base * rate (interest only)
   const newAnnualDebtService = borrowingBase * rate;
-  const existingDebtService =
-    (inputs.actualAnnualDebtService || 0) > 0
+  const existingDebtService: number =
+    inputs.actualAnnualDebtService && inputs.actualAnnualDebtService > 0
       ? inputs.actualAnnualDebtService
       : (totalExistingDebt || 0) * EXISTING_DEBT_SERVICE_RATE;
   const debtServiceEstimated = !((inputs.actualAnnualDebtService || 0) > 0);
@@ -284,7 +284,7 @@ export function calculateRiskScore(
   }
 
   // Liquidation Value (10%) — NOLV percentage; higher is better
-  const nolv = (inputs.nolvPct || 0) > 0 ? inputs.nolvPct / 100 : 0.50; // input is %, convert to decimal
+  const nolv = inputs.nolvPct && inputs.nolvPct > 0 ? inputs.nolvPct / 100 : 0.50; // input is %, convert to decimal
   factors.liquidationValue = lerp(nolv, [
     [0, 5], [0.20, 20], [0.40, 50], [0.55, 70], [0.70, 88], [0.85, 100],
   ] as [number, number][]);
@@ -452,7 +452,7 @@ export function generateCommentary(
   }
 
   // Liquidation value — nolvPct input is in 0-100; convert to fraction.
-  const nolvFrac = (inputs.nolvPct || 0) > 0 ? inputs.nolvPct / 100 : null;
+  const nolvFrac = inputs.nolvPct && inputs.nolvPct > 0 ? inputs.nolvPct / 100 : null;
   if (nolvFrac !== null) {
     if (nolvFrac >= 0.65) {
       comments.push(
@@ -636,7 +636,7 @@ export function runStressTest(
       (inputs.obsoleteInventory || 0) + scenario.obsolescenceIncreasePp,
       100
     );
-    const stressedTurnover = (inputs.inventoryTurnover || 0) > 0
+    const stressedTurnover = inputs.inventoryTurnover && inputs.inventoryTurnover > 0
       ? inputs.inventoryTurnover * (1 - scenario.turnoverDecline)
       : 0;
 
@@ -719,7 +719,7 @@ export function generateExportSummary(
   lines.push(`Perishable:       ${inputs.perishable ? 'Yes' : 'No'}`);
   lines.push(`Turnover Ratio:   ${metrics.turnoverRatio.toFixed(1)}x`);
   lines.push(`Days on Hand:     ${Math.round(metrics.daysOnHand)} days`);
-  if ((inputs.nolvPct || 0) > 0) {
+  if (inputs.nolvPct && inputs.nolvPct > 0) {
     lines.push(`NOLV %:           ${inputs.nolvPct.toFixed(0)}%`);
   }
   lines.push('');

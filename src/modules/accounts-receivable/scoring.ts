@@ -118,8 +118,8 @@ export function calculateMetrics(
 
   // Debt service: estimate annual cost of the revolver at full draw
   const newAnnualDebtService = borrowingBase * effectiveRate;
-  const existingDebtService =
-    (inputs.actualAnnualDebtService || 0) > 0
+  const existingDebtService: number =
+    inputs.actualAnnualDebtService && inputs.actualAnnualDebtService > 0
       ? inputs.actualAnnualDebtService
       : (totalExistingDebt || 0) * EXISTING_DEBT_SERVICE_RATE;
   const debtServiceEstimated = !((inputs.actualAnnualDebtService || 0) > 0);
@@ -545,10 +545,10 @@ export function runStressTest(
     const m = calculateMetrics(stressed, sofr);
     const rs = calculateRiskScore(stressed, m);
     const maintCapex = (stressed.maintenanceCapex || 0) > 0
-      ? stressed.maintenanceCapex
+      ? stressed.maintenanceCapex!
       : (stressed.annualRevenue || 0) * 0.03;
     const debtService = (stressed.actualAnnualDebtService || 0) > 0
-      ? stressed.actualAnnualDebtService
+      ? stressed.actualAnnualDebtService!
       : (m.existingDebtService || 0) + (m.newAnnualDebtService || 0);
     const fccr = computeFccr(stressed.ebitda, maintCapex, debtService);
 
@@ -613,7 +613,7 @@ export function generateExportSummary(
   lines.push(`AR 30-60 Days:    ${formatPercent(inputs.arOver30 || 0)}`);
   lines.push(`AR 60-90 Days:    ${formatPercent(inputs.arOver60 || 0)}`);
   lines.push(`AR Over 90 Days:  ${formatPercent(inputs.arOver90 || 0)}`);
-  lines.push(`Ineligibles:      ${formatPercent(inputs.ineligiblesPct)}`);
+  lines.push(`Ineligibles:      ${formatPercent(inputs.ineligiblesPct ?? 0)}`);
   lines.push(`Eligible AR:      ${formatCurrencyFull(metrics.eligibleAR)}`);
   lines.push(`Advance Rate:     ${formatPercent(metrics.advanceRate * 100)}`);
   lines.push(`Borrowing Base:   ${formatCurrencyFull(metrics.borrowingBase)}`);

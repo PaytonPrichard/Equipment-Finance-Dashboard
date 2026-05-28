@@ -8,6 +8,7 @@
     "allowSyntheticDefaultImports": true,
     "strict": false,
     "noImplicitAny": true,
+    "strictNullChecks": true,
     "forceConsistentCasingInFileNames": true,
     "noFallthroughCasesInSwitch": true,
     "module": "esnext",

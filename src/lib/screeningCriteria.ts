@@ -124,7 +124,7 @@ export function evaluateScreening(
 
   // ---- Inventory-specific ----
   if (moduleKey === 'inventory_finance') {
-    if (c.minTurnover > 0 && metrics.turnoverRatio > 0 && metrics.turnoverRatio < c.minTurnover) {
+    if (c.minTurnover > 0 && metrics.turnoverRatio != null && metrics.turnoverRatio > 0 && metrics.turnoverRatio < c.minTurnover) {
       reasons.push({ level: 'flag', text: `Turnover ${metrics.turnoverRatio.toFixed(1)}x is below minimum (${c.minTurnover}x)` });
     }
     if (c.maxObsolescence > 0 && metrics.obsolescenceRate && metrics.obsolescenceRate * 100 > c.maxObsolescence) {

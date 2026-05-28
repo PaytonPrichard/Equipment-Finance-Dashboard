@@ -328,7 +328,7 @@ export interface StressScenario {
   ebitda: USD;
   dscr: number;
   leverage: number;
-  fccr?: number;
+  fccr?: number | null;
   score: number;
   /** AR-specific. */
   borrowingBase?: USD;

@@ -27,7 +27,7 @@ export function useOrgPlan(): OrgPlanResult {
   const [org, setOrg] = useState<OrgRow | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
-  const orgId: string | undefined = profile?.org_id;
+  const orgId = profile?.org_id ?? undefined;
 
   const fetchOrg = useCallback(async () => {
     if (!supabase || !orgId) {
