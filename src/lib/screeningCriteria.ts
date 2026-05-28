@@ -5,7 +5,28 @@
 // Stored per-user in user_preferences.screening_criteria.
 // ============================================================
 
-export const DEFAULT_CRITERIA = {
+import type {
+  ScreeningCriteria,
+  ScreeningResult,
+  ScreeningReason,
+  RiskScore,
+  BaseDealInputs,
+  AssetClass,
+  BaseMetrics,
+} from '../types';
+
+// Widened metrics type to allow access to module-specific fields across all three modules.
+// Each field is guarded by the moduleKey check at the call site, so access is safe at runtime.
+type ModuleMetrics = BaseMetrics & {
+  ltv?: number;
+  termCoverage?: number;
+  concentrationRisk?: number;
+  dilutionRate?: number;
+  turnoverRatio?: number;
+  obsolescenceRate?: number;
+};
+
+export const DEFAULT_CRITERIA: ScreeningCriteria = {
   // Score thresholds
   passScore: 75,
   flagScore: 35,
@@ -34,17 +55,15 @@ export const DEFAULT_CRITERIA = {
   maxObsolescence: 10,
 };
 
-/**
- * Evaluate a screened deal against the criteria.
- * Returns { verdict: 'pass'|'flag'|'fail', reasons: [...] }
- *
- * Reasons are objects: { level: 'fail'|'flag', text: string }
- * A 'fail' reason always forces verdict to 'fail'.
- * A 'flag' reason downgrades verdict from 'pass' to 'flag'.
- */
-export function evaluateScreening(criteria, metrics, riskScore, inputs, moduleKey) {
-  const c = { ...DEFAULT_CRITERIA, ...criteria };
-  const reasons = [];
+export function evaluateScreening(
+  criteria: Partial<ScreeningCriteria> | null | undefined,
+  metrics: ModuleMetrics,
+  riskScore: RiskScore,
+  inputs: BaseDealInputs,
+  moduleKey: AssetClass,
+): ScreeningResult {
+  const c: ScreeningCriteria = { ...DEFAULT_CRITERIA, ...criteria };
+  const reasons: ScreeningReason[] = [];
 
   // ---- Score-based verdict ----
   if (riskScore.composite < c.flagScore) {
@@ -114,25 +133,23 @@ export function evaluateScreening(criteria, metrics, riskScore, inputs, moduleKe
   }
 
   // ---- Determine final verdict ----
-  const hasFail = reasons.some(r => r.level === 'fail');
-  const hasFlag = reasons.some(r => r.level === 'flag');
+  const hasFail = reasons.some((r) => r.level === 'fail');
+  const hasFlag = reasons.some((r) => r.level === 'flag');
 
-  let verdict = 'pass';
+  let verdict: 'pass' | 'flag' | 'fail' = 'pass';
   if (hasFail) verdict = 'fail';
   else if (hasFlag) verdict = 'flag';
 
   return { verdict, reasons };
 }
 
-/**
- * Validate that a criteria object has all required fields with valid values.
- */
-export function validateCriteria(obj) {
+export function validateCriteria(obj: unknown): ScreeningCriteria | null {
   if (!obj || typeof obj !== 'object') return null;
-  const merged = { ...DEFAULT_CRITERIA };
-  for (const key of Object.keys(DEFAULT_CRITERIA)) {
-    if (typeof obj[key] === 'number' && !isNaN(obj[key]) && obj[key] >= 0) {
-      merged[key] = obj[key];
+  const merged: ScreeningCriteria = { ...DEFAULT_CRITERIA };
+  for (const key of Object.keys(DEFAULT_CRITERIA) as (keyof ScreeningCriteria)[]) {
+    const val = (obj as Record<string, unknown>)[key];
+    if (typeof val === 'number' && !isNaN(val) && val >= 0) {
+      (merged as unknown as Record<string, number>)[key] = val;
     }
   }
   // Ensure passScore > flagScore

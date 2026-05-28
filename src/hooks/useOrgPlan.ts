@@ -2,16 +2,32 @@ import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 
-/**
- * Hook to fetch and track the current org's plan status.
- * Returns plan info and expiry state.
- */
-export function useOrgPlan() {
-  const { profile } = useAuth();
-  const [org, setOrg] = useState(null);
-  const [loading, setLoading] = useState(true);
+interface OrgRow {
+  id: string;
+  name: string;
+  plan: string;
+  plan_started_at: string | null;
+  plan_expires_at: string | null;
+  max_users: number;
+}
 
-  const orgId = profile?.org_id;
+interface OrgPlanResult {
+  org: OrgRow | null;
+  plan: string;
+  isExpired: boolean;
+  isExpiringSoon: boolean;
+  daysRemaining: number | null;
+  expiresAt: Date | null;
+  loading: boolean;
+  refresh: () => void;
+}
+
+export function useOrgPlan(): OrgPlanResult {
+  const { profile } = useAuth();
+  const [org, setOrg] = useState<OrgRow | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+
+  const orgId: string | undefined = profile?.org_id;
 
   const fetchOrg = useCallback(async () => {
     if (!supabase || !orgId) {
@@ -24,7 +40,7 @@ export function useOrgPlan() {
       .eq('id', orgId)
       .single();
 
-    if (!error && data) setOrg(data);
+    if (!error && data) setOrg(data as OrgRow);
     setLoading(false);
   }, [orgId]);
 
@@ -34,10 +50,10 @@ export function useOrgPlan() {
   const expiresAt = org?.plan_expires_at ? new Date(org.plan_expires_at) : null;
   const isExpired = expiresAt ? now > expiresAt : false;
   const daysRemaining = expiresAt
-    ? Math.max(0, Math.ceil((expiresAt - now) / (1000 * 60 * 60 * 24)))
+    ? Math.max(0, Math.ceil((expiresAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)))
     : null;
   const isExpiringSoon = daysRemaining !== null && daysRemaining <= 7 && !isExpired;
-  const plan = org?.plan || 'free_trial';
+  const plan: string = org?.plan || 'free_trial';
 
   return {
     org,

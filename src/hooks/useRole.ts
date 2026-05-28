@@ -1,14 +1,24 @@
 import { useMemo } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { hasPermission } from '../lib/permissions';
+import type { UserRole } from '../types';
 
-export function useRole() {
+interface RoleResult {
+  role: UserRole | null;
+  permissions: Record<string, boolean> | null;
+  can: (permissionKey: string) => boolean;
+  isAdmin: boolean;
+  isSeniorOrAbove: boolean;
+  isCreditCommittee: boolean;
+}
+
+export function useRole(): RoleResult {
   const { profile, permissions } = useAuth();
 
-  const role = profile?.role || null;
+  const role: UserRole | null = profile?.role || null;
 
   const can = useMemo(() => {
-    return (permissionKey) => hasPermission(permissions, permissionKey);
+    return (permissionKey: string): boolean => hasPermission(permissions, permissionKey);
   }, [permissions]);
 
   const isAdmin = role === 'admin';

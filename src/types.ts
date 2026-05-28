@@ -14,6 +14,8 @@ export type AssetClass =
   | 'accounts_receivable'
   | 'inventory_finance';
 
+export type UserRole = 'analyst' | 'senior_analyst' | 'credit_committee' | 'admin';
+
 export const ASSET_CLASSES: readonly AssetClass[] = [
   'equipment_finance',
   'accounts_receivable',
@@ -76,6 +78,7 @@ export type Months = number;
 // Helpers for crossing the unit boundary explicitly.
 export const asPercent = (n: number): Percent => n as Percent;
 export const asFraction = (n: number): Fraction => n as Fraction;
+export const asBps = (n: number): Bps => n as Bps;
 export const percentToFraction = (p: Percent): Fraction => (p / 100) as Fraction;
 export const fractionToPercent = (f: Fraction): Percent => (f * 100) as Percent;
 
@@ -126,9 +129,16 @@ export interface AccountsReceivableInputs extends BaseDealInputs {
 }
 
 export interface InventoryFinanceInputs extends BaseDealInputs {
-  // Filled in when we read inventory-finance/scoring.js in detail.
-  // Placeholder for now — Phase 3 of the migration will type this fully.
-  [key: string]: unknown;
+  totalInventory: USD;
+  rawMaterials?: number;
+  workInProgress?: number;
+  finishedGoods?: number;
+  obsoleteInventory?: number;
+  inventoryTurnover?: number;
+  averageDaysOnHand?: number;
+  requestedAdvanceRate?: number;
+  nolvPct?: number;
+  perishable?: boolean;
 }
 
 /** Discriminated by AssetClass at the boundary. Modules deal in their own concrete shape internally. */
@@ -186,7 +196,27 @@ export interface AccountsReceivableMetrics extends BaseMetrics {
   totalAROutstanding: USD;
 }
 
-export type Metrics = EquipmentMetrics | AccountsReceivableMetrics | (BaseMetrics & Record<string, unknown>);
+export interface CompositionMix {
+  rawPct: number;
+  wipPct: number;
+  finishedPct: number;
+  obsoletePct: number;
+}
+
+export interface InventoryFinanceMetrics extends BaseMetrics {
+  eligibleInventory: USD;
+  borrowingBase: USD;
+  turnoverRatio: number;
+  daysOnHand: number;
+  obsolescenceRate: number;
+  compositionMix: CompositionMix;
+  blendedAdvanceRate: number;
+  appliedAdvanceRate: number;
+  effectiveRate: number;
+  rate: number;
+}
+
+export type Metrics = EquipmentMetrics | AccountsReceivableMetrics | InventoryFinanceMetrics;
 
 // ───────────────────────────────────────────────────────────────
 // Scoring
@@ -255,16 +285,21 @@ export interface ScreeningCriteria {
   passScore: number;
   flagScore: number;
   minDscr: number;
+  minDscrAR: number;
   maxLeverage: number;
   minRevenue: number;
   minYearsInBusiness: number;
   maxLtv: number;
   maxTermCoverage: number;
+  maxRevenueConcentration: number;
   maxConcentration: number;
   maxDilution: number;
   minTurnover: number;
   maxObsolescence: number;
 }
+
+export type AuditAction = 'create' | 'update' | 'delete' | 'view' | 'move' | 'update_stage' | 'login' | 'logout';
+export type AuditEntityType = 'saved_deal' | 'pipeline_deal' | 'user' | 'org' | 'session' | 'invitation';
 
 // ───────────────────────────────────────────────────────────────
 // Stress test

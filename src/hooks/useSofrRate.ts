@@ -4,32 +4,44 @@ import { DEFAULT_SOFR } from '../utils/calculations';
 const CACHE_KEY = 'efd_sofr_cache';
 const CACHE_MAX_AGE_MS = 4 * 60 * 60 * 1000; // 4 hours
 
-function getCached() {
+interface SofrCache {
+  rate: number;
+  date: string;
+  fetchedAt: number;
+}
+
+interface SofrResult {
+  sofr: number;
+  sofrDate: string | null;
+  sofrSource: string;
+}
+
+function getCached(): SofrCache | null {
   try {
     const raw = localStorage.getItem(CACHE_KEY);
     if (!raw) return null;
-    const cached = JSON.parse(raw);
+    const cached: SofrCache = JSON.parse(raw);
     if (Date.now() - cached.fetchedAt < CACHE_MAX_AGE_MS) return cached;
   } catch { /* ignore */ }
   return null;
 }
 
-function setCache(data) {
+function setCache(data: Pick<SofrCache, 'rate' | 'date'>): void {
   try {
     localStorage.setItem(CACHE_KEY, JSON.stringify({ ...data, fetchedAt: Date.now() }));
   } catch { /* ignore */ }
 }
 
-export default function useSofrRate() {
-  const [sofr, setSofr] = useState(() => {
+export default function useSofrRate(): SofrResult {
+  const [sofr, setSofr] = useState<number>(() => {
     const cached = getCached();
     return cached ? cached.rate : DEFAULT_SOFR;
   });
-  const [sofrDate, setSofrDate] = useState(() => {
+  const [sofrDate, setSofrDate] = useState<string | null>(() => {
     const cached = getCached();
     return cached ? cached.date : null;
   });
-  const [sofrSource, setSofrSource] = useState(() => {
+  const [sofrSource, setSofrSource] = useState<string>(() => {
     const cached = getCached();
     return cached ? 'FRED (cached)' : 'Default';
   });
@@ -48,12 +60,12 @@ export default function useSofrRate() {
         if (!res.ok) throw new Error(`Proxy API ${res.status}`);
         return res.json();
       })
-      .then((data) => {
+      .then((data: { rate?: number; date?: string }) => {
         if (data.rate == null) return;
         setSofr(data.rate);
-        setSofrDate(data.date);
+        setSofrDate(data.date ?? null);
         setSofrSource('FRED (live)');
-        setCache({ rate: data.rate, date: data.date });
+        setCache({ rate: data.rate, date: data.date ?? '' });
       })
       .catch(() => {
         // Silently fall back to default
