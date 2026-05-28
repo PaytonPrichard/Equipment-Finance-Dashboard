@@ -120,17 +120,33 @@ function section(title) {
   // ── Create deal ─────────────────────────────────────────
   section('Create deal');
   const testName = `CRM Integration Test ${new Date().toISOString().slice(11, 19)}Z`;
+  // Inputs must satisfy server-side validation (P0-2). asset_class drives
+  // server-side score recomputation (P0-1) — client-supplied scores are ignored.
   const createPayload = {
     name: testName,
+    asset_class: 'equipment_finance',
     inputs: {
-      industryClass: 'Industrial',
-      equipmentType: 'CNC Machine',
-      financingAmount: 250000,
-      termMonths: 60,
-      creditScore: 720,
+      companyName: 'CRM Test Co',
+      yearsInBusiness: 10,
+      annualRevenue: 50_000_000,
+      ebitda: 8_000_000,
+      totalExistingDebt: 15_000_000,
+      industrySector: 'Manufacturing',
+      creditRating: 'Adequate',
+      equipmentType: 'Heavy Machinery',
+      equipmentCondition: 'New',
+      equipmentCost: 5_000_000,
+      downPayment: 500_000,
+      financingType: 'EFA',
+      usefulLife: 15,
+      loanTerm: 84,
+      essentialUse: true,
     },
-    score: 75,
   };
+
+  function isSensibleScore(s) {
+    return typeof s === 'number' && Number.isFinite(s) && s >= 0 && s <= 100;
+  }
   const createStart = Date.now();
   const create = await api('POST', '/api/v1?resource=deals&debug=1', createPayload);
   if (create.data?._webhook_dispatch) {
@@ -174,7 +190,7 @@ function section(title) {
     log('Body parses as JSON', !!body);
     log('Body has event="deal.created"', body?.event === 'deal.created');
     log('Body data.id matches created deal id', String(body?.data?.id) === dealId);
-    log('Body data has stage and score fields', body?.data?.stage === 'Screening' && body?.data?.score === 75);
+    log('Body data.stage is Screening and score is a sensible number', body?.data?.stage === 'Screening' && isSensibleScore(body?.data?.score));
 
     if (WEBHOOK_SECRET && sig) {
       const ok = verifySignature(createdWebhook.content, sig, WEBHOOK_SECRET);
@@ -192,11 +208,11 @@ function section(title) {
     try { body = JSON.parse(r.content); } catch { return false; }
     return String(body?.data?.id) === dealId;
   }, 'deal.scored (on create)');
-  log('deal.scored webhook delivered on POST with score', !!scoredOnCreate);
+  log('deal.scored webhook delivered on POST (always fires after P0-1)', !!scoredOnCreate);
   if (scoredOnCreate) {
     let body;
     try { body = JSON.parse(scoredOnCreate.content); } catch { body = null; }
-    log('Scored webhook (create) body has score=75', body?.data?.score === 75);
+    log('Scored webhook (create) body has a sensible server-computed score', isSensibleScore(body?.data?.score));
   }
 
   // ── GET deal ────────────────────────────────────────────
@@ -262,19 +278,32 @@ function section(title) {
     `webhooks_before=${beforeNotes}, after=${afterNotes}`,
   );
 
-  // ── PATCH score change (fires deal.scored) ──────────────
-  section('Update: score change');
+  // ── PATCH inputs change → server recomputes → fires deal.scored ────
+  // After P0-1, score is server-computed. To trigger a score change we
+  // send modified inputs and let the server recompute.
+  section('Update: inputs change recomputes score');
   const scoreStart = Date.now();
-  const newScore = 82;
-  const patchScore = await api('PATCH', `/api/v1?resource=deals&id=${dealId}&debug=1`, { score: newScore });
+  const initialScore = create.data?.score;
+  const changedInputs = {
+    ...createPayload.inputs,
+    equipmentCost: 9_500_000,    // pushes LTV / term-coverage materially
+    downPayment: 200_000,
+    ebitda: 3_500_000,           // tightens DSCR
+  };
+  const patchScore = await api('PATCH', `/api/v1?resource=deals&id=${dealId}&debug=1`, { inputs: changedInputs });
   if (patchScore.data?._webhook_dispatch) {
     console.log(`  (dispatch: ${JSON.stringify(patchScore.data._webhook_dispatch)})`);
   }
   log(
-    'PATCH score returns 200 with new score',
-    patchScore.status === 200 && patchScore.data?.score === newScore,
+    'PATCH inputs returns 200 with sensible server-computed score',
+    patchScore.status === 200 && isSensibleScore(patchScore.data?.score),
     `status=${patchScore.status}, score=${patchScore.data?.score}`,
     patchScore.status !== 200 ? patchScore.data : null,
+  );
+  log(
+    'Server-recomputed score differs from initial score (inputs materially changed)',
+    isSensibleScore(initialScore) && patchScore.data?.score !== initialScore,
+    `initial=${initialScore}, after=${patchScore.data?.score}`,
   );
 
   const scoreWebhook = await waitForWebhook((r) => {
@@ -283,14 +312,14 @@ function section(title) {
     if (event !== 'deal.scored' || ts < scoreStart - 1000) return false;
     let body;
     try { body = JSON.parse(r.content); } catch { return false; }
-    return String(body?.data?.id) === dealId && body?.data?.score === newScore;
+    return String(body?.data?.id) === dealId && isSensibleScore(body?.data?.score) && body.data.score !== initialScore;
   }, 'deal.scored (on PATCH)');
-  log('deal.scored webhook delivered on PATCH', !!scoreWebhook);
+  log('deal.scored webhook delivered on PATCH after inputs change', !!scoreWebhook);
 
   if (scoreWebhook) {
     let body;
     try { body = JSON.parse(scoreWebhook.content); } catch { body = null; }
-    log('Scored webhook (patch) body has new score', body?.data?.score === newScore);
+    log('Scored webhook (patch) body has sensible new score', isSensibleScore(body?.data?.score));
 
     if (WEBHOOK_SECRET) {
       const sig = headerValue(scoreWebhook.headers, 'x-tranche-signature');
@@ -299,14 +328,14 @@ function section(title) {
     }
   }
 
-  // ── PATCH score to the same value (no webhook expected) ──
-  section('Update: score unchanged (no webhook expected)');
+  // ── PATCH same inputs again → recompute is identical → no deal.scored ──
+  section('Update: same inputs (no webhook expected)');
   const beforeUnchanged = (await getWebhookDeliveries()).length;
-  await api('PATCH', `/api/v1?resource=deals&id=${dealId}`, { score: newScore });
+  await api('PATCH', `/api/v1?resource=deals&id=${dealId}`, { inputs: changedInputs });
   await new Promise((r) => setTimeout(r, 4000));
   const afterUnchanged = (await getWebhookDeliveries()).length;
   log(
-    'PATCH with unchanged score does not fire deal.scored',
+    'PATCH with unchanged inputs does not fire deal.scored',
     afterUnchanged === beforeUnchanged,
     `webhooks_before=${beforeUnchanged}, after=${afterUnchanged}`,
   );
