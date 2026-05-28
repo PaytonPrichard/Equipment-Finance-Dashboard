@@ -417,17 +417,22 @@ function AuthenticatedApp({ profile, user }) {
     return { ...baseRiskScore, composite };
   }, [baseRiskScore, customWeights]);
 
+  // Screening criteria (pass/flag/fail). Declared before the memos below
+  // because commentary and summaryText now read threshold values from it.
+  const [screeningCriteria, setScreeningCriteria] = useState({ ...DEFAULT_CRITERIA });
+
   const recommendation = useMemo(() => mod.getRecommendation(riskScore.composite), [riskScore.composite, mod]);
-  const commentary = useMemo(() => mod.generateCommentary(inputs, metrics, riskScore), [inputs, metrics, riskScore, mod]);
+  const commentary = useMemo(
+    () => mod.generateCommentary(inputs, metrics, riskScore, screeningCriteria),
+    [inputs, metrics, riskScore, screeningCriteria, mod]
+  );
   const structure = useMemo(() => mod.getSuggestedStructure(inputs, metrics, riskScore.composite, sofr), [inputs, metrics, riskScore.composite, sofr, mod]);
   const stressResults = useMemo(() => valid ? mod.runStressTest(inputs, sofr) : [], [inputs, valid, sofr, mod]);
   const summaryText = useMemo(
-    () => valid ? mod.generateExportSummary(inputs, metrics, riskScore, recommendation, commentary, structure, sofr) : '',
-    [inputs, metrics, riskScore, recommendation, commentary, structure, valid, sofr, mod]
+    () => valid ? mod.generateExportSummary(inputs, metrics, riskScore, recommendation, commentary, structure, sofr, screeningCriteria) : '',
+    [inputs, metrics, riskScore, recommendation, commentary, structure, valid, sofr, screeningCriteria, mod]
   );
 
-  // Screening criteria (pass/flag/fail)
-  const [screeningCriteria, setScreeningCriteria] = useState({ ...DEFAULT_CRITERIA });
   const screeningResult = useMemo(
     () => valid ? evaluateScreening(screeningCriteria, metrics, riskScore, inputs, activeModule) : null,
     [screeningCriteria, metrics, riskScore, inputs, activeModule, valid]
@@ -684,7 +689,7 @@ function AuthenticatedApp({ profile, user }) {
                         setSavingToPipeline(true);
                         const dealName = (inputs.companyName || '').trim() || `Untitled Deal — ${new Date().toLocaleDateString()}`;
                         const { createPipelineDeal } = await import('./lib/pipeline');
-                        const { data, error } = await createPipelineDeal(dealName, inputs, riskScore?.composite ?? null);
+                        const { data, error } = await createPipelineDeal(dealName, inputs, riskScore?.composite ?? null, activeModule);
                         setSavingToPipeline(false);
                         if (error) {
                           addToast('Failed to save to pipeline.', 'error');
@@ -1339,6 +1344,7 @@ function AuthenticatedApp({ profile, user }) {
             <DealPipeline
               currentInputs={valid ? inputs : null}
               currentScore={valid ? riskScore.composite : null}
+              activeModule={activeModule}
               onLoadDeal={(dealInputs, dealId) => { setInputs(dealInputs); setActiveDeal(null); setActivePipelineDealId(dealId || null); setActiveTab('screening'); }}
               readOnly={isExpired}
             />

@@ -70,7 +70,7 @@ function getVerdict(score) {
   return { label: 'FAIL', cls: 'bg-rose-500/15 text-rose-400 border-rose-500/30' };
 }
 
-export default function DealPipeline({ onLoadDeal, currentInputs, currentScore, readOnly }) {
+export default function DealPipeline({ onLoadDeal, currentInputs, currentScore, activeModule = 'equipment_finance', readOnly }) {
   const { user, profile } = useAuth();
   const { can } = useRole();
   const { addToast } = useToast();
@@ -144,7 +144,7 @@ export default function DealPipeline({ onLoadDeal, currentInputs, currentScore, 
     setIsAdding(false);
     setAddingName('');
 
-    const { data, error } = await createPipelineDeal(name, currentInputs || {}, currentScore ?? null);
+    const { data, error } = await createPipelineDeal(name, currentInputs || {}, currentScore ?? null, activeModule);
     if (error) {
       addToast('Failed to add deal to pipeline', 'error');
       setDeals((prev) => prev.filter((d) => d.id !== tempId));

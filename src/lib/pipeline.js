@@ -61,16 +61,18 @@ async function callScoreDeal(method, path, body) {
 
 /**
  * Create a new pipeline deal in the initial 'Screening' stage.
- * Server derives user_id and org_id from the JWT.
+ * Server derives user_id and org_id from the JWT and recomputes the
+ * authoritative score from `inputs` + `assetClass`. The `score` arg is
+ * used only for demo mode (which doesn't round-trip through the server).
  */
-export async function createPipelineDeal(name, inputs, score) {
+export async function createPipelineDeal(name, inputs, score, assetClass = 'equipment_finance') {
   if (isDemoMode()) {
-    const deal = createDemoPipelineDeal({ name, inputs, score });
+    const deal = createDemoPipelineDeal({ name, inputs, score, assetClass });
     return { data: deal, error: null };
   }
   if (!supabase) return { data: null, error: null };
 
-  return callScoreDeal('POST', '/api/score-deal', { name, inputs, score, notes: '' });
+  return callScoreDeal('POST', '/api/score-deal', { name, inputs, asset_class: assetClass, notes: '' });
 }
 
 /**
@@ -160,6 +162,8 @@ export async function updatePipelineDeal(dealId, inputs, score) {
   }
   if (!supabase) return { data: null, error: null };
 
+  // Server ignores `score` and recomputes from `inputs` against the deal's
+  // stored asset_class. Still passed for backward compatibility.
   return callScoreDeal('PATCH', `/api/score-deal?id=${encodeURIComponent(dealId)}`, { inputs, score });
 }
 

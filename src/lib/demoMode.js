@@ -37,7 +37,7 @@ export function listDemoPipeline() {
   return [...store()].sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
 }
 
-export function createDemoPipelineDeal({ name, inputs, score, notes = '' }) {
+export function createDemoPipelineDeal({ name, inputs, score, notes = '', assetClass = 'equipment_finance' }) {
   const now = new Date().toISOString();
   const deal = {
     id: `demo-${Date.now()}`,
@@ -46,6 +46,7 @@ export function createDemoPipelineDeal({ name, inputs, score, notes = '' }) {
     name,
     stage: 'Screening',
     inputs,
+    asset_class: assetClass,
     score,
     notes,
     created_at: now,

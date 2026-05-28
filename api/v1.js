@@ -12,6 +12,14 @@ const { supabaseAdmin } = require('../server-lib/supabaseAdmin');
 const { authenticateApiKey, generateApiKey } = require('../server-lib/apiKeyAuth');
 const { dispatchWebhooks } = require('../server-lib/webhookDispatch');
 const { checkRateLimit } = require('../server-lib/rateLimit');
+const { recomputeScore, VALID_ASSET_CLASSES } = require('../server-lib/scoring');
+const { validateDealInputs, validateARInputs, validateInventoryInputs } = require('../server-lib/validate');
+
+function validateInputs(assetClass, inputs) {
+  if (assetClass === 'accounts_receivable') return validateARInputs(inputs);
+  if (assetClass === 'inventory_finance') return validateInventoryInputs(inputs);
+  return validateDealInputs(inputs);
+}
 
 const VALID_EVENTS = ['deal.created', 'deal.scored', 'pipeline.stage_changed'];
 
@@ -49,23 +57,34 @@ async function handleDeals(req, res) {
   const { orgId } = auth;
 
   if (req.method === 'POST') {
-    const { name, inputs } = req.body || {};
+    // Client-supplied `score` is ignored: server is the authoritative scorer.
+    const { name, inputs, asset_class = 'equipment_finance' } = req.body || {};
     if (!name || !inputs) return res.status(400).json({ error: 'name and inputs are required' });
-    const score = req.body.score || null;
+    if (!VALID_ASSET_CLASSES.includes(asset_class)) {
+      return res.status(400).json({
+        error: `Invalid asset_class. Valid: ${VALID_ASSET_CLASSES.join(', ')}`,
+      });
+    }
+    const validation = validateInputs(asset_class, inputs);
+    if (!validation.valid) {
+      return res.status(400).json({ error: 'Invalid inputs', errors: validation.errors });
+    }
+    const { score, error: scoreError } = await recomputeScore(asset_class, inputs);
+    if (scoreError) {
+      return res.status(400).json({ error: scoreError });
+    }
 
     const { data, error } = await supabaseAdmin
       .from('pipeline_deals')
-      .insert({ org_id: orgId, user_id: null, name, stage: 'Screening', inputs, score, notes: '' })
+      .insert({ org_id: orgId, user_id: null, name, stage: 'Screening', inputs, asset_class, score, notes: '' })
       .select().single();
     if (error) return res.status(500).json({ error: 'Failed to create deal', details: error.message });
 
     const payload = { id: data.id, name, stage: 'Screening', score };
     const createdResult = await dispatchWebhooks(orgId, 'deal.created', payload);
-    let scoredResult = null;
-    if (score !== null && score !== undefined) {
-      scoredResult = await dispatchWebhooks(orgId, 'deal.scored', payload);
-    }
-    const debug = req.query?.debug === '1' ? { _webhook_dispatch: { created: createdResult, ...(scoredResult ? { scored: scoredResult } : {}) } } : {};
+    // Every deal now has a server-computed score, so deal.scored always fires.
+    const scoredResult = await dispatchWebhooks(orgId, 'deal.scored', payload);
+    const debug = req.query?.debug === '1' ? { _webhook_dispatch: { created: createdResult, scored: scoredResult } } : {};
     return res.status(201).json({ id: data.id, name: data.name, stage: data.stage, score, created_at: data.created_at, ...debug });
   }
 
@@ -91,27 +110,36 @@ async function handleDeals(req, res) {
 
   if (req.method === 'PATCH') {
     const { id } = req.query || {};
-    const { stage, notes, score, inputs } = req.body || {};
+    // Client-supplied `score` is ignored: server recomputes when inputs change.
+    const { stage, notes, inputs } = req.body || {};
     if (!id) return res.status(400).json({ error: 'id query parameter is required' });
-    if (!stage && notes === undefined && score === undefined && inputs === undefined) {
-      return res.status(400).json({ error: 'stage, notes, score, or inputs is required' });
-    }
-    if (score !== undefined && score !== null && (typeof score !== 'number' || !Number.isFinite(score))) {
-      return res.status(400).json({ error: 'score must be a number or null' });
+    if (!stage && notes === undefined && inputs === undefined) {
+      return res.status(400).json({ error: 'stage, notes, or inputs is required' });
     }
     if (inputs !== undefined && (typeof inputs !== 'object' || inputs === null)) {
       return res.status(400).json({ error: 'inputs must be an object' });
     }
 
     const { data: existing, error: fetchErr } = await supabaseAdmin
-      .from('pipeline_deals').select('id, stage, name, score').eq('id', id).eq('org_id', orgId).single();
+      .from('pipeline_deals').select('id, stage, name, score, asset_class').eq('id', id).eq('org_id', orgId).single();
     if (fetchErr || !existing) return res.status(404).json({ error: 'Deal not found' });
 
     const updates = { updated_at: new Date().toISOString() };
     if (stage) updates.stage = stage;
     if (notes !== undefined) updates.notes = notes;
-    if (score !== undefined) updates.score = score;
-    if (inputs !== undefined) updates.inputs = inputs;
+    if (inputs !== undefined) {
+      const assetClass = existing.asset_class || 'equipment_finance';
+      const validation = validateInputs(assetClass, inputs);
+      if (!validation.valid) {
+        return res.status(400).json({ error: 'Invalid inputs', errors: validation.errors });
+      }
+      const { score: computedScore, error: scoreError } = await recomputeScore(assetClass, inputs);
+      if (scoreError) {
+        return res.status(400).json({ error: scoreError });
+      }
+      updates.inputs = inputs;
+      updates.score = computedScore;
+    }
 
     const { data, error } = await supabaseAdmin
       .from('pipeline_deals').update(updates).eq('id', id).select().single();
@@ -122,7 +150,7 @@ async function handleDeals(req, res) {
     if (stage && stage !== existing.stage) {
       stageResult = await dispatchWebhooks(orgId, 'pipeline.stage_changed', { id: data.id, name: existing.name, previous_stage: existing.stage, new_stage: stage });
     }
-    if (score !== undefined && score !== existing.score) {
+    if (updates.score !== undefined && updates.score !== existing.score) {
       scoredResult = await dispatchWebhooks(orgId, 'deal.scored', { id: data.id, name: data.name, stage: data.stage, score: data.score });
     }
     const debug = req.query?.debug === '1' ? { _webhook_dispatch: { stage_changed: stageResult, scored: scoredResult } } : {};

@@ -406,6 +406,7 @@ export default function BatchScreening({ sofr = DEFAULT_SOFR, onLoadDeal, active
                       dealName,
                       deal.inputs,
                       deal.riskScore?.composite ?? null,
+                      batchModule,
                     );
                     if (data && !error) {
                       saved++;

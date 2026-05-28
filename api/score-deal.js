@@ -11,6 +11,14 @@ const { handlePreflight } = require('../server-lib/cors');
 const { checkRateLimit } = require('../server-lib/rateLimit');
 const { checkPlanStatus } = require('../server-lib/planCheck');
 const { dispatchWebhooks } = require('../server-lib/webhookDispatch');
+const { recomputeScore, VALID_ASSET_CLASSES } = require('../server-lib/scoring');
+const { validateDealInputs, validateARInputs, validateInventoryInputs } = require('../server-lib/validate');
+
+function validateInputs(assetClass, inputs) {
+  if (assetClass === 'accounts_receivable') return validateARInputs(inputs);
+  if (assetClass === 'inventory_finance') return validateInventoryInputs(inputs);
+  return validateDealInputs(inputs);
+}
 
 async function authenticateRequest(req) {
   const authHeader = req.headers.authorization || req.headers.Authorization || '';
@@ -45,11 +53,6 @@ async function writeAuditLog({ userId, orgId, action, dealId, oldValues, newValu
   if (error) console.error('[score-deal] audit_log write error:', error.message);
 }
 
-function isFiniteNumberOrNull(value) {
-  if (value === null || value === undefined) return true;
-  return typeof value === 'number' && Number.isFinite(value);
-}
-
 module.exports = async function handler(req, res) {
   if (handlePreflight(req, res)) return;
 
@@ -73,7 +76,10 @@ module.exports = async function handler(req, res) {
 
   // ===================== POST — Create a scored deal =====================
   if (req.method === 'POST') {
-    const { name, inputs, score = null, notes = '' } = req.body || {};
+    // Client-supplied `score` is intentionally ignored: the server is the
+    // authoritative scorer. `asset_class` defaults to equipment_finance to
+    // match the DB column default.
+    const { name, inputs, notes = '', asset_class = 'equipment_finance' } = req.body || {};
 
     if (!name || typeof name !== 'string' || name.length > 200) {
       return res.status(400).json({ error: 'name is required (string, max 200 chars)' });
@@ -81,11 +87,23 @@ module.exports = async function handler(req, res) {
     if (!inputs || typeof inputs !== 'object') {
       return res.status(400).json({ error: 'inputs is required (object)' });
     }
-    if (!isFiniteNumberOrNull(score)) {
-      return res.status(400).json({ error: 'score must be a number or null' });
-    }
     if (typeof notes !== 'string' || notes.length > 5000) {
       return res.status(400).json({ error: 'notes must be a string under 5000 chars' });
+    }
+    if (!VALID_ASSET_CLASSES.includes(asset_class)) {
+      return res.status(400).json({
+        error: `Invalid asset_class. Valid: ${VALID_ASSET_CLASSES.join(', ')}`,
+      });
+    }
+
+    const validation = validateInputs(asset_class, inputs);
+    if (!validation.valid) {
+      return res.status(400).json({ error: 'Invalid inputs', errors: validation.errors });
+    }
+
+    const { score, error: scoreError } = await recomputeScore(asset_class, inputs);
+    if (scoreError) {
+      return res.status(400).json({ error: scoreError });
     }
 
     const { data, error } = await supabaseAdmin
@@ -96,6 +114,7 @@ module.exports = async function handler(req, res) {
         name,
         stage: 'Screening',
         inputs,
+        asset_class,
         score,
         notes,
       })
@@ -112,20 +131,19 @@ module.exports = async function handler(req, res) {
       orgId,
       action: 'create',
       dealId: data.id,
-      newValues: { name, stage: 'Screening', inputs, score },
+      newValues: { name, stage: 'Screening', inputs, score, asset_class },
     });
 
-    const dispatches = [
+    // Every created deal now has a server-computed score, so deal.scored
+    // always fires alongside deal.created. Payload shape unchanged.
+    await Promise.all([
       dispatchWebhooks(orgId, 'deal.created', {
         id: data.id, name: data.name, stage: data.stage, score: data.score,
       }),
-    ];
-    if (score !== null && score !== undefined) {
-      dispatches.push(dispatchWebhooks(orgId, 'deal.scored', {
+      dispatchWebhooks(orgId, 'deal.scored', {
         id: data.id, name: data.name, stage: data.stage, score: data.score,
-      }));
-    }
-    await Promise.all(dispatches);
+      }),
+    ]);
 
     return res.status(201).json({ deal: data });
   }
@@ -135,28 +153,36 @@ module.exports = async function handler(req, res) {
     const { id } = req.query || {};
     if (!id) return res.status(400).json({ error: 'id query parameter is required' });
 
-    const { inputs, score } = req.body || {};
-    if (inputs !== undefined && (typeof inputs !== 'object' || inputs === null)) {
-      return res.status(400).json({ error: 'inputs must be an object when present' });
-    }
-    if (score !== undefined && !isFiniteNumberOrNull(score)) {
-      return res.status(400).json({ error: 'score must be a number or null when present' });
-    }
-    if (inputs === undefined && score === undefined) {
-      return res.status(400).json({ error: 'inputs or score is required' });
+    // Client-supplied `score` is ignored. To re-score, send inputs;
+    // the server recomputes against the deal's stored asset_class.
+    const { inputs } = req.body || {};
+    if (!inputs || typeof inputs !== 'object') {
+      return res.status(400).json({ error: 'inputs is required (score is server-computed)' });
     }
 
     const { data: existing, error: fetchErr } = await supabaseAdmin
       .from('pipeline_deals')
-      .select('id, org_id, name, stage, inputs, score')
+      .select('id, org_id, name, stage, inputs, score, asset_class')
       .eq('id', id)
       .single();
     if (fetchErr || !existing) return res.status(404).json({ error: 'Deal not found' });
     if (existing.org_id !== orgId) return res.status(403).json({ error: 'Deal does not belong to your organization' });
 
-    const updates = { updated_at: new Date().toISOString() };
-    if (inputs !== undefined) updates.inputs = inputs;
-    if (score !== undefined) updates.score = score;
+    const assetClass = existing.asset_class || 'equipment_finance';
+    const validation = validateInputs(assetClass, inputs);
+    if (!validation.valid) {
+      return res.status(400).json({ error: 'Invalid inputs', errors: validation.errors });
+    }
+    const { score: computedScore, error: scoreError } = await recomputeScore(assetClass, inputs);
+    if (scoreError) {
+      return res.status(400).json({ error: scoreError });
+    }
+
+    const updates = {
+      updated_at: new Date().toISOString(),
+      inputs,
+      score: computedScore,
+    };
 
     const { data, error } = await supabaseAdmin
       .from('pipeline_deals')
@@ -179,8 +205,7 @@ module.exports = async function handler(req, res) {
       newValues: { inputs: data.inputs, score: data.score },
     });
 
-    const scoreChanged = score !== undefined && score !== existing.score;
-    if (scoreChanged) {
+    if (data.score !== existing.score) {
       await dispatchWebhooks(orgId, 'deal.scored', {
         id: data.id, name: data.name, stage: data.stage, score: data.score,
       });
