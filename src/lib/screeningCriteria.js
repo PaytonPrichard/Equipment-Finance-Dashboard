@@ -12,6 +12,10 @@ export const DEFAULT_CRITERIA = {
 
   // Shared metric limits (0 = disabled)
   minDscr: 1.25,
+  // ABL facilities self-liquidate through AR collections, so industry
+  // norm is a lower DSCR floor than equipment finance. Applied only when
+  // moduleKey === 'accounts_receivable'.
+  minDscrAR: 1.10,
   maxLeverage: 5.0,
   minRevenue: 0,
   minYearsInBusiness: 0,
@@ -19,6 +23,7 @@ export const DEFAULT_CRITERIA = {
   // Equipment-specific
   maxLtv: 100,
   maxTermCoverage: 80,
+  maxRevenueConcentration: 25,
 
   // AR-specific
   maxConcentration: 25,
@@ -49,11 +54,13 @@ export function evaluateScreening(criteria, metrics, riskScore, inputs, moduleKe
   }
 
   // ---- DSCR ----
-  if (c.minDscr > 0 && metrics.dscr > 0 && metrics.dscr < c.minDscr) {
+  // AR module uses a lower floor (ABL norm); other modules use minDscr.
+  const dscrFloor = moduleKey === 'accounts_receivable' ? c.minDscrAR : c.minDscr;
+  if (dscrFloor > 0 && metrics.dscr > 0 && metrics.dscr < dscrFloor) {
     if (metrics.dscr < 1.0) {
       reasons.push({ level: 'fail', text: `DSCR ${metrics.dscr.toFixed(2)}x is below 1.0x — insufficient to service debt` });
     } else {
-      reasons.push({ level: 'flag', text: `DSCR ${metrics.dscr.toFixed(2)}x is below minimum (${c.minDscr}x)` });
+      reasons.push({ level: 'flag', text: `DSCR ${metrics.dscr.toFixed(2)}x is below minimum (${dscrFloor}x)` });
     }
   }
 

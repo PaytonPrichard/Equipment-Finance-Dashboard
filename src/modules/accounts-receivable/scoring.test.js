@@ -236,5 +236,29 @@ describe('Accounts Receivable Scoring', () => {
       // Must NOT format aging values with a $ prefix
       expect(text).not.toMatch(/AR Under 30:\s+\$65\b/);
     });
+
+    // ---- P0-3 fix: AR DSCR floor is configurable, defaults to 1.10x ABL norm ----
+    test('DSCR line defaults to 1.10x when no criteria supplied', () => {
+      const metrics = calculateMetrics(validInputs);
+      const score = calculateRiskScore(validInputs, metrics);
+      const rec = getRecommendation(score.composite);
+      const commentary = generateCommentary(validInputs, metrics, score);
+      const structure = getSuggestedStructure(validInputs, metrics, score.composite);
+      const text = generateExportSummary(validInputs, metrics, score, rec, commentary, structure);
+
+      expect(text).toMatch(/DSCR:.*min 1\.10x for ABL/);
+    });
+
+    test('DSCR line reflects criteria.minDscrAR when supplied', () => {
+      const metrics = calculateMetrics(validInputs);
+      const score = calculateRiskScore(validInputs, metrics);
+      const rec = getRecommendation(score.composite);
+      const commentary = generateCommentary(validInputs, metrics, score);
+      const structure = getSuggestedStructure(validInputs, metrics, score.composite);
+      const criteria = { minDscrAR: 1.20 };
+      const text = generateExportSummary(validInputs, metrics, score, rec, commentary, structure, undefined, criteria);
+
+      expect(text).toMatch(/DSCR:.*min 1\.20x for ABL/);
+    });
   });
 });

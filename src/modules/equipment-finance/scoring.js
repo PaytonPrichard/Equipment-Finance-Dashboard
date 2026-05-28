@@ -263,7 +263,7 @@ export function getRecommendation(compositeScore) {
 
 // ------- Commentary -------
 
-export function generateCommentary(inputs, metrics, riskScore) {
+export function generateCommentary(inputs, metrics, riskScore, criteria = null) {
   const comments = [];
 
   // DSCR
@@ -343,7 +343,10 @@ export function generateCommentary(inputs, metrics, riskScore) {
   }
 
   // Revenue concentration
-  if (metrics.revenueConcentration > 25) {
+  const revConcThreshold = (criteria && typeof criteria.maxRevenueConcentration === 'number')
+    ? criteria.maxRevenueConcentration
+    : 25;
+  if (metrics.revenueConcentration > revConcThreshold) {
     comments.push(
       `Equipment cost represents ${metrics.revenueConcentration.toFixed(1)}% of annual revenue — relatively concentrated exposure for the borrower's operations.`
     );
@@ -482,7 +485,13 @@ export function runStressTest(inputs, sofr = DEFAULT_SOFR) {
 
 // ------- Export Summary -------
 
-export function generateExportSummary(inputs, metrics, riskScore, recommendation, commentary, structure, sofr = DEFAULT_SOFR) {
+export function generateExportSummary(inputs, metrics, riskScore, recommendation, commentary, structure, sofr = DEFAULT_SOFR, criteria = null) {
+  const termCoverageTarget = (criteria && typeof criteria.maxTermCoverage === 'number')
+    ? criteria.maxTermCoverage
+    : 80;
+  const revConcTarget = (criteria && typeof criteria.maxRevenueConcentration === 'number')
+    ? criteria.maxRevenueConcentration
+    : 25;
   const ft = inputs.financingType || 'EFA';
   const lines = [];
   lines.push('EQUIPMENT FINANCE DEAL SCREENING');
@@ -513,8 +522,8 @@ export function generateExportSummary(inputs, metrics, riskScore, recommendation
   lines.push(`DSCR:             ${formatRatio(metrics.dscr)}  (min 1.25x)`);
   lines.push(`Leverage:         ${formatRatio(metrics.leverage)}  (target <3.5x)`);
   lines.push(`LTV:              ${formatPercent(metrics.ltv * 100)}  (target <85%)`);
-  lines.push(`Term / Life:      ${formatPercent(metrics.termCoverage)}  (target <60%)`);
-  lines.push(`Rev. Conc.:       ${formatPercent(metrics.revenueConcentration)}  (target <15%)`);
+  lines.push(`Term / Life:      ${formatPercent(metrics.termCoverage)}  (target <${termCoverageTarget}%)`);
+  lines.push(`Rev. Conc.:       ${formatPercent(metrics.revenueConcentration)}  (target <${revConcTarget}%)`);
   lines.push(`EBITDA Margin:    ${formatPercent(metrics.ebitdaMargin)}`);
   lines.push(`Debt Yield:       ${formatPercent(metrics.debtYield)}`);
   lines.push('');

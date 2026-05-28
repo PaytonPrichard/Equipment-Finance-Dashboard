@@ -55,6 +55,41 @@ describe('Screening Criteria', () => {
       const result = evaluateScreening(baseCriteria, invMetrics, passScore, passInputs, 'inventory_finance');
       expect(result.reasons.some(r => r.text.includes('Turnover'))).toBe(true);
     });
+
+    // ---- P0-3 fix: per-module DSCR floor ----
+    test('AR module uses minDscrAR (1.10), not minDscr', () => {
+      // DSCR of 1.15 is below the shared 1.25 floor but above the ABL 1.10 floor.
+      // For AR, this should NOT flag.
+      const arMetrics = { ...passMetrics, dscr: 1.15 };
+      const result = evaluateScreening(baseCriteria, arMetrics, passScore, passInputs, 'accounts_receivable');
+      expect(result.reasons.some(r => r.text.includes('DSCR'))).toBe(false);
+    });
+
+    test('Equipment module at DSCR 1.15 still flags (uses 1.25 floor)', () => {
+      const efMetrics = { ...passMetrics, dscr: 1.15 };
+      const result = evaluateScreening(baseCriteria, efMetrics, passScore, passInputs, 'equipment_finance');
+      expect(result.reasons.some(r => r.level === 'flag' && r.text.includes('DSCR'))).toBe(true);
+    });
+
+    test('AR DSCR below 1.10 flags', () => {
+      const arMetrics = { ...passMetrics, dscr: 1.05 };
+      const result = evaluateScreening(baseCriteria, arMetrics, passScore, passInputs, 'accounts_receivable');
+      expect(result.reasons.some(r => r.level === 'flag' && r.text.includes('DSCR'))).toBe(true);
+    });
+  });
+
+  describe('DEFAULT_CRITERIA', () => {
+    test('has minDscrAR=1.10 for ABL per-module override', () => {
+      expect(DEFAULT_CRITERIA.minDscrAR).toBe(1.10);
+    });
+
+    test('has maxRevenueConcentration=25 for equipment finance', () => {
+      expect(DEFAULT_CRITERIA.maxRevenueConcentration).toBe(25);
+    });
+
+    test('shared minDscr remains 1.25 for non-AR modules', () => {
+      expect(DEFAULT_CRITERIA.minDscr).toBe(1.25);
+    });
   });
 
   describe('validateCriteria', () => {

@@ -5,6 +5,9 @@ import {
   isInputValid,
   getScreeningRate,
   runStressTest,
+  generateCommentary,
+  generateExportSummary,
+  getSuggestedStructure,
 } from './scoring';
 import { INITIAL_INPUTS } from './constants';
 
@@ -166,6 +169,55 @@ describe('Equipment Finance Scoring', () => {
       expect(stress[0].fccr).toBeGreaterThan(stress[1].fccr);
       expect(stress[1].fccr).toBeGreaterThan(stress[2].fccr);
       expect(stress[2].fccr).toBeGreaterThan(stress[3].fccr);
+    });
+  });
+
+  // ---- P0-3 fix: PDF thresholds and commentary read from criteria ----
+  describe('generateExportSummary threshold text', () => {
+    function buildSummary(criteria) {
+      const metrics = calculateMetrics(validInputs);
+      const score = calculateRiskScore(validInputs, metrics);
+      const rec = getRecommendation(score.composite);
+      const commentary = generateCommentary(validInputs, metrics, score, criteria);
+      const structure = getSuggestedStructure(validInputs, metrics, score.composite);
+      return generateExportSummary(validInputs, metrics, score, rec, commentary, structure, undefined, criteria);
+    }
+
+    test('default (no criteria) shows 80% term coverage and 25% revenue concentration', () => {
+      const text = buildSummary(null);
+      expect(text).toMatch(/Term \/ Life:.*target <80%/);
+      expect(text).toMatch(/Rev\. Conc\.:.*target <25%/);
+    });
+
+    test('user-configured criteria flow through to PDF text', () => {
+      const criteria = { maxTermCoverage: 70, maxRevenueConcentration: 20 };
+      const text = buildSummary(criteria);
+      expect(text).toMatch(/Term \/ Life:.*target <70%/);
+      expect(text).toMatch(/Rev\. Conc\.:.*target <20%/);
+    });
+  });
+
+  describe('generateCommentary revenue concentration threshold', () => {
+    // Build inputs where equipmentCost is exactly 20% of revenue so the commentary
+    // triggers only when the threshold is lowered below 20.
+    const concentratedInputs = {
+      ...validInputs,
+      annualRevenue: 10_000_000,
+      equipmentCost: 2_000_000,
+    };
+
+    test('default 25% threshold: 20% concentration does not trigger commentary', () => {
+      const metrics = calculateMetrics(concentratedInputs);
+      const score = calculateRiskScore(concentratedInputs, metrics);
+      const comments = generateCommentary(concentratedInputs, metrics, score, null);
+      expect(comments.some((c) => /concentrated exposure/i.test(c))).toBe(false);
+    });
+
+    test('lowered threshold (15%): 20% concentration triggers commentary', () => {
+      const metrics = calculateMetrics(concentratedInputs);
+      const score = calculateRiskScore(concentratedInputs, metrics);
+      const comments = generateCommentary(concentratedInputs, metrics, score, { maxRevenueConcentration: 15 });
+      expect(comments.some((c) => /concentrated exposure/i.test(c))).toBe(true);
     });
   });
 });

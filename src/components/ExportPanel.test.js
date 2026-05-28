@@ -18,11 +18,11 @@ function buildPdfFor(moduleKey, mod, baseInputs) {
   const metrics = mod.calculateMetrics(baseInputs);
   const riskScore = mod.calculateRiskScore(baseInputs, metrics);
   const recommendation = mod.getRecommendation(riskScore.composite);
-  const commentary = mod.generateCommentary(baseInputs, metrics, riskScore);
+  const commentary = mod.generateCommentary(baseInputs, metrics, riskScore, DEFAULT_CRITERIA);
   const structure = mod.getSuggestedStructure(baseInputs, metrics, riskScore.composite);
   const stressResults = mod.runStressTest(baseInputs);
   const factors = mod.describeFactors(baseInputs, metrics, riskScore);
-  const summaryText = mod.generateExportSummary(baseInputs, metrics, riskScore, recommendation, commentary, structure);
+  const summaryText = mod.generateExportSummary(baseInputs, metrics, riskScore, recommendation, commentary, structure, undefined, DEFAULT_CRITERIA);
   const borrowerExtras = computeBorrowerExtras(baseInputs, metrics);
   const screeningResult = evaluateScreening(DEFAULT_CRITERIA, metrics, riskScore, baseInputs, moduleKey);
 

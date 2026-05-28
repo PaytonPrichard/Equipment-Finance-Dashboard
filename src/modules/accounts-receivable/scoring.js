@@ -527,7 +527,10 @@ export function isInputValid(inputs) {
 
 // ------- Export Summary -------
 
-export function generateExportSummary(inputs, metrics, riskScore, recommendation, commentary, structure, sofr = DEFAULT_SOFR) {
+export function generateExportSummary(inputs, metrics, riskScore, recommendation, commentary, structure, sofr = DEFAULT_SOFR, criteria = null) {
+  const dscrFloor = (criteria && typeof criteria.minDscrAR === 'number')
+    ? criteria.minDscrAR
+    : 1.10;
   const lines = [];
   lines.push('ACCOUNTS RECEIVABLE ABL FACILITY SCREENING');
   lines.push('PRELIMINARY ASSESSMENT');
@@ -567,7 +570,7 @@ export function generateExportSummary(inputs, metrics, riskScore, recommendation
   lines.push('-'.repeat(60));
   lines.push('KEY METRICS');
   lines.push('-'.repeat(60));
-  lines.push(`DSCR:             ${formatRatio(metrics.dscr)}  (min 1.10x for ABL)`);
+  lines.push(`DSCR:             ${formatRatio(metrics.dscr)}  (min ${dscrFloor.toFixed(2)}x for ABL)`);
   lines.push(`Leverage:         ${formatRatio(metrics.leverage)}  (target <4.0x)`);
   lines.push(`Effective Rate:   ${(metrics.effectiveRate * 100).toFixed(2)}%`);
   lines.push(`Est. Annual Cost: ${formatCurrencyFull(metrics.newAnnualDebtService)} (at full draw)`);
