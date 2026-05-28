@@ -1,8 +1,12 @@
 // ============================================================
-// Shared formatting utilities — used by all asset class modules
+// Shared formatting utilities — used by all asset class modules.
+//
+// Phase 1 of the TypeScript migration. See AUDIT.md.
+// Behavior unchanged from format.js; types added.
 // ============================================================
 
-export function formatCurrency(value) {
+/** Currency, abbreviated (K/M/B). For tight spaces. */
+export function formatCurrency(value: number | null | undefined): string {
   if (!value && value !== 0) return '$0';
   if (value >= 1e9) return `$${(value / 1e9).toFixed(1)}B`;
   if (value >= 1e6) return `$${(value / 1e6).toFixed(1)}M`;
@@ -10,24 +14,53 @@ export function formatCurrency(value) {
   return `$${value.toLocaleString()}`;
 }
 
-export function formatCurrencyFull(value) {
+/** Currency, full digits. For committee PDFs. */
+export function formatCurrencyFull(value: number | null | undefined): string {
   if (!value && value !== 0) return '$0';
   return '$' + Math.round(value).toLocaleString();
 }
 
-export function formatPercent(value, decimals = 1) {
+export function formatPercent(value: number, decimals: number = 1): string {
   return value.toFixed(decimals) + '%';
 }
 
-export function formatRatio(value) {
+export function formatRatio(value: number): string {
   return value.toFixed(2) + 'x';
 }
 
 /**
- * Linear interpolation between breakpoints.
- * breakpoints: [[inputValue, score], ...] sorted ascending by inputValue.
+ * Display label for an org plan key. The DB stores keys like `free_trial`;
+ * this maps them to proper-cased names. There is no standalone free tier, so
+ * `free` (legacy webhook value) and the unset default both read "Free Trial".
+ * `pro` is the legacy key the webhook still writes for the Team tier — see
+ * AUDIT.md P0-6. Unknown keys fall back to title-cased text.
  */
-export function lerp(value, breakpoints) {
+const PLAN_LABELS: Record<string, string> = {
+  free_trial: 'Free Trial',
+  free: 'Free Trial',
+  analyst: 'Analyst',
+  team: 'Team',
+  pro: 'Team',
+  enterprise: 'Enterprise',
+};
+
+export function formatPlanName(plan: string | null | undefined): string {
+  if (!plan) return 'Free Trial';
+  return (
+    PLAN_LABELS[plan] ||
+    plan.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
+  );
+}
+
+/** A single breakpoint: [inputValue, score]. */
+export type Breakpoint = readonly [number, number];
+
+/**
+ * Linear interpolation between breakpoints.
+ * Breakpoints must be sorted ascending by inputValue.
+ * Values outside the range are clamped to the nearest breakpoint's score.
+ */
+export function lerp(value: number, breakpoints: readonly Breakpoint[]): number {
   if (value <= breakpoints[0][0]) return breakpoints[0][1];
   const last = breakpoints[breakpoints.length - 1];
   if (value >= last[0]) return last[1];
@@ -42,10 +75,12 @@ export function lerp(value, breakpoints) {
   return breakpoints[0][1];
 }
 
-/**
- * Standard amortization monthly payment.
- */
-export function calculateMonthlyPayment(principal, annualRate, termMonths) {
+/** Standard amortization monthly payment. */
+export function calculateMonthlyPayment(
+  principal: number,
+  annualRate: number,
+  termMonths: number,
+): number {
   if (!principal || !termMonths || termMonths <= 0) return 0;
   const r = annualRate / 12;
   if (r === 0) return principal / termMonths;
@@ -55,16 +90,38 @@ export function calculateMonthlyPayment(principal, annualRate, termMonths) {
   );
 }
 
+export interface AmortizationYear {
+  year: number;
+  principal: number;
+  interest: number;
+  totalPayment: number;
+  endingBalance: number;
+}
+
+export interface AmortizationSchedule {
+  years: AmortizationYear[];
+  totalInterest: number;
+  totalPrincipal: number;
+  totalCost: number;
+}
+
 /**
  * Generate year-by-year amortization schedule.
+ * Returns an empty array (not a schedule object) for invalid inputs — preserving
+ * the original JS behavior. Callers should check `Array.isArray(result)` or use
+ * `'years' in result`.
  */
-export function generateAmortizationSchedule(principal, annualRate, termMonths) {
+export function generateAmortizationSchedule(
+  principal: number,
+  annualRate: number,
+  termMonths: number,
+): AmortizationSchedule | [] {
   if (!principal || !termMonths || termMonths <= 0) return [];
   const monthlyPayment = calculateMonthlyPayment(principal, annualRate, termMonths);
   const r = annualRate / 12;
 
   let balance = principal;
-  const years = [];
+  const years: AmortizationYear[] = [];
   let yearInterest = 0;
   let yearPrincipal = 0;
 
