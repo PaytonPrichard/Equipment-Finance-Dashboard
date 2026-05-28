@@ -36,6 +36,87 @@ const VALID_FINANCING_TYPES = ['EFA', 'FMV', 'TRAC'];
 
 const VALID_EQUIPMENT_CONDITIONS = ['New', 'Used'];
 
+const MAX_INPUTS_BYTES = 32 * 1024;
+
+// Defense-in-depth: stops oversized JSON from being persisted and from
+// blowing up downstream scoring/serialization. Returns null if OK, or
+// an error object suitable for the validators' `errors` array.
+function checkSize(inputs) {
+  let serialized;
+  try { serialized = JSON.stringify(inputs); }
+  catch { return { field: '_root', message: 'inputs is not JSON-serializable' }; }
+  if (serialized.length > MAX_INPUTS_BYTES) {
+    return { field: '_root', message: `inputs payload exceeds ${MAX_INPUTS_BYTES} bytes (got ${serialized.length})` };
+  }
+  return null;
+}
+
+// Shared bounded-number helpers used by AR + Inventory validators.
+// Equipment finance has its own inline checks in validateDealInputs and is
+// intentionally not refactored to use these (behavior is locked in).
+function checkPercent(value, field, errors, { required = false } = {}) {
+  if (value === undefined || value === null || value === '') {
+    if (required) errors.push({ field, message: `${field} is required` });
+    return;
+  }
+  const num = Number(value);
+  if (isNaN(num)) errors.push({ field, message: `${field} must be a number` });
+  else if (num < 0 || num > 100) errors.push({ field, message: `${field} must be between 0 and 100` });
+}
+
+function checkCurrency(value, field, errors, { required = false, allowNegative = false } = {}) {
+  if (value === undefined || value === null || value === '') {
+    if (required) errors.push({ field, message: `${field} is required and must be a number` });
+    return;
+  }
+  const num = Number(value);
+  if (isNaN(num)) errors.push({ field, message: `${field} must be a number` });
+  else if (!allowNegative && num < 0) errors.push({ field, message: `${field} cannot be negative` });
+  else if (num > 1e12) errors.push({ field, message: `${field} cannot exceed $1 trillion` });
+  else if (required && num <= 0) errors.push({ field, message: `${field} must be greater than 0` });
+}
+
+// Shared borrower-profile validation for AR + Inventory.
+// Mirrors the borrower fields in validateDealInputs without sharing code,
+// so equipment-finance behavior stays byte-for-byte unchanged.
+function checkBorrowerCore(inputs, errors) {
+  if (inputs.companyName !== undefined && inputs.companyName !== null && inputs.companyName !== '') {
+    if (typeof inputs.companyName !== 'string') {
+      errors.push({ field: 'companyName', message: 'Company name must be a string' });
+    } else if (inputs.companyName.length > 200) {
+      errors.push({ field: 'companyName', message: 'Company name must be at most 200 characters' });
+    }
+  }
+  if (inputs.yearsInBusiness !== undefined && inputs.yearsInBusiness !== null) {
+    const yib = Number(inputs.yearsInBusiness);
+    if (isNaN(yib)) errors.push({ field: 'yearsInBusiness', message: 'Years in business must be a number' });
+    else if (yib < 0) errors.push({ field: 'yearsInBusiness', message: 'Years in business cannot be negative' });
+    else if (yib > 200) errors.push({ field: 'yearsInBusiness', message: 'Years in business cannot exceed 200' });
+  }
+  checkCurrency(inputs.annualRevenue, 'annualRevenue', errors, { required: true });
+  // EBITDA: required, allow negative (a loss-making borrower is still scoreable),
+  // but reject |EBITDA| > revenue as obviously bad data.
+  {
+    const val = Number(inputs.ebitda);
+    if (isNaN(val) || inputs.ebitda === undefined || inputs.ebitda === null) {
+      errors.push({ field: 'ebitda', message: 'EBITDA is required and must be a number' });
+    } else {
+      const revenue = Number(inputs.annualRevenue);
+      if (!isNaN(revenue) && revenue > 0 && Math.abs(val) > revenue) {
+        errors.push({ field: 'ebitda', message: 'EBITDA absolute value cannot exceed annual revenue' });
+      }
+    }
+  }
+  checkCurrency(inputs.totalExistingDebt, 'totalExistingDebt', errors);
+  checkCurrency(inputs.actualAnnualDebtService, 'actualAnnualDebtService', errors);
+  if (!VALID_INDUSTRY_SECTORS.includes(inputs.industrySector)) {
+    errors.push({ field: 'industrySector', message: `Industry sector must be one of: ${VALID_INDUSTRY_SECTORS.join(', ')}` });
+  }
+  if (!VALID_CREDIT_RATINGS.includes(inputs.creditRating)) {
+    errors.push({ field: 'creditRating', message: `Credit rating must be one of: ${VALID_CREDIT_RATINGS.join(', ')}` });
+  }
+}
+
 /**
  * Validate deal inputs on the server side.
  * Returns { valid: true } or { valid: false, errors: [{field, message}] }
@@ -46,6 +127,9 @@ function validateDealInputs(inputs) {
   if (inputs == null || typeof inputs !== 'object') {
     return { valid: false, errors: [{ field: '_root', message: 'Inputs must be a non-null object' }] };
   }
+
+  const sizeError = checkSize(inputs);
+  if (sizeError) return { valid: false, errors: [sizeError] };
 
   // --- companyName (optional, but if present must be a string <= 200 chars) ---
   if (inputs.companyName !== undefined && inputs.companyName !== null && inputs.companyName !== '') {
@@ -216,8 +300,87 @@ function validateDealInputs(inputs) {
     : { valid: false, errors };
 }
 
+function validateARInputs(inputs) {
+  const errors = [];
+
+  if (inputs == null || typeof inputs !== 'object') {
+    return { valid: false, errors: [{ field: '_root', message: 'Inputs must be a non-null object' }] };
+  }
+
+  const sizeError = checkSize(inputs);
+  if (sizeError) return { valid: false, errors: [sizeError] };
+
+  checkBorrowerCore(inputs, errors);
+
+  checkCurrency(inputs.totalAROutstanding, 'totalAROutstanding', errors, { required: true });
+
+  // Aging buckets: each must be 0-100; no sum-to-100 enforcement
+  checkPercent(inputs.arUnder30, 'arUnder30', errors);
+  checkPercent(inputs.arOver30, 'arOver30', errors);
+  checkPercent(inputs.arOver60, 'arOver60', errors);
+  checkPercent(inputs.arOver90, 'arOver90', errors);
+
+  checkPercent(inputs.topCustomerConcentration, 'topCustomerConcentration', errors);
+  checkPercent(inputs.dilutionRate, 'dilutionRate', errors);
+  checkPercent(inputs.ineligiblesPct, 'ineligiblesPct', errors);
+  checkPercent(inputs.requestedAdvanceRate, 'requestedAdvanceRate', errors);
+
+  if (inputs.existingABLFacility !== undefined && inputs.existingABLFacility !== null) {
+    if (typeof inputs.existingABLFacility !== 'boolean') {
+      errors.push({ field: 'existingABLFacility', message: 'existingABLFacility must be a boolean' });
+    }
+  }
+
+  return errors.length === 0 ? { valid: true } : { valid: false, errors };
+}
+
+function validateInventoryInputs(inputs) {
+  const errors = [];
+
+  if (inputs == null || typeof inputs !== 'object') {
+    return { valid: false, errors: [{ field: '_root', message: 'Inputs must be a non-null object' }] };
+  }
+
+  const sizeError = checkSize(inputs);
+  if (sizeError) return { valid: false, errors: [sizeError] };
+
+  checkBorrowerCore(inputs, errors);
+
+  checkCurrency(inputs.totalInventory, 'totalInventory', errors, { required: true });
+
+  checkPercent(inputs.rawMaterials, 'rawMaterials', errors);
+  checkPercent(inputs.workInProgress, 'workInProgress', errors);
+  checkPercent(inputs.finishedGoods, 'finishedGoods', errors);
+  checkPercent(inputs.obsoleteInventory, 'obsoleteInventory', errors);
+
+  if (inputs.inventoryTurnover !== undefined && inputs.inventoryTurnover !== null && inputs.inventoryTurnover !== '') {
+    const val = Number(inputs.inventoryTurnover);
+    if (isNaN(val)) errors.push({ field: 'inventoryTurnover', message: 'inventoryTurnover must be a number' });
+    else if (val < 0 || val > 200) errors.push({ field: 'inventoryTurnover', message: 'inventoryTurnover must be between 0 and 200' });
+  }
+
+  if (inputs.averageDaysOnHand !== undefined && inputs.averageDaysOnHand !== null && inputs.averageDaysOnHand !== '') {
+    const val = Number(inputs.averageDaysOnHand);
+    if (isNaN(val)) errors.push({ field: 'averageDaysOnHand', message: 'averageDaysOnHand must be a number' });
+    else if (val < 0 || val > 3650) errors.push({ field: 'averageDaysOnHand', message: 'averageDaysOnHand must be between 0 and 3650' });
+  }
+
+  checkPercent(inputs.requestedAdvanceRate, 'requestedAdvanceRate', errors);
+  checkPercent(inputs.nolvPct, 'nolvPct', errors);
+
+  if (inputs.perishable !== undefined && inputs.perishable !== null) {
+    if (typeof inputs.perishable !== 'boolean') {
+      errors.push({ field: 'perishable', message: 'perishable must be a boolean' });
+    }
+  }
+
+  return errors.length === 0 ? { valid: true } : { valid: false, errors };
+}
+
 module.exports = {
   validateDealInputs,
+  validateARInputs,
+  validateInventoryInputs,
   VALID_INDUSTRY_SECTORS,
   VALID_CREDIT_RATINGS,
   VALID_EQUIPMENT_TYPES,
