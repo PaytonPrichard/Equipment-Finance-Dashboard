@@ -12,7 +12,7 @@ const { supabaseAdmin } = require('../server-lib/supabaseAdmin');
 const { authenticateApiKey, generateApiKey } = require('../server-lib/apiKeyAuth');
 const { dispatchWebhooks } = require('../server-lib/webhookDispatch');
 const { checkRateLimit } = require('../server-lib/rateLimit');
-const { recomputeScore, VALID_ASSET_CLASSES } = require('../server-lib/scoring');
+const { recomputeScore, VALID_ASSET_CLASSES } = require('./_scoring.cjs');
 const { validateDealInputs, validateARInputs, validateInventoryInputs } = require('../server-lib/validate');
 
 function validateInputs(assetClass, inputs) {

@@ -11,7 +11,7 @@ const { handlePreflight } = require('../server-lib/cors');
 const { checkRateLimit } = require('../server-lib/rateLimit');
 const { checkPlanStatus } = require('../server-lib/planCheck');
 const { dispatchWebhooks } = require('../server-lib/webhookDispatch');
-const { recomputeScore, VALID_ASSET_CLASSES } = require('../server-lib/scoring');
+const { recomputeScore, VALID_ASSET_CLASSES } = require('./_scoring.cjs');
 const { validateDealInputs, validateARInputs, validateInventoryInputs } = require('../server-lib/validate');
 
 function validateInputs(assetClass, inputs) {

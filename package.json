@@ -27,7 +27,8 @@
     "tailwind": "tailwindcss -i src/tailwind.css -o src/tailwind-compiled.css --watch",
     "tailwind:build": "tailwindcss -i src/tailwind.css -o src/tailwind-compiled.css --minify",
     "start": "concurrently \"npm run tailwind\" \"react-scripts start\"",
-    "build": "npm run tailwind:build && react-scripts build",
+    "build:scoring": "node scripts/build-scoring.js",
+    "build": "npm run tailwind:build && npm run build:scoring && react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
@@ -59,6 +60,7 @@
   },
   "devDependencies": {
     "concurrently": "^9.2.1",
+    "esbuild": "^0.28.0",
     "puppeteer-core": "^24.42.0"
   }
 }
