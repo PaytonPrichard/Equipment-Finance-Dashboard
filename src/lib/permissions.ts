@@ -1,5 +1,6 @@
-// Default permission matrix — orgs can override via org_permissions table
-const DEFAULT_PERMISSIONS = {
+import type { UserRole, PermissionKey, PermissionsMap } from '../types';
+
+const DEFAULT_PERMISSIONS: Record<UserRole, PermissionsMap> = {
   analyst: {
     'deal.screen': true,
     'deal.save': true,
@@ -63,9 +64,9 @@ const DEFAULT_PERMISSIONS = {
 };
 
 // All known permission keys (for the admin settings UI)
-export const PERMISSION_KEYS = Object.keys(DEFAULT_PERMISSIONS.analyst);
+export const PERMISSION_KEYS: PermissionKey[] = Object.keys(DEFAULT_PERMISSIONS.analyst) as PermissionKey[];
 
-export const PERMISSION_LABELS = {
+export const PERMISSION_LABELS: Record<PermissionKey, string> = {
   'deal.screen': 'Screen new deals',
   'deal.save': 'Save deals',
   'deal.delete_own': 'Delete own saved deals',
@@ -81,17 +82,23 @@ export const PERMISSION_LABELS = {
   'org.manage_permissions': 'Edit role permissions',
 };
 
-export const ROLE_LABELS = {
+export const ROLE_LABELS: Record<UserRole, string> = {
   analyst: 'Analyst',
   senior_analyst: 'Senior Analyst',
   credit_committee: 'Credit Committee',
   admin: 'Admin',
 };
 
+export interface OrgPermissionOverride {
+  role: UserRole;
+  permission_key: PermissionKey;
+  allowed: boolean;
+}
+
 // Merge default permissions with org-specific overrides
-export function resolvePermissions(role, orgOverrides = []) {
-  const defaults = DEFAULT_PERMISSIONS[role] || DEFAULT_PERMISSIONS.analyst;
-  const resolved = { ...defaults };
+export function resolvePermissions(role: string, orgOverrides: OrgPermissionOverride[] = []): PermissionsMap {
+  const defaults = DEFAULT_PERMISSIONS[role as UserRole] || DEFAULT_PERMISSIONS.analyst;
+  const resolved: PermissionsMap = { ...defaults };
 
   for (const override of orgOverrides) {
     if (override.role === role && override.permission_key in resolved) {
@@ -102,6 +109,6 @@ export function resolvePermissions(role, orgOverrides = []) {
   return resolved;
 }
 
-export function hasPermission(permissions, key) {
+export function hasPermission(permissions: PermissionsMap | null | undefined, key: PermissionKey): boolean {
   return permissions?.[key] === true;
 }

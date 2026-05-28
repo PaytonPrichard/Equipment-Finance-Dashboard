@@ -1,80 +1,113 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+import type { User, Session } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import { resolvePermissions } from '../lib/permissions';
 import { isDemoMode } from '../lib/demoMode';
 import { DEMO_PROFILE, DEMO_USER } from '../data/demoPipeline';
+import type { UserRole, PermissionsMap } from '../types';
 
-const AuthContext = createContext(null);
+export interface ProfileRow {
+  id: string;
+  org_id: string | null;
+  role: UserRole;
+  full_name: string | null;
+  email: string | null;
+  avatar_url?: string | null;
+  created_at: string;
+  organizations?: {
+    name: string;
+    branding?: unknown;
+    org_settings?: unknown;
+  } | null;
+}
 
-export function useAuth() {
+export interface AuthContextValue {
+  user: User | null;
+  profile: ProfileRow | null;
+  session: Session | null;
+  permissions: PermissionsMap | null;
+  loading: boolean;
+  passwordRecovery: boolean;
+  emailVerified: boolean;
+  signIn: (email: string, password: string) => Promise<{ data: unknown; error: unknown }>;
+  signUp: (email: string, password: string, fullName: string) => Promise<{ data: unknown; error: unknown }>;
+  signOut: () => Promise<void>;
+  refreshProfile: () => Promise<void>;
+}
+
+const AuthContext = createContext<AuthContextValue | null>(null);
+
+export function useAuth(): AuthContextValue {
   const context = useContext(AuthContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
 }
 
-const OFFLINE_CONTEXT = {
+const OFFLINE_CONTEXT: AuthContextValue = {
   user: null,
   profile: null,
   session: null,
   permissions: null,
   loading: false,
-  signIn: async () => ({ error: { message: 'Auth unavailable in offline mode' } }),
-  signUp: async () => ({ error: { message: 'Auth unavailable in offline mode' } }),
+  passwordRecovery: false,
+  emailVerified: false,
+  signIn: async () => ({ data: null, error: { message: 'Auth unavailable in offline mode' } }),
+  signUp: async () => ({ data: null, error: { message: 'Auth unavailable in offline mode' } }),
   signOut: async () => {},
   refreshProfile: async () => {},
 };
 
-const DEMO_CONTEXT = {
-  user: DEMO_USER,
-  profile: DEMO_PROFILE,
-  session: { user: DEMO_USER, access_token: 'demo' },
+const DEMO_CONTEXT: AuthContextValue = {
+  user: DEMO_USER as unknown as User,
+  profile: DEMO_PROFILE as unknown as ProfileRow,
+  session: { user: DEMO_USER as unknown as User, access_token: 'demo' } as Session,
   permissions: resolvePermissions('admin', []),
   loading: false,
   passwordRecovery: false,
   emailVerified: true,
-  signIn: async () => ({ error: { message: 'Sign in disabled in demo mode' } }),
-  signUp: async () => ({ error: { message: 'Sign up disabled in demo mode' } }),
+  signIn: async () => ({ data: null, error: { message: 'Sign in disabled in demo mode' } }),
+  signUp: async () => ({ data: null, error: { message: 'Sign up disabled in demo mode' } }),
   signOut: async () => { window.location.href = '/'; },
   refreshProfile: async () => {},
 };
 
 const CACHE_KEY = 'efd_profile_cache';
 
-function getAuthStorageKey() {
+function getAuthStorageKey(): string | null {
   try {
-    return `sb-${new URL(process.env.REACT_APP_SUPABASE_URL).hostname.split('.')[0]}-auth-token`;
+    return `sb-${new URL(process.env.REACT_APP_SUPABASE_URL!).hostname.split('.')[0]}-auth-token`;
   } catch {
     return null;
   }
 }
 
-function readCachedProfile(userId) {
+function readCachedProfile(userId: string): ProfileRow | null {
   try {
     const cached = localStorage.getItem(CACHE_KEY);
     if (cached) {
       const parsed = JSON.parse(cached);
-      if (parsed?.id === userId) return parsed;
+      if (parsed?.id === userId) return parsed as ProfileRow;
     }
   } catch { /* ignore */ }
   return null;
 }
 
-function writeCachedProfile(profile) {
+function writeCachedProfile(profile: ProfileRow): void {
   try {
     localStorage.setItem(CACHE_KEY, JSON.stringify(profile));
   } catch { /* ignore */ }
 }
 
-export function AuthProvider({ children }) {
+export function AuthProvider({ children }: { children: React.ReactNode }): React.ReactElement {
   if (isDemoMode()) {
     return <DemoAuthProvider>{children}</DemoAuthProvider>;
   }
   return <RealAuthProvider>{children}</RealAuthProvider>;
 }
 
-function DemoAuthProvider({ children }) {
+function DemoAuthProvider({ children }: { children: React.ReactNode }): React.ReactElement {
   return (
     <AuthContext.Provider value={DEMO_CONTEXT}>
       {children}
@@ -82,24 +115,22 @@ function DemoAuthProvider({ children }) {
   );
 }
 
-function RealAuthProvider({ children }) {
-  const [session, setSession] = useState(null);
-  const [user, setUser] = useState(null);
-  const [profile, setProfile] = useState(null);
-  const [permissions, setPermissions] = useState(null);
-  const [loading, setLoading] = useState(!!supabase);
-  const [passwordRecovery, setPasswordRecovery] = useState(false);
-  const [emailVerified, setEmailVerified] = useState(false);
-  const retryTimerRef = useRef(null);
-  const fetchingRef = useRef(false);
+function RealAuthProvider({ children }: { children: React.ReactNode }): React.ReactElement {
+  const [session, setSession] = useState<Session | null>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [profile, setProfile] = useState<ProfileRow | null>(null);
+  const [permissions, setPermissions] = useState<PermissionsMap | null>(null);
+  const [loading, setLoading] = useState<boolean>(!!supabase);
+  const [passwordRecovery, setPasswordRecovery] = useState<boolean>(false);
+  const [emailVerified, setEmailVerified] = useState<boolean>(false);
+  const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const fetchingRef = useRef<boolean>(false);
 
-  // Fetch profile from Supabase with retry
-  const fetchProfile = useCallback(async (authUser) => {
+  const fetchProfile = useCallback(async (authUser: User) => {
     if (!supabase || !authUser || fetchingRef.current) return;
     fetchingRef.current = true;
 
     try {
-      // Single query, no fallback chain
       const { data, error } = await supabase
         .from('profiles')
         .select('*, organizations(name, branding, org_settings)')
@@ -107,7 +138,6 @@ function RealAuthProvider({ children }) {
         .maybeSingle();
 
       if (error) {
-        // Try simpler query
         const fallback = await supabase
           .from('profiles')
           .select('*, organizations(name, branding)')
@@ -115,15 +145,14 @@ function RealAuthProvider({ children }) {
           .maybeSingle();
 
         if (fallback.data) {
-          setProfile(fallback.data);
-          writeCachedProfile(fallback.data);
-          const role = fallback.data.role || 'analyst';
+          setProfile(fallback.data as ProfileRow);
+          writeCachedProfile(fallback.data as ProfileRow);
+          const role = (fallback.data as ProfileRow).role || 'analyst';
           setPermissions(resolvePermissions(role, []));
           fetchingRef.current = false;
           return;
         }
 
-        // Both failed — schedule retry
         console.warn('Profile fetch failed, retrying in 5s:', error.message);
         if (retryTimerRef.current) clearTimeout(retryTimerRef.current);
         retryTimerRef.current = setTimeout(() => {
@@ -135,25 +164,23 @@ function RealAuthProvider({ children }) {
       }
 
       if (data) {
-        setProfile(data);
-        writeCachedProfile(data);
+        setProfile(data as ProfileRow);
+        writeCachedProfile(data as ProfileRow);
 
-        // Fetch org permissions
-        let orgOverrides = [];
-        if (data.org_id) {
+        let orgOverrides: any[] = [];
+        if ((data as ProfileRow).org_id) {
           const { data: overrides } = await supabase
             .from('org_permissions')
             .select('*')
-            .eq('org_id', data.org_id);
+            .eq('org_id', (data as ProfileRow).org_id);
           orgOverrides = overrides || [];
         }
 
-        const role = data.role || 'analyst';
+        const role = (data as ProfileRow).role || 'analyst';
         setPermissions(resolvePermissions(role, orgOverrides));
       }
     } catch (err) {
       console.error('Profile fetch error:', err);
-      // Schedule retry
       if (retryTimerRef.current) clearTimeout(retryTimerRef.current);
       retryTimerRef.current = setTimeout(() => {
         fetchingRef.current = false;
@@ -164,7 +191,6 @@ function RealAuthProvider({ children }) {
     fetchingRef.current = false;
   }, []);
 
-  // Initialize: read auth from localStorage, load cached profile, fetch fresh in background
   useEffect(() => {
     if (!supabase) return;
 
@@ -174,8 +200,7 @@ function RealAuthProvider({ children }) {
       const storageKey = getAuthStorageKey();
       if (!storageKey) { setLoading(false); return; }
 
-      // Step 1: Read auth token from localStorage (instant)
-      let authUser = null;
+      let authUser: User | null = null;
       try {
         const stored = localStorage.getItem(storageKey);
         if (stored) {
@@ -184,12 +209,11 @@ function RealAuthProvider({ children }) {
           if (mounted && authUser) {
             setSession(parsed);
             setUser(authUser);
-            setEmailVerified(!!authUser.email_confirmed_at);
+            setEmailVerified(!!(authUser as User & { email_confirmed_at?: string }).email_confirmed_at);
           }
         }
       } catch { /* ignore */ }
 
-      // Step 2: Load cached profile (instant)
       if (authUser) {
         const cached = readCachedProfile(authUser.id);
         if (cached && mounted) {
@@ -199,21 +223,17 @@ function RealAuthProvider({ children }) {
         }
       }
 
-      // Step 3: Stop loading (UI is usable now)
       if (mounted) setLoading(false);
 
-      // Step 4: Refresh profile from network (background, non-blocking)
-      if (authUser?.email_confirmed_at) {
-        fetchProfile(authUser);
+      if ((authUser as any)?.email_confirmed_at) {
+        fetchProfile(authUser!);
       }
 
-      // Step 5: Refresh auth token (background)
-      supabase.auth.getSession().catch(() => {});
+      supabase!.auth.getSession().catch(() => {});
     };
 
     init();
 
-    // Listen for auth changes (sign in, sign out, token refresh)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, newSession) => {
         if (!mounted) return;
@@ -225,18 +245,17 @@ function RealAuthProvider({ children }) {
         const authUser = newSession?.user ?? null;
         setSession(newSession);
         setUser(authUser);
-        setEmailVerified(!!authUser?.email_confirmed_at);
+        setEmailVerified(!!(authUser as any)?.email_confirmed_at);
 
-        if (event === 'SIGNED_IN' && authUser?.email_confirmed_at) {
-          // Fresh sign in — fetch profile
-          fetchProfile(authUser);
+        if (event === 'SIGNED_IN' && (authUser as any)?.email_confirmed_at) {
+          fetchProfile(authUser!);
         } else if (event === 'SIGNED_OUT') {
           setProfile(null);
           setPermissions(null);
         }
 
         setLoading(false);
-      }
+      },
     );
 
     return () => {
@@ -246,14 +265,14 @@ function RealAuthProvider({ children }) {
     };
   }, [fetchProfile]);
 
-  const signIn = useCallback(async (email, password) => {
-    if (!supabase) return { error: { message: 'Auth unavailable in offline mode' } };
+  const signIn = useCallback(async (email: string, password: string) => {
+    if (!supabase) return { data: null, error: { message: 'Auth unavailable in offline mode' } };
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     return { data, error };
   }, []);
 
-  const signUp = useCallback(async (email, password, fullName) => {
-    if (!supabase) return { error: { message: 'Auth unavailable in offline mode' } };
+  const signUp = useCallback(async (email: string, password: string, fullName: string) => {
+    if (!supabase) return { data: null, error: { message: 'Auth unavailable in offline mode' } };
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -265,7 +284,6 @@ function RealAuthProvider({ children }) {
   const signOut = useCallback(async () => {
     if (!supabase) return;
 
-    // Clear everything
     try {
       localStorage.removeItem(CACHE_KEY);
       localStorage.removeItem('efd_tutorial_state');
@@ -287,7 +305,7 @@ function RealAuthProvider({ children }) {
 
   const refreshProfile = useCallback(async () => {
     if (user) {
-      fetchingRef.current = false; // Allow re-fetch
+      fetchingRef.current = false;
       await fetchProfile(user);
     }
   }, [user, fetchProfile]);

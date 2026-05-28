@@ -1,17 +1,36 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
 
-const ToastContext = createContext(null);
+export type ToastType = 'error' | 'success' | 'info' | 'warning';
 
-export function useToast() {
-  return useContext(ToastContext);
+interface Toast {
+  id: number;
+  message: string;
+  type: ToastType;
+}
+
+export interface ToastContextValue {
+  addToast: (message: string, type?: ToastType, duration?: number) => void;
+}
+
+const ToastContext = createContext<ToastContextValue | null>(null);
+
+export function useToast(): ToastContextValue {
+  return useContext(ToastContext) as ToastContextValue;
 }
 
 let nextId = 0;
 
-export function ToastProvider({ children }) {
-  const [toasts, setToasts] = useState([]);
+const STYLES: Record<ToastType, string> = {
+  error: 'bg-rose-500/15 border-rose-500/25 text-rose-300',
+  success: 'bg-emerald-500/15 border-emerald-500/25 text-emerald-300',
+  info: 'bg-gold-500/15 border-gold-500/25 text-gold-300',
+  warning: 'bg-amber-500/15 border-amber-500/25 text-amber-300',
+};
 
-  const addToast = useCallback((message, type = 'error', duration = 5000) => {
+export function ToastProvider({ children }: { children: React.ReactNode }): React.ReactElement {
+  const [toasts, setToasts] = useState<Toast[]>([]);
+
+  const addToast = useCallback((message: string, type: ToastType = 'error', duration: number = 5000) => {
     const id = ++nextId;
     setToasts((prev) => [...prev, { id, message, type }]);
     setTimeout(() => {
@@ -19,16 +38,9 @@ export function ToastProvider({ children }) {
     }, duration);
   }, []);
 
-  const removeToast = useCallback((id) => {
+  const removeToast = useCallback((id: number) => {
     setToasts((prev) => prev.filter((t) => t.id !== id));
   }, []);
-
-  const STYLES = {
-    error: 'bg-rose-500/15 border-rose-500/25 text-rose-300',
-    success: 'bg-emerald-500/15 border-emerald-500/25 text-emerald-300',
-    info: 'bg-gold-500/15 border-gold-500/25 text-gold-300',
-    warning: 'bg-amber-500/15 border-amber-500/25 text-amber-300',
-  };
 
   return (
     <ToastContext.Provider value={{ addToast }}>

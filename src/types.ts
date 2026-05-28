@@ -16,6 +16,23 @@ export type AssetClass =
 
 export type UserRole = 'analyst' | 'senior_analyst' | 'credit_committee' | 'admin';
 
+export type PermissionKey =
+  | 'deal.screen'
+  | 'deal.save'
+  | 'deal.delete_own'
+  | 'pipeline.create'
+  | 'pipeline.move_review'
+  | 'pipeline.move_approved'
+  | 'pipeline.move_funded'
+  | 'pipeline.move_declined'
+  | 'pipeline.delete_own'
+  | 'pipeline.delete_any'
+  | 'audit.view'
+  | 'org.manage_users'
+  | 'org.manage_permissions';
+
+export type PermissionsMap = Record<PermissionKey, boolean>;
+
 export const ASSET_CLASSES: readonly AssetClass[] = [
   'equipment_finance',
   'accounts_receivable',

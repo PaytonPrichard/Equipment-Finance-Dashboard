@@ -3,11 +3,6 @@
 //
 // Files are stored in a 'deal-documents' bucket.
 // Metadata is stored in the 'deal_attachments' table.
-//
-// Setup required:
-//   1. Create 'deal-documents' storage bucket in Supabase
-//   2. Run the deal_attachments migration (see supabase_attachments.sql)
-//   3. Set RLS policies on the bucket and table
 // ============================================================
 
 import { supabase } from './supabase';
@@ -19,32 +14,42 @@ const ALLOWED_EXTENSIONS = [
   '.pdf', '.doc', '.docx', '.xls', '.xlsx', '.png', '.jpg', '.jpeg', '.webp', '.csv',
 ];
 
-/**
- * Validate a file before upload.
- */
-export function validateFile(file) {
+export interface AttachmentRow {
+  id: string;
+  deal_id: string;
+  deal_type: string;
+  org_id: string;
+  uploaded_by: string;
+  file_name: string;
+  file_size: number;
+  file_type: string;
+  storage_path: string;
+  created_at: string;
+}
+
+const MIME_MAP: Record<string, string[]> = {
+  '.pdf': ['application/pdf'],
+  '.doc': ['application/msword'],
+  '.docx': ['application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
+  '.xls': ['application/vnd.ms-excel'],
+  '.xlsx': ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'],
+  '.csv': ['text/csv', 'application/vnd.ms-excel', 'text/plain'],
+  '.png': ['image/png'],
+  '.jpg': ['image/jpeg'],
+  '.jpeg': ['image/jpeg'],
+  '.webp': ['image/webp'],
+};
+
+export function validateFile(file: File): string | null {
   if (file.size > MAX_FILE_SIZE) {
     return `File too large (${(file.size / 1024 / 1024).toFixed(1)} MB). Maximum is 25 MB.`;
   }
 
-  const ext = '.' + file.name.split('.').pop().toLowerCase();
+  const ext = '.' + file.name.split('.').pop()!.toLowerCase();
   if (!ALLOWED_EXTENSIONS.includes(ext)) {
     return `File type "${ext}" is not supported. Allowed: ${ALLOWED_EXTENSIONS.join(', ')}`;
   }
 
-  // Validate MIME type matches extension (prevents disguised files)
-  const MIME_MAP = {
-    '.pdf': ['application/pdf'],
-    '.doc': ['application/msword'],
-    '.docx': ['application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
-    '.xls': ['application/vnd.ms-excel'],
-    '.xlsx': ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'],
-    '.csv': ['text/csv', 'application/vnd.ms-excel', 'text/plain'],
-    '.png': ['image/png'],
-    '.jpg': ['image/jpeg'],
-    '.jpeg': ['image/jpeg'],
-    '.webp': ['image/webp'],
-  };
   const allowedMimes = MIME_MAP[ext];
   if (allowedMimes && file.type && !allowedMimes.includes(file.type)) {
     return `File content doesn't match its extension (${ext}). Please verify the file.`;
@@ -53,40 +58,30 @@ export function validateFile(file) {
   return null;
 }
 
-/**
- * Upload a document and create a metadata record.
- *
- * @param {File} file — the file to upload
- * @param {string} dealId — pipeline_deal ID
- * @param {string} dealType — 'pipeline' or 'saved'
- * @param {string} userId — current user ID
- * @param {string} orgId — current org ID
- * @returns {{ data, error }}
- */
-export async function uploadAttachment(file, dealId, dealType, userId, orgId) {
+export async function uploadAttachment(
+  file: File,
+  dealId: string,
+  dealType: string,
+  userId: string,
+  orgId: string,
+): Promise<{ data: AttachmentRow | null; error: string | null }> {
   if (!supabase) return { data: null, error: 'Supabase not configured' };
 
   const validationError = validateFile(file);
   if (validationError) return { data: null, error: validationError };
 
-  // Generate a unique storage path: org/deal/timestamp_filename
   const timestamp = Date.now();
   const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
   const storagePath = `${orgId}/${dealId}/${timestamp}_${safeName}`;
 
-  // Upload to storage
   const { error: uploadError } = await supabase.storage
     .from(BUCKET)
-    .upload(storagePath, file, {
-      contentType: file.type,
-      upsert: false,
-    });
+    .upload(storagePath, file, { contentType: file.type, upsert: false });
 
   if (uploadError) {
     return { data: null, error: uploadError.message || 'Upload failed' };
   }
 
-  // Create metadata record
   const { data, error: insertError } = await supabase
     .from('deal_attachments')
     .insert({
@@ -103,18 +98,14 @@ export async function uploadAttachment(file, dealId, dealType, userId, orgId) {
     .single();
 
   if (insertError) {
-    // Clean up the uploaded file if metadata insert fails
     await supabase.storage.from(BUCKET).remove([storagePath]);
     return { data: null, error: insertError.message || 'Failed to save attachment record' };
   }
 
-  return { data, error: null };
+  return { data: data as AttachmentRow, error: null };
 }
 
-/**
- * Fetch all attachments for a deal.
- */
-export async function fetchAttachments(dealId) {
+export async function fetchAttachments(dealId: string): Promise<{ data: AttachmentRow[]; error: unknown }> {
   if (!supabase) return { data: [], error: null };
 
   const { data, error } = await supabase
@@ -123,38 +114,28 @@ export async function fetchAttachments(dealId) {
     .eq('deal_id', dealId)
     .order('created_at', { ascending: false });
 
-  return { data: data || [], error };
+  return { data: (data as AttachmentRow[]) || [], error };
 }
 
-/**
- * Get a temporary download URL for an attachment.
- */
-export async function getDownloadUrl(storagePath) {
+export async function getDownloadUrl(storagePath: string): Promise<{ url: string | null; error: string | null }> {
   if (!supabase) return { url: null, error: 'Supabase not configured' };
 
   const { data, error } = await supabase.storage
     .from(BUCKET)
-    .createSignedUrl(storagePath, 3600); // 1 hour expiry
+    .createSignedUrl(storagePath, 3600);
 
   return { url: data?.signedUrl || null, error: error?.message || null };
 }
 
-/**
- * Delete an attachment (storage file + metadata record).
- */
-export async function deleteAttachment(attachmentId, storagePath) {
+export async function deleteAttachment(attachmentId: string, storagePath: string): Promise<{ error: string | null }> {
   if (!supabase) return { error: 'Supabase not configured' };
 
-  // Delete storage file
-  const { error: storageError } = await supabase.storage
-    .from(BUCKET)
-    .remove([storagePath]);
+  const { error: storageError } = await supabase.storage.from(BUCKET).remove([storagePath]);
 
   if (storageError) {
     console.error('Storage delete error:', storageError);
   }
 
-  // Delete metadata record
   const { error: dbError } = await supabase
     .from('deal_attachments')
     .delete()
@@ -163,10 +144,7 @@ export async function deleteAttachment(attachmentId, storagePath) {
   return { error: dbError?.message || null };
 }
 
-/**
- * Format file size for display.
- */
-export function formatFileSize(bytes) {
+export function formatFileSize(bytes: number): string {
   if (bytes < 1024) return bytes + ' B';
   if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(0) + ' KB';
   return (bytes / (1024 * 1024)).toFixed(1) + ' MB';

@@ -10,7 +10,7 @@ import { supabase } from './supabase';
 
 const SESSION_KEY = 'efd_session_token';
 
-function getSessionToken() {
+function getSessionToken(): string {
   try {
     let token = localStorage.getItem(SESSION_KEY);
     if (!token) {
@@ -23,41 +23,29 @@ function getSessionToken() {
   }
 }
 
-/**
- * Register this device as the active session.
- * Removes all other sessions for this user.
- */
-export async function registerSession(userId) {
+// Register this device as the active session.
+// Removes all other sessions for this user.
+export async function registerSession(userId: string): Promise<void> {
   if (!supabase || !userId) return;
 
   const token = getSessionToken();
   const deviceInfo = navigator.userAgent?.slice(0, 100) || 'unknown';
 
   try {
-    // Delete old sessions for this user
-    await supabase
-      .from('active_sessions')
-      .delete()
-      .eq('user_id', userId);
-
-    // Insert new session
-    await supabase
-      .from('active_sessions')
-      .insert({
-        user_id: userId,
-        session_token: token,
-        device_info: deviceInfo,
-      });
+    await supabase.from('active_sessions').delete().eq('user_id', userId);
+    await supabase.from('active_sessions').insert({
+      user_id: userId,
+      session_token: token,
+      device_info: deviceInfo,
+    });
   } catch (err) {
     console.warn('Session registration failed:', err);
   }
 }
 
-/**
- * Check if this device's session is still the active one.
- * Returns true if valid, false if superseded by another device.
- */
-export async function checkSession(userId) {
+// Check if this device's session is still the active one.
+// Returns true if valid, false if superseded by another device.
+export async function checkSession(userId: string): Promise<boolean> {
   if (!supabase || !userId) return true;
 
   const token = getSessionToken();
@@ -71,17 +59,15 @@ export async function checkSession(userId) {
       .limit(1)
       .single();
 
-    if (!data) return true; // No session record, allow
-    return data.session_token === token;
+    if (!data) return true;
+    return (data as { session_token: string }).session_token === token;
   } catch {
     return true; // On error, don't kick the user out
   }
 }
 
-/**
- * Update last_seen timestamp for heartbeat.
- */
-export async function heartbeatSession(userId) {
+// Update last_seen timestamp for heartbeat.
+export async function heartbeatSession(userId: string): Promise<void> {
   if (!supabase || !userId) return;
 
   const token = getSessionToken();
@@ -97,10 +83,8 @@ export async function heartbeatSession(userId) {
   }
 }
 
-/**
- * Remove this device's session on logout.
- */
-export async function clearSession(userId) {
+// Remove this device's session on logout.
+export async function clearSession(userId: string): Promise<void> {
   if (!supabase || !userId) return;
 
   const token = getSessionToken();
