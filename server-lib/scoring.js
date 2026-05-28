@@ -21,6 +21,11 @@ const MODULE_LOADERS = {
 const VALID_ASSET_CLASSES = Object.keys(MODULE_LOADERS);
 
 async function recomputeScore(assetClass, inputs) {
+  console.log('[scoring] recomputeScore called', {
+    assetClass,
+    hasInputs: !!inputs,
+    inputKeys: inputs ? Object.keys(inputs).slice(0, 8) : [],
+  });
   if (!MODULE_LOADERS[assetClass]) {
     return {
       score: null,
@@ -39,6 +44,7 @@ async function recomputeScore(assetClass, inputs) {
     if (typeof score !== 'number' || !Number.isFinite(score)) {
       return { score: null, error: 'Scoring produced an invalid composite' };
     }
+    console.log('[scoring] recomputeScore success', { assetClass, score });
     return { score, error: null };
   } catch (err) {
     console.error('[scoring] recomputeScore error:', err);
