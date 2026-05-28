@@ -3,7 +3,7 @@ import { isDemoMode } from '../lib/demoMode';
 
 const GOLD = '#D4A843';
 
-export default function DemoBanner() {
+export default function DemoBanner(): React.ReactElement | null {
   if (!isDemoMode()) return null;
 
   const exitDemo = () => {

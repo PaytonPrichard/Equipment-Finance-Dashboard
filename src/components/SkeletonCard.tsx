@@ -1,14 +1,14 @@
 import React from 'react';
 
-/**
- * Reusable skeleton loading components for the dashboard.
- */
+export interface SkeletonPulseProps {
+  className?: string;
+}
 
-export function SkeletonPulse({ className = '' }) {
+export function SkeletonPulse({ className = '' }: SkeletonPulseProps): React.ReactElement {
   return <div className={`animate-pulse bg-white/[0.04] rounded ${className}`} />;
 }
 
-export function SkeletonPipelineCard() {
+export function SkeletonPipelineCard(): React.ReactElement {
   return (
     <div className="glass-card rounded-xl p-3 space-y-2">
       <SkeletonPulse className="h-4 w-3/4 rounded-md" />
@@ -26,7 +26,7 @@ export function SkeletonPipelineCard() {
   );
 }
 
-export function SkeletonPipelineColumn() {
+export function SkeletonPipelineColumn(): React.ReactElement {
   return (
     <div className="flex-1 min-w-[160px] flex flex-col">
       <SkeletonPulse className="h-10 rounded-xl mb-2" />
@@ -38,7 +38,7 @@ export function SkeletonPipelineColumn() {
   );
 }
 
-export function SkeletonPipeline() {
+export function SkeletonPipeline(): React.ReactElement {
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between">
@@ -57,7 +57,12 @@ export function SkeletonPipeline() {
   );
 }
 
-export function SkeletonTable({ rows = 5, cols = 4 }) {
+export interface SkeletonTableProps {
+  rows?: number;
+  cols?: number;
+}
+
+export function SkeletonTable({ rows = 5, cols = 4 }: SkeletonTableProps): React.ReactElement {
   return (
     <div className="glass-card rounded-2xl overflow-hidden">
       <div className="px-5 py-3 border-b border-white/[0.04] flex gap-4">

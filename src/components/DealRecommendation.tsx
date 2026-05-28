@@ -1,6 +1,12 @@
 import React from 'react';
+import type { Recommendation } from '../types';
 
-export default function DealRecommendation({ recommendation, commentary }) {
+export interface DealRecommendationProps {
+  recommendation: Recommendation;
+  commentary: string[];
+}
+
+export default function DealRecommendation({ recommendation, commentary }: DealRecommendationProps): React.ReactElement {
   return (
     <div className={`rounded-2xl p-6 border ${recommendation.bgClass}`}>
       <div className="flex items-center gap-3 mb-4">

@@ -3,6 +3,15 @@ import React from 'react';
 const GOLD = '#D4A843';
 const CHARCOAL = '#141210';
 
+export interface TrancheLogoProps {
+  size?: number;
+  framed?: boolean;
+  barColor?: string;
+  frameColor?: string;
+  className?: string;
+  title?: string;
+}
+
 export default function TrancheLogo({
   size = 28,
   framed = true,
@@ -10,7 +19,7 @@ export default function TrancheLogo({
   frameColor = CHARCOAL,
   className = '',
   title = 'Tranche',
-}) {
+}: TrancheLogoProps): React.ReactElement {
   return (
     <svg
       width={size}

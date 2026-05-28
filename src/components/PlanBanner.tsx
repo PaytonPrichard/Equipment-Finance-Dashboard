@@ -1,10 +1,15 @@
 import React from 'react';
+import { formatPlanName } from '../utils/format';
 
-/**
- * Banner that shows plan expiry warnings and expired state.
- * Renders nothing if the plan is active and not expiring soon.
- */
-export default function PlanBanner({ plan, isExpired, isExpiringSoon, daysRemaining, onManagePlan }) {
+export interface PlanBannerProps {
+  plan: string;
+  isExpired: boolean;
+  isExpiringSoon: boolean;
+  daysRemaining: number | null;
+  onManagePlan?: () => void;
+}
+
+export default function PlanBanner({ plan, isExpired, isExpiringSoon, daysRemaining, onManagePlan }: PlanBannerProps): React.ReactElement | null {
   if (!isExpired && !isExpiringSoon) return null;
 
   if (isExpired) {
@@ -18,7 +23,7 @@ export default function PlanBanner({ plan, isExpired, isExpiringSoon, daysRemain
               <line x1="9" y1="9" x2="15" y2="15" />
             </svg>
             <span className="text-[12px] text-rose-800">
-              Your <span className="font-semibold capitalize">{plan}</span> plan has expired. The dashboard is now in read-only mode.
+              Your <span className="font-semibold">{formatPlanName(plan)}</span> plan has expired. The dashboard is now in read-only mode.
               {' '}Upgrade your plan to continue saving and managing deals.
             </span>
           </div>
@@ -27,7 +32,7 @@ export default function PlanBanner({ plan, isExpired, isExpiringSoon, daysRemain
               onClick={onManagePlan}
               className="flex-shrink-0 px-3 py-1.5 rounded-lg text-[11px] font-semibold text-gray-900 bg-rose-500/20 border border-rose-500/30 hover:bg-rose-500/30 transition-colors"
             >
-              Upgrade Plan
+              Upgrade plan
             </button>
           )}
         </div>
@@ -44,7 +49,7 @@ export default function PlanBanner({ plan, isExpired, isExpiringSoon, daysRemain
             <polyline points="12 6 12 12 16 14" />
           </svg>
           <span className="text-[12px] text-amber-800">
-            Your <span className="font-semibold capitalize">{plan}</span> plan expires in{' '}
+            Your <span className="font-semibold">{formatPlanName(plan)}</span> plan expires in{' '}
             <span className="font-semibold">{daysRemaining} day{daysRemaining !== 1 ? 's' : ''}</span>.
             {' '}Upgrade to keep full access.
           </span>
@@ -54,7 +59,7 @@ export default function PlanBanner({ plan, isExpired, isExpiringSoon, daysRemain
             onClick={onManagePlan}
             className="flex-shrink-0 px-3 py-1.5 rounded-lg text-[11px] font-semibold text-amber-800 bg-amber-100 border border-amber-300 hover:bg-amber-200 transition-colors"
           >
-            Manage Plan
+            Manage plan
           </button>
         )}
       </div>

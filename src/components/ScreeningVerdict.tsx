@@ -1,6 +1,21 @@
 import React from 'react';
+import type { Verdict, ScreeningReason } from '../types';
 
-const VERDICT_CONFIG = {
+export interface ScreeningVerdictProps {
+  verdict: Verdict | null | undefined;
+  reasons: ScreeningReason[];
+}
+
+interface VerdictConfig {
+  label: string;
+  description: string;
+  bgClass: string;
+  textClass: string;
+  iconBg: string;
+  icon: React.ReactElement;
+}
+
+const VERDICT_CONFIG: Record<Verdict, VerdictConfig> = {
   pass: {
     label: 'PASS',
     description: 'Meets screening criteria',
@@ -41,12 +56,12 @@ const VERDICT_CONFIG = {
   },
 };
 
-export default function ScreeningVerdict({ verdict, reasons }) {
+export default function ScreeningVerdict({ verdict, reasons }: ScreeningVerdictProps): React.ReactElement | null {
   if (!verdict) return null;
 
   const config = VERDICT_CONFIG[verdict] || VERDICT_CONFIG.flag;
-  const failReasons = reasons.filter(r => r.level === 'fail');
-  const flagReasons = reasons.filter(r => r.level === 'flag');
+  const failReasons = reasons.filter((r) => r.level === 'fail');
+  const flagReasons = reasons.filter((r) => r.level === 'flag');
 
   return (
     <div className={`rounded-2xl border p-5 ${config.bgClass}`}>

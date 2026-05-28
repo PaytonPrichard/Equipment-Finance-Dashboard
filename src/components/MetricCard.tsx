@@ -1,6 +1,27 @@
 import React from 'react';
 
-function getMetricColor(status) {
+type MetricStatus = 'excellent' | 'good' | 'adequate' | 'weak';
+
+interface MetricColorConfig {
+  label: string;
+  text: string;
+  bg: string;
+  border: string;
+  dot: string;
+  glow: string;
+  labelBg: string;
+}
+
+export interface MetricCardProps {
+  title: string;
+  value: string | number;
+  subtitle?: string;
+  status?: MetricStatus;
+  flag?: string;
+  threshold?: string;
+}
+
+function getMetricColor(status: MetricStatus | undefined): MetricColorConfig {
   switch (status) {
     case 'excellent':
       return {
@@ -55,7 +76,7 @@ function getMetricColor(status) {
   }
 }
 
-export default function MetricCard({ title, value, subtitle, status, flag, threshold }) {
+export default function MetricCard({ title, value, subtitle, status, flag, threshold }: MetricCardProps): React.ReactElement {
   const c = getMetricColor(status);
 
   return (
