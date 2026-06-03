@@ -16,7 +16,9 @@ Three modules under `src/modules/`, each exports the same shape:
 - `accounts-receivable/`
 - `inventory-finance/`
 
-Every module exports: `schema` (field definitions), `constants` (rate spreads, residuals, thresholds), `scoring` (calculateMetrics, calculateRiskScore, describeFactors, getRecommendation, generateCommentary, getSuggestedStructure, runStressTest, generateExportSummary, parseCsvDeals, isInputValid), and `index.js` re-exporting the public surface.
+Every module exports: `schema` (field definitions), `constants` (rate spreads, residuals, thresholds), `scoring` (calculateMetrics, calculateRiskScore, describeFactors, getRecommendation, generateCommentary, getSuggestedStructure, runStressTest, generateExportSummary, parseCsvDeals, isInputValid, getDefaultCovenants), and `index.js` re-exporting the public surface.
+
+`getDefaultCovenants(inputs, metrics, criteria)` is the monitoring seed: it pre-fills a covenant set from the screening assumptions when a deal is funded. Asset-class-specific (term facilities seed no borrowing base; revolving AR/inventory do). Returns `CovenantSeed[]`. The shared evaluator and seed builders live in `src/lib/covenants.js`. See `Monitoring_Phase1_Design.md`.
 
 When adding a new asset class, conform to this contract. Don't introduce module-specific code paths into shared components — instead extend the module shape.
 

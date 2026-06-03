@@ -8,6 +8,7 @@ import {
   generateCommentary,
   generateExportSummary,
   getSuggestedStructure,
+  getDefaultCovenants,
 } from './scoring';
 import { INITIAL_INPUTS } from './constants';
 
@@ -258,5 +259,34 @@ describe('Inventory Finance Scoring', () => {
       // Finished: $8M * 50% * 65% = $2.6M
       expect(structure.sublimits.finishedGoods.amount).toBeCloseTo(2_600_000, -3);
     });
+  });
+});
+
+describe('Inventory Finance getDefaultCovenants', () => {
+  const inputs = {
+    ...INITIAL_INPUTS,
+    annualRevenue: 50000000,
+    ebitda: 8000000,
+    totalExistingDebt: 20000000,
+    totalInventory: 8000000,
+  };
+  const metrics = calculateMetrics(inputs, 0.0425);
+
+  test('uses the standard DSCR floor (1.25), not the AR floor', () => {
+    expect(getDefaultCovenants(inputs, metrics).find((x) => x.metric_key === 'dscr')).toMatchObject({
+      flag_value: 1.25, fail_value: 1.0,
+    });
+  });
+
+  test('seeds turnover (min) and obsolescence (max) covenants', () => {
+    const cov = getDefaultCovenants(inputs, metrics);
+    expect(cov.find((x) => x.metric_key === 'turnover')).toMatchObject({ direction: 'min', flag_value: 4.0, unit: 'ratio' });
+    expect(cov.find((x) => x.metric_key === 'obsolescence')).toMatchObject({ direction: 'max', flag_value: 10, unit: 'percent' });
+  });
+
+  test('includes a monthly borrowing base and an annual appraisal', () => {
+    const cov = getDefaultCovenants(inputs, metrics);
+    expect(cov.find((x) => /borrowing base/i.test(x.name))).toMatchObject({ test_frequency: 'monthly' });
+    expect(cov.find((x) => /appraisal/i.test(x.name))).toMatchObject({ test_frequency: 'annual' });
   });
 });

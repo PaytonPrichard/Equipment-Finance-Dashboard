@@ -315,8 +315,123 @@ export interface ScreeningCriteria {
   maxObsolescence: number;
 }
 
-export type AuditAction = 'create' | 'update' | 'delete' | 'view' | 'move' | 'update_stage' | 'login' | 'logout';
-export type AuditEntityType = 'saved_deal' | 'pipeline_deal' | 'user' | 'org' | 'session' | 'invitation';
+export type AuditAction =
+  | 'create' | 'update' | 'delete' | 'view' | 'move' | 'update_stage' | 'login' | 'logout'
+  | 'create_facility' | 'seed_covenants' | 'update_covenant' | 'record_test' | 'waive_covenant' | 'close_facility';
+export type AuditEntityType =
+  | 'saved_deal' | 'pipeline_deal' | 'user' | 'org' | 'session' | 'invitation'
+  | 'facility' | 'covenant' | 'covenant_test';
+
+// ───────────────────────────────────────────────────────────────
+// Monitoring — facilities and covenants (post-close, lender-side)
+//
+// A funded pipeline deal becomes a facility under monitoring. Covenants are
+// seeded from the screening assumptions (each module's getDefaultCovenants),
+// then frozen against the executed credit agreement. The seed is a pre-fill,
+// not the source of truth. See Monitoring_Phase1_Design.md.
+// ───────────────────────────────────────────────────────────────
+
+export type CovenantKind = 'financial' | 'reporting';
+export type CovenantDirection = 'min' | 'max';
+export type CovenantUnit = 'ratio' | 'percent' | 'currency' | 'count';
+export type TestFrequency = 'monthly' | 'quarterly' | 'semiannual' | 'annual';
+export type CovenantSource = 'underwritten' | 'manual';
+
+/** Computed test result. */
+export type CovenantStatus = 'pass' | 'flag' | 'fail';
+/** Stored test status — includes the manual 'waived'. */
+export type CovenantTestStatus = CovenantStatus | 'waived';
+
+export type FacilityStatus = 'active' | 'closed' | 'defaulted';
+
+/**
+ * What getDefaultCovenants returns: a covenant definition without DB identity.
+ * The setup screen edits these against the signed agreement, then they are
+ * written as covenant rows. Fields are snake_case to match the DB row shape.
+ */
+export interface CovenantSeed {
+  name: string;
+  kind: CovenantKind;
+  metric_key: string | null;            // e.g. 'dscr','leverage'; null for reporting
+  direction: CovenantDirection | null;  // null for reporting
+  flag_value: number | null;            // soft-breach boundary (watch / cure)
+  fail_value: number | null;            // hard-breach boundary (default)
+  unit: CovenantUnit | null;
+  test_frequency: TestFrequency;
+  cure_days: number;
+  source: CovenantSource;
+}
+
+/** A persisted facility row (mirrors the facilities table). */
+export interface FacilityRow {
+  id: string;
+  org_id: string;
+  pipeline_deal_id: string | null;
+  user_id: string;
+  borrower_name: string;
+  asset_class: AssetClass;
+  commitment_amount: number | null;
+  status: FacilityStatus;
+  funded_at: string | null;
+  maturity_date: string | null;
+  underwritten_snapshot: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+}
+
+/** A persisted covenant row. Extends the seed with identity and scheduling. */
+export interface CovenantRow extends CovenantSeed {
+  id: string;
+  org_id: string;
+  facility_id: string;
+  next_test_date: string | null;
+  active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+/** A persisted covenant test row (mirrors the covenant_tests table). */
+export interface CovenantTestRow {
+  id: string;
+  org_id: string;
+  facility_id: string;
+  covenant_id: string;
+  test_date: string;
+  due_date: string | null;
+  reported_value: number | null;
+  submitted_at: string | null;
+  status: CovenantTestStatus;
+  note: string;
+  created_by: string;
+  created_at: string;
+}
+
+/** A facility with its covenants and recorded tests, for the monitor view. */
+export interface FacilityDetail {
+  facility: FacilityRow;
+  covenants: CovenantRow[];
+  tests: CovenantTestRow[];
+}
+
+export interface CreateFacilityParams {
+  pipelineDealId: string | null;
+  borrowerName: string;
+  assetClass: AssetClass;
+  commitmentAmount: number | null;
+  fundedAt: string | null;
+  maturityDate: string | null;
+  underwrittenSnapshot: Record<string, unknown>;
+}
+
+export interface RecordTestParams {
+  testDate: string;
+  dueDate?: string | null;
+  reportedValue?: number | null;
+  submittedAt?: string | null;
+  note?: string;
+  waived?: boolean;
+  asOf?: string;            // evaluation date; defaults to testDate
+}
 
 // ───────────────────────────────────────────────────────────────
 // Stress test
@@ -362,4 +477,6 @@ export interface AssetClassModule<TInputs extends BaseDealInputs = BaseDealInput
   ) => string;
   parseCsvDeals: (csvText: string) => { id: string; inputs: TInputs }[];
   isInputValid: (inputs: Partial<TInputs>) => boolean;
+  /** Pre-fill a monitoring covenant set from the screening assumptions at funding. */
+  getDefaultCovenants: (inputs: TInputs, metrics: TMetrics, criteria?: Partial<ScreeningCriteria> | null) => CovenantSeed[];
 }

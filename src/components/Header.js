@@ -12,6 +12,7 @@ export default function Header({ activeTab, onTabChange, onOpenGuide, onOpenSett
   const parentTab = {
     screening: 'screening', batch: 'screening',
     pipeline: 'pipeline',
+    monitoring: 'monitoring',
     dashboard: 'dashboard', compare: 'dashboard', historical: 'dashboard', audit: 'dashboard',
     team: 'dashboard',
   };
@@ -32,23 +33,27 @@ export default function Header({ activeTab, onTabChange, onOpenGuide, onOpenSett
           {[
             { id: 'screening', label: 'New Deal', shortLabel: 'Deal' },
             { id: 'pipeline', label: 'Pipeline', shortLabel: 'Pipeline' },
+            { id: 'monitoring', label: 'Monitoring', shortLabel: 'Monitor' },
             { id: 'dashboard', label: 'Dashboard', shortLabel: 'Dash' },
           ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => onTabChange(tab.id)}
-              aria-current={activeParent === tab.id ? 'page' : undefined}
-              className={`px-2.5 md:px-4 py-1.5 md:py-2 rounded-lg text-[11px] md:text-xs font-semibold transition-all ${
-                activeParent === tab.id
-                  ? 'bg-white text-gray-900 shadow-sm border border-gray-200'
-                  : 'text-gray-500 hover:text-gray-900'
-              }`}
-            >
-              <span className="hidden sm:inline">{tab.label}</span>
-              <span className="sm:hidden">{tab.shortLabel}</span>
-            </button>
+            <React.Fragment key={tab.id}>
+              <button
+                onClick={() => onTabChange(tab.id)}
+                aria-current={activeParent === tab.id ? 'page' : undefined}
+                className={`px-2.5 md:px-4 py-1.5 md:py-2 rounded-lg text-[11px] md:text-xs font-semibold transition-all ${
+                  activeParent === tab.id
+                    ? 'bg-white text-gray-900 shadow-sm border border-gray-200'
+                    : 'text-gray-500 hover:text-gray-900'
+                }`}
+              >
+                <span className="hidden sm:inline">{tab.label}</span>
+                <span className="sm:hidden">{tab.shortLabel}</span>
+              </button>
+              {tab.id === 'pipeline' && (
+                <TutorialBeacon id="pipeline" title="Pipeline" description="Save deals here to track through your workflow." position="bottom" />
+              )}
+            </React.Fragment>
           ))}
-          <TutorialBeacon id="pipeline" title="Pipeline" description="Save deals here to track through your workflow." position="bottom" />
         </nav>
 
         {/* Actions */}

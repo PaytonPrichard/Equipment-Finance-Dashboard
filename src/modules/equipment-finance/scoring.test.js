@@ -8,6 +8,7 @@ import {
   generateCommentary,
   generateExportSummary,
   getSuggestedStructure,
+  getDefaultCovenants,
 } from './scoring';
 import { INITIAL_INPUTS } from './constants';
 
@@ -219,5 +220,51 @@ describe('Equipment Finance Scoring', () => {
       const comments = generateCommentary(concentratedInputs, metrics, score, { maxRevenueConcentration: 15 });
       expect(comments.some((c) => /concentrated exposure/i.test(c))).toBe(true);
     });
+  });
+});
+
+describe('Equipment Finance getDefaultCovenants', () => {
+  const inputs = {
+    ...INITIAL_INPUTS,
+    annualRevenue: 50000000,
+    ebitda: 8000000,
+    totalExistingDebt: 15000000,
+    equipmentCost: 5000000,
+    downPayment: 500000,
+    usefulLife: 15,
+    loanTerm: 84,
+  };
+  const metrics = calculateMetrics(inputs, 0.0425);
+
+  test('seeds DSCR and leverage from default criteria, with screening-aligned fail bands', () => {
+    const cov = getDefaultCovenants(inputs, metrics);
+    expect(cov.find((x) => x.metric_key === 'dscr')).toMatchObject({
+      kind: 'financial', direction: 'min', flag_value: 1.25, fail_value: 1.0, source: 'underwritten',
+    });
+    expect(cov.find((x) => x.metric_key === 'leverage')).toMatchObject({
+      direction: 'max', flag_value: 5.0, fail_value: 7.5,
+    });
+  });
+
+  test('omits the LTV covenant when maxLtv is disabled (100)', () => {
+    expect(getDefaultCovenants(inputs, metrics).find((x) => x.metric_key === 'ltv')).toBeUndefined();
+  });
+
+  test('seeds the LTV covenant only when the firm enforces a cap', () => {
+    const cov = getDefaultCovenants(inputs, metrics, { maxLtv: 85 });
+    expect(cov.find((x) => x.metric_key === 'ltv')).toMatchObject({ direction: 'max', flag_value: 85, unit: 'percent' });
+  });
+
+  test('includes reporting covenants but no borrowing base for a term facility', () => {
+    const reporting = getDefaultCovenants(inputs, metrics).filter((x) => x.kind === 'reporting');
+    expect(reporting.length).toBeGreaterThan(0);
+    expect(reporting.some((x) => /borrowing base/i.test(x.name))).toBe(false);
+    expect(reporting.some((x) => /insurance/i.test(x.name))).toBe(true);
+  });
+
+  test('custom criteria flow into the seed', () => {
+    const cov = getDefaultCovenants(inputs, metrics, { minDscr: 1.4, maxLeverage: 4 });
+    expect(cov.find((x) => x.metric_key === 'dscr').flag_value).toBe(1.4);
+    expect(cov.find((x) => x.metric_key === 'leverage').fail_value).toBe(6);
   });
 });

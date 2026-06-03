@@ -21,8 +21,12 @@ import type {
   RateInfo,
   CreditRating,
   IndustrySector,
+  ScreeningCriteria,
+  CovenantSeed,
 } from '../../types';
 import { asBps, asFraction } from '../../types';
+import { financialCovenantSeed, reportingCovenantSeed } from '../../lib/covenants';
+import { DEFAULT_CRITERIA } from '../../lib/screeningCriteria';
 
 import {
   DEFAULT_SOFR,
@@ -564,6 +568,52 @@ export function runStressTest(
       score: rs.composite,
     };
   });
+}
+
+// ------- Default Covenants (monitoring seed) -------
+
+// Pre-fill a covenant set from the screening assumptions when a deal is funded.
+// AR facilities revolve against a borrowing base, so reporting is monthly and
+// the BBC is central. See Monitoring_Phase1_Design.md section 4.
+export function getDefaultCovenants(
+  inputs: AccountsReceivableInputs,
+  metrics: AccountsReceivableMetrics,
+  criteria?: Partial<ScreeningCriteria> | null,
+): CovenantSeed[] {
+  const c: ScreeningCriteria = { ...DEFAULT_CRITERIA, ...(criteria || {}) };
+  const seeds: CovenantSeed[] = [];
+
+  // Minimum DSCR — AR uses a lower floor (ABL self-liquidates through collections).
+  // Fail below 1.0x, matching evaluateScreening.
+  if (c.minDscrAR > 0) {
+    seeds.push(financialCovenantSeed('Minimum DSCR', 'dscr', 'min', c.minDscrAR, 1.0, 'ratio', 'quarterly'));
+  }
+
+  // Maximum leverage — flag above the cap, fail above 1.5x the cap.
+  if (c.maxLeverage > 0) {
+    seeds.push(financialCovenantSeed('Maximum leverage', 'leverage', 'max', c.maxLeverage, c.maxLeverage * 1.5, 'ratio', 'quarterly'));
+  }
+
+  // Maximum customer concentration — tested with each monthly borrowing base.
+  if (c.maxConcentration > 0) {
+    seeds.push(financialCovenantSeed('Max customer concentration', 'concentration', 'max', c.maxConcentration, null, 'percent', 'monthly'));
+  }
+
+  // Maximum dilution.
+  if (c.maxDilution > 0) {
+    seeds.push(financialCovenantSeed('Maximum dilution', 'dilution', 'max', c.maxDilution, null, 'percent', 'monthly'));
+  }
+
+  // Reporting covenants — monthly cadence anchored on the borrowing base.
+  seeds.push(
+    reportingCovenantSeed('Borrowing base certificate', 'monthly'),
+    reportingCovenantSeed('AR aging report', 'monthly'),
+    reportingCovenantSeed('Compliance certificate', 'quarterly'),
+    reportingCovenantSeed('Quarterly financial statements', 'quarterly'),
+    reportingCovenantSeed('Annual audited financials', 'annual'),
+  );
+
+  return seeds;
 }
 
 // ------- Validation -------

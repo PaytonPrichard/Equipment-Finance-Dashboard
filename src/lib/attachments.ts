@@ -7,7 +7,7 @@
 
 import { supabase } from './supabase';
 
-const BUCKET = 'deal-documents';
+export const BUCKET = 'deal-documents';
 const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25 MB
 
 const ALLOWED_EXTENSIONS = [

@@ -8,6 +8,7 @@ import {
   generateCommentary,
   generateExportSummary,
   getSuggestedStructure,
+  getDefaultCovenants,
 } from './scoring';
 import { INITIAL_INPUTS } from './constants';
 
@@ -260,5 +261,33 @@ describe('Accounts Receivable Scoring', () => {
 
       expect(text).toMatch(/DSCR:.*min 1\.20x for ABL/);
     });
+  });
+});
+
+describe('Accounts Receivable getDefaultCovenants', () => {
+  const inputs = {
+    ...INITIAL_INPUTS,
+    annualRevenue: 50000000,
+    ebitda: 8000000,
+    totalExistingDebt: 20000000,
+    totalAROutstanding: 12000000,
+  };
+  const metrics = calculateMetrics(inputs, 0.0425);
+
+  test('uses the lower AR DSCR floor (1.10) from DEFAULT_CRITERIA', () => {
+    expect(getDefaultCovenants(inputs, metrics).find((x) => x.metric_key === 'dscr')).toMatchObject({
+      direction: 'min', flag_value: 1.10, fail_value: 1.0,
+    });
+  });
+
+  test('seeds concentration and dilution covenants tested monthly', () => {
+    const cov = getDefaultCovenants(inputs, metrics);
+    expect(cov.find((x) => x.metric_key === 'concentration')).toMatchObject({ direction: 'max', flag_value: 25, test_frequency: 'monthly' });
+    expect(cov.find((x) => x.metric_key === 'dilution')).toMatchObject({ direction: 'max', flag_value: 5, test_frequency: 'monthly' });
+  });
+
+  test('anchors reporting on a monthly borrowing base certificate', () => {
+    const bbc = getDefaultCovenants(inputs, metrics).find((x) => /borrowing base/i.test(x.name));
+    expect(bbc).toMatchObject({ kind: 'reporting', test_frequency: 'monthly' });
   });
 });

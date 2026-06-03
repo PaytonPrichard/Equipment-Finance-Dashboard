@@ -21,8 +21,12 @@ import type {
   IndustrySector,
   EquipmentType,
   FinancingType,
+  ScreeningCriteria,
+  CovenantSeed,
 } from '../../types';
 import { asBps } from '../../types';
+import { financialCovenantSeed, reportingCovenantSeed } from '../../lib/covenants';
+import { DEFAULT_CRITERIA } from '../../lib/screeningCriteria';
 
 import {
   DEFAULT_SOFR,
@@ -673,6 +677,54 @@ export function parseCsvDeals(csvText: string): { id: string; inputs: EquipmentF
 
     return { id: `CSV-${String(idx + 1).padStart(3, '0')}`, inputs };
   });
+}
+
+// ------- Default Covenants (monitoring seed) -------
+
+// Pre-fill a covenant set from the screening assumptions when a deal is funded.
+// The lender edits these against the executed credit agreement before they are
+// written. Only covenants the firm actually enforces in screening are seeded;
+// anything the firm left disabled is added manually. The `metrics` argument is
+// accepted for signature parity across modules (some asset classes seed from
+// computed values). See Monitoring_Phase1_Design.md section 4.
+export function getDefaultCovenants(
+  inputs: EquipmentFinanceInputs,
+  metrics: EquipmentMetrics,
+  criteria?: Partial<ScreeningCriteria> | null,
+): CovenantSeed[] {
+  const c: ScreeningCriteria = { ...DEFAULT_CRITERIA, ...(criteria || {}) };
+  const seeds: CovenantSeed[] = [];
+
+  // Minimum DSCR — flag below the floor, fail below 1.0x (matches evaluateScreening).
+  if (c.minDscr > 0) {
+    seeds.push(financialCovenantSeed('Minimum DSCR', 'dscr', 'min', c.minDscr, 1.0, 'ratio', 'quarterly'));
+  }
+
+  // Maximum leverage — flag above the cap, fail above 1.5x the cap.
+  if (c.maxLeverage > 0) {
+    seeds.push(financialCovenantSeed('Maximum leverage', 'leverage', 'max', c.maxLeverage, c.maxLeverage * 1.5, 'ratio', 'quarterly'));
+  }
+
+  // Maximum LTV — only when the firm enforces a cap (< 100 = enabled in screening).
+  if (c.maxLtv > 0 && c.maxLtv < 100) {
+    seeds.push(financialCovenantSeed('Maximum LTV', 'ltv', 'max', c.maxLtv, null, 'percent', 'annual'));
+  }
+
+  // Maximum term-to-useful-life coverage.
+  if (c.maxTermCoverage > 0) {
+    seeds.push(financialCovenantSeed('Maximum term coverage', 'termCoverage', 'max', c.maxTermCoverage, null, 'percent', 'annual'));
+  }
+
+  // Reporting covenants — the affirmative cadence. Equipment term facilities
+  // report financials and keep collateral insured; no borrowing base.
+  seeds.push(
+    reportingCovenantSeed('Quarterly financial statements', 'quarterly'),
+    reportingCovenantSeed('Annual audited financials', 'annual'),
+    reportingCovenantSeed('Compliance certificate', 'quarterly'),
+    reportingCovenantSeed('Insurance certificate', 'annual'),
+  );
+
+  return seeds;
 }
 
 // ------- Validation -------

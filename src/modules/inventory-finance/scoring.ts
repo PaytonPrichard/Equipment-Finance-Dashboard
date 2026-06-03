@@ -21,8 +21,12 @@ import type {
   RateInfo,
   CreditRating,
   IndustrySector,
+  ScreeningCriteria,
+  CovenantSeed,
 } from '../../types';
 import { asBps } from '../../types';
+import { financialCovenantSeed, reportingCovenantSeed } from '../../lib/covenants';
+import { DEFAULT_CRITERIA } from '../../lib/screeningCriteria';
 
 import {
   DEFAULT_SOFR,
@@ -672,6 +676,53 @@ export function runStressTest(
       score: rs.composite,
     };
   });
+}
+
+// ------- Default Covenants (monitoring seed) -------
+
+// Pre-fill a covenant set from the screening assumptions when a deal is funded.
+// Inventory facilities revolve against a borrowing base with periodic appraisal,
+// so reporting is monthly with an annual appraisal. See Monitoring_Phase1_Design.md
+// section 4.
+export function getDefaultCovenants(
+  inputs: InventoryFinanceInputs,
+  metrics: InventoryFinanceMetrics,
+  criteria?: Partial<ScreeningCriteria> | null,
+): CovenantSeed[] {
+  const c: ScreeningCriteria = { ...DEFAULT_CRITERIA, ...(criteria || {}) };
+  const seeds: CovenantSeed[] = [];
+
+  // Minimum DSCR — flag below the floor, fail below 1.0x (matches evaluateScreening).
+  if (c.minDscr > 0) {
+    seeds.push(financialCovenantSeed('Minimum DSCR', 'dscr', 'min', c.minDscr, 1.0, 'ratio', 'quarterly'));
+  }
+
+  // Maximum leverage — flag above the cap, fail above 1.5x the cap.
+  if (c.maxLeverage > 0) {
+    seeds.push(financialCovenantSeed('Maximum leverage', 'leverage', 'max', c.maxLeverage, c.maxLeverage * 1.5, 'ratio', 'quarterly'));
+  }
+
+  // Minimum inventory turnover — slowing turns signal aging or obsolete stock.
+  if (c.minTurnover > 0) {
+    seeds.push(financialCovenantSeed('Minimum inventory turnover', 'turnover', 'min', c.minTurnover, null, 'ratio', 'quarterly'));
+  }
+
+  // Maximum obsolescence.
+  if (c.maxObsolescence > 0) {
+    seeds.push(financialCovenantSeed('Maximum obsolescence', 'obsolescence', 'max', c.maxObsolescence, null, 'percent', 'quarterly'));
+  }
+
+  // Reporting covenants — monthly borrowing base plus periodic appraisal.
+  seeds.push(
+    reportingCovenantSeed('Borrowing base certificate', 'monthly'),
+    reportingCovenantSeed('Inventory report', 'monthly'),
+    reportingCovenantSeed('Compliance certificate', 'quarterly'),
+    reportingCovenantSeed('Quarterly financial statements', 'quarterly'),
+    reportingCovenantSeed('Annual audited financials', 'annual'),
+    reportingCovenantSeed('Inventory appraisal', 'annual'),
+  );
+
+  return seeds;
 }
 
 // ------- Validation -------

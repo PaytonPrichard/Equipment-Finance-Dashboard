@@ -55,6 +55,7 @@ const HistoricalDealsTable = lazy(() => import('./components/HistoricalDealsTabl
 const PortfolioAnalytics = lazy(() => import('./components/PortfolioAnalytics'));
 const DealComparison = lazy(() => import('./components/DealComparison'));
 const DealPipeline = lazy(() => import('./components/DealPipeline'));
+const MonitoringRoute = lazy(() => import('./components/MonitoringRoute'));
 const BatchScreening = lazy(() => import('./components/BatchScreening'));
 const AuditLogViewer = lazy(() => import('./components/AuditLogViewer'));
 const TeamManagement = lazy(() => import('./components/TeamManagement'));
@@ -1348,6 +1349,10 @@ function AuthenticatedApp({ profile, user }) {
               onLoadDeal={(dealInputs, dealId) => { setInputs(dealInputs); setActiveDeal(null); setActivePipelineDealId(dealId || null); setActiveTab('screening'); }}
               readOnly={isExpired}
             />
+          </Suspense></ErrorBoundary>
+        ) : activeTab === 'monitoring' ? (
+          <ErrorBoundary><Suspense fallback={<LazyFallback />}>
+            <MonitoringRoute sofr={sofr} />
           </Suspense></ErrorBoundary>
         ) : activeTab === 'team' ? (
           <ErrorBoundary><Suspense fallback={<LazyFallback />}>
