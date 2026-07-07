@@ -3,21 +3,31 @@ import React from 'react';
 const CIRCUMFERENCE = 2 * Math.PI * 80;
 const ARC_LENGTH = CIRCUMFERENCE * 0.75;
 
-function getScoreColor(score) {
+interface GaugeSegment {
+  start: number;
+  end: number;
+  color: string;
+}
+
+function getScoreColor(score: number): string {
   if (score >= 75) return '#10b981';
   if (score >= 55) return '#84cc16';
   if (score >= 35) return '#f59e0b';
   return '#ef4444';
 }
 
-function getScoreLabel(score) {
+function getScoreLabel(score: number): string {
   if (score >= 75) return 'Strong';
   if (score >= 55) return 'Moderate';
   if (score >= 35) return 'Borderline';
   return 'Weak';
 }
 
-export default function RiskScoreGauge({ score }) {
+export interface RiskScoreGaugeProps {
+  score: number;
+}
+
+export default function RiskScoreGauge({ score }: RiskScoreGaugeProps): React.ReactElement {
   const fillLength = ARC_LENGTH * (score / 100);
   const color = getScoreColor(score);
   const needleAngleDeg = 135 + (score / 100) * 270;
@@ -25,6 +35,13 @@ export default function RiskScoreGauge({ score }) {
   const needleLength = 58;
   const needleX = 100 + needleLength * Math.cos(needleAngleRad);
   const needleY = 100 + needleLength * Math.sin(needleAngleRad);
+
+  const segments: GaugeSegment[] = [
+    { start: 0,  end: 35,  color: 'rgba(239,68,68,0.08)'  },
+    { start: 35, end: 55,  color: 'rgba(245,158,11,0.08)' },
+    { start: 55, end: 75,  color: 'rgba(132,204,22,0.08)' },
+    { start: 75, end: 100, color: 'rgba(16,185,129,0.08)' },
+  ];
 
   return (
     <div className="flex flex-col items-center">
@@ -37,13 +54,8 @@ export default function RiskScoreGauge({ score }) {
           transform="rotate(135, 100, 100)"
           strokeLinecap="round"
         />
-        {/* Segment colors (subtle) */}
-        {[
-          { start: 0, end: 35, color: 'rgba(239,68,68,0.08)' },
-          { start: 35, end: 55, color: 'rgba(245,158,11,0.08)' },
-          { start: 55, end: 75, color: 'rgba(132,204,22,0.08)' },
-          { start: 75, end: 100, color: 'rgba(16,185,129,0.08)' },
-        ].map((seg, i) => {
+        {/* Segment colors */}
+        {segments.map((seg, i) => {
           const segLength = ARC_LENGTH * ((seg.end - seg.start) / 100);
           const offset = ARC_LENGTH - ARC_LENGTH * (seg.start / 100);
           return (

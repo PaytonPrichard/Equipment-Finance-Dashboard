@@ -1,11 +1,34 @@
 import React from 'react';
-import { formatCurrency, formatPercent } from '../utils/calculations';
+import { formatCurrency, formatPercent } from '../utils/format';
+import type { BaseDealInputs, BaseMetrics, RiskScore, Recommendation, USD } from '../types';
 
-function generateTakeaways(inputs, metrics, riskScore, recommendation) {
-  const items = [];
+interface ESInputs extends BaseDealInputs {
+  financingType?: string;
+  downPayment?: USD;
+}
+
+interface ESMetrics extends BaseMetrics {
+  ebitdaMargin?: number;
+  ltv?: number;
+  residualValue?: USD;
+}
+
+type TakeawayType = 'positive' | 'neutral' | 'caution' | 'negative';
+
+interface TakeawayItem {
+  type: TakeawayType;
+  text: string;
+}
+
+function generateTakeaways(
+  inputs: ESInputs,
+  metrics: ESMetrics,
+  riskScore: RiskScore,
+  recommendation: Recommendation,
+): TakeawayItem[] {
+  const items: TakeawayItem[] = [];
   const ft = inputs.financingType || 'EFA';
 
-  // 1. Lead with the verdict
   if (riskScore.composite >= 75) {
     items.push({
       type: 'positive',
@@ -28,10 +51,9 @@ function generateTakeaways(inputs, metrics, riskScore, recommendation) {
     });
   }
 
-  // 2. Biggest strength
   const factorEntries = Object.entries(riskScore.factors).sort((a, b) => b[1] - a[1]);
   const strongest = factorEntries[0];
-  const factorDescriptions = {
+  const factorDescriptions: Record<string, string> = {
     dscr: 'The borrower\'s debt service coverage is the strongest part of this deal.',
     leverage: 'The borrower\'s low leverage relative to earnings is the strongest part of this deal.',
     industry: 'The borrower\'s industry carries relatively low risk, which helps the overall profile.',
@@ -53,9 +75,8 @@ function generateTakeaways(inputs, metrics, riskScore, recommendation) {
     });
   }
 
-  // 3. Biggest weakness
   const weakest = factorEntries[factorEntries.length - 1];
-  const weakDescriptions = {
+  const weakDescriptions: Record<string, string> = {
     dscr: 'Debt service coverage is the weakest area here and should be the primary focus of diligence.',
     leverage: 'High leverage relative to earnings is the primary concern. It is important to understand the borrower\'s capacity to take on this additional debt.',
     industry: 'The borrower\'s industry carries above-average risk, which weighs on the overall score.',
@@ -77,7 +98,6 @@ function generateTakeaways(inputs, metrics, riskScore, recommendation) {
     });
   }
 
-  // 4. DSCR cushion / risk
   if (metrics.dscr >= 1.25 && metrics.dscr < 1.5) {
     const cushionPct = Math.round((1 - (1.25 / metrics.dscr)) * 100);
     items.push({
@@ -94,7 +114,6 @@ function generateTakeaways(inputs, metrics, riskScore, recommendation) {
     });
   }
 
-  // 5. EBITDA margin context (equipment only)
   if (metrics.ebitdaMargin !== undefined && metrics.ebitdaMargin > 0) {
     if (metrics.ebitdaMargin < 10) {
       items.push({
@@ -109,7 +128,6 @@ function generateTakeaways(inputs, metrics, riskScore, recommendation) {
     }
   }
 
-  // 6. LTV / equity (equipment only)
   if (metrics.ltv !== undefined && metrics.ltv > 1.0) {
     items.push({
       type: 'negative',
@@ -118,35 +136,33 @@ function generateTakeaways(inputs, metrics, riskScore, recommendation) {
   } else if (metrics.ltv !== undefined && (inputs.downPayment || 0) > 0 && metrics.ltv <= 0.85) {
     items.push({
       type: 'positive',
-      text: `The ${formatCurrency(inputs.downPayment)} down payment brings LTV to ${formatPercent(metrics.ltv * 100)}, which gives the lender a solid collateral cushion.`,
+      text: `The ${formatCurrency(inputs.downPayment ?? 0)} down payment brings LTV to ${formatPercent(metrics.ltv * 100)}, which gives the lender a solid collateral cushion.`,
     });
   }
 
-  // 7. Structure note
   if (ft === 'FMV') {
     items.push({
       type: 'neutral',
-      text: `This is structured as an FMV lease with an estimated ${formatCurrency(metrics.residualValue)} residual. That lowers periodic payments, but the lessor takes on residual value risk at maturity.`,
+      text: `This is structured as an FMV lease with an estimated ${formatCurrency(metrics.residualValue ?? 0)} residual. That lowers periodic payments, but the lessor takes on residual value risk at maturity.`,
     });
   } else if (ft === 'TRAC') {
     items.push({
       type: 'neutral',
-      text: `This is a TRAC lease where the lessee guarantees a ${formatCurrency(metrics.residualValue)} residual value. That shifts the residual risk to the lessee and reduces lessor exposure.`,
+      text: `This is a TRAC lease where the lessee guarantees a ${formatCurrency(metrics.residualValue ?? 0)} residual value. That shifts the residual risk to the lessee and reduces lessor exposure.`,
     });
   }
 
-  // Return top 4 most relevant
   return items.slice(0, 4);
 }
 
-const TYPE_STYLES = {
+const TYPE_STYLES: Record<TakeawayType, { icon: string; bg: string }> = {
   positive: { icon: 'text-emerald-400', bg: 'bg-emerald-500/[0.04]' },
-  neutral: { icon: 'text-gray-600', bg: 'bg-gray-50' },
-  caution: { icon: 'text-amber-400', bg: 'bg-amber-500/[0.04]' },
-  negative: { icon: 'text-rose-400', bg: 'bg-rose-500/[0.04]' },
+  neutral:  { icon: 'text-gray-600',    bg: 'bg-gray-50'            },
+  caution:  { icon: 'text-amber-400',   bg: 'bg-amber-500/[0.04]'  },
+  negative: { icon: 'text-rose-400',    bg: 'bg-rose-500/[0.04]'   },
 };
 
-const TYPE_ICONS = {
+const TYPE_ICONS: Record<TakeawayType, React.ReactElement> = {
   positive: (
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
       <polyline points="20 6 9 17 4 12" />
@@ -174,7 +190,14 @@ const TYPE_ICONS = {
   ),
 };
 
-export default function ExecutiveSummary({ inputs, metrics, riskScore, recommendation }) {
+export interface ExecutiveSummaryProps {
+  inputs: ESInputs;
+  metrics: ESMetrics;
+  riskScore: RiskScore;
+  recommendation: Recommendation;
+}
+
+export default function ExecutiveSummary({ inputs, metrics, riskScore, recommendation }: ExecutiveSummaryProps): React.ReactElement {
   const takeaways = generateTakeaways(inputs, metrics, riskScore, recommendation);
 
   return (

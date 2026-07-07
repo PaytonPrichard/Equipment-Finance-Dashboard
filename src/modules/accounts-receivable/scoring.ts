@@ -232,7 +232,9 @@ export function describeFactors(
   const tier = INDUSTRY_RISK_TIER[inputs.industrySector] || 'moderate';
   const pctOver30 = (inputs.arOver30 || 0) + (inputs.arOver60 || 0) + (inputs.arOver90 || 0);
   return [
-    { key: 'dscr', label: 'DSCR', score: f.dscr || 0, weight: 0.25, caption: `${(metrics.dscr || 0).toFixed(2)}x`, target: '≥ 1.25x', passed: (metrics.dscr || 0) >= 1.25 },
+    // ABL floor (minDscrAR), not the equipment-finance 1.25x. Keeps the factor
+    // table consistent with evaluateScreening and the export summary.
+    { key: 'dscr', label: 'DSCR', score: f.dscr || 0, weight: 0.25, caption: `${(metrics.dscr || 0).toFixed(2)}x`, target: `≥ ${DEFAULT_CRITERIA.minDscrAR.toFixed(2)}x`, passed: (metrics.dscr || 0) >= DEFAULT_CRITERIA.minDscrAR },
     { key: 'leverage', label: 'Leverage', score: f.leverage || 0, weight: 0.15, caption: `${(metrics.leverage || 0).toFixed(1)}x`, target: '≤ 4.0x', passed: (metrics.leverage || 0) <= 4.0 },
     { key: 'arQuality', label: 'AR aging', score: f.arQuality || 0, weight: 0.20, caption: `${pctOver30.toFixed(0)}% past 30 days`, target: '< 25%', passed: pctOver30 < 25 },
     { key: 'concentration', label: 'Top customer concentration', score: f.concentration || 0, weight: 0.15, caption: `${((metrics.concentrationRisk || 0) * 100).toFixed(0)}%`, target: `≤ ${(CONCENTRATION_THRESHOLD * 100).toFixed(0)}%`, passed: (metrics.concentrationRisk || 0) <= CONCENTRATION_THRESHOLD },
@@ -640,7 +642,7 @@ export function generateExportSummary(
 ): string {
   const dscrFloor = (criteria && typeof criteria.minDscrAR === 'number')
     ? criteria.minDscrAR
-    : 1.10;
+    : DEFAULT_CRITERIA.minDscrAR;
   const lines: string[] = [];
   lines.push('ACCOUNTS RECEIVABLE ABL FACILITY SCREENING');
   lines.push('PRELIMINARY ASSESSMENT');

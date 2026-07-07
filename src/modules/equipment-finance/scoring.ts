@@ -50,7 +50,7 @@ interface SuggestedStructure {
   sizingFlag?: string;
 }
 
-type ExportCriteria = { maxTermCoverage?: number; maxRevenueConcentration?: number } | null | undefined;
+type ExportCriteria = { minDscr?: number; maxTermCoverage?: number; maxRevenueConcentration?: number } | null | undefined;
 
 // ------- Rate Calculation -------
 
@@ -521,14 +521,18 @@ export function generateExportSummary(
   sofr: number = DEFAULT_SOFR,
   criteria: ExportCriteria = null,
 ): string {
+  const dscrFloor =
+    criteria && typeof criteria.minDscr === 'number'
+      ? criteria.minDscr
+      : DEFAULT_CRITERIA.minDscr;
   const termCoverageTarget =
     criteria && typeof criteria.maxTermCoverage === 'number'
       ? criteria.maxTermCoverage
-      : 80;
+      : DEFAULT_CRITERIA.maxTermCoverage;
   const revConcTarget =
     criteria && typeof criteria.maxRevenueConcentration === 'number'
       ? criteria.maxRevenueConcentration
-      : 25;
+      : DEFAULT_CRITERIA.maxRevenueConcentration;
   const ft = inputs.financingType || 'EFA';
   const lines: string[] = [];
   lines.push('EQUIPMENT FINANCE DEAL SCREENING');
@@ -556,7 +560,7 @@ export function generateExportSummary(
   lines.push('-'.repeat(60));
   lines.push('KEY METRICS');
   lines.push('-'.repeat(60));
-  lines.push(`DSCR:             ${formatRatio(metrics.dscr)}  (min 1.25x)`);
+  lines.push(`DSCR:             ${formatRatio(metrics.dscr)}  (min ${dscrFloor.toFixed(2)}x)`);
   lines.push(`Leverage:         ${formatRatio(metrics.leverage)}  (target <3.5x)`);
   lines.push(`LTV:              ${formatPercent(metrics.ltv * 100)}  (target <85%)`);
   lines.push(`Term / Life:      ${formatPercent(metrics.termCoverage)}  (target <${termCoverageTarget}%)`);

@@ -18,6 +18,7 @@ import { useOrgPlan } from './hooks/useOrgPlan';
 import PlanBanner from './components/PlanBanner';
 import Header from './components/Header';
 import DealInputForm from './components/DealInputForm';
+import DealSheetUpload from './components/DealSheetUpload';
 import RiskScoreGauge from './components/RiskScoreGauge';
 import RiskRadarChart from './components/RiskRadarChart';
 import MetricCard from './components/MetricCard';
@@ -785,6 +786,10 @@ function AuthenticatedApp({ profile, user }) {
                       )}
                     </div>
                   </div>
+                  <DealSheetUpload
+                    activeModule={activeModule}
+                    onExtracted={(extracted) => setInputs((prev) => ({ ...prev, ...extracted }))}
+                  />
                   <DealInputForm
                     inputs={inputs}
                     onChange={setInputs}

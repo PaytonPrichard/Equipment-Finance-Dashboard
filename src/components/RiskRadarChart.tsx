@@ -9,7 +9,7 @@ import {
   Tooltip,
 } from 'recharts';
 
-const FACTOR_LABELS = {
+const FACTOR_LABELS: Record<string, string> = {
   dscr: 'DSCR',
   leverage: 'Leverage',
   industry: 'Industry',
@@ -19,7 +19,7 @@ const FACTOR_LABELS = {
   termCoverage: 'Term Cov.',
 };
 
-const FACTOR_WEIGHTS = {
+const FACTOR_WEIGHTS: Record<string, string> = {
   dscr: '25%',
   leverage: '20%',
   industry: '15%',
@@ -29,7 +29,20 @@ const FACTOR_WEIGHTS = {
   termCoverage: '10%',
 };
 
-function CustomTooltip({ active, payload }) {
+interface RadarDataPoint {
+  factor: string;
+  label: string;
+  score: number;
+  weight: string;
+  fullMark: number;
+}
+
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: Array<{ payload: RadarDataPoint }>;
+}
+
+function CustomTooltip({ active, payload }: CustomTooltipProps): React.ReactElement | null {
   if (!active || !payload || !payload.length) return null;
   const data = payload[0].payload;
   return (
@@ -43,12 +56,21 @@ function CustomTooltip({ active, payload }) {
   );
 }
 
-export default function RiskRadarChart({ factors }) {
-  const data = Object.entries(FACTOR_LABELS).map(([key, label]) => ({
+// recharts PolarAngleAxis ships with return type ReactNode, which TypeScript
+// rejects as a JSX element under react-jsx. Cast to unblock the library issue.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const AngleAxis = PolarAngleAxis as any;
+
+export interface RiskRadarChartProps {
+  factors: Record<string, number>;
+}
+
+export default function RiskRadarChart({ factors }: RiskRadarChartProps): React.ReactElement {
+  const data: RadarDataPoint[] = Object.entries(FACTOR_LABELS).map(([key, label]) => ({
     factor: label,
     label,
     score: factors[key] || 0,
-    weight: FACTOR_WEIGHTS[key],
+    weight: FACTOR_WEIGHTS[key] || '0%',
     fullMark: 100,
   }));
 
@@ -56,7 +78,7 @@ export default function RiskRadarChart({ factors }) {
     <ResponsiveContainer width="100%" height={260}>
       <RadarChart data={data} cx="50%" cy="50%" outerRadius="72%">
         <PolarGrid stroke="rgba(148,163,184,0.2)" strokeDasharray="3 3" />
-        <PolarAngleAxis
+        <AngleAxis
           dataKey="factor"
           tick={{ fill: '#374151', fontSize: 10, fontWeight: 500 }}
         />

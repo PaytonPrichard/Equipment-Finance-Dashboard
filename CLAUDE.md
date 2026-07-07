@@ -32,6 +32,7 @@ When adding a new asset class, conform to this contract. Don't introduce module-
 - `src/components/DealPipeline.js` — kanban-style pipeline (Screening → Under Review → Approved → Funded → Declined).
 - `src/components/ExportPanel.js` — committee PDF generation via html2pdf.
 - `api/score-deal.js` — auth'd deal creation/rescore. JWT auth.
+- `api/parse-deal.js` — deal sheet extraction (PDF/image → prefilled form inputs). JWT auth. Extraction logic and per-module field specs live in `server-lib/extract.js`; equipment-finance only for now. Requires `ANTHROPIC_API_KEY`. Extracted values prefill the form for analyst review; they are never scored or persisted directly.
 - `api/v1.js` — public API. X-API-Key auth.
 - `server-lib/validate.js` — server-side validation (equipment-finance only as of now).
 - `Deal_Screening_Model_Assumptions.md` — the methodology spec. Scoring breakpoints, rate adjustments, thresholds. Treat as source of truth when code and doc disagree, then update one to match the other.

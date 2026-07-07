@@ -120,6 +120,8 @@ The model produces a composite risk score (0-100), financial metrics, commentary
 
 **Assumption:** 1.25x is the minimum DSCR threshold for most equipment finance. Below this, the borrower may struggle to service total debt obligations. The 8% estimate for unknown existing debt service is conservative; actual rates could be higher or lower.
 
+**AR / ABL exception:** revolving AR facilities self-liquidate through collections, so the industry norm is a lower DSCR floor. The model applies a **1.10x minimum** for the accounts receivable module (`minDscrAR` in screening criteria). Equipment finance and inventory finance use the 1.25x floor above. This floor appears consistently in screening evaluation, the factor table, and the exported summary.
+
 ### Leverage (Total Debt / EBITDA)
 - **Formula:** (Total Existing Debt + Net Financed Amount) / EBITDA
 

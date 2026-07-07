@@ -75,29 +75,29 @@ const FEATURES = [
 
 const PRICING = [
   {
-    name: 'Starter',
+    name: 'Analyst',
     price: '$200',
     period: '/mo',
     who: 'For individual analysts',
     features: ['1 user', 'All asset classes', 'Pass/flag/fail screening', 'Deal pipeline', 'CSV & PDF export', '50 active deals'],
-    cta: 'Request a Trial',
+    cta: 'Request a trial',
   },
   {
-    name: 'Growth',
+    name: 'Team',
     price: '$500',
     period: '/mo',
     who: 'For credit teams of 2-10',
-    features: ['Up to 10 users', 'Everything in Starter', 'Unlimited deals', 'Firm-branded memos', 'Shared pipeline & audit trail', 'Custom scoring weights', 'API & webhook integrations'],
-    cta: 'Request a Trial',
+    features: ['Up to 10 users', 'Everything in Analyst', 'Unlimited deals', 'Firm-branded memos', 'Shared pipeline & audit trail', 'Custom scoring weights', 'API & webhook integrations'],
+    cta: 'Request a trial',
     highlight: true,
   },
   {
-    name: 'Institution',
+    name: 'Enterprise',
     price: '$1,500',
     period: '/mo',
     who: 'For lenders with custom workflows',
-    features: ['Up to 50 users', 'Everything in Growth', 'API access', 'Custom scoring models', 'SSO integration', 'Dedicated support & SLA'],
-    cta: 'Schedule a Demo',
+    features: ['Up to 50 users', 'Everything in Team', 'Custom scoring models', 'SSO integration', 'Dedicated support & SLA'],
+    cta: 'Schedule a demo',
   },
 ];
 
@@ -117,9 +117,9 @@ export default function LandingPage({ onGetStarted, onSignIn }) {
             <button onClick={() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })} className="text-[15px] text-gray-500 hover:text-gray-900 transition-colors">Contact</button>
           </div>
           <div className="flex items-center gap-3">
-            <a href="?demo=1" className="hidden md:inline-block px-4 py-2 rounded-lg text-[15px] font-medium text-gray-600 hover:text-gray-900 transition-colors">View Demo</a>
-            <button onClick={onSignIn} className="px-4 py-2 rounded-lg text-[15px] font-medium text-gray-600 hover:text-gray-900 transition-colors">Sign In</button>
-            <button onClick={onGetStarted} className="px-5 py-2.5 rounded-lg text-[15px] font-semibold text-white hover:opacity-90 transition-all" style={{ backgroundColor: GOLD }}>Get Started</button>
+            <a href="?demo=1" className="hidden md:inline-block px-4 py-2 rounded-lg text-[15px] font-medium text-gray-600 hover:text-gray-900 transition-colors">View demo</a>
+            <button onClick={onSignIn} className="px-4 py-2 rounded-lg text-[15px] font-medium text-gray-600 hover:text-gray-900 transition-colors">Sign in</button>
+            <button onClick={onGetStarted} className="px-5 py-2.5 rounded-lg text-[15px] font-semibold text-white hover:opacity-90 transition-all" style={{ backgroundColor: GOLD }}>Get started</button>
           </div>
         </div>
       </nav>
@@ -136,14 +136,14 @@ export default function LandingPage({ onGetStarted, onSignIn }) {
             Screen equipment, AR, and inventory deals in minutes, not hours.
           </h1>
           <p className="text-lg md:text-xl text-gray-500 max-w-2xl mx-auto mb-10 leading-relaxed">
-            Automated risk scoring, configurable credit policy, and branded screening memos. Replace the spreadsheet your team uses to screen ABL deals.
+            Upload a deal sheet or enter the basics. Automated risk scoring, configurable credit policy, and branded screening memos. Replace the spreadsheet your team uses to screen ABL deals.
           </p>
           <div className="flex items-center justify-center gap-4 mb-4 flex-wrap">
             <button onClick={onGetStarted} className="px-7 py-3.5 rounded-lg text-[16px] font-semibold text-white shadow-lg hover:opacity-90 transition-all" style={{ backgroundColor: GOLD, boxShadow: '0 4px 24px rgba(212, 168, 67, 0.3)' }}>
-              Request a Trial
+              Request a trial
             </button>
             <a href="?demo=1" className="px-7 py-3.5 rounded-lg text-[16px] font-semibold text-gray-700 border border-gray-300 hover:border-gray-400 transition-all">
-              View Demo
+              View demo
             </a>
           </div>
           <p className="text-sm text-gray-500">No credit card required. Live demo with sample deals, no signup needed.</p>
@@ -364,7 +364,7 @@ export default function LandingPage({ onGetStarted, onSignIn }) {
             <span>&middot;</span>
             <span>No credit card required</span>
             <span>&middot;</span>
-            <span>Annual: save 20%</span>
+            <span>Annual: save 17%</span>
           </div>
         </div>
       </section>

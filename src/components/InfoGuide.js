@@ -34,7 +34,7 @@ const SECTIONS = [
     content: [
       {
         heading: 'How do I screen a deal?',
-        body: 'Two ways. For a single deal, fill in borrower financials and collateral details on the left side of the New Deal screen. Score, metrics, and recommendation update live on the right. For many deals at once, switch to Bulk and download the Excel template, fill in your roster, and upload. Each row gets its own screening result. No save button needed for screening; you only save when you want to add a deal to your pipeline.',
+        body: 'Two ways. For a single deal, fill in borrower financials and collateral details on the left side of the New Deal screen. Score, metrics, and recommendation update live on the right. For many deals at once, switch to Batch Upload and download the Excel template, fill in your roster, and upload. Each row gets its own screening result. No save button needed for screening; you only save when you want to add a deal to your pipeline.',
       },
       {
         heading: 'Is my data secure?',
@@ -42,7 +42,7 @@ const SECTIONS = [
       },
       {
         heading: 'Can I screen multiple deals at once?',
-        body: 'Yes. On the New Deal screen, switch to Bulk and download the Excel template. It includes column descriptions in cell comments (hover any header), dropdowns for industry and equipment type, and required fields marked with a red asterisk. Fill it in, upload, and each row gets a screening result. Templates are specific per asset class.',
+        body: 'Yes. On the New Deal screen, switch to Batch Upload and download the Excel template. It includes column descriptions in cell comments (hover any header), dropdowns for industry and equipment type, and required fields marked with a red asterisk. Fill it in, upload, and each row gets a screening result. Templates are specific per asset class.',
       },
       {
         heading: 'What if my deal\'s industry or equipment type isn\'t listed?',
@@ -145,7 +145,7 @@ const SECTIONS = [
       },
       {
         heading: 'Batch screening',
-        body: 'Upload a CSV to score up to 500 deals at once. Download a template from the Batch Screening tab.',
+        body: 'Upload a CSV to score up to 500 deals at once. Download a template from the Batch Upload view.',
       },
     ],
   },
@@ -190,11 +190,11 @@ const SECTIONS = [
         body: 'Download branded PDF memos or CSV files. Admins can customize memo branding in Settings.',
       },
       {
-        heading: 'Document Attachments',
+        heading: 'Document attachments',
         body: 'Attach files to any pipeline deal. Supports PDF, Word, Excel, CSV, and images up to 25 MB. Files are stored securely and accessible to your team.',
       },
       {
-        heading: 'Copy Summary',
+        heading: 'Copy summary',
         body: 'Copy a plain-text screening report to your clipboard for pasting into emails, credit memos, or deal tracking systems.',
       },
     ],

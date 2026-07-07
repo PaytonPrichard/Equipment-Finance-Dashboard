@@ -9,6 +9,7 @@ import {
   generateExportSummary,
   getSuggestedStructure,
   getDefaultCovenants,
+  describeFactors,
 } from './scoring';
 import { INITIAL_INPUTS } from './constants';
 
@@ -260,6 +261,17 @@ describe('Accounts Receivable Scoring', () => {
       const text = generateExportSummary(validInputs, metrics, score, rec, commentary, structure, undefined, criteria);
 
       expect(text).toMatch(/DSCR:.*min 1\.20x for ABL/);
+    });
+  });
+
+  // ---- P0-3 fix: factor table uses the same 1.10x ABL floor as screening ----
+  describe('describeFactors', () => {
+    test('DSCR target matches the ABL floor, not the 1.25x equipment floor', () => {
+      const metrics = calculateMetrics(validInputs);
+      const score = calculateRiskScore(validInputs, metrics);
+      const dscrRow = describeFactors(validInputs, { ...metrics, dscr: 1.15 }, score).find((f) => f.key === 'dscr');
+      expect(dscrRow.target).toBe('≥ 1.10x');
+      expect(dscrRow.passed).toBe(true);
     });
   });
 });

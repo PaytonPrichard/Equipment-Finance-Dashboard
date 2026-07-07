@@ -53,7 +53,11 @@ Environment variables required in Vercel:
 - `REACT_APP_SUPABASE_ANON_KEY` — public
 - `SUPABASE_SERVICE_ROLE_KEY` — secret, server-side only (used by `api/*` routes)
 - `RESEND_API_KEY` — secret, for outbound notifications
+- `REQUEST_ACCESS_TO_EMAIL` — where access-request notifications go (without it, requests save to the DB but no email is sent)
+- `NOTIFICATION_FROM_EMAIL` — optional, sender for notification emails (defaults to notifications@gettranche.app)
 - `FRED_API_KEY` — for SOFR rate fetching in `api/sofr.js`
+- `ANTHROPIC_API_KEY` — secret, for deal sheet parsing in `api/parse-deal.js`
+- `ANTHROPIC_MODEL` — optional, overrides the extraction model (defaults in `server-lib/extract.js`)
 
 Optional (Stripe, currently dormant):
 

@@ -279,7 +279,7 @@ function getInputWarnings(inputs, pipelineDeals) {
     if (agingSum > 0 && Math.abs(agingSum - 100) > 5) {
       warnings.push({
         id: 'aging-sum', severity: 'warn',
-        text: `AR aging buckets sum to ${agingSum.toFixed(0)}% — expected ~100%. Verify percentages.`,
+        text: `AR aging buckets sum to ${agingSum.toFixed(0)}%, expected ~100%. Verify percentages.`,
       });
     }
   }
@@ -290,7 +290,7 @@ function getInputWarnings(inputs, pipelineDeals) {
     if (compSum > 0 && Math.abs(compSum - 100) > 5) {
       warnings.push({
         id: 'inv-comp-sum', severity: 'warn',
-        text: `Inventory composition sums to ${compSum.toFixed(0)}% — expected ~100%. Verify percentages.`,
+        text: `Inventory composition sums to ${compSum.toFixed(0)}%, expected ~100%. Verify percentages.`,
       });
     }
   }
@@ -320,7 +320,7 @@ function MissingFieldWrapper({ isMissing, label, children }) {
       {children}
       <div className="mt-1 flex items-center gap-1">
         <span className="text-[9px] font-semibold text-amber-600 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded">
-          Missing — required for screening
+          Missing, required for screening
         </span>
       </div>
     </div>
@@ -725,7 +725,7 @@ export default function DealInputForm({ inputs, onChange, schema, modules, activ
               })}
               className="px-3 py-2 rounded-lg bg-gray-900 text-white text-[11px] font-semibold hover:bg-gray-800 transition-all flex-shrink-0"
             >
-              Request Info
+              Request info
             </a>
           </div>
         </div>

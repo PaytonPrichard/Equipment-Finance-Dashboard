@@ -114,7 +114,7 @@ export default function OrgSetup({ profile, onComplete }) {
                   <span>Joining...</span>
                 </>
               ) : (
-                <span>Join Organization</span>
+                <span>Join organization</span>
               )}
             </button>
           </form>
@@ -128,7 +128,7 @@ export default function OrgSetup({ profile, onComplete }) {
 
         {/* Footer */}
         <p className="text-center text-[11px] text-gray-400 mt-6">
-          Tranche &middot; Organization Setup
+          Tranche &middot; Organization setup
         </p>
       </div>
     </div>

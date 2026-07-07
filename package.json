@@ -59,6 +59,7 @@
     "node": ">=18.0.0"
   },
   "devDependencies": {
+    "@types/jest": "^30.0.0",
     "concurrently": "^9.2.1",
     "esbuild": "^0.28.0",
     "puppeteer-core": "^24.42.0"

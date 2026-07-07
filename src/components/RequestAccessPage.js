@@ -199,7 +199,7 @@ export default function RequestAccessPage({ onBackToLanding, onSignIn }) {
                       <span>Submitting...</span>
                     </>
                   ) : (
-                    <span>Request Access</span>
+                    <span>Request access</span>
                   )}
                 </button>
               </form>
@@ -210,7 +210,7 @@ export default function RequestAccessPage({ onBackToLanding, onSignIn }) {
                   onClick={onSignIn}
                   className="text-sm text-gray-600 hover:text-gray-900 font-medium transition-colors"
                 >
-                  Sign In
+                  Sign in
                 </button>
               </div>
             </>
@@ -226,7 +226,7 @@ export default function RequestAccessPage({ onBackToLanding, onSignIn }) {
               &larr; Back to home
             </button>
           )}
-          <p className="text-[11px] text-gray-400">Tranche &middot; ABL Deal Screening</p>
+          <p className="text-[11px] text-gray-400">Tranche &middot; ABL deal screening</p>
         </div>
       </div>
     </div>

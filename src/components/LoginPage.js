@@ -201,10 +201,10 @@ export default function LoginPage({ passwordRecovery, onBackToLanding, initialMo
   };
 
   const submitLabels = {
-    signin: { idle: 'Sign In', loading: 'Signing in...' },
-    signup: { idle: 'Create Account', loading: 'Creating account...' },
-    forgot: { idle: 'Send Reset Link', loading: 'Sending...' },
-    update_password: { idle: 'Update Password', loading: 'Updating...' },
+    signin: { idle: 'Sign in', loading: 'Signing in...' },
+    signup: { idle: 'Create account', loading: 'Creating account...' },
+    forgot: { idle: 'Send reset link', loading: 'Sending...' },
+    update_password: { idle: 'Update password', loading: 'Updating...' },
   };
 
   // Special-case render: signup mode with invalid invite code.
@@ -249,7 +249,7 @@ export default function LoginPage({ passwordRecovery, onBackToLanding, initialMo
                   className="px-5 py-2.5 rounded-xl text-gray-900 text-sm font-semibold shadow-lg hover:opacity-90 transition-all"
                   style={{ backgroundColor: GOLD, boxShadow: '0 4px 16px rgba(212,168,67,0.3)' }}
                 >
-                  Request a Trial
+                  Request a trial
                 </button>
               )}
             </div>
@@ -435,13 +435,13 @@ export default function LoginPage({ passwordRecovery, onBackToLanding, initialMo
                   <div>
                     <span className="text-sm text-gray-400">Already have an account? </span>
                     <button onClick={() => switchMode('signin')} className="text-sm text-gray-600 hover:text-gray-900 font-medium transition-colors">
-                      Sign In
+                      Sign in
                     </button>
                   </div>
                 )}
                 {(mode === 'forgot' || mode === 'update_password') && (
                   <button onClick={() => switchMode('signin')} className="text-sm text-gray-600 hover:text-gray-900 font-medium transition-colors">
-                    Back to Sign In
+                    Back to sign in
                   </button>
                 )}
               </div>
@@ -458,7 +458,7 @@ export default function LoginPage({ passwordRecovery, onBackToLanding, initialMo
               &larr; Back to home
             </button>
           )}
-          <p className="text-[11px] text-gray-400">Tranche &middot; ABL Deal Screening</p>
+          <p className="text-[11px] text-gray-400">Tranche &middot; ABL deal screening</p>
         </div>
       </div>
     </div>

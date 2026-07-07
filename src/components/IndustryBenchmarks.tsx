@@ -1,33 +1,52 @@
 import React, { useMemo } from 'react';
 import historicalDeals from '../data/historicalDeals';
 import { calculateMetrics, calculateRiskScore, formatRatio, formatPercent, DEFAULT_SOFR } from '../utils/calculations';
+import type { EquipmentFinanceInputs, EquipmentMetrics, RiskScore } from '../types';
 
-// Define whether higher or lower is "better" for each metric,
-// so we can color-code the comparison arrows correctly.
-const METRIC_DEFS = [
-  { key: 'dscr',                 label: 'DSCR',                 format: formatRatio,                       higherIsBetter: true  },
-  { key: 'leverage',             label: 'Leverage',             format: formatRatio,                       higherIsBetter: false },
-  { key: 'ltv',                  label: 'LTV',                  format: (v) => formatPercent(v * 100),     higherIsBetter: false },
-  { key: 'termCoverage',         label: 'Term Coverage',        format: (v) => formatPercent(v),           higherIsBetter: false },
-  { key: 'revenueConcentration', label: 'Revenue Concentration',format: (v) => formatPercent(v),           higherIsBetter: false },
-  { key: 'riskScore',            label: 'Risk Score',           format: (v) => String(Math.round(v)),      higherIsBetter: true  },
+interface MetricDef {
+  key: string;
+  label: string;
+  format: (v: number) => string;
+  higherIsBetter: boolean;
+}
+
+const METRIC_DEFS: MetricDef[] = [
+  { key: 'dscr',                 label: 'DSCR',                  format: formatRatio,                     higherIsBetter: true  },
+  { key: 'leverage',             label: 'Leverage',              format: formatRatio,                     higherIsBetter: false },
+  { key: 'ltv',                  label: 'LTV',                   format: (v) => formatPercent(v * 100),   higherIsBetter: false },
+  { key: 'termCoverage',         label: 'Term Coverage',         format: (v) => formatPercent(v),         higherIsBetter: false },
+  { key: 'revenueConcentration', label: 'Revenue Concentration', format: (v) => formatPercent(v),         higherIsBetter: false },
+  { key: 'riskScore',            label: 'Risk Score',            format: (v) => String(Math.round(v)),    higherIsBetter: true  },
 ];
 
-function average(values) {
+interface IndustryAverages {
+  dscr: number;
+  leverage: number;
+  ltv: number;
+  termCoverage: number;
+  revenueConcentration: number;
+  riskScore: number;
+}
+
+function average(values: number[]): number {
   if (values.length === 0) return 0;
   return values.reduce((sum, v) => sum + v, 0) / values.length;
 }
 
-export default function IndustryBenchmarks({ inputs, metrics, riskScore, sofr = DEFAULT_SOFR }) {
-  const industry = inputs.industrySector;
+export interface IndustryBenchmarksProps {
+  inputs: EquipmentFinanceInputs;
+  metrics: EquipmentMetrics;
+  riskScore: RiskScore;
+  sofr?: number;
+}
 
+export default function IndustryBenchmarks({ inputs, metrics, riskScore, sofr = DEFAULT_SOFR }: IndustryBenchmarksProps): React.ReactElement {
+  const industry = inputs.industrySector;
   const currentName = (inputs.companyName || '').toLowerCase().trim();
 
   const { industryAverages, dealCount, smallSample } = useMemo(() => {
-    // Filter historical deals to the same industry, EXCLUDING the current deal by name
-    const sameIndustry = historicalDeals.filter((deal) => {
+    const sameIndustry = (historicalDeals as any[]).filter((deal: any) => {
       if (deal.inputs.industrySector !== industry) return false;
-      // Exclude the current company so a deal doesn't benchmark against itself
       const histName = (deal.inputs.companyName || '').toLowerCase().trim();
       if (currentName && histName === currentName) return false;
       return true;
@@ -37,29 +56,25 @@ export default function IndustryBenchmarks({ inputs, metrics, riskScore, sofr = 
       return { industryAverages: null, dealCount: 0, smallSample: true };
     }
 
-    // Calculate metrics and risk score for each historical deal
-    const computed = sameIndustry.map((deal) => {
+    const computed = sameIndustry.map((deal: any) => {
       const m = calculateMetrics(deal.inputs, sofr);
       const rs = calculateRiskScore(deal.inputs, m);
       return { m, rs };
     });
 
-    return {
-      industryAverages: {
-        dscr: average(computed.map((c) => c.m.dscr)),
-        leverage: average(computed.map((c) => c.m.leverage)),
-        ltv: average(computed.map((c) => c.m.ltv)),
-        termCoverage: average(computed.map((c) => c.m.termCoverage)),
-        revenueConcentration: average(computed.map((c) => c.m.revenueConcentration)),
-        riskScore: average(computed.map((c) => c.rs.composite)),
-      },
-      dealCount: sameIndustry.length,
-      smallSample: sameIndustry.length < 3,
+    const avgs: IndustryAverages = {
+      dscr: average(computed.map((c: any) => c.m.dscr)),
+      leverage: average(computed.map((c: any) => c.m.leverage)),
+      ltv: average(computed.map((c: any) => c.m.ltv)),
+      termCoverage: average(computed.map((c: any) => c.m.termCoverage)),
+      revenueConcentration: average(computed.map((c: any) => c.m.revenueConcentration)),
+      riskScore: average(computed.map((c: any) => c.rs.composite)),
     };
+
+    return { industryAverages: avgs, dealCount: sameIndustry.length, smallSample: sameIndustry.length < 3 };
   }, [industry, sofr, currentName]);
 
-  // Current deal values (including the risk score composite)
-  const currentValues = useMemo(() => ({
+  const currentValues: IndustryAverages = useMemo(() => ({
     dscr: metrics.dscr,
     leverage: metrics.leverage,
     ltv: metrics.ltv,
@@ -88,7 +103,6 @@ export default function IndustryBenchmarks({ inputs, metrics, riskScore, sofr = 
 
   return (
     <div className="glass-card rounded-2xl p-6 space-y-5">
-      {/* Header */}
       <div>
         <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">
           Industry Benchmarks
@@ -111,9 +125,7 @@ export default function IndustryBenchmarks({ inputs, metrics, riskScore, sofr = 
         )}
       </div>
 
-      {/* Comparison Table */}
       <div className="space-y-2">
-        {/* Column Headers */}
         <div className="grid grid-cols-[1.2fr_0.8fr_0.8fr_0.5fr] gap-3 px-3 pb-1">
           <span className="text-[10px] text-gray-400">Metric</span>
           <span className="text-[10px] text-gray-400 text-right">This Deal</span>
@@ -121,32 +133,28 @@ export default function IndustryBenchmarks({ inputs, metrics, riskScore, sofr = 
           <span className="text-[10px] text-gray-400 text-center">vs Avg</span>
         </div>
 
-        {/* Rows */}
         {METRIC_DEFS.map((def) => {
-          const current = currentValues[def.key];
-          const avg = industryAverages[def.key];
+          const current = currentValues[def.key as keyof IndustryAverages];
+          const avg = industryAverages[def.key as keyof IndustryAverages];
           const delta = current - avg;
           const isBetter = def.higherIsBetter ? delta > 0 : delta < 0;
-          // Treat very small differences as neutral
           const isNeutral = Math.abs(delta) < 0.01;
 
-          let arrowColor, arrowChar;
+          let arrowColor: string;
+          let arrowChar: string;
           if (isNeutral) {
             arrowColor = 'text-gray-400';
             arrowChar = '—';
           } else if (isBetter) {
             arrowColor = 'text-emerald-400';
-            arrowChar = '\u25B2'; // up triangle
+            arrowChar = '▲';
           } else {
             arrowColor = 'text-rose-400';
-            arrowChar = '\u25BC'; // down triangle
+            arrowChar = '▼';
           }
 
-          // For "better = lower" metrics where current < avg, the arrow should
-          // still point down visually but be green (favorable). And vice versa.
-          // Re-derive the visual arrow direction based on the raw delta sign.
           if (!isNeutral) {
-            arrowChar = delta > 0 ? '\u25B2' : '\u25BC';
+            arrowChar = delta > 0 ? '▲' : '▼';
           }
 
           return (
@@ -171,14 +179,13 @@ export default function IndustryBenchmarks({ inputs, metrics, riskScore, sofr = 
         })}
       </div>
 
-      {/* Legend */}
       <div className="flex items-center gap-4 px-3 pt-1">
         <div className="flex items-center gap-1.5">
-          <span className="text-emerald-400 font-mono text-xs font-bold">{'\u25B2'}</span>
+          <span className="text-emerald-400 font-mono text-xs font-bold">{'▲'}</span>
           <span className="text-[10px] text-gray-400">Better than avg</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="text-rose-400 font-mono text-xs font-bold">{'\u25BC'}</span>
+          <span className="text-rose-400 font-mono text-xs font-bold">{'▼'}</span>
           <span className="text-[10px] text-gray-400">Worse than avg</span>
         </div>
         <div className="flex items-center gap-1.5">
@@ -187,7 +194,6 @@ export default function IndustryBenchmarks({ inputs, metrics, riskScore, sofr = 
         </div>
       </div>
 
-      {/* Footnote */}
       <p className="text-[10px] text-gray-400 italic">
         Averages based on {dealCount} historical {industry} deal{dealCount !== 1 ? 's' : ''}. Benchmarks are for screening context only and do not constitute credit guidance.
       </p>

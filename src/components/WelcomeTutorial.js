@@ -185,7 +185,7 @@ export default function WelcomeTutorial({ onComplete, onSkip }) {
               }}
               className="px-5 py-2 rounded-xl bg-gradient-to-r from-gray-800 to-gray-900 text-white text-sm font-semibold shadow-lg shadow-gray-300/20 hover:shadow-gray-300/30 hover:from-gray-700 hover:to-gray-800 transition-all"
             >
-              {isLast ? 'Get Started' : 'Next'}
+              {isLast ? 'Get started' : 'Next'}
             </button>
           </div>
         </div>

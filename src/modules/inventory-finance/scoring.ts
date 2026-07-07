@@ -42,6 +42,8 @@ import {
   MIN_TURNOVER,
 } from './constants';
 
+type InventoryExportCriteria = { minDscr?: number; minTurnover?: number; maxObsolescence?: number } | null | undefined;
+
 interface InventoryStressScenario {
   label: string;
   ebitdaDecline: number;
@@ -745,8 +747,21 @@ export function generateExportSummary(
   commentary: string[],
   structure: InventorySuggestedStructure,
   sofr: number = DEFAULT_SOFR,
-  criteria?: unknown,
+  criteria: InventoryExportCriteria = null,
 ): string {
+  const dscrFloor =
+    criteria && typeof criteria.minDscr === 'number'
+      ? criteria.minDscr
+      : DEFAULT_CRITERIA.minDscr;
+  const turnoverFloor =
+    criteria && typeof criteria.minTurnover === 'number'
+      ? criteria.minTurnover
+      : MIN_TURNOVER;
+  // criteria.maxObsolescence is a percent (10 = 10%); OBSOLESCENCE_THRESHOLD is a fraction.
+  const obsolescenceMaxPct =
+    criteria && typeof criteria.maxObsolescence === 'number'
+      ? criteria.maxObsolescence
+      : OBSOLESCENCE_THRESHOLD * 100;
   const lines: string[] = [];
   lines.push('INVENTORY FINANCE DEAL SCREENING');
   lines.push('PRELIMINARY ASSESSMENT — ABL REVOLVING FACILITY');
@@ -795,10 +810,10 @@ export function generateExportSummary(
   lines.push('-'.repeat(60));
   lines.push('KEY METRICS');
   lines.push('-'.repeat(60));
-  lines.push(`DSCR:             ${formatRatio(metrics.dscr)}  (min 1.25x)`);
+  lines.push(`DSCR:             ${formatRatio(metrics.dscr)}  (min ${dscrFloor.toFixed(2)}x)`);
   lines.push(`Leverage:         ${formatRatio(metrics.leverage)}  (target <3.5x)`);
-  lines.push(`Turnover:         ${metrics.turnoverRatio.toFixed(1)}x  (min ${MIN_TURNOVER.toFixed(1)}x)`);
-  lines.push(`Obsolescence:     ${formatPercent(metrics.obsolescenceRate * 100)}  (threshold ${formatPercent(OBSOLESCENCE_THRESHOLD * 100)})`);
+  lines.push(`Turnover:         ${metrics.turnoverRatio.toFixed(1)}x  (min ${turnoverFloor.toFixed(1)}x)`);
+  lines.push(`Obsolescence:     ${formatPercent(metrics.obsolescenceRate * 100)}  (threshold ${formatPercent(obsolescenceMaxPct)})`);
   lines.push(`Screening Rate:   ${(metrics.rate * 100).toFixed(2)}%`);
   lines.push(`Annual DS (Est):  ${formatCurrencyFull(metrics.newAnnualDebtService)} (interest only at full draw)`);
   lines.push(`Existing DS:      ${formatCurrencyFull(metrics.existingDebtService)}${metrics.debtServiceEstimated ? ' (estimated)' : ''}`);

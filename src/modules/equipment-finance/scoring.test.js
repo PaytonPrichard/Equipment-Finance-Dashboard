@@ -196,6 +196,11 @@ describe('Equipment Finance Scoring', () => {
       expect(text).toMatch(/Term \/ Life:.*target <70%/);
       expect(text).toMatch(/Rev\. Conc\.:.*target <20%/);
     });
+
+    test('DSCR line defaults to 1.25x and reflects criteria.minDscr', () => {
+      expect(buildSummary(null)).toMatch(/DSCR:.*min 1\.25x/);
+      expect(buildSummary({ minDscr: 1.35 })).toMatch(/DSCR:.*min 1\.35x/);
+    });
   });
 
   describe('generateCommentary revenue concentration threshold', () => {

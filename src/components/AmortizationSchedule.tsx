@@ -1,19 +1,33 @@
 import React, { useState, useMemo } from 'react';
-import { generateAmortizationSchedule, formatCurrencyFull } from '../utils/calculations';
+import {
+  generateAmortizationSchedule,
+  formatCurrencyFull,
+  type AmortizationSchedule as AmortScheduleData,
+} from '../utils/format';
 
-export default function AmortizationSchedule({ principal, annualRate, termMonths }) {
-  const [isOpen, setIsOpen] = useState(false);
+export interface AmortizationScheduleProps {
+  principal: number;
+  annualRate: number;
+  termMonths: number;
+}
+
+export default function AmortizationSchedule({ principal, annualRate, termMonths }: AmortizationScheduleProps): React.ReactElement | null {
+  const [isOpen, setIsOpen] = useState<boolean>(false);
 
   const schedule = useMemo(
     () => generateAmortizationSchedule(principal, annualRate, termMonths),
     [principal, annualRate, termMonths]
   );
 
-  if (!schedule || !schedule.years || schedule.years.length === 0) return null;
+  // generateAmortizationSchedule returns AmortScheduleData | [] for invalid inputs.
+  if (Array.isArray(schedule) || schedule.years.length === 0) return null;
+
+  // TypeScript now knows schedule is AmortScheduleData.
+  const amort: AmortScheduleData = schedule;
 
   const interestPct =
-    schedule.totalCost > 0
-      ? ((schedule.totalInterest / schedule.totalCost) * 100).toFixed(1)
+    amort.totalCost > 0
+      ? ((amort.totalInterest / amort.totalCost) * 100).toFixed(1)
       : '0.0';
 
   return (
@@ -35,7 +49,7 @@ export default function AmortizationSchedule({ principal, annualRate, termMonths
               Amortization Schedule
             </h3>
             <p className="text-[11px] text-gray-400">
-              {formatCurrencyFull(schedule.totalCost)} total cost &middot; {formatCurrencyFull(schedule.totalInterest)} interest ({interestPct}%)
+              {formatCurrencyFull(amort.totalCost)} total cost &middot; {formatCurrencyFull(amort.totalInterest)} interest ({interestPct}%)
             </p>
           </div>
         </div>
@@ -54,15 +68,15 @@ export default function AmortizationSchedule({ principal, annualRate, termMonths
           <div className="grid grid-cols-3 gap-3 mb-4">
             <div className="bg-gray-50 rounded-xl px-3 py-2.5 text-center">
               <span className="text-[10px] text-gray-400">Total Principal</span>
-              <p className="font-mono text-sm font-semibold text-gray-800">{formatCurrencyFull(schedule.totalPrincipal)}</p>
+              <p className="font-mono text-sm font-semibold text-gray-800">{formatCurrencyFull(amort.totalPrincipal)}</p>
             </div>
             <div className="bg-gray-50 rounded-xl px-3 py-2.5 text-center">
               <span className="text-[10px] text-gray-400">Total Interest</span>
-              <p className="font-mono text-sm font-semibold text-amber-400">{formatCurrencyFull(schedule.totalInterest)}</p>
+              <p className="font-mono text-sm font-semibold text-amber-400">{formatCurrencyFull(amort.totalInterest)}</p>
             </div>
             <div className="bg-gray-50 rounded-xl px-3 py-2.5 text-center">
               <span className="text-[10px] text-gray-400">Total Cost</span>
-              <p className="font-mono text-sm font-semibold text-gray-800">{formatCurrencyFull(schedule.totalCost)}</p>
+              <p className="font-mono text-sm font-semibold text-gray-800">{formatCurrencyFull(amort.totalCost)}</p>
             </div>
           </div>
 
@@ -79,7 +93,7 @@ export default function AmortizationSchedule({ principal, annualRate, termMonths
                 </tr>
               </thead>
               <tbody>
-                {schedule.years.map((row) => {
+                {amort.years.map((row) => {
                   const principalPct =
                     row.totalPayment > 0 ? (row.principal / row.totalPayment) * 100 : 0;
                   return (
@@ -96,7 +110,6 @@ export default function AmortizationSchedule({ principal, annualRate, termMonths
                       <td className="py-2 px-2 text-right">
                         <div>
                           <span className="font-mono text-[12px] text-gray-700">{formatCurrencyFull(row.totalPayment)}</span>
-                          {/* Mini principal/interest ratio bar */}
                           <div className="h-1 mt-1 rounded-full bg-gray-50 overflow-hidden">
                             <div
                               className="h-full bg-gray-300 rounded-full"

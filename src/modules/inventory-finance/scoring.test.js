@@ -244,6 +244,30 @@ describe('Inventory Finance Scoring', () => {
       expect(text).toMatch(/Raw Materials.*2,400,000.*30\.0%/);
       expect(text).toMatch(/NOLV %:\s+55%/);
     });
+
+    // ---- P0-3 fix: PDF threshold text reads from criteria ----
+    function buildSummary(criteria) {
+      const metrics = calculateMetrics(validInputs);
+      const score = calculateRiskScore(validInputs, metrics);
+      const rec = getRecommendation(score.composite);
+      const commentary = generateCommentary(validInputs, metrics, score);
+      const structure = getSuggestedStructure(validInputs, metrics, score.composite);
+      return generateExportSummary(validInputs, metrics, score, rec, commentary, structure, undefined, criteria);
+    }
+
+    test('threshold text defaults match model constants', () => {
+      const text = buildSummary(null);
+      expect(text).toMatch(/DSCR:.*min 1\.25x/);
+      expect(text).toMatch(/Turnover:.*min 4\.0x/);
+      expect(text).toMatch(/Obsolescence:.*threshold 10\.0%/);
+    });
+
+    test('user-configured criteria flow through to PDF text', () => {
+      const text = buildSummary({ minDscr: 1.30, minTurnover: 5, maxObsolescence: 8 });
+      expect(text).toMatch(/DSCR:.*min 1\.30x/);
+      expect(text).toMatch(/Turnover:.*min 5\.0x/);
+      expect(text).toMatch(/Obsolescence:.*threshold 8\.0%/);
+    });
   });
 
   describe('getSuggestedStructure', () => {

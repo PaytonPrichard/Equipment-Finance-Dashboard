@@ -1,36 +1,24 @@
 import React, { useMemo } from 'react';
 import historicalDeals from '../data/historicalDeals';
 import { calculateMetrics, calculateRiskScore, formatCurrency, formatRatio, DEFAULT_SOFR } from '../utils/calculations';
+import type { EquipmentFinanceInputs, EquipmentMetrics, RiskScore } from '../types';
 
-// Continuous proximity score: 1.0 at perfect match, decays toward 0
-// tolerance = ratio at which score drops to ~0.5
-function proximityScore(a, b, tolerance) {
+function proximityScore(a: number, b: number, tolerance: number): number {
   if (a <= 0 || b <= 0) return 0;
-  const ratio = a > b ? a / b : b / a; // always >= 1
-  // Exponential decay: score = e^(-k*(ratio-1)) where k = ln(2)/tolerance
+  const ratio = a > b ? a / b : b / a;
   const k = Math.log(2) / (tolerance - 1);
   return Math.exp(-k * (ratio - 1));
 }
 
-function scoreSimilarity(current, candidate) {
+function scoreSimilarity(current: EquipmentFinanceInputs, candidate: any): number {
   let score = 0;
 
-  // Industry match (30 pts).exact match only
   if (current.industrySector === candidate.industrySector) score += 30;
-
-  // Equipment type match (20 pts)
   if (current.equipmentType === candidate.equipmentType) score += 20;
-
-  // Revenue proximity (15 pts).continuous decay, half-score at 3x difference
   score += proximityScore(current.annualRevenue, candidate.annualRevenue, 3) * 15;
-
-  // EBITDA proximity (10 pts).half-score at 3x difference
   score += proximityScore(current.ebitda, candidate.ebitda, 3) * 10;
-
-  // Equipment cost proximity (10 pts).half-score at 2.5x difference
   score += proximityScore(current.equipmentCost, candidate.equipmentCost, 2.5) * 10;
 
-  // Credit rating match (10 pts).partial credit for adjacent ratings
   const CREDIT_ORDER = ['Strong', 'Adequate', 'Weak', 'Not Rated'];
   const ci = CREDIT_ORDER.indexOf(current.creditRating);
   const cj = CREDIT_ORDER.indexOf(candidate.creditRating);
@@ -40,36 +28,59 @@ function scoreSimilarity(current, candidate) {
     else if (diff === 1) score += 5;
   }
 
-  // Financing type match (5 pts)
   if ((current.financingType || 'EFA') === (candidate.financingType || 'EFA')) score += 5;
 
   return Math.round(score);
 }
 
-const OUTCOME_STYLES = {
+type OutcomeStatus = 'Performing' | 'Paid Off' | 'Watchlist' | 'Defaulted';
+
+interface OutcomeStyle {
+  bg: string;
+  text: string;
+  border: string;
+}
+
+const OUTCOME_STYLES: Record<OutcomeStatus, OutcomeStyle> = {
   Performing: { bg: 'bg-emerald-500/10', text: 'text-emerald-400', border: 'border-emerald-500/20' },
-  'Paid Off': { bg: 'bg-gray-100', text: 'text-gray-600', border: 'border-gray-200' },
-  Watchlist: { bg: 'bg-amber-500/10', text: 'text-amber-400', border: 'border-amber-500/20' },
-  Defaulted: { bg: 'bg-rose-500/10', text: 'text-rose-400', border: 'border-rose-500/20' },
+  'Paid Off':  { bg: 'bg-gray-100',       text: 'text-gray-600',    border: 'border-gray-200'        },
+  Watchlist:  { bg: 'bg-amber-500/10',   text: 'text-amber-400',   border: 'border-amber-500/20'   },
+  Defaulted:  { bg: 'bg-rose-500/10',    text: 'text-rose-400',    border: 'border-rose-500/20'    },
 };
 
-export default function ComparableDeals({ inputs, metrics, riskScore, sofr = DEFAULT_SOFR }) {
-  const comparables = useMemo(() => {
+interface ComparableDeal {
+  id: string;
+  closedDate?: string;
+  similarity: number;
+  outcome: { status: OutcomeStatus };
+  inputs: any;
+  m: any;
+  rs: { composite: number };
+}
+
+export interface ComparableDealsProps {
+  inputs: EquipmentFinanceInputs;
+  metrics: EquipmentMetrics;
+  riskScore: RiskScore;
+  sofr?: number;
+}
+
+export default function ComparableDeals({ inputs, metrics, riskScore, sofr = DEFAULT_SOFR }: ComparableDealsProps): React.ReactElement | null {
+  const comparables = useMemo<ComparableDeal[]>(() => {
     const currentName = (inputs.companyName || '').toLowerCase().trim();
-    return historicalDeals
-      .filter((deal) => {
-        // Exclude the current deal if it matches a historical deal by name
+    return (historicalDeals as any[])
+      .filter((deal: any) => {
         const histName = (deal.inputs.companyName || '').toLowerCase().trim();
         return !currentName || histName !== currentName;
       })
-      .map((deal) => {
+      .map((deal: any) => {
         const similarity = scoreSimilarity(inputs, deal.inputs);
         const m = calculateMetrics(deal.inputs, sofr);
         const rs = calculateRiskScore(deal.inputs, m);
         return { ...deal, similarity, m, rs };
       })
-      .filter((d) => d.similarity >= 20)
-      .sort((a, b) => b.similarity - a.similarity)
+      .filter((d: any) => d.similarity >= 20)
+      .sort((a: any, b: any) => b.similarity - a.similarity)
       .slice(0, 4);
   }, [inputs, sofr]);
 
@@ -93,7 +104,6 @@ export default function ComparableDeals({ inputs, metrics, riskScore, sofr = DEF
         </p>
       </div>
 
-      {/* Summary insight */}
       <div className={`rounded-xl p-3 flex items-center gap-3 ${
         performingCount > troubledCount
           ? 'bg-emerald-500/[0.06] border border-emerald-500/15'
@@ -119,7 +129,6 @@ export default function ComparableDeals({ inputs, metrics, riskScore, sofr = DEF
         </p>
       </div>
 
-      {/* Deal cards */}
       <div className="space-y-2.5">
         {comparables.map((deal) => {
           const os = OUTCOME_STYLES[deal.outcome.status] || OUTCOME_STYLES['Performing'];
@@ -147,7 +156,6 @@ export default function ComparableDeals({ inputs, metrics, riskScore, sofr = DEF
                 </div>
               </div>
 
-              {/* Metric comparison */}
               <div className="grid grid-cols-4 gap-3">
                 <div>
                   <span className="text-[10px] text-gray-400">Score</span>
@@ -174,7 +182,6 @@ export default function ComparableDeals({ inputs, metrics, riskScore, sofr = DEF
                 </div>
               </div>
 
-              {/* Closure date if available */}
               {deal.closedDate && (
                 <p className="text-[10px] text-gray-400 mt-2">
                   Closed: {deal.closedDate}
