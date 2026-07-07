@@ -788,7 +788,7 @@ function AuthenticatedApp({ profile, user }) {
                   </div>
                   <DealSheetUpload
                     activeModule={activeModule}
-                    onExtracted={(extracted) => setInputs((prev) => ({ ...prev, ...extracted }))}
+                    onExtracted={(extracted) => setInputs({ ...mod.INITIAL_INPUTS, ...extracted })}
                   />
                   <DealInputForm
                     inputs={inputs}

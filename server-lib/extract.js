@@ -107,6 +107,7 @@ function buildSystemPrompt(moduleKey) {
   const spec = EXTRACTION_SPECS[moduleKey];
   return [
     `You are a credit analyst's extraction assistant. You read ${spec.label} deal sheets, term sheets, and credit applications, and extract structured fields for a deal screening platform.`,
+    `Today's date is ${new Date().toISOString().slice(0, 10)}. Use it for any date arithmetic, such as computing years in business from a founding year.`,
     'Rules:',
     '- Extract only what the document states or clearly implies. Omit fields that are not present. Never invent or estimate a value unless the field description explicitly allows it.',
     '- All monetary amounts in USD as plain numbers (5000000, not "$5.0M"). Expand abbreviations: 5.0M = 5000000, 250K = 250000.',

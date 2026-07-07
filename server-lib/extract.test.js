@@ -65,6 +65,11 @@ describe('buildRequestBody', () => {
     expect(body.messages[0].content[0].source.media_type).toBe('image/png');
   });
 
+  test('system prompt carries today\'s date for founding-year math', () => {
+    const body = buildRequestBody(MODULE, 'application/pdf', 'X');
+    expect(body.system).toContain(new Date().toISOString().slice(0, 10));
+  });
+
   test('text files are decoded inline', () => {
     const base64 = Buffer.from('Equipment cost: $5M').toString('base64');
     const body = buildRequestBody(MODULE, 'text/plain', base64);
