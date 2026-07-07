@@ -78,11 +78,13 @@ async function dispatchWebhooks(orgId, event, payload) {
         }
         console.log(`[webhooks] -> ${hook.url} event=${event} status=${statusCode}${errMsg ? ' err=' + errMsg : ''}`);
 
-        supabaseAdmin
-          .from('webhook_logs')
-          .insert({ webhook_id: hook.id, event, status_code: statusCode })
-          .then(() => {})
-          .catch(() => {});
+        // Awaited: fire-and-forget dies when the serverless function
+        // freezes after the response is sent. Failure is still swallowed.
+        try {
+          await supabaseAdmin
+            .from('webhook_logs')
+            .insert({ webhook_id: hook.id, event, status_code: statusCode });
+        } catch { /* log insert is best-effort */ }
         return { id: hook.id, statusCode };
       })
     );

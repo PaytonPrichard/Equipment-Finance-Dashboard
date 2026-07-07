@@ -135,8 +135,11 @@ module.exports = async function handler(req, res) {
       return res.status(500).json({ error: 'Could not submit request. Please try again.' });
     }
 
-    // Email is best-effort. DB row is the source of truth.
-    sendNotificationEmail({ name, email, firm, role, notes, requestId: inserted.id })
+    // Email is best-effort (failure never fails the request), but it MUST
+    // be awaited: Vercel freezes the function as soon as the response is
+    // sent, which kills fire-and-forget work mid-flight (seen as ECONNRESET
+    // during the TLS handshake to api.resend.com).
+    await sendNotificationEmail({ name, email, firm, role, notes, requestId: inserted.id })
       .catch((err) => console.error('[request-access] Email send failed:', err));
 
     return res.status(200).json({ ok: true });

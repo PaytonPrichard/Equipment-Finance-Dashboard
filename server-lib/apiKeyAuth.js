@@ -29,13 +29,14 @@ async function authenticateApiKey(req) {
 
   if (error || !data) return null;
 
-  // Update last_used_at (fire and forget)
-  supabaseAdmin
-    .from('api_keys')
-    .update({ last_used_at: new Date().toISOString() })
-    .eq('id', data.id)
-    .then(() => {})
-    .catch(() => {});
+  // Awaited: fire-and-forget dies when the serverless function freezes
+  // after the response is sent, so last_used_at never persisted.
+  try {
+    await supabaseAdmin
+      .from('api_keys')
+      .update({ last_used_at: new Date().toISOString() })
+      .eq('id', data.id);
+  } catch { /* best-effort */ }
 
   return { orgId: data.org_id, keyId: data.id };
 }
