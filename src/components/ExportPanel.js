@@ -573,14 +573,14 @@ export function generateBrandedPdfHtml({ summaryText, inputs, metrics, riskScore
   </div>` : '';
 
   const strengthsConcernsHtml = (strengths.length === 0 && concerns.length === 0) ? '' : `<div class="section" style="page-break-before:always">
-    <div class="section-title">Strengths &amp; Concerns</div>
+    <div class="section-title">Strengths &amp; Risks</div>
     <div style="display:flex;gap:12px">
       <div style="flex:1">
         <div style="font-size:10px;font-weight:700;color:#16a34a;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px">Strengths</div>
         ${strengths.length > 0 ? strengths.map((f) => factorRow(f, 'strength')).join('') : '<div style="font-size:11px;color:#94a3b8;font-style:italic">No sub-scores above 75.</div>'}
       </div>
       <div style="flex:1">
-        <div style="font-size:10px;font-weight:700;color:#dc2626;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px">Concerns</div>
+        <div style="font-size:10px;font-weight:700;color:#dc2626;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px">Risks</div>
         ${concerns.length > 0 ? concerns.map((f) => factorRow(f, 'concern')).join('') : '<div style="font-size:11px;color:#94a3b8;font-style:italic">No sub-scores below 50.</div>'}
       </div>
     </div>
@@ -668,7 +668,7 @@ export function generateBrandedPdfHtml({ summaryText, inputs, metrics, riskScore
     <div style="font-size:14px;font-weight:700;color:${scoreColor};margin-bottom:4px">${esc(recommendation?.category || '')}</div>
     <div style="font-size:12px;color:#475569;margin-bottom:${(structure?.enhancements?.length || 0) > 0 ? '12px' : '0'}">${esc(recommendation?.detail || '')}</div>
     ${(structure?.enhancements?.length || 0) > 0 ? `
-      <div style="font-size:10px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px">Conditions / Suggested Enhancements</div>
+      <div style="font-size:10px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px">Conditions / Mitigants</div>
       <ul style="margin:0;padding-left:18px">
         ${structure.enhancements.map((e) => `<li style="font-size:11px;color:#1f2937;margin-bottom:3px">${esc(e)}</li>`).join('')}
       </ul>
@@ -681,8 +681,8 @@ export function generateBrandedPdfHtml({ summaryText, inputs, metrics, riskScore
     <table>
       <tr><td style="color:#64748b;width:140px">Industry</td><td style="font-weight:500">${esc(inputs?.industrySector || '')}</td></tr>
       <tr><td style="color:#64748b">Credit Rating</td><td style="font-weight:500">${esc(inputs?.creditRating || '')}</td></tr>
-      <tr><td style="color:#64748b">Annual Revenue</td><td style="font-weight:500">${fmtCurrency(inputs?.annualRevenue)}</td></tr>
-      <tr><td style="color:#64748b">EBITDA</td><td style="font-weight:500">${fmtCurrency(inputs?.ebitda)}</td></tr>
+      <tr><td style="color:#64748b">Annual Revenue</td><td style="font-weight:500">${fmtCurrency(inputs?.annualRevenue)}${inputs?.priorYearRevenue > 0 ? ` <span style="color:#64748b;font-weight:400">· prior ${fmtCurrency(inputs.priorYearRevenue)} · ${(((inputs.annualRevenue / inputs.priorYearRevenue) - 1) * 100).toFixed(1)}% YoY</span>` : ''}</td></tr>
+      <tr><td style="color:#64748b">EBITDA</td><td style="font-weight:500">${fmtCurrency(inputs?.ebitda)}${inputs?.priorYearEbitda > 0 ? ` <span style="color:#64748b;font-weight:400">· prior ${fmtCurrency(inputs.priorYearEbitda)} · ${(((inputs.ebitda / inputs.priorYearEbitda) - 1) * 100).toFixed(1)}% YoY</span>` : ''}</td></tr>
       <tr><td style="color:#64748b">Existing Debt</td><td style="font-weight:500">${fmtCurrency(inputs?.totalExistingDebt)}</td></tr>
       ${inputs?.yearsInBusiness ? `<tr><td style="color:#64748b">Years in Business</td><td style="font-weight:500">${inputs.yearsInBusiness}</td></tr>` : ''}
       <tr><td style="color:#64748b">Screening Rate</td><td style="font-weight:500">${(rate * 100).toFixed(2)}%</td></tr>

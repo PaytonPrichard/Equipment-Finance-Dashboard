@@ -64,9 +64,9 @@ describe('generateBrandedPdfHtml — Equipment Finance', () => {
     expect(html).toMatch(/Firm flag threshold/);
   });
 
-  test('renders Strengths & Concerns', () => {
+  test('renders Strengths & Risks', () => {
     expect(html).toContain('Strengths');
-    expect(html).toContain('Concerns');
+    expect(html).toContain('Risks');
   });
 
   test('renders Sensitivity Analysis with all four scenarios', () => {
@@ -133,7 +133,7 @@ describe('generateBrandedPdfHtml — Accounts Receivable', () => {
   test('Recommended Action shows conditions when enhancements exist', () => {
     expect(html).toContain('Recommended Action');
     // High concentration + high dilution triggers enhancements
-    expect(html).toContain('Conditions / Suggested Enhancements');
+    expect(html).toContain('Conditions / Mitigants');
   });
 
   test('Sensitivity rows render finite numeric DSCR and FCCR values', () => {
