@@ -268,6 +268,30 @@ async function handleWebhooks(req, res) {
   return res.status(405).json({ error: 'Method not allowed' });
 }
 
+// ── Health / keepalive ──────────────────────────────────────
+// Hit daily by the Vercel cron (see vercel.json) so the free-tier
+// Supabase project never auto-pauses. Unauthenticated by design;
+// returns nothing but ok/err and touches the DB with a head count.
+async function handleHealth(req, res) {
+  if (!checkRateLimit(req, res, 'default')) {
+    return res.status(429).json({ error: 'Rate limit exceeded' });
+  }
+  try {
+    const { error } = await supabaseAdmin
+      .from('access_requests')
+      .select('id', { count: 'exact', head: true })
+      .limit(1);
+    if (error) {
+      console.error('[health] Supabase ping failed:', error.message);
+      return res.status(500).json({ ok: false });
+    }
+    return res.status(200).json({ ok: true });
+  } catch (err) {
+    console.error('[health] Exception:', err.message);
+    return res.status(500).json({ ok: false });
+  }
+}
+
 // ── Router ──────────────────────────────────────────────────
 module.exports = async function handler(req, res) {
   if (handlePreflight(req, res)) return;
@@ -278,6 +302,7 @@ module.exports = async function handler(req, res) {
     case 'deals': return handleDeals(req, res);
     case 'keys': return handleKeys(req, res);
     case 'webhooks': return handleWebhooks(req, res);
+    case 'health': return handleHealth(req, res);
     default:
       return res.status(400).json({
         error: 'Missing or invalid resource parameter',
