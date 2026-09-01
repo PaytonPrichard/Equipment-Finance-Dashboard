@@ -59,5 +59,12 @@ rp-*.jpg
 slide-*.jpg
 _t.tmp
 
-# Files moved out of api/ pending manual deletion
+# Files moved out of api/ pending manual deletion. Deleted 2026-09-01;
+# both handlers live in git history at 67cd680^ if they are ever wanted.
 _to_delete/
+
+# Personal job-search material now lives in ../_personal/ and the
+# Real Estate brief project in ../Real_Estate_Tranche/. These patterns stay
+# as a backstop in case anything lands here again.
+Real_Estate_Tranche/
+_personal/
