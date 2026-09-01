@@ -141,11 +141,23 @@ export default function DealSheetUpload({ activeModule, onExtracted, onDocuments
     return null;
   }
 
-  async function handleFiles(fileList) {
-    const files = Array.from(fileList || []);
-    if (!files.length) return;
+  // Demo mode has no files to pick, so the button must not open the OS file
+  // dialog: a native picker is a dead end for someone clicking through a
+  // shared link. It loads the captured Granite Ridge set instead and runs
+  // the same merge and conflict UI the signed-in path runs.
+  function openPicker() {
+    if (demo) {
+      handleFiles(null, { demo: true });
+      return;
+    }
+    fileInputRef.current?.click();
+  }
 
-    const reason = rejectionReason(files);
+  async function handleFiles(fileList, opts = {}) {
+    const files = Array.from(fileList || []);
+    if (!files.length && !opts.demo) return;
+
+    const reason = opts.demo ? null : rejectionReason(files);
     if (reason) {
       setStatus('error');
       setError(reason);
@@ -158,7 +170,7 @@ export default function DealSheetUpload({ activeModule, onExtracted, onDocuments
     try {
       let newDocs;
 
-      if (demo) {
+      if (demo || opts.demo) {
         // Demo mode runs the real merge and the real conflict UI against a
         // captured extraction, so the panel behaves exactly as it does with
         // an account. No API key, no auth, no cost.
@@ -193,6 +205,7 @@ export default function DealSheetUpload({ activeModule, onExtracted, onDocuments
       }
 
       const allDocs = demo ? newDocs : [...documents, ...newDocs];
+
       publish(allDocs, mergeExtractions(allDocs));
       setStatus('done');
     } catch (err) {
@@ -248,6 +261,7 @@ export default function DealSheetUpload({ activeModule, onExtracted, onDocuments
       onDrop={(e) => {
         e.preventDefault();
         setDragging(false);
+        if (demo) { handleFiles(null, { demo: true }); return; }
         handleFiles(e.dataTransfer.files);
       }}
     >
@@ -270,13 +284,15 @@ export default function DealSheetUpload({ activeModule, onExtracted, onDocuments
             <div className="text-[12px] text-gray-500">
               {documents.length > 0
                 ? `${fieldCount} fields from ${documents.length} document${documents.length > 1 ? 's' : ''}. Review before saving.`
-                : 'Application, financials, quote, cover email. Up to four at once, PDF or image.'}
+                : demo
+                  ? 'Load a sample deal: a credit application, financials, a dealer quote, and a broker email.'
+                  : 'Application, financials, quote, cover email. Up to four at once, PDF or image.'}
             </div>
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
-            {documents.length > 0 && documents.length < MAX_FILES && (
+            {!demo && documents.length > 0 && documents.length < MAX_FILES && (
               <button
-                onClick={() => fileInputRef.current?.click()}
+                onClick={openPicker}
                 className="px-3 py-1.5 rounded-lg text-[12px] font-semibold text-gray-700 bg-white border border-gray-200 hover:border-gray-300 transition-all"
               >
                 Add document
@@ -284,10 +300,10 @@ export default function DealSheetUpload({ activeModule, onExtracted, onDocuments
             )}
             {documents.length === 0 ? (
               <button
-                onClick={() => fileInputRef.current?.click()}
+                onClick={openPicker}
                 className="px-3 py-1.5 rounded-lg text-[12px] font-semibold text-white bg-black hover:bg-gray-800 transition-colors"
               >
-                Choose files
+                {demo ? 'Load sample documents' : 'Choose files'}
               </button>
             ) : (
               <button
