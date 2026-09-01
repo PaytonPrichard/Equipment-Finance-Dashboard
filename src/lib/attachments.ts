@@ -6,6 +6,12 @@
 // ============================================================
 
 import { supabase } from './supabase';
+import {
+  isDemoMode,
+  listDemoAttachments,
+  countDemoAttachments,
+  deleteDemoAttachment,
+} from './demoMode';
 
 export const BUCKET = 'deal-documents';
 const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25 MB
@@ -75,6 +81,9 @@ export async function uploadAttachment(
   orgId: string,
   source: AttachmentSource = 'manual',
 ): Promise<{ data: AttachmentRow | null; error: string | null }> {
+  if (isDemoMode()) {
+    return { data: null, error: 'Uploads are disabled in the demo. Request access to attach your own documents.' };
+  }
   if (!supabase) return { data: null, error: 'Supabase not configured' };
 
   const validationError = validateFile(file);
@@ -117,6 +126,9 @@ export async function uploadAttachment(
 }
 
 export async function fetchAttachments(dealId: string): Promise<{ data: AttachmentRow[]; error: unknown }> {
+  // Demo deal ids are strings like "demo-1", not UUIDs, so a real query for
+  // them returns nothing at best and errors at worst.
+  if (isDemoMode()) return { data: listDemoAttachments(dealId) as AttachmentRow[], error: null };
   if (!supabase) return { data: [], error: null };
 
   const { data, error } = await supabase
@@ -139,6 +151,9 @@ export async function getDownloadUrl(storagePath: string): Promise<{ url: string
 }
 
 export async function deleteAttachment(attachmentId: string, storagePath: string): Promise<{ error: string | null }> {
+  if (isDemoMode()) {
+    return { error: deleteDemoAttachment(attachmentId) ? null : 'Attachment not found' };
+  }
   if (!supabase) return { error: 'Supabase not configured' };
 
   const { error: storageError } = await supabase.storage.from(BUCKET).remove([storagePath]);
@@ -172,6 +187,7 @@ export function formatFileSize(bytes: number): string {
 export async function fetchAttachmentCounts(
   dealIds: string[],
 ): Promise<Record<string, number>> {
+  if (isDemoMode()) return countDemoAttachments(dealIds);
   if (!supabase || dealIds.length === 0) return {};
 
   const { data, error } = await supabase

@@ -262,3 +262,96 @@ export function listDemoCovenants(orgId: string): CovenantRow[] {
 export function listDemoTests(orgId: string): CovenantTestRow[] {
   return testStore().filter((t) => t.org_id === orgId).map((t) => ({ ...t }));
 }
+
+// ───────────────────────────────────────────────────────────────
+// Attachments — in-memory, so the deal detail drawer has documents
+// to show in demo mode. Mirrors src/lib/attachments.ts.
+//
+// Demo deal ids are strings like "demo-1", not UUIDs, so querying
+// Supabase for them returns nothing at best and errors at worst.
+// ───────────────────────────────────────────────────────────────
+
+export interface DemoAttachment {
+  id: string;
+  deal_id: string;
+  deal_type: string;
+  org_id: string;
+  uploaded_by: string;
+  file_name: string;
+  file_size: number;
+  file_type: string;
+  storage_path: string;
+  created_at: string;
+  source: 'manual' | 'extraction';
+}
+
+let _attachments: DemoAttachment[] | null = null;
+
+function attachmentStore(): DemoAttachment[] {
+  if (_attachments === null) _attachments = seedDemoAttachments();
+  return _attachments;
+}
+
+// The documents behind the seeded deals. Sizes and dates are plausible
+// rather than real; nothing downloads, since there is no stored object.
+function seedDemoAttachments(): DemoAttachment[] {
+  const daysAgo = (n: number) => new Date(Date.now() - n * 86400000).toISOString();
+  const make = (
+    dealId: string,
+    fileName: string,
+    sizeKb: number,
+    source: 'manual' | 'extraction',
+    age: number,
+  ): DemoAttachment => ({
+    id: `demo-att-${dealId}-${fileName}`,
+    deal_id: dealId,
+    deal_type: 'pipeline',
+    org_id: 'demo-org',
+    uploaded_by: 'demo-user',
+    file_name: fileName,
+    file_size: sizeKb * 1024,
+    file_type: fileName.endsWith('.txt') ? 'text/plain' : 'application/pdf',
+    storage_path: `demo/${dealId}/${fileName}`,
+    created_at: daysAgo(age),
+    source,
+  });
+
+  return [
+    // A deal that came in as a document set, the way the upload panel produces.
+    make('demo-1', '01_credit-application.pdf', 104, 'extraction', 2),
+    make('demo-1', '02_financial-statements.pdf', 138, 'extraction', 2),
+    make('demo-1', '03_equipment-quote.pdf', 109, 'extraction', 2),
+    make('demo-1', '04_broker-email.txt', 2, 'extraction', 2),
+
+    // A deal further along, with diligence added after screening.
+    make('demo-6', 'FY25_audited_financials.pdf', 890, 'extraction', 9),
+    make('demo-6', 'equipment_appraisal.pdf', 412, 'manual', 6),
+    make('demo-6', 'site_inspection_photos.pdf', 1240, 'manual', 4),
+
+    make('demo-8', 'borrower_application.pdf', 96, 'extraction', 13),
+    make('demo-8', 'UCC_search_results.pdf', 58, 'manual', 11),
+  ];
+}
+
+export function listDemoAttachments(dealId: string): DemoAttachment[] {
+  return attachmentStore()
+    .filter((a) => a.deal_id === dealId)
+    .sort((a, b) => (a.created_at < b.created_at ? 1 : -1))
+    .map((a) => ({ ...a }));
+}
+
+export function countDemoAttachments(dealIds: string[]): Record<string, number> {
+  const counts: Record<string, number> = {};
+  for (const a of attachmentStore()) {
+    if (dealIds.includes(a.deal_id)) counts[a.deal_id] = (counts[a.deal_id] || 0) + 1;
+  }
+  return counts;
+}
+
+export function deleteDemoAttachment(id: string): boolean {
+  const store = attachmentStore();
+  const idx = store.findIndex((a) => a.id === id);
+  if (idx === -1) return false;
+  store.splice(idx, 1);
+  return true;
+}

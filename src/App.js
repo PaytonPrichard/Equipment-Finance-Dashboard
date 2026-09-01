@@ -296,7 +296,17 @@ function AuthenticatedApp({ profile, user }) {
   const [extractionFiles, setExtractionFiles] = useState([]);
   const [activeDeal, setActiveDeal] = useState(null);
   const [activePipelineDealId, setActivePipelineDealId] = useState(null);
-  const [activeTab, setActiveTab] = useState('screening');
+  // ?tab= opens a chosen screen directly, so a demo link can land on the
+  // pipeline or the memo rather than always on an empty New Deal form.
+  const [activeTab, setActiveTab] = useState(() => {
+    const ALLOWED = ['screening', 'batch', 'pipeline', 'monitoring', 'dashboard', 'compare', 'historical', 'audit'];
+    try {
+      const requested = new URLSearchParams(window.location.search).get('tab');
+      return requested && ALLOWED.includes(requested) ? requested : 'screening';
+    } catch {
+      return 'screening';
+    }
+  });
 
   // New Deal layout prefs — persisted so the user's choice sticks across sessions.
   // paneMode: 'split' (both panes), 'form' (results collapsed to a rail),
