@@ -66,24 +66,32 @@ const FIXTURES = {
     label: 'Accounts Receivable',
     modulePath: 'src/modules/accounts-receivable/scoring.ts',
     constantsPath: 'src/modules/accounts-receivable/constants.ts',
+    // Matches test-deal-sheets/accounts-receivable/atlas-industrial-multidoc.
     inputs: {
       companyName: 'Atlas Industrial Supply LLC',
       annualRevenue: 42000000, priorYearRevenue: 38500000,
       ebitda: 5200000, priorYearEbitda: 4700000,
       yearsInBusiness: 14, totalExistingDebt: 11000000,
       actualAnnualDebtService: 1850000, cashOnHand: 1900000,
+      availableLiquidity: 2500000,
       industrySector: 'Manufacturing', creditRating: 'Adequate',
       totalAROutstanding: 12000000, requestedAdvanceRate: 85,
       arUnder30: 65, arOver30: 22, arOver60: 9, arOver90: 4,
       topCustomerConcentration: 18, dilutionRate: 3.2, ineligiblesPct: 12,
       existingABLFacility: true,
     },
-    sourceDocuments: [],
+    sourceDocuments: [
+      { fileName: '01_credit-application.pdf', documentType: 'Credit application', addedOn: 'Sep 1, 2026' },
+      { fileName: '02_ar-aging.pdf', documentType: 'AR aging report', addedOn: 'Sep 1, 2026' },
+      { fileName: '03_borrowing-base-certificate.pdf', documentType: 'Borrowing base certificate', addedOn: 'Sep 1, 2026' },
+      { fileName: '04_customer-concentration.pdf', documentType: 'AR aging report', addedOn: 'Sep 1, 2026' },
+    ],
   },
   inventory_finance: {
     label: 'Inventory Finance',
     modulePath: 'src/modules/inventory-finance/scoring.ts',
     constantsPath: 'src/modules/inventory-finance/constants.ts',
+    // Matches test-deal-sheets/inventory/cascade-outdoor-multidoc.
     inputs: {
       companyName: 'Cascade Outdoor Brands Inc.',
       annualRevenue: 51000000, priorYearRevenue: 46000000,
@@ -96,7 +104,12 @@ const FIXTURES = {
       obsoleteInventory: 6, inventoryTurnover: 5.2, averageDaysOnHand: 70,
       nolvPct: 58, perishable: false,
     },
-    sourceDocuments: [],
+    sourceDocuments: [
+      { fileName: '01_credit-application.pdf', documentType: 'Credit application', addedOn: 'Sep 1, 2026' },
+      { fileName: '02_inventory-report.pdf', documentType: 'Financial statements', addedOn: 'Sep 1, 2026' },
+      { fileName: '03_nolv-appraisal.pdf', documentType: 'Appraisal', addedOn: 'Sep 1, 2026' },
+      { fileName: '04_broker-email.txt', documentType: 'Deal sheet', addedOn: 'Sep 1, 2026' },
+    ],
   },
 };
 

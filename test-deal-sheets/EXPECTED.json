@@ -65,6 +65,109 @@
       "expectedAbsent": [
         "creditRating"
       ]
+    },
+    {
+      "scenario": "atlas-industrial-multidoc",
+      "assetClass": "accounts-receivable",
+      "moduleKey": "accounts_receivable",
+      "description": "Four documents for an ABL revolver. The aging report and the borrowing base certificate state dollars where the form stores percentages, which is the bug class that already reached production once. Concentration must be picked out of a per-customer schedule, dilution derived from credits against billings.",
+      "dir": "accounts-receivable/atlas-industrial-multidoc",
+      "documents": [
+        {
+          "file": "01_credit-application.pdf",
+          "documentType": "credit_application"
+        },
+        {
+          "file": "02_ar-aging.pdf",
+          "documentType": "ar_aging"
+        },
+        {
+          "file": "03_borrowing-base-certificate.pdf",
+          "documentType": "borrowing_base_certificate"
+        },
+        {
+          "file": "04_customer-concentration.pdf",
+          "documentType": "ar_aging"
+        }
+      ],
+      "truth": {
+        "companyName": "Atlas Industrial Supply LLC",
+        "annualRevenue": 42000000,
+        "priorYearRevenue": 38500000,
+        "ebitda": 5200000,
+        "priorYearEbitda": 4700000,
+        "yearsInBusiness": 14,
+        "totalExistingDebt": 11000000,
+        "actualAnnualDebtService": 1850000,
+        "cashOnHand": 1900000,
+        "availableLiquidity": 2500000,
+        "industrySector": "Manufacturing",
+        "totalAROutstanding": 12000000,
+        "requestedAdvanceRate": 85,
+        "arUnder30": 65,
+        "arOver30": 22,
+        "arOver60": 9,
+        "arOver90": 4,
+        "topCustomerConcentration": 18,
+        "dilutionRate": 3.2,
+        "ineligiblesPct": 12,
+        "existingABLFacility": true
+      },
+      "expectedConflicts": [],
+      "expectedAbsent": [
+        "creditRating"
+      ]
+    },
+    {
+      "scenario": "cascade-outdoor-multidoc",
+      "assetClass": "inventory",
+      "moduleKey": "inventory_finance",
+      "description": "Four documents for an inventory revolver. Composition is stated in dollars where the form stores percentages, NOLV arrives as a dollar recovery that has to be expressed against book value, and obsolete stock overlaps the three stage categories rather than sitting beside them.",
+      "dir": "inventory/cascade-outdoor-multidoc",
+      "documents": [
+        {
+          "file": "01_credit-application.pdf",
+          "documentType": "credit_application"
+        },
+        {
+          "file": "02_inventory-report.pdf",
+          "documentType": "financial_statement"
+        },
+        {
+          "file": "03_nolv-appraisal.pdf",
+          "documentType": "appraisal"
+        },
+        {
+          "file": "04_broker-email.txt",
+          "documentType": "deal_sheet"
+        }
+      ],
+      "truth": {
+        "companyName": "Cascade Outdoor Brands Inc.",
+        "annualRevenue": 51000000,
+        "priorYearRevenue": 46000000,
+        "ebitda": 6800000,
+        "priorYearEbitda": 5900000,
+        "yearsInBusiness": 19,
+        "totalExistingDebt": 16500000,
+        "actualAnnualDebtService": 2400000,
+        "cashOnHand": 2200000,
+        "industrySector": "Manufacturing",
+        "totalInventory": 14000000,
+        "requestedAdvanceRate": 55,
+        "rawMaterials": 25,
+        "workInProgress": 15,
+        "finishedGoods": 60,
+        "obsoleteInventory": 6,
+        "inventoryTurnover": 5.2,
+        "averageDaysOnHand": 70,
+        "nolvPct": 58,
+        "perishable": false
+      },
+      "expectedConflicts": [],
+      "expectedAbsent": [
+        "creditRating"
+      ]
     }
   ]
 }

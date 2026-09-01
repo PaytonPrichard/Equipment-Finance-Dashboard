@@ -49,14 +49,30 @@ function buildRequestLine(inputs, metrics, moduleKey, financingLabel) {
   if (moduleKey === 'accounts_receivable') {
     const base = metrics?.borrowingBase;
     if (!base) return '';
-    const rate = inputs?.requestedAdvanceRate ? ` at a ${inputs.requestedAdvanceRate}% advance rate` : '';
+    const rate = inputs?.requestedAdvanceRate
+      ? ` at ${article(inputs.requestedAdvanceRate)} ${inputs.requestedAdvanceRate}% advance rate`
+      : '';
     return `${usd(base)} revolving facility secured by accounts receivable${rate} for ${company}.`;
   }
 
   const base = metrics?.borrowingBase;
   if (!base) return '';
-  const rate = inputs?.requestedAdvanceRate ? ` at a ${inputs.requestedAdvanceRate}% advance rate` : '';
+  const rate = inputs?.requestedAdvanceRate
+    ? ` at ${article(inputs.requestedAdvanceRate)} ${inputs.requestedAdvanceRate}% advance rate`
+    : '';
   return `${usd(base)} revolving facility secured by inventory${rate} for ${company}.`;
+}
+
+// "a 85% advance rate" reads wrong. The article depends on how the number
+// is spoken, not how it is spelled: eight, eleven, eighteen and eighty all
+// start with a vowel sound.
+function article(n) {
+  const s = String(Math.floor(Math.abs(Number(n) || 0)));
+  if (s === '8' || s === '11' || s === '18') return 'an';
+  if (s.startsWith('8') && s.length === 2) return 'an';   // 80-89
+  if (s.startsWith('11') && s.length === 4) return 'an';  // 1100-1199
+  if (s.startsWith('18') && s.length === 4) return 'an';  // 1800-1899
+  return 'a';
 }
 
 // Sources and uses. Equipment finance only: an ABL revolver funds against a

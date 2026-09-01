@@ -384,3 +384,47 @@ describe('the memo contains no model-generated prose', () => {
     expect(source).not.toMatch(/XMLHttpRequest/);
   });
 });
+
+describe('the request line reads correctly aloud', () => {
+  // "a 85% advance rate" is the sort of thing that reads as unpolished in a
+  // committee document. The article depends on how the number is spoken.
+  const arBase = {
+    ...AR_INITIAL,
+    companyName: 'Article Co',
+    annualRevenue: 40000000, ebitda: 6000000, totalExistingDebt: 12000000,
+    totalAROutstanding: 10000000, arUnder30: 70, arOver30: 20, arOver60: 7, arOver90: 3,
+    topCustomerConcentration: 15, dilutionRate: 3,
+  };
+
+  test('85% takes "an"', () => {
+    const html = buildPdfFor('accounts_receivable', ar, { ...arBase, requestedAdvanceRate: 85 });
+    expect(html).toContain('at an 85% advance rate');
+  });
+
+  test('55% takes "a"', () => {
+    const html = buildPdfFor('accounts_receivable', ar, { ...arBase, requestedAdvanceRate: 55 });
+    expect(html).toContain('at a 55% advance rate');
+  });
+
+  test('80% takes "an"', () => {
+    const html = buildPdfFor('accounts_receivable', ar, { ...arBase, requestedAdvanceRate: 80 });
+    expect(html).toContain('at an 80% advance rate');
+  });
+
+  test('no advance rate means no facility size, so no transaction summary', () => {
+    // The borrowing base is the advance rate applied to eligible AR, so
+    // without a rate there is no facility to state. Omitting the section
+    // beats printing "$0 revolving facility".
+    const html = buildPdfFor('accounts_receivable', ar, { ...arBase, requestedAdvanceRate: 0 });
+    expect(html).not.toContain('Transaction Summary');
+  });
+
+  test('no memo ever prints a dangling article', () => {
+    for (const rate of [55, 80, 85, 0]) {
+      const html = buildPdfFor('accounts_receivable', ar, { ...arBase, requestedAdvanceRate: rate });
+      expect(html).not.toMatch(/at an?\s+% advance/);
+      expect(html).not.toMatch(/at a 8[0-9]% advance/);
+      expect(html).not.toMatch(/at an [2-79][0-9]% advance/);
+    }
+  });
+});

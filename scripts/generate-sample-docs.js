@@ -25,6 +25,8 @@ const OUT_ROOT = path.join(__dirname, '..', 'test-deal-sheets');
 
 const SCENARIOS = [
   require('./sample-docs/granite-ridge'),
+  require('./sample-docs/atlas-industrial'),
+  require('./sample-docs/cascade-outdoor'),
 ];
 
 // ---- Locating a Chromium ----
