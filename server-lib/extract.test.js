@@ -15,6 +15,8 @@ const {
   normalizeNumber,
   EXTRACTION_SPECS,
   SUPPORTED_MODULES,
+  extractDealSheetSet,
+  DOCUMENT_TYPES,
 } = require('./extract');
 
 const MODULE = 'equipment_finance';
@@ -166,7 +168,7 @@ describe('extractDealSheet', () => {
   });
 
   test('rejects unsupported modules and media types', async () => {
-    const r1 = await extractDealSheet({ moduleKey: 'inventory_finance', mediaType: 'application/pdf', fileBase64: 'x' });
+    const r1 = await extractDealSheet({ moduleKey: 'commercial_real_estate', mediaType: 'application/pdf', fileBase64: 'x' });
     expect(r1.error).toContain('not yet supported');
     const r2 = await extractDealSheet({ moduleKey: MODULE, mediaType: 'application/zip', fileBase64: 'x' });
     expect(r2.error).toContain('Unsupported file type');
@@ -240,7 +242,228 @@ describe('credit rating is never inferred from silence', () => {
 });
 
 describe('module registry', () => {
-  test('equipment finance is the only supported module for now', () => {
-    expect(SUPPORTED_MODULES).toEqual(['equipment_finance']);
+  test('all three asset classes support extraction', () => {
+    expect(SUPPORTED_MODULES.slice().sort()).toEqual([
+      'accounts_receivable',
+      'equipment_finance',
+      'inventory_finance',
+    ]);
+  });
+
+  test('every module shares the same borrower block', () => {
+    // The borrower fields come from one constant. If a module grows its own
+    // copy they drift, and the same field ends up described differently
+    // depending on asset class.
+    const SHARED = [
+      'companyName', 'annualRevenue', 'priorYearRevenue', 'ebitda', 'priorYearEbitda',
+      'yearsInBusiness', 'totalExistingDebt', 'actualAnnualDebtService', 'maintenanceCapex',
+      'cashOnHand', 'availableLiquidity', 'industrySector', 'creditRating',
+    ];
+    const borrowerFields = (key) =>
+      EXTRACTION_SPECS[key].fields.filter((f) => SHARED.includes(f.key));
+
+    const equipment = borrowerFields('equipment_finance');
+    expect(equipment).toHaveLength(13);
+
+    for (const other of ['accounts_receivable', 'inventory_finance']) {
+      const fields = borrowerFields(other);
+      expect(fields.map((f) => f.key)).toEqual(equipment.map((f) => f.key));
+      // Same wording too, not just the same names.
+      expect(fields.map((f) => f.description)).toEqual(equipment.map((f) => f.description));
+    }
+  });
+
+  test('collateral fields do not leak across modules', () => {
+    const keys = (k) => EXTRACTION_SPECS[k].fields.map((f) => f.key);
+    expect(keys('accounts_receivable')).toContain('arOver90');
+    expect(keys('accounts_receivable')).not.toContain('equipmentCost');
+    expect(keys('inventory_finance')).toContain('nolvPct');
+    expect(keys('inventory_finance')).not.toContain('arOver90');
+    expect(keys('equipment_finance')).not.toContain('totalInventory');
+  });
+});
+
+describe('document classification', () => {
+  test('the tool schema asks the model to classify the document', () => {
+    const schema = buildToolSchema(MODULE);
+    expect(schema.input_schema.properties._documentType).toBeDefined();
+    expect(schema.input_schema.properties._documentType.enum).toEqual(DOCUMENT_TYPES);
+  });
+
+  test('a valid classification is carried through', () => {
+    const r = mapExtractedFields(MODULE, { ebitda: 100, _documentType: 'financial_statement' });
+    expect(r.documentType).toBe('financial_statement');
+  });
+
+  test('an absent or unrecognised classification falls back to other', () => {
+    // 'other' sorts last in every precedence group, so a document the model
+    // could not classify never wins a field by accident.
+    expect(mapExtractedFields(MODULE, { ebitda: 100 }).documentType).toBe('other');
+    expect(mapExtractedFields(MODULE, { ebitda: 100, _documentType: 'invoice' }).documentType).toBe('other');
+  });
+});
+
+describe('percentage groups that should sum to 100', () => {
+  // Source documents state dollars; these fields are percentages. The
+  // percent-vs-dollar class already reached production once in AR and
+  // inventory scoring. Closes AUDIT P1-9.
+
+  test('aging buckets that sum to ~100 pass silently', () => {
+    const r = mapExtractedFields('accounts_receivable', {
+      arUnder30: 65, arOver30: 27, arOver60: 7, arOver90: 1,
+    });
+    expect(r.warnings).toHaveLength(0);
+  });
+
+  test('dollar amounts in percent fields are called out as such', () => {
+    const r = mapExtractedFields('accounts_receivable', {
+      arUnder30: 7800000, arOver30: 3240000, arOver60: 840000, arOver90: 120000,
+    });
+    expect(r.warnings).toHaveLength(1);
+    expect(r.warnings[0]).toMatch(/dollar amounts rather than percentages/);
+    // Kept, not dropped: the analyst can see all four and correct them.
+    expect(r.inputs.arOver30).toBe(3240000);
+  });
+
+  test('a merely incomplete schedule gets a plainer warning', () => {
+    const r = mapExtractedFields('accounts_receivable', {
+      arUnder30: 65, arOver30: 20, arOver60: 7, arOver90: 1,
+    });
+    expect(r.warnings).toHaveLength(1);
+    expect(r.warnings[0]).toContain('sum to 93.0');
+    expect(r.warnings[0]).not.toMatch(/dollar amounts/);
+  });
+
+  test('a partial group is not checked', () => {
+    // Three of four buckets says nothing about whether they sum right.
+    const r = mapExtractedFields('accounts_receivable', {
+      arUnder30: 65, arOver30: 27, arOver60: 7,
+    });
+    expect(r.warnings).toHaveLength(0);
+  });
+
+  test('inventory composition is checked, with obsolete excluded from the sum', () => {
+    // Obsolete overlaps the three stage categories rather than sitting
+    // beside them, so 30 + 15 + 55 alongside 8 obsolete must still pass.
+    const r = mapExtractedFields('inventory_finance', {
+      rawMaterials: 30, workInProgress: 15, finishedGoods: 55, obsoleteInventory: 8,
+    });
+    expect(r.warnings).toHaveLength(0);
+  });
+
+  test('equipment finance has no percentage groups to check', () => {
+    const r = mapExtractedFields(MODULE, { equipmentCost: 5000000, downPayment: 500000 });
+    expect(r.warnings).toHaveLength(0);
+  });
+});
+
+describe('extractDealSheetSet', () => {
+  function sequencedFetch(inputsPerCall) {
+    let i = 0;
+    return async () => ({
+      ok: true,
+      json: async () => toolUseResponse(inputsPerCall[i++]),
+    });
+  }
+
+  test('extracts every document and keeps their results separate', async () => {
+    const result = await extractDealSheetSet({
+      moduleKey: MODULE,
+      files: [
+        { name: 'financials.pdf', media_type: 'application/pdf', data: 'x' },
+        { name: 'quote.pdf', media_type: 'application/pdf', data: 'y' },
+      ],
+      fetchImpl: sequencedFetch([
+        { ebitda: 7400000, _documentType: 'financial_statement' },
+        { equipmentCost: 6275000, _documentType: 'equipment_quote' },
+      ]),
+    });
+
+    expect(result.documents).toHaveLength(2);
+    expect(result.documents[0].fileName).toBe('financials.pdf');
+    expect(result.documents[0].documentType).toBe('financial_statement');
+    expect(result.documents[0].inputs.ebitda).toBe(7400000);
+    expect(result.documents[1].documentType).toBe('equipment_quote');
+    expect(result.documents[1].inputs.equipmentCost).toBe(6275000);
+  });
+
+  test('results stay aligned with the files that produced them', async () => {
+    // Fan-out is Promise.all, so results must come back in argument order
+    // regardless of which request settles first. If this ever regresses,
+    // every field would be attributed to the wrong document.
+    const byData = {
+      a: { ebitda: 1, _documentType: 'financial_statement' },
+      b: { ebitda: 2, _documentType: 'tax_return' },
+      c: { ebitda: 3, _documentType: 'credit_application' },
+    };
+    const fetchImpl = async (_url, options) => {
+      const body = JSON.parse(options.body);
+      const block = body.messages[0].content[0];
+      const data = block.source ? block.source.data : 'a';
+      // Make the first request settle last.
+      const delay = data === 'a' ? 20 : 0;
+      await new Promise((r) => setTimeout(r, delay));
+      return { ok: true, json: async () => toolUseResponse(byData[data]) };
+    };
+
+    const result = await extractDealSheetSet({
+      moduleKey: MODULE,
+      files: [
+        { name: 'a.pdf', media_type: 'application/pdf', data: 'a' },
+        { name: 'b.pdf', media_type: 'application/pdf', data: 'b' },
+        { name: 'c.pdf', media_type: 'application/pdf', data: 'c' },
+      ],
+      fetchImpl,
+    });
+
+    expect(result.documents.map((d) => d.fileName)).toEqual(['a.pdf', 'b.pdf', 'c.pdf']);
+    expect(result.documents.map((d) => d.inputs.ebitda)).toEqual([1, 2, 3]);
+  });
+
+  test('one unreadable document does not fail the batch', async () => {
+    // Three good documents and one bad scan should still prefill the form.
+    let call = 0;
+    const fetchImpl = async () => {
+      call += 1;
+      if (call === 2) {
+        return { ok: false, status: 400, json: async () => ({ error: { message: 'could not read' } }) };
+      }
+      return { ok: true, json: async () => toolUseResponse({ ebitda: 100, _documentType: 'financial_statement' }) };
+    };
+
+    const result = await extractDealSheetSet({
+      moduleKey: MODULE,
+      files: [
+        { name: 'good.pdf', media_type: 'application/pdf', data: 'x' },
+        { name: 'bad.pdf', media_type: 'application/pdf', data: 'y' },
+      ],
+      fetchImpl,
+    });
+
+    const bad = result.documents.find((d) => d.fileName === 'bad.pdf');
+    const good = result.documents.find((d) => d.fileName === 'good.pdf');
+    expect(bad.error).toBeTruthy();
+    expect(bad.inputs).toEqual({});
+    expect(good.error).toBeNull();
+    expect(good.inputs.ebitda).toBe(100);
+  });
+
+  test('rejects an unsupported module and an empty set', async () => {
+    const r1 = await extractDealSheetSet({
+      moduleKey: 'commercial_real_estate',
+      files: [{ media_type: 'application/pdf', data: 'x' }],
+    });
+    expect(r1.error).toContain('not yet supported');
+    const r2 = await extractDealSheetSet({ moduleKey: MODULE, files: [] });
+    expect(r2.error).toContain('At least one file');
+  });
+
+  test('a missing filename does not produce an unnamed document', async () => {
+    const result = await extractDealSheetSet({
+      moduleKey: MODULE,
+      files: [{ media_type: 'application/pdf', data: 'x' }],
+      fetchImpl: sequencedFetch([{ ebitda: 1, _documentType: 'other' }]),
+    });
+    expect(result.documents[0].fileName).toBe('document');
   });
 });

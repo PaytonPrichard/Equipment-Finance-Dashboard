@@ -1,0 +1,193 @@
+{
+  "_comment": "Real output of server-lib/extract.js against test-deal-sheets/equipment/granite-ridge-multidoc, captured so demo mode can exercise the real merge and conflict UI with no API key and no cost. Regenerate by re-running the capture script if the extraction spec changes. The borrower is fictional.",
+  "capturedAt": "2026-09-01",
+  "assetClass": "equipment_finance",
+  "scenario": "granite-ridge-multidoc",
+  "documents": [
+    {
+      "fileName": "01_credit-application.pdf",
+      "inputs": {
+        "companyName": "Granite Ridge Materials LLC",
+        "yearsInBusiness": 16,
+        "totalExistingDebt": 14200000,
+        "actualAnnualDebtService": 2310000,
+        "availableLiquidity": 4000000,
+        "industrySector": "Mining",
+        "equipmentType": "Heavy Machinery",
+        "equipmentCondition": "New",
+        "equipmentCost": 6275000,
+        "downPayment": 941250,
+        "financingType": "EFA",
+        "essentialUse": true
+      },
+      "found": [
+        "companyName",
+        "yearsInBusiness",
+        "totalExistingDebt",
+        "actualAnnualDebtService",
+        "availableLiquidity",
+        "industrySector",
+        "equipmentType",
+        "equipmentCondition",
+        "equipmentCost",
+        "downPayment",
+        "financingType",
+        "essentialUse"
+      ],
+      "missing": [
+        "annualRevenue",
+        "priorYearRevenue",
+        "ebitda",
+        "priorYearEbitda",
+        "maintenanceCapex",
+        "cashOnHand",
+        "creditRating",
+        "usefulLife",
+        "loanTerm"
+      ],
+      "warnings": [],
+      "notes": "Equipment condition (new) inferred from \"replacement\" plant purchase; not explicitly labeled new/used. Available liquidity computed as $6,000,000 revolver capacity minus $2,000,000 drawn = $4,000,000 undrawn.",
+      "documentType": "credit_application",
+      "error": null
+    },
+    {
+      "fileName": "02_financial-statements.pdf",
+      "inputs": {
+        "companyName": "Granite Ridge Materials LLC",
+        "annualRevenue": 38400000,
+        "priorYearRevenue": 34900000,
+        "ebitda": 7400000,
+        "priorYearEbitda": 6600000,
+        "totalExistingDebt": 14200000,
+        "actualAnnualDebtService": 2310000,
+        "maintenanceCapex": 1850000,
+        "cashOnHand": 2650000,
+        "availableLiquidity": 4000000,
+        "industrySector": "Mining"
+      },
+      "found": [
+        "companyName",
+        "annualRevenue",
+        "priorYearRevenue",
+        "ebitda",
+        "priorYearEbitda",
+        "totalExistingDebt",
+        "actualAnnualDebtService",
+        "maintenanceCapex",
+        "cashOnHand",
+        "availableLiquidity",
+        "industrySector"
+      ],
+      "missing": [
+        "yearsInBusiness",
+        "creditRating",
+        "equipmentType",
+        "equipmentCondition",
+        "equipmentCost",
+        "downPayment",
+        "financingType",
+        "usefulLife",
+        "loanTerm",
+        "essentialUse"
+      ],
+      "warnings": [],
+      "notes": "Industry inferred as mining/aggregates (mineral rights, aggregate sales, hauling revenue) but no exact match; mapped to Mining. No equipment financing details present in this document.",
+      "documentType": "financial_statement",
+      "error": null
+    },
+    {
+      "fileName": "03_equipment-quote.pdf",
+      "inputs": {
+        "companyName": "Granite Ridge Materials LLC",
+        "industrySector": "Mining",
+        "equipmentType": "Heavy Machinery",
+        "equipmentCondition": "New",
+        "equipmentCost": 6275000,
+        "downPayment": 941250,
+        "usefulLife": 12,
+        "essentialUse": true
+      },
+      "found": [
+        "companyName",
+        "industrySector",
+        "equipmentType",
+        "equipmentCondition",
+        "equipmentCost",
+        "downPayment",
+        "usefulLife",
+        "essentialUse"
+      ],
+      "missing": [
+        "annualRevenue",
+        "priorYearRevenue",
+        "ebitda",
+        "priorYearEbitda",
+        "yearsInBusiness",
+        "totalExistingDebt",
+        "actualAnnualDebtService",
+        "maintenanceCapex",
+        "cashOnHand",
+        "availableLiquidity",
+        "creditRating",
+        "financingType",
+        "loanTerm"
+      ],
+      "warnings": [],
+      "notes": "Quote is for Granite Ridge Materials LLC (Blair County Quarry); prepared by dealer Keystone Aggregate Systems. Down payment inferred from deposit due at order ($941,250). Useful life taken from engineering design service life of 12 years. Industry sector inferred as Mining (quarry/aggregate).",
+      "documentType": "equipment_quote",
+      "error": null
+    },
+    {
+      "fileName": "04_broker-email.txt",
+      "inputs": {
+        "companyName": "Granite Ridge Materials",
+        "annualRevenue": 38000000,
+        "priorYearRevenue": 34900000,
+        "ebitda": 7900000,
+        "yearsInBusiness": 16,
+        "totalExistingDebt": 14200000,
+        "actualAnnualDebtService": 2300000,
+        "cashOnHand": 2650000,
+        "availableLiquidity": 4000000,
+        "industrySector": "Mining",
+        "equipmentType": "Heavy Machinery",
+        "equipmentCondition": "New",
+        "equipmentCost": 6275000,
+        "downPayment": 941250,
+        "financingType": "EFA",
+        "usefulLife": 12,
+        "loanTerm": 84,
+        "essentialUse": true
+      },
+      "found": [
+        "companyName",
+        "annualRevenue",
+        "priorYearRevenue",
+        "ebitda",
+        "yearsInBusiness",
+        "totalExistingDebt",
+        "actualAnnualDebtService",
+        "cashOnHand",
+        "availableLiquidity",
+        "industrySector",
+        "equipmentType",
+        "equipmentCondition",
+        "equipmentCost",
+        "downPayment",
+        "financingType",
+        "usefulLife",
+        "loanTerm",
+        "essentialUse"
+      ],
+      "missing": [
+        "priorYearEbitda",
+        "maintenanceCapex",
+        "creditRating"
+      ],
+      "warnings": [],
+      "notes": "Down payment implied at 15% of $6.275MM equipment cost (~$941,250), financed amount ~$5.334MM, consistent with stated ~$5.3MM request.",
+      "documentType": "deal_sheet",
+      "error": null
+    }
+  ]
+}

@@ -3,6 +3,10 @@
   "functions": {
     "api/*.js": {
       "includeFiles": "server-lib/**"
+    },
+    "api/parse-deal.js": {
+      "includeFiles": "server-lib/**",
+      "maxDuration": 120
     }
   },
   "rewrites": [
