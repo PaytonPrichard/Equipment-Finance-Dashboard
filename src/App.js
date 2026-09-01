@@ -11,6 +11,7 @@ import { isDemoMode } from './lib/demoMode';
 import DemoBanner from './components/DemoBanner';
 import { useToast } from './contexts/ToastContext';
 import { TutorialProvider, useTutorial } from './contexts/TutorialContext';
+import { useConfirm } from './contexts/ConfirmContext';
 import WelcomeTutorial from './components/WelcomeTutorial';
 import TutorialBeacon from './components/TutorialBeacon';
 import { useSessionGuard } from './hooks/useSessionGuard';
@@ -41,6 +42,7 @@ import {
   formatPercent,
   formatCurrencyFull,
   formatCurrency,
+  calculateMonthlyPayment,
 } from './utils/format';
 import { getModule, getAvailableModules, DEFAULT_MODULE } from './modules';
 import { computeBorrowerExtras, fccrStatus, liquidityCoverageStatus, revenueGrowthStatus } from './utils/borrowerMetrics';
@@ -157,7 +159,15 @@ export default function App() {
     && new URLSearchParams(window.location.search).get('code');
   const [showLogin, setShowLogin] = useState(Boolean(hasInviteCode));
   const [loginMode, setLoginMode] = useState(hasInviteCode ? 'signup' : 'signin');
-  const [showRequestAccess, setShowRequestAccess] = useState(false);
+  // ?request=1 opens the access form directly, so the demo banner's CTA can
+  // hand someone straight to it instead of dropping them on the landing page.
+  const [showRequestAccess, setShowRequestAccess] = useState(() => {
+    try {
+      return new URLSearchParams(window.location.search).get('request') === '1';
+    } catch {
+      return false;
+    }
+  });
 
   // Auto sign-out after 30 minutes of inactivity (skipped in demo mode)
   useIdleTimeout(() => {
@@ -225,12 +235,16 @@ function AuthenticatedApp({ profile, user }) {
   const userId = user?.id;
   const { signOut: authSignOut } = useAuth();
   const { addToast } = useToast();
+  const confirm = useConfirm();
   const draftSaveTimer = useRef(null);
-  const { plan, isExpired, isExpiringSoon, daysRemaining } = useOrgPlan();
+  const { plan, maxUsers, isExpired, isExpiringSoon, daysRemaining } = useOrgPlan();
 
-  // Enforce single session for Analyst tier (1 user plans)
-  useSessionGuard(userId, plan === 'analyst', () => {
-    alert('Your session was ended because another login was detected.');
+  // Single-seat plans get single-session enforcement. This used to test
+  // `plan === 'analyst'`, but 'analyst' is a user role and was never written
+  // as a plan value, so the guard never fired for anyone. Seat count is what
+  // the rule means.
+  useSessionGuard(userId, maxUsers === 1, () => {
+    addToast('Your session was ended because another login was detected.', 'warning');
     authSignOut();
   });
 
@@ -303,7 +317,6 @@ function AuthenticatedApp({ profile, user }) {
   useEffect(() => {
     try { localStorage.setItem('efd_new_deal_labels_hidden', paneLabelsHidden ? '1' : '0'); } catch { /* ignore */ }
   }, [paneLabelsHidden]);
-  const [importedDeals, setImportedDeals] = useState([]);
   const [guideOpen, setGuideOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [recentDeals, setRecentDeals] = useState([]);
@@ -339,6 +352,22 @@ function AuthenticatedApp({ profile, user }) {
   const [draftStatus, setDraftStatus] = useState(null); // null | 'saving' | 'saved'
   const [dealTemplates, setDealTemplates] = useState([]);
   const [showTemplateMenu, setShowTemplateMenu] = useState(false);
+  // Naming a template used to go through prompt(), an OS dialog that names
+  // localhost and blocks the event loop.
+  const [namingTemplate, setNamingTemplate] = useState(false);
+  const [templateName, setTemplateName] = useState('');
+
+  const saveTemplate = () => {
+    const name = templateName.trim();
+    if (!name) return;
+    const newTemplates = [...dealTemplates, { name, inputs: { ...inputs }, module: activeModule, created: Date.now() }];
+    setDealTemplates(newTemplates);
+    upsertPreferences(userId, { deal_templates: newTemplates });
+    setNamingTemplate(false);
+    setTemplateName('');
+    setShowTemplateMenu(false);
+    addToast('Template saved', 'success');
+  };
   useEffect(() => {
     if (!userId) return;
     setDraftStatus('saving');
@@ -397,7 +426,26 @@ function AuthenticatedApp({ profile, user }) {
 
       if (orgSpreadAdj !== 0) {
         const adjRate = (baseMetrics.rate || baseMetrics.effectiveRate || 0) + orgSpreadAdj / 10000;
-        const adjNewDS = baseMetrics.netFinanced ? baseMetrics.netFinanced * adjRate / (baseMetrics.monthlyPayment ? 1 : 1) : baseMetrics.borrowingBase ? baseMetrics.borrowingBase * adjRate : baseMetrics.newAnnualDebtService;
+        // Debt service has to be recomputed the same way the module computes
+        // it, or the org override silently changes the definition of DSCR.
+        //
+        // This used to read `netFinanced * adjRate` for term facilities:
+        // interest only, against a module that amortizes
+        // (newAnnualDebtService = monthlyPayment * 12). On a $5.3M 84-month
+        // facility at 7% that understated annual debt service by 2.6x
+        // ($373K against $966K) and inflated DSCR from 2.26x to 2.76x. DSCR
+        // is the highest-weighted factor and the primary gate, so any org
+        // that set a custom spread in Settings was scoring against a
+        // different, more generous rule than the defaults.
+        //
+        // Revolvers are a different instrument: an ABL facility does not
+        // amortize, so borrowingBase * rate is the right shape there and is
+        // left alone.
+        const adjNewDS = baseMetrics.netFinanced
+          ? calculateMonthlyPayment(baseMetrics.netFinanced, adjRate, inputs.loanTerm) * 12
+          : baseMetrics.borrowingBase
+            ? baseMetrics.borrowingBase * adjRate
+            : baseMetrics.newAnnualDebtService;
         const totalDS = baseMetrics.existingDebtService + (adjNewDS || baseMetrics.newAnnualDebtService);
         const adjDscr = inputs.ebitda && totalDS > 0 ? inputs.ebitda / totalDS : baseMetrics.dscr;
         return {
@@ -493,8 +541,14 @@ function AuthenticatedApp({ profile, user }) {
     setActiveTab('screening');
   };
 
-  const clearForm = () => {
-    if (!window.confirm('Clear all fields? This cannot be undone.')) return;
+  const clearForm = async () => {
+    const ok = await confirm({
+      title: 'Clear all fields?',
+      body: 'The current deal inputs and any uploaded documents will be discarded.',
+      confirmLabel: 'Clear',
+      danger: true,
+    });
+    if (!ok) return;
     setInputs(mod.INITIAL_INPUTS);
     setActiveDeal(null);
     setActivePipelineDealId(null);
@@ -533,12 +587,6 @@ function AuthenticatedApp({ profile, user }) {
     setActivePipelineDealId(dealId || null);
     clearExtraction();
     setActiveTab('screening');
-  };
-
-  // eslint-disable-next-line no-unused-vars
-  const handleCsvImport = (deals) => {
-    setImportedDeals(deals);
-    setActiveTab('historical');
   };
 
   const ft = inputs.financingType || 'EFA';
@@ -647,22 +695,49 @@ function AuthenticatedApp({ profile, user }) {
                       <>
                         <div className="fixed inset-0 z-40" onClick={() => setShowTemplateMenu(false)} />
                         <div className="absolute top-full right-0 mt-2 py-2 w-56 bg-white border border-gray-200 rounded-xl shadow-xl z-50 animate-fade-in">
-                          {/* Save current as template */}
-                          {inputs.companyName && (
+                          {/* Save current as template. Naming happens inline;
+                              it used to open an OS prompt() dialog. */}
+                          {inputs.companyName && !namingTemplate && (
                             <button
                               onClick={() => {
-                                const name = prompt('Template name:', `${inputs.industrySector || 'Deal'} Template`);
-                                if (!name) return;
-                                const newTemplates = [...dealTemplates, { name, inputs: { ...inputs }, module: activeModule, created: Date.now() }];
-                                setDealTemplates(newTemplates);
-                                upsertPreferences(userId, { deal_templates: newTemplates });
-                                setShowTemplateMenu(false);
-                                addToast('Template saved', 'success');
+                                setTemplateName(`${inputs.industrySector || 'Deal'} Template`);
+                                setNamingTemplate(true);
                               }}
                               className="w-full text-left px-4 py-2 text-[12px] text-gray-700 hover:bg-gray-50 transition-colors"
                             >
                               Save current as template
                             </button>
+                          )}
+                          {inputs.companyName && namingTemplate && (
+                            <div className="px-3 py-2">
+                              <input
+                                autoFocus
+                                value={templateName}
+                                onChange={(e) => setTemplateName(e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') { e.preventDefault(); saveTemplate(); }
+                                  if (e.key === 'Escape') { setNamingTemplate(false); setTemplateName(''); }
+                                }}
+                                placeholder="Template name"
+                                aria-label="Template name"
+                                className="w-full px-2 py-1.5 rounded-lg border border-gray-200 text-[12px] text-gray-900 outline-none focus:border-gray-400"
+                              />
+                              <div className="flex items-center gap-2 mt-1.5">
+                                <button
+                                  onClick={saveTemplate}
+                                  disabled={!templateName.trim()}
+                                  className="text-[11px] font-semibold text-gray-900 disabled:text-gray-300"
+                                >
+                                  Save
+                                </button>
+                                <button
+                                  onClick={() => { setNamingTemplate(false); setTemplateName(''); }}
+                                  className="text-[11px] text-gray-400 hover:text-gray-600"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            </div>
                           )}
                           {dealTemplates.length > 0 && <div className="border-t border-gray-100 my-1" />}
                           {dealTemplates.map((t, i) => (
@@ -1471,7 +1546,7 @@ function AuthenticatedApp({ profile, user }) {
               {activeTab === 'historical' && (
                 <div className="space-y-8">
                   <PortfolioAnalytics scoredDeals={allHistorical} />
-                  <HistoricalDealsTable deals={[...historicalDeals, ...importedDeals]} sofr={sofr} />
+                  <HistoricalDealsTable deals={historicalDeals} sofr={sofr} />
                 </div>
               )}
               {activeTab === 'audit' && <AuditLogViewer />}
@@ -1484,7 +1559,8 @@ function AuthenticatedApp({ profile, user }) {
   );
 }
 
-// Email verification screen — Step 2 of 3 onboarding
+// Email verification screen. Reachable only by accounts created outside the
+// invite endpoint, which sets email_confirm on creation.
 function EmailVerificationScreen({ email, signOut }) {
   const [resendState, setResendState] = useState('idle'); // idle, sent, cooldown
 
@@ -1506,7 +1582,6 @@ function EmailVerificationScreen({ email, signOut }) {
           <div className="w-2 h-2 rounded-full bg-gray-900 animate-pulse" />
           <div className="w-8 h-0.5 bg-gray-200" />
           <div className="w-2 h-2 rounded-full bg-gray-200" />
-          <span className="text-[10px] text-gray-400 ml-2">Step 2 of 3</span>
         </div>
         <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-amber-50 border border-amber-200 mb-4">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-amber-500" strokeWidth="2">

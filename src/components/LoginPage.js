@@ -29,7 +29,6 @@ export default function LoginPage({ passwordRecovery, onBackToLanding, initialMo
   const [orgNameInput, setOrgNameInput] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [signUpSuccess, setSignUpSuccess] = useState(false);
   const [resetSent, setResetSent] = useState(false);
 
   // Invite-code signup state. Code comes from the URL once on mount and
@@ -41,7 +40,6 @@ export default function LoginPage({ passwordRecovery, onBackToLanding, initialMo
   const switchMode = (newMode) => {
     setMode(newMode);
     setError('');
-    setSignUpSuccess(false);
     setResetSent(false);
   };
 
@@ -96,7 +94,6 @@ export default function LoginPage({ passwordRecovery, onBackToLanding, initialMo
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    setSignUpSuccess(false);
     setLoading(true);
 
     try {
@@ -262,12 +259,6 @@ export default function LoginPage({ passwordRecovery, onBackToLanding, initialMo
             <>
               <h2 className="text-lg font-semibold text-gray-900 mb-1">{titles[mode]}</h2>
               <p className="text-sm text-gray-400 mb-6">{subtitles[mode]}</p>
-
-              {signUpSuccess && (
-                <div className="mb-4 p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm">
-                  Account created. Check your email to confirm your account, then sign in.
-                </div>
-              )}
 
               {resetSent && (
                 <div className="mb-4 p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm">

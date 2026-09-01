@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { formatPlanName } from '../utils/format';
 import TrancheLogo from './TrancheLogo';
 import { useAuth } from '../contexts/AuthContext';
 import { useRole } from '../hooks/useRole';
 import { useOrgPlan } from '../hooks/useOrgPlan';
 import { useToast } from '../contexts/ToastContext';
+import { useConfirm } from '../contexts/ConfirmContext';
 import { supabase } from '../lib/supabase';
 import { ROLE_LABELS } from '../lib/permissions';
 import { fetchPreferences, upsertPreferences } from '../lib/preferences';
@@ -415,17 +417,17 @@ export default function SettingsPanel({ isOpen, onClose, onCriteriaChange, activ
             <div className="space-y-6">
               <div>
                 <h3 className="text-sm font-bold text-gray-900 mb-1">Billing</h3>
-                <p className="text-[12px] text-gray-400 mb-4">Manage your subscription and payment method.</p>
+                <p className="text-[12px] text-gray-400 mb-4">Your current plan and how long it runs.</p>
                 <div className="p-4 rounded-xl bg-gray-50 border border-gray-200 mb-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-[12px] text-gray-900 font-medium capitalize">{plan || 'Free'} Plan</p>
+                      <p className="text-[12px] text-gray-900 font-medium">{formatPlanName(plan)}</p>
                       {daysRemaining != null && <p className="text-[10px] text-gray-400">{daysRemaining} days remaining</p>}
                       {isExpired && <p className="text-[10px] text-rose-400">Plan expired. Upgrade to continue.</p>}
                     </div>
                   </div>
                 </div>
-                <p className="text-[12px] text-gray-400">Stripe billing integration coming soon. Contact us for plan changes or pilot extensions.</p>
+                <p className="text-[12px] text-gray-500">Plans are set up by hand. Email us for a plan change, a pilot extension, or more seats.</p>
                 <a href="mailto:team@gettranche.app?subject=Tranche%20Billing" className="inline-block mt-2 text-[12px] text-gray-600 hover:text-gray-700 transition-colors">
                   Contact about billing
                 </a>
@@ -445,6 +447,7 @@ export default function SettingsPanel({ isOpen, onClose, onCriteriaChange, activ
 
 // ── Integrations Section (API Keys + Webhooks) ──────────────
 function IntegrationsSection({ addToast }) {
+  const confirm = useConfirm();
   const { session } = useAuth();
   const [apiKeys, setApiKeys] = useState([]);
   const [webhooksList, setWebhooksList] = useState([]);
@@ -478,7 +481,13 @@ function IntegrationsSection({ addToast }) {
   };
 
   const revokeKey = async (id) => {
-    if (!window.confirm('Revoke this API key? Any integrations using it will stop working.')) return;
+    const ok = await confirm({
+      title: 'Revoke this API key?',
+      body: 'Any integration using it stops working immediately. This cannot be undone.',
+      confirmLabel: 'Revoke',
+      danger: true,
+    });
+    if (!ok) return;
     const res = await fetch(`/api/v1?resource=keys&id=${id}`, { method: 'DELETE', headers: getAuthHeaders() });
     if (res.ok) { setApiKeys(prev => prev.map(k => k.id === id ? { ...k, revoked_at: new Date().toISOString() } : k)); addToast('Key revoked', 'success'); }
   };
@@ -496,7 +505,13 @@ function IntegrationsSection({ addToast }) {
   };
 
   const deleteWebhook = async (id) => {
-    if (!window.confirm('Delete this webhook?')) return;
+    const ok = await confirm({
+      title: 'Delete this webhook?',
+      body: 'Events will stop being delivered to this endpoint.',
+      confirmLabel: 'Delete',
+      danger: true,
+    });
+    if (!ok) return;
     const res = await fetch(`/api/v1?resource=webhooks&id=${id}`, { method: 'DELETE', headers: getAuthHeaders() });
     if (res.ok) { setWebhooksList(prev => prev.filter(w => w.id !== id)); addToast('Webhook deleted', 'success'); }
   };

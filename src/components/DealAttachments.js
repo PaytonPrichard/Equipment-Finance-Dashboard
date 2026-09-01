@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { useConfirm } from '../contexts/ConfirmContext';
 import {
   uploadAttachment,
   fetchAttachments,
@@ -27,6 +28,7 @@ function getFileIcon(mimeType) {
 
 export default function DealAttachments({ dealId, dealType }) {
   const { user, profile } = useAuth();
+  const confirm = useConfirm();
   const [attachments, setAttachments] = useState([]);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState(null);
@@ -80,7 +82,13 @@ export default function DealAttachments({ dealId, dealType }) {
   };
 
   const handleDelete = async (attachment) => {
-    if (!window.confirm(`Delete "${attachment.file_name}"?`)) return;
+    const ok = await confirm({
+      title: `Delete "${attachment.file_name}"?`,
+      body: 'The file is removed from this deal and from storage. This cannot be undone.',
+      confirmLabel: 'Delete',
+      danger: true,
+    });
+    if (!ok) return;
     const { error: delError } = await deleteAttachment(attachment.id, attachment.storage_path);
     if (delError) {
       setError(delError);

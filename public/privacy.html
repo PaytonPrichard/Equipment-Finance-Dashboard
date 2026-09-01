@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Privacy Policy — Tranche</title>
+<style>
+  :root { --ink:#111827; --muted:#6b7280; --line:#e5e7eb; --gold:#D4A843; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: #f8f9fa; color: var(--ink);
+    font: 15px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  .wrap { max-width: 720px; margin: 0 auto; padding: 48px 24px 72px; }
+  a { color: var(--ink); }
+  .back { display:inline-block; font-size:13px; color:var(--muted); text-decoration:none; margin-bottom:28px; }
+  .back:hover { color: var(--ink); }
+  h1 { font-size: 28px; font-weight: 800; letter-spacing:-0.01em; margin: 0 0 6px; }
+  .updated { font-size: 13px; color: var(--muted); margin: 0 0 32px; }
+  h2 { font-size: 15px; font-weight: 700; margin: 32px 0 8px; }
+  p, li { color: #374151; }
+  ul { padding-left: 20px; }
+  li { margin-bottom: 6px; }
+  .card { background:#fff; border:1px solid var(--line); border-radius:16px; padding:32px; }
+  footer { margin-top:32px; font-size:12px; color:var(--muted); text-align:center; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="/">&larr; Back to Tranche</a>
+  <div class="card">
+    <h1>Privacy Policy</h1>
+    <p class="updated">Last updated 1 September 2026</p>
+
+    <p>Tranche is a deal screening tool for commercial credit teams. This page explains
+    what we store, why, and what we do not do with it. It is written to be read, not to
+    be comprehensive legal cover.</p>
+
+    <h2>What we store</h2>
+    <ul>
+      <li><strong>Account information.</strong> Your email address, name, organization, and role.</li>
+      <li><strong>Deal data.</strong> The borrower and facility details you enter or upload, the
+      scores computed from them, your notes, and your pipeline stages.</li>
+      <li><strong>Documents.</strong> Files you upload to a deal are stored so they stay attached
+      to it. You can delete them from the deal at any time.</li>
+      <li><strong>Activity records.</strong> Changes to deals, stages, and facilities are recorded
+      so your team has an audit trail.</li>
+    </ul>
+
+    <h2>Where it lives</h2>
+    <p>Data is held in a managed Postgres database and object storage operated by Supabase,
+    and the application is served by Vercel. Both encrypt data in transit and at rest at the
+    infrastructure level. Each organization's rows are isolated from every other
+    organization's by database row-level security policies, not only by application code.</p>
+
+    <h2>Document processing</h2>
+    <p>When you upload a deal document, its contents are sent to Anthropic's API to extract
+    field values, which are returned to you for review before anything is scored or saved.
+    Anthropic does not train models on data submitted through its API. If you would rather
+    not send a document to a third party, enter the figures manually instead; every field is
+    editable by hand.</p>
+
+    <h2>What we do not do</h2>
+    <ul>
+      <li>We do not sell your data, and we do not share it with advertisers.</li>
+      <li>We do not use your deal data to train models.</li>
+      <li>We do not share one organization's deals with another.</li>
+      <li>We do not run third-party analytics or advertising trackers on the application.</li>
+    </ul>
+
+    <h2>Retention and deletion</h2>
+    <p>Your data stays until you delete it or ask us to. Deleting a deal removes the deal
+    record; deleting an attachment removes the file. To have an organization's data removed
+    entirely, email us and we will do it and confirm when it is done.</p>
+
+    <h2>Your choices</h2>
+    <p>You can export your pipeline and any screening to CSV or PDF at any time from inside
+    the app. You can request a copy of your data, a correction, or deletion by email.</p>
+
+    <h2>Contact</h2>
+    <p>Questions about any of this: <a href="mailto:team@gettranche.app">team@gettranche.app</a>.</p>
+  </div>
+  <footer>Tranche &middot; gettranche.app</footer>
+</div>
+</body>
+</html>

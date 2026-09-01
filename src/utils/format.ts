@@ -29,18 +29,25 @@ export function formatRatio(value: number): string {
 }
 
 /**
- * Display label for an org plan key. The DB stores keys like `free_trial`;
- * this maps them to proper-cased names. There is no standalone free tier, so
- * `free` (legacy webhook value) and the unset default both read "Free Trial".
- * `pro` is the legacy key the webhook still writes for the Team tier — see
- * AUDIT.md P0-6. Unknown keys fall back to title-cased text.
+ * Display label for an org plan key.
+ *
+ * The three keys scripts/create-signup-invite.js actually issues are
+ * free_trial, pilot and pro. Everything else in this map is a value the
+ * deleted Stripe webhook used to write: `free` on cancellation, `team` and
+ * `enterprise` from a pricing grid that never reached checkout. They are
+ * kept so an org row written before the billing code was removed still reads
+ * sensibly, and nothing new writes them.
+ *
+ * Unknown keys fall back to title-cased text.
  */
 const PLAN_LABELS: Record<string, string> = {
   free_trial: 'Free Trial',
+  pilot: 'Pilot',
+  pro: 'Pro',
+  // Legacy values, no longer written by anything.
   free: 'Free Trial',
   analyst: 'Analyst',
   team: 'Team',
-  pro: 'Team',
   enterprise: 'Enterprise',
 };
 

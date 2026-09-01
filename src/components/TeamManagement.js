@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useRole } from '../hooks/useRole';
 import { useToast } from '../contexts/ToastContext';
+import { useConfirm } from '../contexts/ConfirmContext';
 import { supabase } from '../lib/supabase';
 import { ROLE_LABELS } from '../lib/permissions';
 import { sendInviteEmail } from '../lib/notifications';
@@ -28,6 +29,7 @@ export default function TeamManagement() {
   const { user, profile, refreshProfile } = useAuth();
   const { can } = useRole();
   const { addToast } = useToast();
+  const confirm = useConfirm();
 
   const [members, setMembers] = useState([]);
   const [invites, setInvites] = useState([]);
@@ -144,9 +146,12 @@ export default function TeamManagement() {
   };
 
   const handleRemoveMember = async (userId, memberName) => {
-    const confirmed = window.confirm(
-      `Remove ${memberName || 'this user'} from the organization? They will lose access to all org data.`
-    );
+    const confirmed = await confirm({
+      title: `Remove ${memberName || 'this user'}?`,
+      body: 'They lose access to every deal in this organization. Their account stays, without an org.',
+      confirmLabel: 'Remove',
+      danger: true,
+    });
     if (!confirmed) return;
 
     const { error } = await supabase

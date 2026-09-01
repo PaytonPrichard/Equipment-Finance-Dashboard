@@ -17,15 +17,6 @@ export default function OrgSetup({ profile, onComplete }) {
       <div className="w-full max-w-md">
         {/* Logo and App Title */}
         <div className="text-center mb-8">
-          {/* Progress */}
-          <div className="flex items-center justify-center gap-2 mb-6">
-            <div className="w-2 h-2 rounded-full bg-gray-700" />
-            <div className="w-8 h-0.5 bg-gray-700" />
-            <div className="w-2 h-2 rounded-full bg-gray-700" />
-            <div className="w-8 h-0.5 bg-gray-700" />
-            <div className="w-2 h-2 rounded-full bg-gray-700 animate-pulse" />
-            <span className="text-[10px] text-gray-400 ml-2">Step 3 of 3</span>
-          </div>
           <div className="flex items-center justify-center gap-2.5 mb-1">
             <TrancheLogo size={36} />
             <h1 className="text-2xl font-extrabold text-gray-900 tracking-tight">
@@ -33,7 +24,7 @@ export default function OrgSetup({ profile, onComplete }) {
             </h1>
           </div>
           <p className="text-sm text-gray-400 mt-1">
-            Let's set up your organization to start screening deals
+            Enter your invite code to join an organization
           </p>
         </div>
 
@@ -119,10 +110,34 @@ export default function OrgSetup({ profile, onComplete }) {
             </button>
           </form>
 
-          <div className="mt-5 pt-4 border-t border-gray-200">
+          {/* Escape hatch. Without these a user with an account but no org and
+              no invite code has exactly one action available: type a code
+              they do not have. The only way out was closing the tab. */}
+          <div className="mt-5 pt-4 border-t border-gray-200 space-y-2">
             <p className="text-xs text-gray-400 text-center">
-              No invite yet? Ask your organization admin, or request a trial at gettranche.app.
+              No invite yet? Ask your organization admin.
             </p>
+            <div className="flex items-center justify-center gap-4">
+              <button
+                type="button"
+                onClick={() => { window.location.href = '/?request=1'; }}
+                className="text-xs text-gray-600 hover:text-gray-900 transition-colors underline underline-offset-2"
+              >
+                Request access
+              </button>
+              <span className="text-gray-200">|</span>
+              <button
+                type="button"
+                onClick={async () => {
+                  try { localStorage.removeItem('efd_profile_cache'); } catch { /* ignore */ }
+                  if (supabase) await supabase.auth.signOut();
+                  window.location.href = '/';
+                }}
+                className="text-xs text-gray-600 hover:text-gray-900 transition-colors underline underline-offset-2"
+              >
+                Sign out
+              </button>
+            </div>
           </div>
         </div>
 

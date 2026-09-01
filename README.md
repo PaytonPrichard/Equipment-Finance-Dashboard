@@ -29,7 +29,7 @@ To explore without setting up Supabase, append `?demo=1` to the URL. Demo mode r
 ## Project layout
 
 ```
-api/                    Vercel serverless functions (Stripe, notifications, public API)
+api/                    Vercel serverless functions (scoring, document parsing, notifications, public API)
 public/                 Static assets, brand mark, OG image
 server-lib/             Shared server-only utilities (auth, rate limit, CORS)
 src/
@@ -58,10 +58,6 @@ Environment variables required in Vercel:
 - `FRED_API_KEY` — for SOFR rate fetching in `api/sofr.js`
 - `ANTHROPIC_API_KEY` — secret, for deal sheet parsing in `api/parse-deal.js`
 - `ANTHROPIC_MODEL` — optional, overrides the extraction model (defaults in `server-lib/extract.js`)
-
-Optional (Stripe, currently dormant):
-
-- `STRIPE_SECRET_KEY`, `STRIPE_PRICE_*`, `STRIPE_WEBHOOK_SECRET`
 
 ## Status
 

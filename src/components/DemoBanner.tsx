@@ -12,6 +12,17 @@ export default function DemoBanner(): React.ReactElement | null {
     window.location.href = url.pathname + (url.search || '');
   };
 
+  // The gold CTA used to call exitDemo, doing exactly what the grey Exit
+  // button beside it did: drop the demo and land back on the marketing page.
+  // Someone who has just seen the product work and wants it should not be
+  // dropped at the top of the funnel.
+  const requestAccess = () => {
+    const url = new URL(window.location.href);
+    url.searchParams.delete('demo');
+    url.searchParams.set('request', '1');
+    window.location.href = url.pathname + url.search;
+  };
+
   return (
     <div className="border-b border-amber-100" style={{ backgroundColor: '#FFF7E0' }}>
       <div className="max-w-[1600px] mx-auto px-4 md:px-6 py-2 flex items-center justify-between gap-4">
@@ -34,11 +45,11 @@ export default function DemoBanner(): React.ReactElement | null {
             Exit
           </button>
           <button
-            onClick={exitDemo}
+            onClick={requestAccess}
             className="px-3 py-1.5 rounded-md text-[12px] font-semibold text-white hover:opacity-90 transition-all"
             style={{ backgroundColor: GOLD }}
           >
-            Sign up to save
+            Request access
           </button>
         </div>
       </div>

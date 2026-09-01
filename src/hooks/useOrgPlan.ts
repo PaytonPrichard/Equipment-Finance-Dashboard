@@ -14,6 +14,14 @@ interface OrgRow {
 interface OrgPlanResult {
   org: OrgRow | null;
   plan: string;
+  /**
+   * Seats the org is entitled to. Exposed because single-seat plans get
+   * single-session enforcement, and gating that on a plan NAME was how the
+   * check came to be dead: App.js tested `plan === 'analyst'`, but 'analyst'
+   * is a user role, never a plan value, so it could not fire. Seat count is
+   * what the rule actually means and survives any renaming of the tiers.
+   */
+  maxUsers: number | null;
   isExpired: boolean;
   isExpiringSoon: boolean;
   daysRemaining: number | null;
@@ -54,10 +62,12 @@ export function useOrgPlan(): OrgPlanResult {
     : null;
   const isExpiringSoon = daysRemaining !== null && daysRemaining <= 7 && !isExpired;
   const plan: string = org?.plan || 'free_trial';
+  const maxUsers: number | null = typeof org?.max_users === 'number' ? org.max_users : null;
 
   return {
     org,
     plan,
+    maxUsers,
     isExpired,
     isExpiringSoon,
     daysRemaining,

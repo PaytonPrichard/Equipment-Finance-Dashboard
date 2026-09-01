@@ -360,7 +360,7 @@ export default function LandingPage({ onGetStarted, onSignIn }) {
             ))}
           </div>
           <div className="flex items-center justify-center gap-6 mt-8 text-sm text-gray-400">
-            <span>14-day free trial</span>
+            <span>Free trial</span>
             <span>&middot;</span>
             <span>No credit card required</span>
             <span>&middot;</span>
@@ -404,10 +404,9 @@ export default function LandingPage({ onGetStarted, onSignIn }) {
         <div className="max-w-[1200px] mx-auto px-6 py-8">
           <div className="flex items-center justify-center gap-10 flex-wrap">
             {[
-              { icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>, label: 'SOC 2 in progress' },
-              { icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>, label: 'Encrypted at rest' },
+              { icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>, label: 'Row-level data isolation' },
               { icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" /></svg>, label: 'Role-based access' },
-              { icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>, label: 'Audit trail on all actions' },
+              { icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>, label: 'Audit trail on deal changes' },
             ].map(t => (
               <div key={t.label} className="flex items-center gap-2.5 text-gray-500">
                 {t.icon}
@@ -420,12 +419,17 @@ export default function LandingPage({ onGetStarted, onSignIn }) {
 
       {/* Footer */}
       <footer style={{ backgroundColor: '#0F0E0C' }} className="border-t border-gray-800">
-        <div className="max-w-[1200px] mx-auto px-6 py-8 flex items-center justify-between">
+        <div className="max-w-[1200px] mx-auto px-6 py-8 flex items-center justify-between gap-4 flex-wrap">
           <span className="flex items-center gap-2 text-sm font-bold text-gray-500 tracking-tight">
             <TrancheLogo size={20} framed={false} />
             Tranche
           </span>
-          <span className="text-xs text-gray-600">&copy; {new Date().getFullYear()}</span>
+          <div className="flex items-center gap-5">
+            <a href="/privacy.html" className="text-xs text-gray-500 hover:text-gray-300 transition-colors">Privacy</a>
+            <a href="/terms.html" className="text-xs text-gray-500 hover:text-gray-300 transition-colors">Terms</a>
+            <a href="mailto:team@gettranche.app" className="text-xs text-gray-500 hover:text-gray-300 transition-colors">Contact</a>
+            <span className="text-xs text-gray-600">&copy; {new Date().getFullYear()}</span>
+          </div>
         </div>
       </footer>
     </div>

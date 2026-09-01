@@ -20,11 +20,13 @@ export function useToast(): ToastContextValue {
 
 let nextId = 0;
 
+// Light theme. These were -300 text on a translucent tint, written for the
+// dark theme the app no longer uses, and rendered as washed-out text on white.
 const STYLES: Record<ToastType, string> = {
-  error: 'bg-rose-500/15 border-rose-500/25 text-rose-300',
-  success: 'bg-emerald-500/15 border-emerald-500/25 text-emerald-300',
-  info: 'bg-gold-500/15 border-gold-500/25 text-gold-300',
-  warning: 'bg-amber-500/15 border-amber-500/25 text-amber-300',
+  error: 'bg-rose-50 border-rose-200 text-rose-800',
+  success: 'bg-emerald-50 border-emerald-200 text-emerald-800',
+  info: 'bg-amber-50 border-amber-200 text-amber-900',
+  warning: 'bg-amber-50 border-amber-200 text-amber-900',
 };
 
 export function ToastProvider({ children }: { children: React.ReactNode }): React.ReactElement {
