@@ -11,6 +11,7 @@ import {
   sourceDocuments,
   valuesAgree,
   groupForField,
+  applyMergeToForm,
   NUMERIC_TOLERANCE,
 } from './extractionMerge';
 import type { DocumentExtraction } from './extractionMerge';
@@ -322,5 +323,124 @@ describe('source documents for the memo', () => {
     expect(sourceDocuments(merged).map((s) => s.fileName)).toEqual([
       '02_financial-statements.pdf',
     ]);
+  });
+});
+
+describe('applyMergeToForm', () => {
+  // The three claims that pull against each other: a new deal resets, a
+  // second document adds rather than replaces, and the analyst outranks
+  // the model.
+  const initial = {
+    companyName: '',
+    ebitda: 0,
+    annualRevenue: 0,
+    yearsInBusiness: 0,
+    creditRating: 'Adequate',
+    essentialUse: false,
+  };
+
+  test('the first upload fills a blank form', () => {
+    const out = applyMergeToForm({
+      initial,
+      current: initial,
+      previousMerged: null,
+      nextMerged: { companyName: 'Granite Ridge Materials LLC', ebitda: 7400000 },
+    });
+    expect(out.companyName).toBe('Granite Ridge Materials LLC');
+    expect(out.ebitda).toBe(7400000);
+    // Untouched fields keep their defaults rather than going undefined.
+    expect(out.creditRating).toBe('Adequate');
+  });
+
+  test('a second document adds to the first instead of replacing it', () => {
+    const afterFirst = applyMergeToForm({
+      initial,
+      current: initial,
+      previousMerged: null,
+      nextMerged: { ebitda: 7400000 },
+    });
+    const afterSecond = applyMergeToForm({
+      initial,
+      current: afterFirst,
+      previousMerged: { ebitda: 7400000 },
+      nextMerged: { ebitda: 7400000, annualRevenue: 38400000 },
+    });
+    expect(afterSecond.ebitda).toBe(7400000);
+    expect(afterSecond.annualRevenue).toBe(38400000);
+  });
+
+  test('a value the analyst typed survives the next upload', () => {
+    // No document ever supplied yearsInBusiness; they typed it. Adding a
+    // document must not wipe it. This is the regression the plain
+    // reset-and-spread caused.
+    const current = { ...initial, ebitda: 7400000, yearsInBusiness: 16 };
+    const out = applyMergeToForm({
+      initial,
+      current,
+      previousMerged: { ebitda: 7400000 },
+      nextMerged: { ebitda: 7400000, annualRevenue: 38400000 },
+    });
+    expect(out.yearsInBusiness).toBe(16);
+    expect(out.annualRevenue).toBe(38400000);
+  });
+
+  test('an analyst correction outranks a later extraction of the same field', () => {
+    // They looked at the document; the model only read it.
+    const current = { ...initial, ebitda: 7250000 }; // corrected down from 7.4M
+    const out = applyMergeToForm({
+      initial,
+      current,
+      previousMerged: { ebitda: 7400000 },
+      nextMerged: { ebitda: 7400000, annualRevenue: 38400000 },
+    });
+    expect(out.ebitda).toBe(7250000);
+  });
+
+  test('a correction inside the rounding band is not treated as an edit', () => {
+    // Re-rendering a number as 7400000.4 must not latch it as an override.
+    const current = { ...initial, ebitda: 7400000.4 };
+    const out = applyMergeToForm({
+      initial,
+      current,
+      previousMerged: { ebitda: 7400000 },
+      nextMerged: { ebitda: 7410000 },
+    });
+    expect(out.ebitda).toBe(7410000);
+  });
+
+  test('removing the last document returns the form to defaults plus edits', () => {
+    const current = { ...initial, ebitda: 7400000, yearsInBusiness: 16 };
+    const out = applyMergeToForm({
+      initial,
+      current,
+      previousMerged: { ebitda: 7400000 },
+      nextMerged: {},
+    });
+    expect(out.ebitda).toBe(0);
+    expect(out.yearsInBusiness).toBe(16);
+  });
+
+  test('a false boolean default is not mistaken for an analyst edit', () => {
+    // essentialUse defaults to false. Leaving it false is not a decision.
+    const out = applyMergeToForm({
+      initial,
+      current: initial,
+      previousMerged: null,
+      nextMerged: { essentialUse: true },
+    });
+    expect(out.essentialUse).toBe(true);
+  });
+
+  test('an analyst who set a boolean back to the default keeps it', () => {
+    const current = { ...initial, essentialUse: false };
+    const out = applyMergeToForm({
+      initial,
+      current,
+      previousMerged: { essentialUse: false },
+      nextMerged: { essentialUse: true },
+    });
+    // previousMerged said false, current says false, so no edit was made
+    // and the new extraction wins.
+    expect(out.essentialUse).toBe(true);
   });
 });

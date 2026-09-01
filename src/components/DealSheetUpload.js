@@ -1,24 +1,35 @@
 // ============================================================
-// DealSheetUpload — upload a deal sheet, extract fields server-side,
-// prefill the deal input form for analyst review.
+// DealSheetUpload — upload the document set for a deal, extract each
+// document server-side, merge them, and prefill the form for review.
 //
-// Module-agnostic: the server owns per-module extraction specs and
-// rejects unsupported asset classes. The extracted values are never
-// scored directly; they populate the form and the analyst reviews
-// them before anything is saved.
+// A deal does not arrive as one file. It arrives as an application,
+// financials, a quote, a cover email. This panel takes up to four at once,
+// keeps each document's result separately, and merges them with
+// src/lib/extractionMerge.
+//
+// Two properties this component exists to hold:
+//
+//   1. Nothing is silently chosen. Where documents disagree, the analyst
+//      sees both values and both sources and can switch.
+//   2. Nothing typed is silently destroyed. Adding a document re-merges
+//      the set; it does not reset the form. See the note on onExtracted.
 // ============================================================
 
-import { useRef, useState } from 'react';
+import { useRef, useState, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { isDemoMode } from '../lib/demoMode';
-
-// Keep in sync with SUPPORTED_MODULES in server-lib/extract.js.
-const SUPPORTED_MODULES = ['equipment_finance'];
+import { mergeExtractions, chooseAlternative, DOCUMENT_TYPE_LABELS } from '../lib/extractionMerge';
+import demoExtraction from '../data/demoExtraction.json';
 
 const ACCEPT = '.pdf,.png,.jpg,.jpeg,.webp,.gif,.txt,.csv';
-const MAX_FILE_BYTES = 3 * 1024 * 1024; // mirror of server cap
+const MAX_FILES = 4;
+const MAX_FILE_BYTES = 3 * 1024 * 1024;
 
-// Field keys → short labels for the extraction report.
+// Attachments accept these; extraction does not. Saying so beats a generic
+// "unsupported file type" from the server.
+const ATTACHABLE_NOT_PARSEABLE = ['.doc', '.docx', '.xls', '.xlsx'];
+
+// Field keys to short labels, for the conflict list and the summary.
 const FIELD_LABELS = {
   companyName: 'Company',
   annualRevenue: 'Revenue',
@@ -41,10 +52,35 @@ const FIELD_LABELS = {
   usefulLife: 'Useful life',
   loanTerm: 'Term',
   essentialUse: 'Essential use',
+  totalAROutstanding: 'Total AR',
+  requestedAdvanceRate: 'Advance rate',
+  arUnder30: 'AR 0-30',
+  arOver30: 'AR 31-60',
+  arOver60: 'AR 61-90',
+  arOver90: 'AR 90+',
+  topCustomerConcentration: 'Top customer',
+  dilutionRate: 'Dilution',
+  ineligiblesPct: 'Ineligibles',
+  existingABLFacility: 'Existing ABL',
+  totalInventory: 'Total inventory',
+  rawMaterials: 'Raw materials',
+  workInProgress: 'WIP',
+  finishedGoods: 'Finished goods',
+  obsoleteInventory: 'Obsolete',
+  inventoryTurnover: 'Turnover',
+  averageDaysOnHand: 'Days on hand',
+  nolvPct: 'NOLV',
+  perishable: 'Perishable',
 };
 
 function labelFor(key) {
   return FIELD_LABELS[key] || key;
+}
+
+function displayValue(v) {
+  if (typeof v === 'boolean') return v ? 'Yes' : 'No';
+  if (typeof v === 'number') return v.toLocaleString('en-US');
+  return String(v);
 }
 
 function fileToBase64(file) {
@@ -52,7 +88,6 @@ function fileToBase64(file) {
     const reader = new FileReader();
     reader.onload = () => {
       const result = reader.result || '';
-      // Strip the data URL prefix ("data:application/pdf;base64,")
       const idx = result.indexOf('base64,');
       resolve(idx >= 0 ? result.slice(idx + 7) : result);
     };
@@ -61,67 +96,105 @@ function fileToBase64(file) {
   });
 }
 
-export default function DealSheetUpload({ activeModule, onExtracted }) {
+export default function DealSheetUpload({ activeModule, onExtracted, onDocumentsChange }) {
   const fileInputRef = useRef(null);
   const [status, setStatus] = useState('idle'); // idle | parsing | done | error
-  const [report, setReport] = useState(null);
+  const [documents, setDocuments] = useState([]); // per-document extraction results
+  const [merged, setMerged] = useState(null);
   const [error, setError] = useState(null);
-  const [showMissing, setShowMissing] = useState(false);
+  const [dragging, setDragging] = useState(false);
+  const [showDetail, setShowDetail] = useState(false);
 
-  if (isDemoMode()) return null;
-  if (!SUPPORTED_MODULES.includes(activeModule)) return null;
+  // Staged File objects, kept so they can be attached to the deal once it
+  // has an id. Parsing alone used to throw the source documents away.
+  const stagedFiles = useRef([]);
 
-  async function handleFile(file) {
-    if (!file) return;
-    if (file.size > MAX_FILE_BYTES) {
+  const demo = isDemoMode();
+
+  const publish = useCallback(
+    (nextDocs, nextMerged) => {
+      setDocuments(nextDocs);
+      setMerged(nextMerged);
+      onExtracted(nextMerged ? nextMerged.inputs : {}, nextMerged);
+      if (onDocumentsChange) {
+        onDocumentsChange(
+          stagedFiles.current.filter((f) => nextDocs.some((d) => d.fileName === f.name)),
+        );
+      }
+    },
+    [onExtracted, onDocumentsChange],
+  );
+
+  function rejectionReason(files) {
+    if (documents.length + files.length > MAX_FILES) {
+      return `Up to ${MAX_FILES} documents per deal. You have ${documents.length}.`;
+    }
+    for (const f of files) {
+      const ext = f.name.slice(f.name.lastIndexOf('.')).toLowerCase();
+      if (ATTACHABLE_NOT_PARSEABLE.includes(ext)) {
+        return `${f.name} cannot be read for extraction. Word and Excel files can be attached to the deal after saving, but not parsed. Export to PDF to extract from it.`;
+      }
+      if (f.size > MAX_FILE_BYTES) {
+        return `${f.name} is too large. Maximum is 3MB per document.`;
+      }
+    }
+    return null;
+  }
+
+  async function handleFiles(fileList) {
+    const files = Array.from(fileList || []);
+    if (!files.length) return;
+
+    const reason = rejectionReason(files);
+    if (reason) {
       setStatus('error');
-      setError('File too large. Maximum size is 3MB.');
+      setError(reason);
       return;
     }
+
     setStatus('parsing');
     setError(null);
-    setReport(null);
 
     try {
-      const { data: sessionData } = await supabase.auth.getSession();
-      const token = sessionData?.session?.access_token;
-      if (!token) throw new Error('Not authenticated');
+      let newDocs;
 
-      const base64 = await fileToBase64(file);
-      const res = await fetch('/api/parse-deal', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          asset_class: activeModule,
-          file: {
-            name: file.name,
-            media_type: file.type || 'application/pdf',
-            data: base64,
-          },
-        }),
-      });
+      if (demo) {
+        // Demo mode runs the real merge and the real conflict UI against a
+        // captured extraction, so the panel behaves exactly as it does with
+        // an account. No API key, no auth, no cost.
+        await new Promise((r) => setTimeout(r, 900));
+        newDocs = demoExtraction.documents;
+        stagedFiles.current = [];
+      } else {
+        const { data: sessionData } = await supabase.auth.getSession();
+        const token = sessionData?.session?.access_token;
+        if (!token) throw new Error('Not authenticated');
 
-      let payload = null;
-      try { payload = await res.json(); } catch { payload = null; }
+        const payload = await Promise.all(
+          files.map(async (f) => ({
+            name: f.name,
+            media_type: f.type || 'application/pdf',
+            data: await fileToBase64(f),
+          })),
+        );
 
-      if (!res.ok) {
-        throw new Error(payload?.error || `Parsing failed (HTTP ${res.status})`);
+        const res = await fetch('/api/parse-deal', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ asset_class: activeModule, files: payload }),
+        });
+
+        let body = null;
+        try { body = await res.json(); } catch { body = null; }
+        if (!res.ok) throw new Error(body?.error || `Parsing failed (HTTP ${res.status})`);
+
+        newDocs = body.documents || [];
+        stagedFiles.current = [...stagedFiles.current, ...files];
       }
 
-      setReport({
-        fileName: file.name,
-        found: payload.found || [],
-        missing: payload.missing || [],
-        warnings: payload.warnings || [],
-        notes: payload.notes || null,
-      });
+      const allDocs = demo ? newDocs : [...documents, ...newDocs];
+      publish(allDocs, mergeExtractions(allDocs));
       setStatus('done');
-      if (payload.inputs && Object.keys(payload.inputs).length > 0) {
-        onExtracted(payload.inputs);
-      }
     } catch (err) {
       setStatus('error');
       setError(err.message || 'Parsing failed');
@@ -130,28 +203,101 @@ export default function DealSheetUpload({ activeModule, onExtracted }) {
     }
   }
 
+  function removeDocument(fileName) {
+    const remaining = documents.filter((d) => d.fileName !== fileName);
+    stagedFiles.current = stagedFiles.current.filter((f) => f.name !== fileName);
+    if (remaining.length === 0) {
+      stagedFiles.current = [];
+      publish([], null);
+      setStatus('idle');
+      return;
+    }
+    // Re-merge from the results we already have. No re-parsing, no cost.
+    publish(remaining, mergeExtractions(remaining));
+  }
+
+  function switchTo(field, alternative) {
+    const next = chooseAlternative(merged, field, alternative);
+    setMerged(next);
+    onExtracted(next.inputs, next);
+  }
+
+  function reset() {
+    stagedFiles.current = [];
+    publish([], null);
+    setStatus('idle');
+    setError(null);
+  }
+
+  if (!activeModule) return null;
+
+  const conflicts = merged?.conflicts || [];
+  const warnings = documents.flatMap((d) =>
+    (d.warnings || []).map((w) => ({ fileName: d.fileName, text: w })),
+  );
+  const failures = documents.filter((d) => d.error);
+  const fieldCount = merged ? Object.keys(merged.inputs).length : 0;
+
   return (
-    <div className="rounded-2xl border border-gray-200 bg-white px-4 py-3 mb-3">
+    <div
+      className={`rounded-2xl border bg-white px-4 py-3 mb-3 transition-colors ${
+        dragging ? 'border-[#D4A843] bg-[#fffdf7]' : 'border-gray-200'
+      }`}
+      onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+      onDragLeave={() => setDragging(false)}
+      onDrop={(e) => {
+        e.preventDefault();
+        setDragging(false);
+        handleFiles(e.dataTransfer.files);
+      }}
+    >
       <input
         ref={fileInputRef}
         type="file"
         accept={ACCEPT}
+        multiple
         className="hidden"
-        onChange={(e) => handleFile(e.target.files?.[0])}
+        onChange={(e) => handleFiles(e.target.files)}
       />
 
-      {status === 'idle' && (
+      {/* ---- Header ---- */}
+      {status !== 'parsing' && (
         <div className="flex items-center justify-between gap-3">
           <div>
-            <div className="text-[13px] font-semibold text-gray-900">Upload a deal sheet</div>
-            <div className="text-[12px] text-gray-500">PDF or image. Extracted fields prefill the form for your review.</div>
+            <div className="text-[13px] font-semibold text-gray-900">
+              {documents.length > 0 ? 'Deal documents' : 'Upload the deal documents'}
+            </div>
+            <div className="text-[12px] text-gray-500">
+              {documents.length > 0
+                ? `${fieldCount} fields from ${documents.length} document${documents.length > 1 ? 's' : ''}. Review before saving.`
+                : 'Application, financials, quote, cover email. Up to four at once, PDF or image.'}
+            </div>
           </div>
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            className="flex-shrink-0 px-3 py-1.5 rounded-lg text-[12px] font-semibold text-white bg-black hover:bg-gray-800 transition-colors"
-          >
-            Choose file
-          </button>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {documents.length > 0 && documents.length < MAX_FILES && (
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="px-3 py-1.5 rounded-lg text-[12px] font-semibold text-gray-700 bg-white border border-gray-200 hover:border-gray-300 transition-all"
+              >
+                Add document
+              </button>
+            )}
+            {documents.length === 0 ? (
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="px-3 py-1.5 rounded-lg text-[12px] font-semibold text-white bg-black hover:bg-gray-800 transition-colors"
+              >
+                Choose files
+              </button>
+            ) : (
+              <button
+                onClick={reset}
+                className="text-[12px] font-semibold text-gray-500 hover:text-gray-800 transition-colors"
+              >
+                Clear
+              </button>
+            )}
+          </div>
         </div>
       )}
 
@@ -161,61 +307,141 @@ export default function DealSheetUpload({ activeModule, onExtracted }) {
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
           </svg>
-          Reading deal sheet…
+          Reading documents...
         </div>
       )}
 
-      {status === 'done' && report && (
-        <div>
-          <div className="flex items-center justify-between gap-3">
-            <div className="text-[13px] text-gray-900">
-              <span className="font-semibold">{report.found.length} fields extracted</span>
-              <span className="text-gray-500"> from {report.fileName}. Review before saving.</span>
-            </div>
-            <button
-              onClick={() => { setStatus('idle'); setReport(null); }}
-              className="flex-shrink-0 text-[12px] font-semibold text-gray-500 hover:text-gray-800 transition-colors"
+      {/* ---- The document set ---- */}
+      {documents.length > 0 && (
+        <div className="mt-2.5 space-y-1">
+          {documents.map((d) => (
+            <div
+              key={d.fileName}
+              className="flex items-center justify-between gap-2 rounded-lg bg-gray-50 px-2.5 py-1.5"
             >
-              Upload another
-            </button>
+              <div className="min-w-0">
+                <div className="text-[12px] font-medium text-gray-900 truncate">{d.fileName}</div>
+                <div className="text-[11px] text-gray-500">
+                  {d.error ? (
+                    <span className="text-red-700">{d.error}</span>
+                  ) : (
+                    <>
+                      {DOCUMENT_TYPE_LABELS[d.documentType] || 'Document'}
+                      <span className="text-gray-400"> · {d.found.length} fields</span>
+                    </>
+                  )}
+                </div>
+              </div>
+              <button
+                onClick={() => removeDocument(d.fileName)}
+                className="flex-shrink-0 text-gray-300 hover:text-gray-600 transition-colors text-[14px] leading-none px-1"
+                aria-label={`Remove ${d.fileName}`}
+                title="Remove and re-merge"
+              >
+                &times;
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* ---- Conflicts: the reason this panel exists ---- */}
+      {conflicts.length > 0 && (
+        <div className="mt-2.5 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2">
+          <div className="text-[12px] font-semibold text-amber-900 mb-1.5">
+            {conflicts.length} field{conflicts.length > 1 ? 's' : ''} where the documents disagree
           </div>
+          <div className="space-y-1.5">
+            {conflicts.map((c) => (
+              <div key={c.field} className="text-[11px] leading-snug">
+                <span className="font-semibold text-gray-900">{labelFor(c.field)}:</span>{' '}
+                <span className="text-gray-900">{displayValue(c.chosen.value)}</span>{' '}
+                <span className="text-gray-500">from {c.chosen.fileName}.</span>
+                {c.alternatives.map((alt) => (
+                  <span key={alt.fileName}>
+                    {' '}
+                    <span className="text-gray-500">
+                      {alt.fileName} says {displayValue(alt.value)}.
+                    </span>{' '}
+                    <button
+                      onClick={() => switchTo(c.field, alt)}
+                      className="font-semibold text-amber-800 hover:text-amber-900 underline underline-offset-2"
+                    >
+                      Use that
+                    </button>
+                  </span>
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
-          {report.missing.length > 0 && (
-            <button
-              onClick={() => setShowMissing(!showMissing)}
-              className="mt-1 text-[12px] text-gray-500 hover:text-gray-700 transition-colors"
-            >
-              {report.missing.length} not found in document {showMissing ? '▴' : '▾'}
-            </button>
-          )}
-          {showMissing && report.missing.length > 0 && (
-            <div className="mt-1 text-[12px] text-gray-400">
-              {report.missing.map(labelFor).join(', ')}
-            </div>
-          )}
+      {/* ---- Warnings from extraction (percent-vs-dollar lives here) ---- */}
+      {warnings.length > 0 && (
+        <ul className="mt-2 space-y-0.5">
+          {warnings.map((w, i) => (
+            <li key={i} className="text-[11px] text-amber-700 leading-snug">
+              <span className="text-amber-900 font-medium">{w.fileName}:</span> {w.text}
+            </li>
+          ))}
+        </ul>
+      )}
 
-          {report.warnings.length > 0 && (
-            <ul className="mt-1.5 space-y-0.5">
-              {report.warnings.map((w, i) => (
-                <li key={i} className="text-[12px] text-amber-700">{w}</li>
+      {failures.length > 0 && failures.length < documents.length && (
+        <div className="mt-2 text-[11px] text-gray-500">
+          {failures.length} document{failures.length > 1 ? 's' : ''} could not be read. The rest were
+          used.
+        </div>
+      )}
+
+      {/* ---- What came from where, and what is still blank ---- */}
+      {merged && (
+        <div className="mt-2">
+          <button
+            onClick={() => setShowDetail(!showDetail)}
+            className="text-[11px] text-gray-500 hover:text-gray-700 transition-colors"
+          >
+            {showDetail ? 'Hide' : 'Show'} what came from where {showDetail ? '▴' : '▾'}
+          </button>
+          {showDetail && (
+            <div className="mt-1.5 space-y-0.5">
+              {Object.entries(merged.fieldSources).map(([field, src]) => (
+                <div key={field} className="text-[11px] text-gray-500 flex gap-2">
+                  <span className="text-gray-700 min-w-[110px]">{labelFor(field)}</span>
+                  <span className="text-gray-900">{displayValue(src.value)}</span>
+                  <span className="text-gray-400 truncate">{src.fileName}</span>
+                </div>
               ))}
-            </ul>
-          )}
-
-          {report.notes && (
-            <div className="mt-1.5 text-[12px] text-gray-500 italic">{report.notes}</div>
+              {merged.missing.length > 0 && (
+                <div className="text-[11px] text-gray-400 pt-1">
+                  Not found in any document: {merged.missing.map(labelFor).join(', ')}
+                </div>
+              )}
+              {documents.some((d) => d.notes) && (
+                <div className="pt-1 space-y-0.5">
+                  {documents
+                    .filter((d) => d.notes)
+                    .map((d) => (
+                      <div key={d.fileName} className="text-[11px] text-gray-500 italic leading-snug">
+                        {d.fileName}: {d.notes}
+                      </div>
+                    ))}
+                </div>
+              )}
+            </div>
           )}
         </div>
       )}
 
       {status === 'error' && (
-        <div className="flex items-center justify-between gap-3">
-          <div className="text-[13px] text-red-700">{error}</div>
+        <div className="mt-2 flex items-start justify-between gap-3">
+          <div className="text-[12px] text-red-700 leading-snug">{error}</div>
           <button
-            onClick={() => { setStatus('idle'); setError(null); }}
-            className="flex-shrink-0 px-3 py-1.5 rounded-lg text-[12px] font-semibold text-gray-700 bg-white border border-gray-200 hover:border-gray-300 transition-all"
+            onClick={() => { setStatus(documents.length ? 'done' : 'idle'); setError(null); }}
+            className="flex-shrink-0 px-2.5 py-1 rounded-lg text-[11px] font-semibold text-gray-700 bg-white border border-gray-200 hover:border-gray-300 transition-all"
           >
-            Try again
+            Dismiss
           </button>
         </div>
       )}

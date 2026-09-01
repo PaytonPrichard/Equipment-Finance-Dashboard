@@ -19,6 +19,7 @@ import PlanBanner from './components/PlanBanner';
 import Header from './components/Header';
 import DealInputForm from './components/DealInputForm';
 import DealSheetUpload from './components/DealSheetUpload';
+import { applyMergeToForm } from './lib/extractionMerge';
 import RiskScoreGauge from './components/RiskScoreGauge';
 import RiskRadarChart from './components/RiskRadarChart';
 import MetricCard from './components/MetricCard';
@@ -268,9 +269,17 @@ function AuthenticatedApp({ profile, user }) {
     setInputs({ ...newMod.INITIAL_INPUTS, ...preserved });
     setActiveModule(newModuleKey);
     setActiveDeal(null);
+    setExtraction(null);
+    setExtractionFiles([]);
   };
 
   const [inputs, setInputs] = useState(EQ_INITIAL_INPUTS_CONST);
+  // What the last document-set merge produced, and the File objects behind
+  // it. The merge result drives per-field provenance in the form; the files
+  // are attached to the deal once it has an id, so the documents that
+  // produced the numbers stop evaporating after parsing.
+  const [extraction, setExtraction] = useState(null);
+  const [extractionFiles, setExtractionFiles] = useState([]);
   const [activeDeal, setActiveDeal] = useState(null);
   const [activePipelineDealId, setActivePipelineDealId] = useState(null);
   const [activeTab, setActiveTab] = useState('screening');
@@ -489,6 +498,15 @@ function AuthenticatedApp({ profile, user }) {
     setInputs(mod.INITIAL_INPUTS);
     setActiveDeal(null);
     setActivePipelineDealId(null);
+    clearExtraction();
+  };
+
+  // A document set belongs to one deal. Carrying it across a new deal, a
+  // loaded deal, or an asset class switch would re-attach the wrong source
+  // documents and show provenance from a different borrower.
+  const clearExtraction = () => {
+    setExtraction(null);
+    setExtractionFiles([]);
   };
 
   const loadRecentDeal = (deal) => {
@@ -513,6 +531,7 @@ function AuthenticatedApp({ profile, user }) {
     setInputs(dealInputs);
     setActiveDeal(null);
     setActivePipelineDealId(dealId || null);
+    clearExtraction();
     setActiveTab('screening');
   };
 
@@ -715,6 +734,25 @@ function AuthenticatedApp({ profile, user }) {
                           addToast(`Saved "${dealName}" to pipeline`, 'success');
                           setPipelineDealsList((prev) => [data, ...prev]);
                           setActivePipelineDealId(data.id);
+                          // The deal now has an id, so the documents that
+                          // produced its numbers can finally be stored
+                          // against it. Marked source='extraction' so the
+                          // committee memo can cite them.
+                          if (extractionFiles.length > 0) {
+                            const { uploadAttachment } = await import('./lib/attachments');
+                            const results = await Promise.all(
+                              extractionFiles.map((f) =>
+                                uploadAttachment(f, data.id, 'pipeline', user.id, profile.org_id, 'extraction'),
+                              ),
+                            );
+                            const failed = results.filter((r) => r.error).length;
+                            if (failed > 0) {
+                              addToast(
+                                `Deal saved, but ${failed} source document${failed > 1 ? 's' : ''} could not be attached.`,
+                                'warning',
+                              );
+                            }
+                          }
                         }
                       }}
                       disabled={savingToPipeline}
@@ -804,7 +842,22 @@ function AuthenticatedApp({ profile, user }) {
                   </div>
                   <DealSheetUpload
                     activeModule={activeModule}
-                    onExtracted={(extracted) => setInputs({ ...mod.INITIAL_INPUTS, ...extracted })}
+                    onExtracted={(mergedInputs, mergeResult) => {
+                      // Defaults, then the merged extraction, then anything
+                      // the analyst typed or corrected. Keeps the fae01c1
+                      // cross-deal reset while letting a second document add
+                      // to the first instead of replacing it.
+                      setInputs((prev) =>
+                        applyMergeToForm({
+                          initial: mod.INITIAL_INPUTS,
+                          current: prev,
+                          previousMerged: extraction ? extraction.inputs : null,
+                          nextMerged: mergedInputs,
+                        }),
+                      );
+                      setExtraction(mergeResult);
+                    }}
+                    onDocumentsChange={setExtractionFiles}
                   />
                   <DealInputForm
                     inputs={inputs}

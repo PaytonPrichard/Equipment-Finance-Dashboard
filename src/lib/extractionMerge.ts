@@ -326,3 +326,54 @@ export function sourceDocuments(result: MergeResult): { fileName: string; docume
 // Kept for callers that want to know which module a merge was built for
 // without threading it separately.
 export type { AssetClass };
+
+/**
+ * Fold a new merge into the form without destroying the analyst's work.
+ *
+ * Three claims have to hold at once, and they pull against each other:
+ *
+ *   1. Starting a new deal clears the old one. Commit fae01c1 fixed real
+ *      cross-deal contamination by resetting to INITIAL_INPUTS on upload;
+ *      that reset must survive.
+ *   2. Adding a second document adds to the first rather than replacing it.
+ *   3. Anything the analyst typed or corrected outranks extraction. They
+ *      looked at the document; the model only read it.
+ *
+ * So: start from defaults, lay the merged extraction over them, then lay
+ * the analyst's own edits over that. An edit is either a field they changed
+ * away from what extraction last produced, or a non-default value in a
+ * field no document ever supplied.
+ *
+ * Passing previousMerged as null treats every non-default value as an
+ * analyst edit, which is the right reading for the first upload of a
+ * session where they had already started typing.
+ */
+export function applyMergeToForm({
+  initial,
+  current,
+  previousMerged,
+  nextMerged,
+}: {
+  initial: Record<string, unknown>;
+  current: Record<string, unknown>;
+  previousMerged: Record<string, unknown> | null;
+  nextMerged: Record<string, unknown>;
+}): Record<string, unknown> {
+  const analystEdits: Record<string, unknown> = {};
+
+  for (const key of Object.keys(current)) {
+    const value = current[key];
+    const wasExtracted = previousMerged !== null && key in previousMerged;
+
+    if (wasExtracted) {
+      // They changed a value extraction had supplied. That is a correction.
+      if (!valuesAgree(value, previousMerged[key])) analystEdits[key] = value;
+    } else if (!valuesAgree(value, initial[key])) {
+      // No document ever supplied this and it is not the default, so they
+      // typed it.
+      analystEdits[key] = value;
+    }
+  }
+
+  return { ...initial, ...nextMerged, ...analystEdits };
+}

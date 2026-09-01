@@ -25,7 +25,16 @@ export interface AttachmentRow {
   file_type: string;
   storage_path: string;
   created_at: string;
+  /**
+   * 'extraction' means this document produced the deal's numbers; 'manual'
+   * means someone attached it afterward. The committee memo lists the
+   * extraction set as its source documents, so a reader can ask where a
+   * figure came from and get an answer.
+   */
+  source?: AttachmentSource;
 }
+
+export type AttachmentSource = 'manual' | 'extraction';
 
 const MIME_MAP: Record<string, string[]> = {
   '.pdf': ['application/pdf'],
@@ -64,6 +73,7 @@ export async function uploadAttachment(
   dealType: string,
   userId: string,
   orgId: string,
+  source: AttachmentSource = 'manual',
 ): Promise<{ data: AttachmentRow | null; error: string | null }> {
   if (!supabase) return { data: null, error: 'Supabase not configured' };
 
@@ -93,6 +103,7 @@ export async function uploadAttachment(
       file_size: file.size,
       file_type: file.type,
       storage_path: storagePath,
+      source,
     })
     .select()
     .single();
