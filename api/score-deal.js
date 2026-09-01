@@ -53,6 +53,22 @@ async function writeAuditLog({ userId, orgId, action, dealId, oldValues, newValu
   if (error) console.error('[score-deal] audit_log write error:', error.message);
 }
 
+// Provenance is client-supplied display metadata, not something the score
+// depends on, so it is size-capped and otherwise stored as sent. The same
+// reasoning as the 32KB inputs cap in server-lib/validate.js: bound what a
+// caller can write, and do not let it influence the computed score.
+const MAX_PROVENANCE_BYTES = 64 * 1024;
+
+function sanitizeProvenance(value) {
+  if (!value || typeof value !== 'object') return null;
+  try {
+    if (JSON.stringify(value).length > MAX_PROVENANCE_BYTES) return null;
+  } catch {
+    return null;
+  }
+  return value;
+}
+
 module.exports = async function handler(req, res) {
   if (handlePreflight(req, res)) return;
 
@@ -79,7 +95,7 @@ module.exports = async function handler(req, res) {
     // Client-supplied `score` is intentionally ignored: the server is the
     // authoritative scorer. `asset_class` defaults to equipment_finance to
     // match the DB column default.
-    const { name, inputs, notes = '', asset_class = 'equipment_finance' } = req.body || {};
+    const { name, inputs, notes = '', asset_class = 'equipment_finance', extraction_provenance = null } = req.body || {};
 
     if (!name || typeof name !== 'string' || name.length > 200) {
       return res.status(400).json({ error: 'name is required (string, max 200 chars)' });
@@ -112,6 +128,10 @@ module.exports = async function handler(req, res) {
         org_id: orgId,
         user_id: user.id,
         name,
+        // Which document supplied each field. Null when the analyst typed
+        // the deal in, which the audit view and the memo both report as
+        // "entered manually" rather than treating as missing data.
+        extraction_provenance: sanitizeProvenance(extraction_provenance),
         stage: 'Screening',
         inputs,
         asset_class,

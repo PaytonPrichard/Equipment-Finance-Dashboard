@@ -250,7 +250,7 @@ export default function DealPipeline({ onLoadDeal, currentInputs, currentScore, 
   };
 
   const handleLoadDeal = (deal) => {
-    if (onLoadDeal) onLoadDeal(deal.inputs, deal.id, deal.asset_class);
+    if (onLoadDeal) onLoadDeal(deal.inputs, deal.id, deal.asset_class, deal.extraction_provenance);
   };
 
   const handleStartNote = (deal) => {

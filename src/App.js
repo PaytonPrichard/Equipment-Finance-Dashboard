@@ -20,7 +20,13 @@ import PlanBanner from './components/PlanBanner';
 import Header from './components/Header';
 import DealInputForm from './components/DealInputForm';
 import DealSheetUpload from './components/DealSheetUpload';
-import { applyMergeToForm } from './lib/extractionMerge';
+import DealProvenance from './components/DealProvenance';
+import {
+  applyMergeToForm,
+  DOCUMENT_TYPE_LABELS,
+  toStoredProvenance,
+  fromStoredProvenance,
+} from './lib/extractionMerge';
 import RiskScoreGauge from './components/RiskScoreGauge';
 import RiskRadarChart from './components/RiskRadarChart';
 import MetricCard from './components/MetricCard';
@@ -294,6 +300,40 @@ function AuthenticatedApp({ profile, user }) {
   // produced the numbers stop evaporating after parsing.
   const [extraction, setExtraction] = useState(null);
   const [extractionFiles, setExtractionFiles] = useState([]);
+
+  // Documents the memo cites. Only files that actually supplied a value
+  // appear: one that lost every field it claimed did not contribute to the
+  // numbers and should not be listed as a source.
+  const memoSourceDocuments = useMemo(() => {
+    if (!extraction) return [];
+    const seen = new Map();
+    for (const src of Object.values(extraction.fieldSources || {})) {
+      if (seen.has(src.fileName)) continue;
+      seen.set(src.fileName, {
+        fileName: src.fileName,
+        documentType: DOCUMENT_TYPE_LABELS[src.documentType] || 'Document',
+        addedOn: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+      });
+    }
+    return Array.from(seen.values());
+  }, [extraction]);
+
+  // What DealProvenance renders. Document counts are derived rather than
+  // stored separately, so they always match the fields actually used.
+  const provenanceView = useMemo(() => {
+    if (!extraction) return null;
+    const byFile = new Map();
+    for (const src of Object.values(extraction.fieldSources || {})) {
+      const existing = byFile.get(src.fileName);
+      if (existing) existing.fieldCount += 1;
+      else byFile.set(src.fileName, { fileName: src.fileName, documentType: src.documentType, fieldCount: 1 });
+    }
+    return {
+      fieldSources: extraction.fieldSources || {},
+      conflicts: extraction.conflicts || [],
+      documents: Array.from(byFile.values()),
+    };
+  }, [extraction]);
   const [activeDeal, setActiveDeal] = useState(null);
   const [activePipelineDealId, setActivePipelineDealId] = useState(null);
   // ?tab= opens a chosen screen directly, so a demo link can land on the
@@ -588,7 +628,7 @@ function AuthenticatedApp({ profile, user }) {
   // the module switches first and the inputs are set wholesale (no field
   // preservation, unlike handleModuleChange, which is for switching asset class
   // on a deal you are actively building).
-  const loadDealIntoScreening = (dealInputs, dealId, assetClass) => {
+  const loadDealIntoScreening = (dealInputs, dealId, assetClass, storedProvenance) => {
     if (assetClass && assetClass !== activeModule) {
       setActiveModule(assetClass);
     }
@@ -596,6 +636,11 @@ function AuthenticatedApp({ profile, user }) {
     setActiveDeal(null);
     setActivePipelineDealId(dealId || null);
     clearExtraction();
+    // Field provenance used to live only in React state, so reopening a deal
+    // lost which document supplied what, and the memo then described a
+    // four-document deal as "entered manually".
+    const restored = fromStoredProvenance(storedProvenance);
+    if (restored) setExtraction(restored);
     setActiveTab('screening');
   };
 
@@ -785,7 +830,7 @@ function AuthenticatedApp({ profile, user }) {
                       </>
                     )}
                   </div>
-                  {valid && <ExportPanel summaryText={summaryText} inputs={inputs} metrics={metrics} riskScore={riskScore} recommendation={recommendation} screeningResult={screeningResult} profile={profile} moduleLabel={moduleLabel} moduleKey={activeModule} factors={mod.describeFactors ? mod.describeFactors(inputs, metrics, riskScore) : []} structure={structure} stressResults={stressResults} borrowerExtras={borrowerExtras} criteria={screeningCriteria} />}
+                  {valid && <ExportPanel summaryText={summaryText} inputs={inputs} metrics={metrics} riskScore={riskScore} recommendation={recommendation} screeningResult={screeningResult} profile={profile} moduleLabel={moduleLabel} moduleKey={activeModule} factors={mod.describeFactors ? mod.describeFactors(inputs, metrics, riskScore) : []} structure={structure} stressResults={stressResults} borrowerExtras={borrowerExtras} criteria={screeningCriteria} commentary={commentary} sourceDocuments={memoSourceDocuments} />}
                   {activePipelineDealId && valid && (
                     <button
                       onClick={async () => {
@@ -811,7 +856,10 @@ function AuthenticatedApp({ profile, user }) {
                         setSavingToPipeline(true);
                         const dealName = (inputs.companyName || '').trim() || `Untitled Deal — ${new Date().toLocaleDateString()}`;
                         const { createPipelineDeal } = await import('./lib/pipeline');
-                        const { data, error } = await createPipelineDeal(dealName, inputs, riskScore?.composite ?? null, activeModule);
+                        const { data, error } = await createPipelineDeal(
+                          dealName, inputs, riskScore?.composite ?? null, activeModule,
+                          toStoredProvenance(extraction),
+                        );
                         setSavingToPipeline(false);
                         if (error) {
                           addToast('Failed to save to pipeline.', 'error');
@@ -1109,6 +1157,7 @@ function AuthenticatedApp({ profile, user }) {
                       { id: 'sec-recommendation', label: 'Assessment' },
                       { id: 'sec-structure', label: 'Structure' },
                       { id: 'sec-policy', label: 'Policy' },
+                      { id: 'sec-provenance', label: 'Audit' },
                     ].map((s) => (
                       <button
                         key={s.id}
@@ -1484,6 +1533,20 @@ function AuthenticatedApp({ profile, user }) {
                     <ScreeningCriteria
                       activeModule={activeModule}
                       onCriteriaChange={setScreeningCriteria}
+                    />
+                  </div>
+
+                  {/* Last on purpose: it closes the loop the rest of the page
+                      opens, from documents through to the verdict. */}
+                  <div id="sec-provenance" className="scroll-mt-[150px]">
+                    <DealProvenance
+                      inputs={inputs}
+                      provenance={provenanceView}
+                      factors={mod.describeFactors ? mod.describeFactors(inputs, metrics, riskScore) : []}
+                      riskScore={riskScore}
+                      screeningResult={screeningResult}
+                      criteria={screeningCriteria}
+                      moduleInitialInputs={mod.INITIAL_INPUTS}
                     />
                   </div>
 

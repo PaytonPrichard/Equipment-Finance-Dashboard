@@ -377,3 +377,46 @@ export function applyMergeToForm({
 
   return { ...initial, ...nextMerged, ...analystEdits };
 }
+
+/**
+ * The storable shape of a merge, for pipeline_deals.extraction_provenance.
+ *
+ * Only what the audit view and the memo need: where each field came from,
+ * what disagreed, and which documents contributed. The per-document
+ * extraction results are not kept, since re-parsing is not something a
+ * saved deal ever does.
+ */
+export interface StoredProvenance {
+  fieldSources: Record<string, FieldSource>;
+  conflicts: FieldConflict[];
+  documents: { fileName: string; documentType: DocumentType; fieldCount: number }[];
+  capturedAt: string;
+}
+
+export function toStoredProvenance(result: MergeResult | null): StoredProvenance | null {
+  if (!result || Object.keys(result.fieldSources).length === 0) return null;
+  return {
+    fieldSources: result.fieldSources,
+    conflicts: result.conflicts,
+    documents: sourceDocuments(result),
+    capturedAt: new Date().toISOString(),
+  };
+}
+
+/** Rehydrate enough of a MergeResult for the audit view and the memo. */
+export function fromStoredProvenance(stored: unknown): MergeResult | null {
+  if (!stored || typeof stored !== 'object') return null;
+  const s = stored as Partial<StoredProvenance>;
+  if (!s.fieldSources || typeof s.fieldSources !== 'object') return null;
+  const inputs: Record<string, unknown> = {};
+  for (const [field, source] of Object.entries(s.fieldSources)) {
+    inputs[field] = source.value;
+  }
+  return {
+    inputs,
+    fieldSources: s.fieldSources,
+    conflicts: Array.isArray(s.conflicts) ? s.conflicts : [],
+    missing: [],
+    failed: [],
+  };
+}

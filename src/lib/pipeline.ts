@@ -27,6 +27,11 @@ export interface PipelineDealRow {
   // Set on every stage change. "Days in stage" reads this, not updated_at,
   // so editing a note no longer resets a deal's aging clock.
   stage_entered_at?: string | null;
+  /**
+   * Which document supplied each field. Null for a deal typed in by hand,
+   * which is a meaningful state rather than a missing one.
+   */
+  extraction_provenance?: unknown;
 }
 
 interface FetchResult {
@@ -90,14 +95,18 @@ export async function createPipelineDeal(
   inputs: DealInputs,
   score: number | null,
   assetClass: AssetClass = 'equipment_finance',
+  extractionProvenance: unknown = null,
 ): Promise<SingleResult> {
   if (isDemoMode()) {
-    const deal = createDemoPipelineDeal({ name, inputs, score, assetClass });
+    const deal = createDemoPipelineDeal({ name, inputs, score, assetClass, extractionProvenance });
     return { data: deal, error: null };
   }
   if (!supabase) return { data: null, error: null };
 
-  return callScoreDeal('POST', '/api/score-deal', { name, inputs, asset_class: assetClass, notes: '' });
+  return callScoreDeal('POST', '/api/score-deal', {
+    name, inputs, asset_class: assetClass, notes: '',
+    extraction_provenance: extractionProvenance,
+  });
 }
 
 // Move a pipeline deal to a new stage.

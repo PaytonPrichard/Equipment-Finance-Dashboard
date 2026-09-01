@@ -30,6 +30,7 @@ export interface DemoDeal {
   created_at: string;
   updated_at: string;
   stage_entered_at?: string | null;
+  extraction_provenance?: unknown;
 }
 
 interface CreateDemoDealParams {
@@ -38,6 +39,7 @@ interface CreateDemoDealParams {
   score: number | null;
   notes?: string;
   assetClass?: AssetClass;
+  extractionProvenance?: unknown;
 }
 
 let _enabled: boolean | null = null;
@@ -75,7 +77,7 @@ export function listDemoPipeline(): DemoDeal[] {
   );
 }
 
-export function createDemoPipelineDeal({ name, inputs, score, notes = '', assetClass = 'equipment_finance' }: CreateDemoDealParams): DemoDeal {
+export function createDemoPipelineDeal({ name, inputs, score, notes = '', assetClass = 'equipment_finance', extractionProvenance = null }: CreateDemoDealParams): DemoDeal {
   const now = new Date().toISOString();
   const deal: DemoDeal = {
     id: `demo-${Date.now()}`,
@@ -90,6 +92,7 @@ export function createDemoPipelineDeal({ name, inputs, score, notes = '', assetC
     created_at: now,
     updated_at: now,
     stage_entered_at: now,
+    extraction_provenance: extractionProvenance,
   };
   store().unshift(deal);
   return { ...deal };
