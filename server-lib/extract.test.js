@@ -214,6 +214,31 @@ describe('extractDealSheet', () => {
   });
 });
 
+describe('credit rating is never inferred from silence', () => {
+  // "Not Rated" is a scored credit opinion (+100bps in CREDIT_SPREAD_BPS)
+  // while the form default "Adequate" is 0bps. The spec used to say
+  // 'Use "Not Rated" if not addressed', so a document that never discussed
+  // credit quality priced 100bps wider on upload than on manual entry.
+  // Verified against the Granite Ridge corpus, where no document mentions
+  // credit quality and extraction returned "Not Rated" from all three.
+  const field = EXTRACTION_SPECS.equipment_finance.fields.find(
+    (f) => f.key === 'creditRating',
+  );
+
+  test('the field exists and is still an enum over the valid ratings', () => {
+    expect(field).toBeDefined();
+    expect(field.type).toBe('enum');
+    expect(field.options).toContain('Not Rated');
+  });
+
+  test('the description tells the model to omit rather than default', () => {
+    expect(field.description).toMatch(/omit this field/i);
+    expect(field.description).toMatch(/do not infer/i);
+    // The old instruction is the regression being guarded against.
+    expect(field.description).not.toMatch(/use "Not Rated" if not addressed/i);
+  });
+});
+
 describe('module registry', () => {
   test('equipment finance is the only supported module for now', () => {
     expect(SUPPORTED_MODULES).toEqual(['equipment_finance']);

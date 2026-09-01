@@ -54,7 +54,13 @@ const EXTRACTION_SPECS = {
       { key: 'cashOnHand', type: 'currency', description: 'Unrestricted cash and equivalents from the most recent balance sheet, in USD.' },
       { key: 'availableLiquidity', type: 'currency', description: 'Other available liquidity such as undrawn revolver capacity, in USD. Do not include cash on hand.' },
       { key: 'industrySector', type: 'enum', options: VALID_INDUSTRY_SECTORS, description: 'Borrower industry, mapped to the closest listed option. Use "Other" only if nothing fits.' },
-      { key: 'creditRating', type: 'enum', options: VALID_CREDIT_RATINGS, description: 'Borrower credit quality if characterized in the document (investment grade or equivalent = "Strong", middle market = "Adequate", below average = "Weak"). Use "Not Rated" if not addressed.' },
+      // Do NOT map silence to "Not Rated". "Not Rated" is a scored credit
+    // opinion carrying +100bps of spread (CREDIT_SPREAD_BPS), while the
+    // form default is "Adequate" at 0bps. Emitting it for a document that
+    // simply never discusses credit quality made the same deal price 100bps
+    // wider when uploaded than when typed in, with nothing on screen to say
+    // the value was manufactured. Omit the field and let the analyst set it.
+    { key: 'creditRating', type: 'enum', options: VALID_CREDIT_RATINGS, description: 'Borrower credit quality, ONLY if the document explicitly characterizes it (investment grade or equivalent = "Strong", middle market = "Adequate", below average = "Weak", explicitly stated as unrated = "Not Rated"). If the document does not discuss credit quality or ratings at all, omit this field entirely. Do not infer it from company size, profitability, or leverage.' },
       { key: 'equipmentType', type: 'enum', options: VALID_EQUIPMENT_TYPES, description: 'Type of equipment being financed, mapped to the closest listed option.' },
       { key: 'equipmentCondition', type: 'enum', options: VALID_EQUIPMENT_CONDITIONS, description: 'Whether the equipment is new or used.' },
       { key: 'equipmentCost', type: 'currency', description: 'Total purchase price / cost of the equipment being financed, in USD.' },
