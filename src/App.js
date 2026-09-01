@@ -1422,6 +1422,7 @@ function AuthenticatedApp({ profile, user }) {
               activeModule={activeModule}
               onLoadDeal={loadDealIntoScreening}
               readOnly={isExpired}
+              criteria={screeningCriteria}
             />
           </Suspense></ErrorBoundary>
         ) : activeTab === 'monitoring' ? (

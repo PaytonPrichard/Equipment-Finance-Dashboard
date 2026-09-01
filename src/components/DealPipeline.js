@@ -12,7 +12,8 @@ import {
 } from '../lib/pipeline';
 import { SkeletonPipeline } from './SkeletonCard';
 import { exportPipelineCsv } from '../utils/csvExport';
-import DealAttachments from './DealAttachments';
+import DealDetail from './DealDetail';
+import { fetchAttachmentCounts } from '../lib/attachments';
 import { notifyStageChange } from '../lib/notifications';
 
 const STAGES = [
@@ -73,7 +74,7 @@ function getVerdict(score) {
   return { label: 'FAIL', cls: 'bg-rose-500/15 text-rose-400 border-rose-500/30' };
 }
 
-export default function DealPipeline({ onLoadDeal, currentInputs, currentScore, activeModule = 'equipment_finance', readOnly }) {
+export default function DealPipeline({ onLoadDeal, currentInputs, currentScore, activeModule = 'equipment_finance', readOnly, criteria }) {
   const { user, profile } = useAuth();
   const { can } = useRole();
   const { addToast } = useToast();
@@ -241,7 +242,7 @@ export default function DealPipeline({ onLoadDeal, currentInputs, currentScore, 
     setDeals(prev => prev.map(d => d.id === renamingId ? { ...d, name: trimmed } : d));
     setRenamingId(null);
 
-    const { error } = await updatePipelineName(renamingId, trimmed);
+    const { error } = await updatePipelineName(renamingId, trimmed, userId, orgId);
     if (error) {
       addToast('Failed to rename deal', 'error');
       setDeals(prev => prev.map(d => d.id === renamingId ? { ...d, name: oldName } : d));
@@ -255,6 +256,43 @@ export default function DealPipeline({ onLoadDeal, currentInputs, currentScore, 
   const handleStartNote = (deal) => {
     setEditingNoteId(deal.id);
     setNoteText(deal.notes || '');
+  };
+
+  // Save a note for an explicit deal id. The drawer and the inline card
+  // editor both go through this, so optimistic update and rollback are
+  // written once.
+  const saveNoteFor = async (dealId, text) => {
+    const trimmed = (text || '').trim();
+    const prevDeal = deals.find((d) => d.id === dealId);
+    if (!prevDeal || prevDeal.notes === trimmed) return;
+
+    setDeals((prev) =>
+      prev.map((d) =>
+        d.id === dealId ? { ...d, notes: trimmed, updated_at: new Date().toISOString() } : d,
+      ),
+    );
+
+    const { error } = await updatePipelineNotes(dealId, trimmed, userId, orgId);
+    if (error) {
+      addToast('Failed to save note', 'error');
+      setDeals((prev) =>
+        prev.map((d) =>
+          d.id === dealId ? { ...d, notes: prevDeal.notes, updated_at: prevDeal.updated_at } : d,
+        ),
+      );
+    }
+  };
+
+  // Rename from the drawer, where there is no inline-edit state to unwind.
+  const renameDeal = async (dealId, newName) => {
+    const prev = deals.find((d) => d.id === dealId);
+    if (!prev || prev.name === newName) return;
+    setDeals((list) => list.map((d) => (d.id === dealId ? { ...d, name: newName } : d)));
+    const { error } = await updatePipelineName(dealId, newName, userId, orgId);
+    if (error) {
+      addToast('Failed to rename deal', 'error');
+      setDeals((list) => list.map((d) => (d.id === dealId ? { ...d, name: prev.name } : d)));
+    }
   };
 
   const handleSaveNote = async () => {
@@ -271,7 +309,7 @@ export default function DealPipeline({ onLoadDeal, currentInputs, currentScore, 
     setEditingNoteId(null);
     setNoteText('');
 
-    const { error } = await updatePipelineNotes(dealId, trimmed);
+    const { error } = await updatePipelineNotes(dealId, trimmed, userId, orgId);
     if (error) {
       addToast('Failed to save note', 'error');
       if (prevDeal) {
@@ -283,6 +321,24 @@ export default function DealPipeline({ onLoadDeal, currentInputs, currentScore, 
       }
     }
   };
+
+  // One query for the whole board instead of one per card.
+  const [attachmentCounts, setAttachmentCounts] = useState({});
+  useEffect(() => {
+    if (!deals.length) { setAttachmentCounts({}); return; }
+    let cancelled = false;
+    fetchAttachmentCounts(deals.map((d) => d.id))
+      .then((counts) => { if (!cancelled) setAttachmentCounts(counts); })
+      .catch(() => { /* counts are decoration; a failure should not break the board */ });
+    return () => { cancelled = true; };
+  }, [deals]);
+
+  /* --- Detail drawer --- */
+  // The card used to be the whole detail surface. Clicking the title left the
+  // pipeline entirely; now it opens the deal, and going to screening is an
+  // explicit action inside the drawer.
+  const [openDealId, setOpenDealId] = useState(null);
+  const openDeal = deals.find((d) => d.id === openDealId) || null;
 
   /* --- Search & Grouping --- */
 
@@ -516,9 +572,9 @@ export default function DealPipeline({ onLoadDeal, currentInputs, currentScore, 
                         ) : (
                           <button
                             className="text-sm font-semibold text-gray-800 truncate text-left hover:text-gray-600 transition-colors leading-tight"
-                            title="Click to load deal. Double-click to rename."
-                            aria-label="Load deal into screening"
-                            onClick={() => handleLoadDeal(deal)}
+                            title="Open deal. Double-click to rename."
+                            aria-label={`Open ${deal.name}`}
+                            onClick={() => setOpenDealId(deal.id)}
                             onDoubleClick={(e) => { e.preventDefault(); startRename(deal); }}
                           >
                             {deal.name}
@@ -622,8 +678,16 @@ export default function DealPipeline({ onLoadDeal, currentInputs, currentScore, 
                         </button>
                       )}
 
-                      {/* Document attachments */}
-                      <DealAttachments dealId={deal.id} dealType="pipeline" />
+                      {/* Document count. The attachment UI itself lives in the
+                          detail drawer, where it has room. */}
+                      {attachmentCounts[deal.id] > 0 && (
+                        <div className="flex items-center gap-1 text-[10px] text-gray-400 mb-2">
+                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" />
+                          </svg>
+                          {attachmentCounts[deal.id]} document{attachmentCounts[deal.id] > 1 ? 's' : ''}
+                        </div>
+                      )}
 
                       {/* Move buttons */}
                       <div className="flex items-center justify-between border-t border-gray-200 pt-2 mt-2">
@@ -677,6 +741,19 @@ export default function DealPipeline({ onLoadDeal, currentInputs, currentScore, 
           );
         })}
       </div>
+
+      <DealDetail
+        deal={openDeal}
+        criteria={criteria}
+        onClose={() => setOpenDealId(null)}
+        onRename={renameDeal}
+        onSaveNotes={saveNoteFor}
+        onMoveStage={handleMove}
+        onDelete={handleDelete}
+        onOpenInScreening={handleLoadDeal}
+        canDelete={openDeal ? canDeleteDeal(openDeal) : false}
+        canMoveToStage={canMoveToStage}
+      />
     </div>
   );
 }

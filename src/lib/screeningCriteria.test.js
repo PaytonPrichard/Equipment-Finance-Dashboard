@@ -25,6 +25,53 @@ describe('Screening Criteria', () => {
       expect(result.verdict).toBe('flag');
     });
 
+    // LTV was never evaluated in the verdict: a `maxLtv < 100` guard turned
+    // the check off at the default of 100. The factor score and the
+    // commentary both reacted to high LTV; only the pass/flag/fail verdict
+    // stayed silent, which is the part an analyst actually reads.
+    describe('LTV', () => {
+      test('LTV above the maximum flags, at the default criteria', () => {
+        const highLtv = { ...passMetrics, ltv: 1.06 };
+        const result = evaluateScreening(baseCriteria, highLtv, passScore, passInputs, 'equipment_finance');
+        expect(result.verdict).toBe('flag');
+        expect(result.reasons.some((r) => /LTV 106% exceeds maximum/.test(r.text))).toBe(true);
+      });
+
+      test('lending well past the equipment value does not screen clean', () => {
+        // The spec: "LTV above 100% means the lender has negative equity
+        // from day one."
+        const underwater = { ...passMetrics, ltv: 1.5 };
+        const result = evaluateScreening(baseCriteria, underwater, passScore, passInputs, 'equipment_finance');
+        expect(result.verdict).not.toBe('pass');
+      });
+
+      test('LTV at or below the maximum is silent', () => {
+        const ok = { ...passMetrics, ltv: 1.0 };
+        const result = evaluateScreening(baseCriteria, ok, passScore, passInputs, 'equipment_finance');
+        expect(result.reasons.some((r) => /LTV/.test(r.text))).toBe(false);
+      });
+
+      test('a tighter firm limit is honoured', () => {
+        const strict = { ...baseCriteria, maxLtv: 80 };
+        const result = evaluateScreening(strict, passMetrics, passScore, passInputs, 'equipment_finance');
+        expect(result.reasons.some((r) => /LTV 75% exceeds maximum \(80%\)/.test(r.text))).toBe(false);
+        const over = evaluateScreening(strict, { ...passMetrics, ltv: 0.85 }, passScore, passInputs, 'equipment_finance');
+        expect(over.reasons.some((r) => /LTV 85% exceeds maximum \(80%\)/.test(r.text))).toBe(true);
+      });
+
+      test('0 disables the check, per the convention for shared limits', () => {
+        const disabled = { ...baseCriteria, maxLtv: 0 };
+        const result = evaluateScreening(disabled, { ...passMetrics, ltv: 2.0 }, passScore, passInputs, 'equipment_finance');
+        expect(result.reasons.some((r) => /LTV/.test(r.text))).toBe(false);
+      });
+
+      test('LTV is not evaluated for AR or inventory deals', () => {
+        // Neither module produces an ltv metric; the check is equipment-only.
+        const result = evaluateScreening(baseCriteria, { ...passMetrics, ltv: 1.5 }, passScore, passInputs, 'accounts_receivable');
+        expect(result.reasons.some((r) => /LTV/.test(r.text))).toBe(false);
+      });
+    });
+
     test('DSCR below 1.0 always fails', () => {
       const lowDscr = { ...passMetrics, dscr: 0.8 };
       const result = evaluateScreening(baseCriteria, lowDscr, passScore, passInputs, 'equipment_finance');

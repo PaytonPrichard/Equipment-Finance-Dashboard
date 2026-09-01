@@ -140,12 +140,30 @@ export async function updatePipelineStage(
 }
 
 // Rename a pipeline deal.
-export async function updatePipelineName(dealId: string, name: string): Promise<SingleResult> {
+//
+// Audited, unlike before: stage changes and deletes wrote to audit_log but
+// renames did not, so a deal could be relabelled between screening and
+// committee with nothing recording it. userId and orgId are optional so the
+// existing call sites keep working; without them the write still happens and
+// only the log is skipped.
+export async function updatePipelineName(
+  dealId: string,
+  name: string,
+  userId?: string,
+  orgId?: string,
+): Promise<SingleResult> {
   if (isDemoMode()) {
     const deal = updateDemoPipelineName(dealId, name);
     return { data: deal, error: deal ? null : { message: 'Deal not found' } };
   }
   if (!supabase) return { data: null, error: null };
+
+  const { data: existing } = await supabase
+    .from('pipeline_deals')
+    .select('name')
+    .eq('id', dealId)
+    .single();
+  const oldName = (existing as { name: string } | null)?.name ?? null;
 
   const { data, error } = await supabase
     .from('pipeline_deals')
@@ -154,16 +172,36 @@ export async function updatePipelineName(dealId: string, name: string): Promise<
     .select()
     .single();
 
+  if (!error && data && userId && orgId) {
+    logAudit(userId, orgId, 'update', 'pipeline_deal', dealId, { name: oldName }, { name });
+  }
+
   return { data: data as PipelineDealRow | null, error };
 }
 
-// Update notes on a pipeline deal (no audit logging for notes).
-export async function updatePipelineNotes(dealId: string, notes: string): Promise<SingleResult> {
+// Update notes on a pipeline deal.
+//
+// Each save overwrites the previous note outright. There is no note history,
+// so the audit entry carrying the old text is the only record that a note
+// ever said something else.
+export async function updatePipelineNotes(
+  dealId: string,
+  notes: string,
+  userId?: string,
+  orgId?: string,
+): Promise<SingleResult> {
   if (isDemoMode()) {
     const deal = updateDemoPipelineNotes(dealId, notes);
     return { data: deal, error: deal ? null : { message: 'Deal not found' } };
   }
   if (!supabase) return { data: null, error: null };
+
+  const { data: existing } = await supabase
+    .from('pipeline_deals')
+    .select('notes')
+    .eq('id', dealId)
+    .single();
+  const oldNotes = (existing as { notes: string } | null)?.notes ?? '';
 
   const { data, error } = await supabase
     .from('pipeline_deals')
@@ -171,6 +209,10 @@ export async function updatePipelineNotes(dealId: string, notes: string): Promis
     .eq('id', dealId)
     .select()
     .single();
+
+  if (!error && data && userId && orgId && oldNotes !== notes) {
+    logAudit(userId, orgId, 'update', 'pipeline_deal', dealId, { notes: oldNotes }, { notes });
+  }
 
   return { data: data as PipelineDealRow | null, error };
 }

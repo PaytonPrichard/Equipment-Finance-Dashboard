@@ -160,3 +160,30 @@ export function formatFileSize(bytes: number): string {
   if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(0) + ' KB';
   return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
 }
+
+/**
+ * Attachment counts for many deals in one query, keyed by deal id.
+ *
+ * The pipeline used to mount a full DealAttachments widget on every kanban
+ * card, which fired one request per card and spent four lines of vertical
+ * space per deal to say "No documents attached". Cards now show a count and
+ * the real attachment UI lives in the detail drawer.
+ */
+export async function fetchAttachmentCounts(
+  dealIds: string[],
+): Promise<Record<string, number>> {
+  if (!supabase || dealIds.length === 0) return {};
+
+  const { data, error } = await supabase
+    .from('deal_attachments')
+    .select('deal_id')
+    .in('deal_id', dealIds);
+
+  if (error || !data) return {};
+
+  const counts: Record<string, number> = {};
+  for (const row of data as { deal_id: string }[]) {
+    counts[row.deal_id] = (counts[row.deal_id] || 0) + 1;
+  }
+  return counts;
+}

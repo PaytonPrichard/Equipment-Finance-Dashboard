@@ -104,7 +104,19 @@ export function evaluateScreening(
 
   // ---- Equipment-specific ----
   if (moduleKey === 'equipment_finance') {
-    if (c.maxLtv > 0 && c.maxLtv < 100 && metrics.ltv && metrics.ltv * 100 > c.maxLtv) {
+    // The `c.maxLtv < 100` guard that used to be here disabled the check
+    // entirely at the default of 100, so LTV was never evaluated in the
+    // verdict under stock settings: a deal at 150% LTV screened PASS with no
+    // LTV reason given. That contradicted everything around it. The spec says
+    // "LTV above 100% means the lender has negative equity from day one"
+    // (Deal_Screening_Model_Assumptions.md), generateCommentary flags
+    // ltv > 1.0 in prose, and describeFactors marks the factor failed above
+    // 85%. Only the verdict stayed silent.
+    //
+    // The convention in this file is 0 = disabled, per the note on the
+    // shared limits above. maxLtv keeps its default of 100; it is now
+    // actually applied.
+    if (c.maxLtv > 0 && metrics.ltv && metrics.ltv * 100 > c.maxLtv) {
       reasons.push({ level: 'flag', text: `LTV ${(metrics.ltv * 100).toFixed(0)}% exceeds maximum (${c.maxLtv}%)` });
     }
     if (c.maxTermCoverage > 0 && metrics.termCoverage && metrics.termCoverage > c.maxTermCoverage) {
