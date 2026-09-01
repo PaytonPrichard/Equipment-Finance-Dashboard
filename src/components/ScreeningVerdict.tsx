@@ -20,7 +20,7 @@ const VERDICT_CONFIG: Record<Verdict, VerdictConfig> = {
     label: 'PASS',
     description: 'Meets screening criteria',
     bgClass: 'bg-emerald-500/10 border-emerald-500/30',
-    textClass: 'text-emerald-400',
+    textClass: 'text-emerald-700',
     iconBg: 'bg-emerald-500/20',
     icon: (
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -32,7 +32,7 @@ const VERDICT_CONFIG: Record<Verdict, VerdictConfig> = {
     label: 'FLAG',
     description: 'Requires additional review',
     bgClass: 'bg-amber-500/10 border-amber-500/30',
-    textClass: 'text-amber-400',
+    textClass: 'text-amber-700',
     iconBg: 'bg-amber-500/20',
     icon: (
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -45,7 +45,7 @@ const VERDICT_CONFIG: Record<Verdict, VerdictConfig> = {
     label: 'FAIL',
     description: 'Does not meet screening criteria',
     bgClass: 'bg-rose-500/10 border-rose-500/30',
-    textClass: 'text-rose-400',
+    textClass: 'text-rose-700',
     iconBg: 'bg-rose-500/20',
     icon: (
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
@@ -82,7 +82,7 @@ export default function ScreeningVerdict({ verdict, reasons }: ScreeningVerdictP
       <div className="space-y-2 mt-3">
         {failReasons.map((r, i) => (
           <div key={`f-${i}`} className="flex items-start gap-2">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-rose-400 mt-0.5 flex-shrink-0" strokeWidth="2.5">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-rose-700 mt-0.5 flex-shrink-0" strokeWidth="2.5">
               <line x1="18" y1="6" x2="6" y2="18" />
               <line x1="6" y1="6" x2="18" y2="18" />
             </svg>
@@ -91,7 +91,7 @@ export default function ScreeningVerdict({ verdict, reasons }: ScreeningVerdictP
         ))}
         {flagReasons.map((r, i) => (
           <div key={`w-${i}`} className="flex items-start gap-2">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-amber-400 mt-0.5 flex-shrink-0" strokeWidth="2">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-amber-700 mt-0.5 flex-shrink-0" strokeWidth="2">
               <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
               <line x1="12" y1="9" x2="12" y2="13" />
               <line x1="12" y1="17" x2="12.01" y2="17" />

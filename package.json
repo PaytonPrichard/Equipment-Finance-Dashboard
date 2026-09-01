@@ -30,6 +30,8 @@
     "build:scoring": "node scripts/build-scoring.js",
     "build": "npm run tailwind:build && npm run build:scoring && react-scripts build",
     "test": "react-scripts test",
+    "test:server": "jest server-lib --testEnvironment node",
+    "test:all": "npm run test -- --watchAll=false && npm run test:server",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {

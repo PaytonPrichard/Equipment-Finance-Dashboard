@@ -13,6 +13,10 @@ const PLANS = [
     features: ['1 user', 'All asset classes', 'Pass/flag/fail screening', 'Deal pipeline', 'Dashboard metrics', 'Document attachments', 'CSV & PDF export', 'Up to 50 active deals'],
     stripePlanMonthly: 'analyst_monthly',
     stripePlanAnnual: 'analyst_annual',
+    // Stripe price IDs for this tier were never wired up in api/checkout.js
+    // (priceMap only maps pro_monthly / pro_annual), so clicking Upgrade
+    // returned 'Unknown plan'. Route to sales until the prices exist.
+    contactOnly: true,
   },
   {
     key: 'team',
@@ -34,6 +38,8 @@ const PLANS = [
     features: ['Up to 50 users', 'Everything in Team', 'Custom scoring models', 'SSO integration', 'Dedicated support', 'Custom onboarding', 'SLA guarantee'],
     stripePlanMonthly: 'enterprise_monthly',
     stripePlanAnnual: 'enterprise_annual',
+    // See the note on the Analyst tier.
+    contactOnly: true,
   },
 ];
 
@@ -49,6 +55,14 @@ export default function BillingPage() {
 
   const handleUpgrade = async (planConfig) => {
     if (!supabase || !user) return;
+
+    // Tiers with no configured Stripe price go to sales, not to a checkout
+    // session that would fail.
+    if (planConfig.contactOnly) {
+      window.location.href = 'mailto:team@gettranche.app?subject='
+        + encodeURIComponent(planConfig.name + ' plan enquiry');
+      return;
+    }
 
     setLoading(planConfig.key);
     setError(null);
@@ -204,7 +218,7 @@ export default function BillingPage() {
                     : 'bg-gray-50 border border-gray-200 text-gray-900 hover:bg-gray-100 disabled:opacity-50'
                 }`}
               >
-                {loading === p.key ? 'Redirecting...' : isCurrentPlan ? 'Current Plan' : 'Upgrade'}
+                {loading === p.key ? 'Redirecting...' : isCurrentPlan ? 'Current Plan' : p.contactOnly ? 'Contact sales' : 'Upgrade'}
               </button>
               <ul className="space-y-2">
                 {p.features.map((f) => (

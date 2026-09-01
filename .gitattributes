@@ -1,0 +1,15 @@
+# Normalise line endings. The repo stores LF; Windows checkouts get CRLF
+# via core.autocrlf=true. Added 2026-08-04 after the working tree drifted
+# to CRLF and produced a 38,829-line phantom diff across 49 files.
+* text=auto
+
+# Explicitly binary so git never tries to normalise them.
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.webp binary
+*.pdf  binary
+*.ico  binary
+*.woff  binary
+*.woff2 binary
