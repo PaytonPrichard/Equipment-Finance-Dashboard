@@ -88,7 +88,7 @@ export function getResidualValue(
   if (financingType === 'TRAC') {
     return equipmentCost * (TRAC_RESIDUAL_PCT[equipmentType] || 0.15);
   }
-  return 0; // EFA — fully amortizing
+  return 0; // EFA. Fully amortizing
 }
 
 // ------- Core Metrics -------
@@ -320,7 +320,7 @@ export function generateCommentary(
     );
   } else {
     comments.push(
-      `DSCR of ${metrics.dscr.toFixed(2)}x falls below typical minimum thresholds — borrower may struggle to service total debt obligations.`,
+      `DSCR of ${metrics.dscr.toFixed(2)}x falls below typical minimum thresholds. Borrower may struggle to service total debt obligations.`,
     );
   }
 
@@ -351,7 +351,7 @@ export function generateCommentary(
 
   if (metrics.ltv > 1.0) {
     comments.push(
-      `LTV of ${(metrics.ltv * 100).toFixed(0)}% exceeds equipment value — additional equity contribution or collateral should be considered.`,
+      `LTV of ${(metrics.ltv * 100).toFixed(0)}% exceeds equipment value. Additional equity contribution or collateral should be considered.`,
     );
   } else if (metrics.ltv <= 0.75) {
     comments.push(
@@ -362,7 +362,7 @@ export function generateCommentary(
   const ft = inputs.financingType || 'EFA';
   if (ft === 'FMV' && metrics.residualValue > 0) {
     comments.push(
-      `FMV lease structure reduces periodic payments by ${formatCurrency(metrics.residualValue)} (estimated residual). Lessor retains residual value risk — assess remarketing outlook for ${inputs.equipmentType}.`,
+      `FMV lease structure reduces periodic payments by ${formatCurrency(metrics.residualValue)} (estimated residual). Lessor retains residual value risk. Assess remarketing outlook for ${inputs.equipmentType}.`,
     );
   } else if (ft === 'TRAC') {
     comments.push(
@@ -372,7 +372,7 @@ export function generateCommentary(
 
   if (metrics.termCoverage > 80) {
     comments.push(
-      `Loan term covers ${metrics.termCoverage.toFixed(0)}% of equipment useful life — residual value risk is elevated. Consider shorter term or residual value guarantee.`,
+      `Loan term covers ${metrics.termCoverage.toFixed(0)}% of equipment useful life. Residual value risk is elevated. Consider shorter term or residual value guarantee.`,
     );
   }
 
@@ -382,7 +382,7 @@ export function generateCommentary(
       : 25;
   if (metrics.revenueConcentration > revConcThreshold) {
     comments.push(
-      `Equipment cost represents ${metrics.revenueConcentration.toFixed(1)}% of annual revenue — relatively concentrated exposure for the borrower's operations.`,
+      `Equipment cost represents ${metrics.revenueConcentration.toFixed(1)}% of annual revenue. Relatively concentrated exposure for the borrower's operations.`,
     );
   }
 
@@ -423,16 +423,16 @@ export function getSuggestedStructure(
 
   if (ft === 'FMV') {
     suggestions.structure =
-      'Fair Market Value lease — lessee has option to purchase at FMV, return, or renew at end of term. Lower periodic payments due to residual value assumption. Lessor bears residual risk; ensure remarketing channel for this equipment type.';
+      'Fair Market Value lease. Lessee has option to purchase at FMV, return, or renew at end of term. Lower periodic payments due to residual value assumption. Lessor bears residual risk; ensure remarketing channel for this equipment type.';
     suggestions.structureType = 'FMV Lease';
   } else if (ft === 'TRAC') {
     suggestions.structure =
-      'TRAC lease — lessee guarantees a terminal residual value. If disposition proceeds differ from guaranteed amount, a rental adjustment (refund or additional charge) is applied. Commonly used for over-the-road vehicles and fleet assets.';
+      'TRAC lease. Lessee guarantees a terminal residual value. If disposition proceeds differ from guaranteed amount, a rental adjustment (refund or additional charge) is applied. Commonly used for over-the-road vehicles and fleet assets.';
     suggestions.structureType = 'TRAC Lease';
   } else {
     if (inputs.essentialUse && metrics.termCoverage < 80) {
       suggestions.structure =
-        'Equipment Finance Agreement (EFA) recommended — borrower takes ownership, fully amortizing payments. Essential-use asset with favorable term-to-useful-life coverage supports lender recovery profile.';
+        'Equipment Finance Agreement (EFA) recommended. Borrower takes ownership, fully amortizing payments. Essential-use asset with favorable term-to-useful-life coverage supports lender recovery profile.';
     } else if (metrics.termCoverage >= 80) {
       suggestions.structure =
         'EFA with first-priority equipment lien. Consider adding residual value guarantee given elevated term-to-useful-life ratio, or evaluate an FMV lease to shift residual risk.';

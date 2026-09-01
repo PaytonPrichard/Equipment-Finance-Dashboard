@@ -406,14 +406,14 @@ export function generateCommentary(
     );
   } else {
     comments.push(
-      `DSCR of ${metrics.dscr.toFixed(2)}x falls below typical minimum thresholds — borrower may struggle to service total debt obligations under full utilization.`
+      `DSCR of ${metrics.dscr.toFixed(2)}x falls below typical minimum thresholds. Borrower may struggle to service total debt obligations under full utilization.`
     );
   }
 
   // Turnover analysis
   if (metrics.turnoverRatio >= 8) {
     comments.push(
-      `Inventory turnover of ${metrics.turnoverRatio.toFixed(1)}x is excellent — rapid conversion to cash reduces collateral risk and supports higher advance rates.`
+      `Inventory turnover of ${metrics.turnoverRatio.toFixed(1)}x is excellent. Rapid conversion to cash reduces collateral risk and supports higher advance rates.`
     );
   } else if (metrics.turnoverRatio >= MIN_TURNOVER) {
     comments.push(
@@ -421,7 +421,7 @@ export function generateCommentary(
     );
   } else if (metrics.turnoverRatio >= 2) {
     comments.push(
-      `Inventory turnover of ${metrics.turnoverRatio.toFixed(1)}x is below the ${MIN_TURNOVER.toFixed(1)}x minimum threshold — slow-moving inventory increases collateral risk and may warrant reduced advance rates or more frequent field exams.`
+      `Inventory turnover of ${metrics.turnoverRatio.toFixed(1)}x is below the ${MIN_TURNOVER.toFixed(1)}x minimum threshold. Slow-moving inventory increases collateral risk and may warrant reduced advance rates or more frequent field exams.`
     );
   } else {
     comments.push(
@@ -433,7 +433,7 @@ export function generateCommentary(
   const wipPct = metrics.compositionMix.wipPct;
   if (wipPct > 0.35) {
     comments.push(
-      `Work-in-progress represents ${(wipPct * 100).toFixed(0)}% of total inventory — elevated WIP concentration limits liquidation value and caps advance rates at ${(MAX_ADVANCE_RATE_WIP * 100).toFixed(0)}% for that component.`
+      `Work-in-progress represents ${(wipPct * 100).toFixed(0)}% of total inventory. Elevated WIP concentration limits liquidation value and caps advance rates at ${(MAX_ADVANCE_RATE_WIP * 100).toFixed(0)}% for that component.`
     );
   } else if (wipPct > 0.20) {
     comments.push(
@@ -443,14 +443,14 @@ export function generateCommentary(
 
   if (metrics.compositionMix.finishedPct > 0.60) {
     comments.push(
-      `Finished goods comprise ${(metrics.compositionMix.finishedPct * 100).toFixed(0)}% of inventory — high liquidity supports stronger borrowing base and advance rates up to ${(MAX_ADVANCE_RATE_FINISHED * 100).toFixed(0)}%.`
+      `Finished goods comprise ${(metrics.compositionMix.finishedPct * 100).toFixed(0)}% of inventory. High liquidity supports stronger borrowing base and advance rates up to ${(MAX_ADVANCE_RATE_FINISHED * 100).toFixed(0)}%.`
     );
   }
 
   // Obsolescence concerns
   if (metrics.obsolescenceRate > OBSOLESCENCE_THRESHOLD) {
     comments.push(
-      `Obsolete inventory at ${(metrics.obsolescenceRate * 100).toFixed(1)}% exceeds the ${(OBSOLESCENCE_THRESHOLD * 100).toFixed(0)}% threshold — recommend excluding obsolete stock from borrowing base and requiring quarterly inventory aging reports.`
+      `Obsolete inventory at ${(metrics.obsolescenceRate * 100).toFixed(1)}% exceeds the ${(OBSOLESCENCE_THRESHOLD * 100).toFixed(0)}% threshold. Recommend excluding obsolete stock from borrowing base and requiring quarterly inventory aging reports.`
     );
   } else if (metrics.obsolescenceRate > 0.05) {
     comments.push(
@@ -463,7 +463,7 @@ export function generateCommentary(
   if (nolvFrac !== null) {
     if (nolvFrac >= 0.65) {
       comments.push(
-        `Net orderly liquidation value of ${(nolvFrac * 100).toFixed(0)}% is strong — collateral recovery expectations support the proposed advance rate.`
+        `Net orderly liquidation value of ${(nolvFrac * 100).toFixed(0)}% is strong. Collateral recovery expectations support the proposed advance rate.`
       );
     } else if (nolvFrac >= 0.45) {
       comments.push(
@@ -471,7 +471,7 @@ export function generateCommentary(
       );
     } else {
       comments.push(
-        `NOLV of ${(nolvFrac * 100).toFixed(0)}% is below average — low liquidation recovery increases loss severity in default; consider reducing advance rate or requiring additional collateral.`
+        `NOLV of ${(nolvFrac * 100).toFixed(0)}% is below average. Low liquidation recovery increases loss severity in default; consider reducing advance rate or requiring additional collateral.`
       );
     }
   }
@@ -479,7 +479,7 @@ export function generateCommentary(
   // Perishable flag
   if (inputs.perishable) {
     comments.push(
-      `Perishable inventory classification applies a 15% haircut to advance rates — shorter shelf life increases liquidation risk and requires accelerated monitoring.`
+      `Perishable inventory classification applies a 15% haircut to advance rates. Shorter shelf life increases liquidation risk and requires accelerated monitoring.`
     );
   }
 
@@ -550,7 +550,7 @@ export function getSuggestedStructure(
       'Senior secured revolving credit facility with inventory borrowing base. Recommend monthly borrowing base reporting, semi-annual field exams, and quarterly inventory appraisals. Consider dominion-of-funds arrangement with springing cash dominion trigger.';
   } else if (compositeScore >= 35) {
     suggestions.structure =
-      'Revolving facility with tightened inventory borrowing base — recommend reduced advance rates, monthly field exams during initial period, and full cash dominion. Weekly borrowing base certificates may be required.';
+      'Revolving facility with tightened inventory borrowing base. Recommend reduced advance rates, monthly field exams during initial period, and full cash dominion. Weekly borrowing base certificates may be required.';
   } else {
     suggestions.structure =
       'Inventory ABL facility presents significant risk. If proceeding, structure with full cash dominion, weekly borrowing base certificates, monthly field exams, and reduced advance rates below standard caps. Personal guarantee recommended.';
@@ -589,7 +589,7 @@ export function getSuggestedStructure(
   }
   if (metrics.turnoverRatio < MIN_TURNOVER) {
     suggestions.enhancements.push(
-      'Inventory turnover covenant — require minimum ' + MIN_TURNOVER.toFixed(1) + 'x annual turnover'
+      'Inventory turnover covenant. Require minimum ' + MIN_TURNOVER.toFixed(1) + 'x annual turnover'
     );
   }
   if (metrics.obsolescenceRate > OBSOLESCENCE_THRESHOLD) {
@@ -765,7 +765,7 @@ export function generateExportSummary(
       : OBSOLESCENCE_THRESHOLD * 100;
   const lines: string[] = [];
   lines.push('INVENTORY FINANCE DEAL SCREENING');
-  lines.push('PRELIMINARY ASSESSMENT — ABL REVOLVING FACILITY');
+  lines.push('PRELIMINARY ASSESSMENT: ABL REVOLVING FACILITY');
   lines.push('='.repeat(60));
   lines.push('');
   lines.push(`Company:          ${inputs.companyName || 'N/A'}`);
@@ -805,7 +805,7 @@ export function generateExportSummary(
   lines.push('-'.repeat(60));
   lines.push('SCREENING RESULT');
   lines.push('-'.repeat(60));
-  lines.push(`Risk Score:       ${riskScore.composite}/100 — ${recommendation.category}`);
+  lines.push(`Risk Score:       ${riskScore.composite}/100 - ${recommendation.category}`);
   lines.push(`Recommendation:   ${recommendation.detail}`);
   lines.push('');
   lines.push('-'.repeat(60));

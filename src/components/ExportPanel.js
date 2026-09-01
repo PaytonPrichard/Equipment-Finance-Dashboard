@@ -27,357 +27,86 @@ function safeUrl(value) {
   return /^https:\/\//i.test(s) ? s : '';
 }
 
-// eslint-disable-next-line no-unused-vars
-function parseSummaryToPdfHtml(summaryText, inputs) {
-  const lines = summaryText.split('\n');
-  const companyName = inputs?.companyName || 'N/A';
+// A memo opens by stating the ask. Without this a reader gets a score before
+// they know what is being asked for, which is backwards: the request is the
+// thing being decided. Every value here is already on the page; nothing new
+// is computed and nothing is inferred.
+function buildRequestLine(inputs, metrics, moduleKey, financingLabel) {
+  const usd = (v) => '$' + Math.round(Number(v) || 0).toLocaleString();
+  const company = inputs?.companyName;
+  if (!company) return '';
 
-  // Parse sections from the structured summaryText
-  const sections = [];
-  let currentSection = null;
-  let screeningResult = {};
-
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
-    const trimmed = line.trim();
-
-    // Skip the plain-text title lines and separator lines
-    if (trimmed === 'EQUIPMENT FINANCE DEAL SCREENING') continue;
-    if (trimmed === 'PRELIMINARY ASSESSMENT') continue;
-    if (/^[=]+$/.test(trimmed)) continue;
-    if (trimmed === '') continue;
-
-    // Detect section headers (lines that are ALL CAPS followed by a dashed line, or preceded by one)
-    if (/^[-]+$/.test(trimmed)) {
-      // Check if next line is a section header
-      const nextLine = (lines[i + 1] || '').trim();
-      const lineAfter = (lines[i + 2] || '').trim();
-      if (nextLine && !/^[-]+$/.test(nextLine) && /^[-]+$/.test(lineAfter)) {
-        // nextLine is the header, lineAfter is the closing dashes
-        currentSection = { title: nextLine, lines: [] };
-        sections.push(currentSection);
-        i += 2; // skip header and closing dashes
-        continue;
-      } else if (nextLine && !/^[-]+$/.test(nextLine)) {
-        currentSection = { title: nextLine, lines: [] };
-        sections.push(currentSection);
-        i += 1;
-        continue;
-      }
-      continue;
-    }
-
-    // Collect content into current section
-    if (currentSection) {
-      currentSection.lines.push(line);
-    } else {
-      // Lines before the first section (deal info header)
-      if (!sections.length || sections[0].title !== '_HEADER_') {
-        sections.unshift({ title: '_HEADER_', lines: [] });
-        currentSection = sections[0];
-      }
-      sections[0].lines.push(line);
-    }
+  if (moduleKey === 'equipment_finance') {
+    const financed = metrics?.netFinanced;
+    if (!financed) return '';
+    const term = inputs?.loanTerm ? `${inputs.loanTerm}-month ` : '';
+    const structure = financingLabel ? `${financingLabel}` : 'facility';
+    const condition = inputs?.equipmentCondition ? inputs.equipmentCondition.toLowerCase() + ' ' : '';
+    const kind = inputs?.equipmentType ? `${condition}${inputs.equipmentType.toLowerCase()}` : 'equipment';
+    return `${usd(financed)} ${term}${structure} to finance ${kind} for ${company}.`;
   }
 
-  // Extract screening result from the SCREENING RESULT section
-  const screeningSection = sections.find(s => s.title === 'SCREENING RESULT');
-  if (screeningSection) {
-    for (const line of screeningSection.lines) {
-      const scoreMatch = line.match(/Risk Score:\s*(\d+)\/100\s*-\s*(.+)/);
-      if (scoreMatch) {
-        screeningResult.score = scoreMatch[1];
-        screeningResult.category = scoreMatch[2].trim();
-      }
-      const recMatch = line.match(/Recommendation:\s*(.+)/);
-      if (recMatch) {
-        screeningResult.recommendation = recMatch[1].trim();
-      }
-    }
+  if (moduleKey === 'accounts_receivable') {
+    const base = metrics?.borrowingBase;
+    if (!base) return '';
+    const rate = inputs?.requestedAdvanceRate ? ` at a ${inputs.requestedAdvanceRate}% advance rate` : '';
+    return `${usd(base)} revolving facility secured by accounts receivable${rate} for ${company}.`;
   }
 
-  // Determine score color
-  const scoreNum = parseInt(screeningResult.score || '0', 10);
-  let scoreColor = '#dc2626'; // red
-  let scoreBg = '#fef2f2';
-  if (scoreNum >= 70) { scoreColor = '#16a34a'; scoreBg = '#f0fdf4'; }
-  else if (scoreNum >= 50) { scoreColor = '#ca8a04'; scoreBg = '#fefce8'; }
-  else if (scoreNum >= 35) { scoreColor = '#ea580c'; scoreBg = '#fff7ed'; }
-
-  // Build header info rows from _HEADER_ section
-  const headerSection = sections.find(s => s.title === '_HEADER_');
-  const headerRows = (headerSection?.lines || []).map(l => {
-    const colonIdx = l.indexOf(':');
-    if (colonIdx > 0) {
-      const label = l.substring(0, colonIdx).trim();
-      const value = l.substring(colonIdx + 1).trim();
-      return `<tr><td style="padding:4px 16px 4px 0;color:#64748b;font-size:12px;white-space:nowrap">${esc(label)}</td><td style="padding:4px 0;font-size:12px;font-weight:500">${esc(value)}</td></tr>`;
-    }
-    return '';
-  }).join('');
-
-  // Build section HTML
-  function renderSection(section) {
-    if (section.title === '_HEADER_' || section.title === 'SCREENING RESULT') return '';
-    if (section.title === 'DISCLAIMER: Preliminary screening only. Not a credit decision.') return '';
-
-    const title = esc(section.title);
-
-    // KEY METRICS and DEBT SERVICE: render as table
-    if (section.title === 'KEY METRICS' || section.title === 'DEBT SERVICE') {
-      const rows = section.lines.map(l => {
-        const colonIdx = l.indexOf(':');
-        if (colonIdx > 0) {
-          const label = l.substring(0, colonIdx).trim();
-          let value = l.substring(colonIdx + 1).trim();
-          // Extract parenthetical notes
-          const noteMatch = value.match(/^(.+?)\s+(\(.+\))$/);
-          let note = '';
-          if (noteMatch) {
-            value = noteMatch[1];
-            note = noteMatch[2];
-          }
-          // Flag warnings
-          const flagMatch = value.match(/^(.+?)\s+(\*\*.+\*\*)$/);
-          let flag = '';
-          if (flagMatch) {
-            value = flagMatch[1];
-            flag = flagMatch[2].replace(/\*/g, '');
-          }
-          return `<tr>
-            <td style="padding:6px 16px 6px 0;color:#475569;font-size:12px;border-bottom:1px solid #f1f5f9">${esc(label)}</td>
-            <td style="padding:6px 8px 6px 0;font-size:12px;font-weight:600;border-bottom:1px solid #f1f5f9;text-align:right">${esc(value)}</td>
-            <td style="padding:6px 0;font-size:10px;color:#94a3b8;border-bottom:1px solid #f1f5f9">${esc(note)}${flag ? '<span style="color:#dc2626;font-weight:600"> ' + esc(flag) + '</span>' : ''}</td>
-          </tr>`;
-        }
-        return '';
-      }).join('');
-      return `<div style="margin-bottom:20px">
-        <h3 style="font-size:13px;font-weight:700;color:#1e293b;text-transform:uppercase;letter-spacing:0.05em;margin:0 0 8px 0;padding-bottom:6px;border-bottom:2px solid #d4a843">${title}</h3>
-        <table style="width:100%;border-collapse:collapse">${rows}</table>
-      </div>`;
-    }
-
-    // STRESS TEST: render as formatted table
-    if (section.title === 'STRESS TEST') {
-      const rows = section.lines.map(l => {
-        const match = l.match(/^(.+?)\s{2,}EBITDA:\s*(\S+)\s{2,}DSCR:\s*(\S+)(.*)$/);
-        if (match) {
-          const scenario = match[1].trim();
-          const ebitda = match[2].trim();
-          const dscr = match[3].trim();
-          const flag = (match[4] || '').replace(/\*/g, '').trim();
-          const dscrNum = parseFloat(dscr);
-          let dscrColor = '#16a34a';
-          if (dscrNum < 1.0) dscrColor = '#dc2626';
-          else if (dscrNum < 1.25) dscrColor = '#ea580c';
-          return `<tr>
-            <td style="padding:6px 12px 6px 0;font-size:12px;border-bottom:1px solid #f1f5f9">${esc(scenario)}</td>
-            <td style="padding:6px 12px 6px 0;font-size:12px;text-align:right;border-bottom:1px solid #f1f5f9">${esc(ebitda)}</td>
-            <td style="padding:6px 0;font-size:12px;text-align:right;font-weight:600;color:${dscrColor};border-bottom:1px solid #f1f5f9">${esc(dscr)}${flag ? ' <span style="font-size:10px;font-weight:400;color:#dc2626">' + esc(flag) + '</span>' : ''}</td>
-          </tr>`;
-        }
-        return '';
-      }).join('');
-      return `<div style="margin-bottom:20px">
-        <h3 style="font-size:13px;font-weight:700;color:#1e293b;text-transform:uppercase;letter-spacing:0.05em;margin:0 0 8px 0;padding-bottom:6px;border-bottom:2px solid #d4a843">${title}</h3>
-        <table style="width:100%;border-collapse:collapse">
-          <thead><tr>
-            <th style="padding:6px 12px 6px 0;font-size:11px;color:#64748b;text-align:left;border-bottom:2px solid #e2e8f0">Scenario</th>
-            <th style="padding:6px 12px 6px 0;font-size:11px;color:#64748b;text-align:right;border-bottom:2px solid #e2e8f0">EBITDA</th>
-            <th style="padding:6px 0;font-size:11px;color:#64748b;text-align:right;border-bottom:2px solid #e2e8f0">DSCR</th>
-          </tr></thead>
-          <tbody>${rows}</tbody>
-        </table>
-      </div>`;
-    }
-
-    // ASSESSMENT NOTES: numbered list
-    if (section.title === 'ASSESSMENT NOTES') {
-      const items = section.lines.map(l => {
-        const m = l.match(/^\d+\.\s*(.+)/);
-        if (m) return `<li style="margin-bottom:4px;font-size:12px;color:#334155">${esc(m[1])}</li>`;
-        return '';
-      }).join('');
-      return `<div style="margin-bottom:20px">
-        <h3 style="font-size:13px;font-weight:700;color:#1e293b;text-transform:uppercase;letter-spacing:0.05em;margin:0 0 8px 0;padding-bottom:6px;border-bottom:2px solid #d4a843">${title}</h3>
-        <ol style="margin:0;padding-left:20px">${items}</ol>
-      </div>`;
-    }
-
-    // SUGGESTED ENHANCEMENTS: bullet list
-    if (section.title === 'SUGGESTED ENHANCEMENTS') {
-      const items = section.lines.map(l => {
-        const m = l.match(/^-\s*(.+)/);
-        if (m) return `<li style="margin-bottom:4px;font-size:12px;color:#334155">${esc(m[1])}</li>`;
-        return '';
-      }).join('');
-      if (!items) return '';
-      return `<div style="margin-bottom:20px">
-        <h3 style="font-size:13px;font-weight:700;color:#1e293b;text-transform:uppercase;letter-spacing:0.05em;margin:0 0 8px 0;padding-bottom:6px;border-bottom:2px solid #d4a843">${title}</h3>
-        <ul style="margin:0;padding-left:20px">${items}</ul>
-      </div>`;
-    }
-
-    // Default: render lines as paragraphs
-    const content = section.lines.map(l => `<p style="margin:2px 0;font-size:12px;color:#334155">${esc(l)}</p>`).join('');
-    return `<div style="margin-bottom:20px">
-      <h3 style="font-size:13px;font-weight:700;color:#1e293b;text-transform:uppercase;letter-spacing:0.05em;margin:0 0 8px 0;padding-bottom:6px;border-bottom:2px solid #d4a843">${title}</h3>
-      ${content}
-    </div>`;
-  }
-
-  const sectionHtml = sections.map(renderSection).join('');
-
-  // Extract disclaimer from the last section or raw text
-  const disclaimerSection = sections.find(s => s.title.startsWith('DISCLAIMER'));
-  let disclaimerText = 'Preliminary screening only. Not a credit decision. Final terms subject to full underwriting, credit committee approval, and documentation.';
-  if (disclaimerSection) {
-    disclaimerText = disclaimerSection.title.replace('DISCLAIMER: ', '') + ' ' + disclaimerSection.lines.join(' ');
-  }
-
-  // Find generated date from raw text
-  const dateMatch = summaryText.match(/Generated:\s*(.+)/);
-  const generatedDate = dateMatch ? dateMatch[1].trim() : new Date().toLocaleDateString();
-
-  return `<!DOCTYPE html>
-<html>
-<head>
-<meta charset="utf-8"/>
-<title>Tranche Screening - ${esc(companyName)}</title>
-<style>
-  @page {
-    margin: 0.6in 0.7in;
-    size: letter;
-  }
-  @media print {
-    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-    .no-print { display: none !important; }
-  }
-  * { box-sizing: border-box; }
-  body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-    color: #1e293b;
-    background: #fff;
-    margin: 0;
-    padding: 0;
-    line-height: 1.5;
-    font-size: 12px;
-  }
-  .page {
-    max-width: 780px;
-    margin: 0 auto;
-    padding: 20px 0;
-  }
-  .header {
-    border-bottom: 3px solid #d4a843;
-    padding-bottom: 16px;
-    margin-bottom: 20px;
-  }
-  .header h1 {
-    font-size: 22px;
-    font-weight: 800;
-    color: #1e293b;
-    margin: 0 0 2px 0;
-  }
-  .header .subtitle {
-    font-size: 13px;
-    color: #64748b;
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-  }
-  .score-banner {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background: ${scoreBg};
-    border: 1px solid ${scoreColor}33;
-    border-left: 4px solid ${scoreColor};
-    border-radius: 6px;
-    padding: 14px 20px;
-    margin-bottom: 20px;
-  }
-  .score-badge {
-    display: inline-flex;
-    align-items: baseline;
-    gap: 4px;
-  }
-  .score-number {
-    font-size: 32px;
-    font-weight: 800;
-    color: ${scoreColor};
-    line-height: 1;
-  }
-  .score-max {
-    font-size: 14px;
-    font-weight: 600;
-    color: ${scoreColor}aa;
-  }
-  .score-label {
-    font-size: 14px;
-    font-weight: 700;
-    color: ${scoreColor};
-    margin-left: 12px;
-  }
-  .score-rec {
-    font-size: 12px;
-    color: #475569;
-    max-width: 400px;
-    text-align: right;
-  }
-  .deal-info {
-    margin-bottom: 20px;
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 6px;
-    padding: 12px 16px;
-  }
-  .footer {
-    margin-top: 24px;
-    padding-top: 12px;
-    border-top: 1px solid #e2e8f0;
-    font-size: 10px;
-    color: #94a3b8;
-    text-align: center;
-  }
-  table { border-collapse: collapse; }
-</style>
-</head>
-<body>
-<div class="page">
-  <div class="header">
-    <h1>${esc(companyName)}</h1>
-    <div class="subtitle">Preliminary Screening Assessment</div>
-  </div>
-
-  <div class="score-banner">
-    <div style="display:flex;align-items:center">
-      <div class="score-badge">
-        <span class="score-number">${esc(screeningResult.score || 'N/A')}</span>
-        <span class="score-max">/100</span>
-      </div>
-      <span class="score-label">${esc(screeningResult.category || '')}</span>
-    </div>
-    <div class="score-rec">${esc(screeningResult.recommendation || '')}</div>
-  </div>
-
-  <div class="deal-info">
-    <table style="width:100%">${headerRows}</table>
-  </div>
-
-  ${sectionHtml}
-
-  <div class="footer">
-    <p style="margin:0 0 2px 0">${esc(disclaimerText)}</p>
-    <p style="margin:0">Generated: ${esc(generatedDate)}</p>
-  </div>
-</div>
-</body>
-</html>`;
+  const base = metrics?.borrowingBase;
+  if (!base) return '';
+  const rate = inputs?.requestedAdvanceRate ? ` at a ${inputs.requestedAdvanceRate}% advance rate` : '';
+  return `${usd(base)} revolving facility secured by inventory${rate} for ${company}.`;
 }
 
-export function generateBrandedPdfHtml({ summaryText, inputs, metrics, riskScore, recommendation, screeningResult, orgName, analystName, moduleLabel, branding, factors = [], structure = null, stressResults = [], moduleKey = 'equipment_finance', borrowerExtras = null, criteria = null }) {
+// Sources and uses. Equipment finance only: an ABL revolver funds against a
+// borrowing base rather than a fixed purchase, so the three-line block does
+// not describe it and is omitted rather than faked.
+function buildSourcesAndUses(inputs, metrics, moduleKey) {
+  if (moduleKey !== 'equipment_finance') return null;
+  const cost = Number(inputs?.equipmentCost) || 0;
+  const down = Number(inputs?.downPayment) || 0;
+  const financed = Number(metrics?.netFinanced) || 0;
+  if (!cost || !financed) return null;
+  return { cost, down, financed };
+}
+
+// Two lines of borrower context from fields already collected. A committee
+// reading this cold should not have to assemble who the borrower is from a
+// metrics table.
+function buildBorrowerDescription(inputs) {
+  const company = inputs?.companyName;
+  if (!company) return '';
+  const parts = [];
+  if (inputs?.yearsInBusiness) {
+    parts.push(`has been operating for ${inputs.yearsInBusiness} year${inputs.yearsInBusiness === 1 ? '' : 's'}`);
+  }
+  if (inputs?.industrySector) parts.push(`in ${inputs.industrySector.toLowerCase()}`);
+  const revenue = Number(inputs?.annualRevenue) || 0;
+  const scale = revenue
+    ? `Most recent annual revenue is $${Math.round(revenue).toLocaleString()}`
+    : '';
+  const rating = inputs?.creditRating && inputs.creditRating !== 'Not Rated'
+    ? ` Credit quality is characterized as ${inputs.creditRating.toLowerCase()}.`
+    : '';
+  const opening = parts.length ? `${company} ${parts.join(' ')}.` : `${company}.`;
+  return `${opening}${scale ? ' ' + scale + '.' : ''}${rating}`;
+}
+
+// Legacy path: recover the assessment lines from the plain-text summary.
+// Only used when a caller does not pass the commentary array.
+function parseCommentaryFromSummary(summaryText) {
+  const out = [];
+  let inCommentary = false;
+  for (const line of String(summaryText || '').split('\n')) {
+    if (line.includes('ASSESSMENT NOTES')) { inCommentary = true; continue; }
+    if (line.includes('STRESS TEST') || line.includes('FACILITY STRUCTURE') || line.includes('SUGGESTED ENHANCEMENTS') || line.includes('DISCLAIMER')) { inCommentary = false; }
+    if (inCommentary && line.trim() && !/^[-=]+$/.test(line.trim())) out.push(line.trim());
+  }
+  return out;
+}
+
+export function generateBrandedPdfHtml({ summaryText, inputs, metrics, riskScore, recommendation, screeningResult, orgName, analystName, moduleLabel, branding, factors = [], structure = null, stressResults = [], moduleKey = 'equipment_finance', borrowerExtras = null, criteria = null, commentary = null, sourceDocuments = [] }) {
   const companyName = inputs?.companyName || 'N/A';
   const date = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
   const score = riskScore?.composite ?? 0;
@@ -408,32 +137,46 @@ export function generateBrandedPdfHtml({ summaryText, inputs, metrics, riskScore
   const fmtPct = (v) => v !== undefined && v !== null ? (v * 100).toFixed(1) + '%' : '';
   const fmtRatio = (v) => v !== undefined ? v.toFixed(2) + 'x' : '';
 
-  // Build key metrics table based on what's available
+  // Build key metrics table based on what's available.
+  //
+  // The green/amber/red dots are read as a judgement about the firm's policy,
+  // so their breakpoints come from that policy rather than from literals
+  // sitting in the presentation layer. Green is at or better than the firm's
+  // limit, amber is past it but not alarming, red is past the point the
+  // commentary would call out.
+  const c = { ...DEFAULT_CRITERIA, ...(criteria || {}) };
+  const dscrFloor = moduleKey === 'accounts_receivable' ? c.minDscrAR : c.minDscr;
   const metricRows = [];
-  if (metrics?.dscr !== undefined) metricRows.push(['DSCR', fmtRatio(metrics.dscr), metrics.dscr >= 1.25 ? '#16a34a' : metrics.dscr >= 1.0 ? '#ca8a04' : '#dc2626']);
-  if (borrowerExtras?.fccr != null) metricRows.push(['FCCR', fmtRatio(borrowerExtras.fccr), borrowerExtras.fccr >= 1.25 ? '#16a34a' : borrowerExtras.fccr >= 1.0 ? '#ca8a04' : '#dc2626']);
-  if (metrics?.leverage !== undefined) metricRows.push(['Leverage', fmtRatio(metrics.leverage), metrics.leverage <= 3.5 ? '#16a34a' : metrics.leverage <= 5.0 ? '#ca8a04' : '#dc2626']);
-  if (metrics?.ltv !== undefined) metricRows.push(['LTV', fmtPct(metrics.ltv), metrics.ltv <= 0.85 ? '#16a34a' : metrics.ltv <= 1.0 ? '#ca8a04' : '#dc2626']);
-  if (metrics?.termCoverage !== undefined) metricRows.push(['Term Coverage', metrics.termCoverage.toFixed(0) + '%', metrics.termCoverage <= 80 ? '#16a34a' : '#dc2626']);
+  if (metrics?.dscr !== undefined) metricRows.push(['DSCR', fmtRatio(metrics.dscr), metrics.dscr >= dscrFloor ? '#16a34a' : metrics.dscr >= 1.0 ? '#ca8a04' : '#dc2626']);
+  if (borrowerExtras?.fccr != null) metricRows.push(['FCCR', fmtRatio(borrowerExtras.fccr), borrowerExtras.fccr >= dscrFloor ? '#16a34a' : borrowerExtras.fccr >= 1.0 ? '#ca8a04' : '#dc2626']);
+  if (metrics?.leverage !== undefined) metricRows.push(['Leverage', fmtRatio(metrics.leverage), metrics.leverage <= c.maxLeverage ? '#16a34a' : metrics.leverage <= c.maxLeverage * 1.5 ? '#ca8a04' : '#dc2626']);
+  if (metrics?.ltv !== undefined) metricRows.push(['LTV', fmtPct(metrics.ltv), metrics.ltv * 100 <= c.maxLtv ? '#16a34a' : metrics.ltv <= 1.2 ? '#ca8a04' : '#dc2626']);
+  if (metrics?.termCoverage !== undefined) metricRows.push(['Term Coverage', metrics.termCoverage.toFixed(0) + '%', metrics.termCoverage <= c.maxTermCoverage ? '#16a34a' : '#dc2626']);
   if (metrics?.borrowingBase !== undefined) metricRows.push(['Borrowing Base', fmtCurrency(metrics.borrowingBase), '#334155']);
   if (metrics?.dso !== undefined) metricRows.push(['DSO', Math.round(metrics.dso) + ' days', metrics.dso <= 60 ? '#16a34a' : '#ca8a04']);
-  if (metrics?.concentrationRisk !== undefined) metricRows.push(['Concentration', fmtPct(metrics.concentrationRisk), metrics.concentrationRisk <= 0.25 ? '#16a34a' : '#dc2626']);
-  if (metrics?.turnoverRatio !== undefined) metricRows.push(['Turnover', fmtRatio(metrics.turnoverRatio), metrics.turnoverRatio >= 4 ? '#16a34a' : '#ca8a04']);
-  if (metrics?.obsolescenceRate !== undefined) metricRows.push(['Obsolescence', fmtPct(metrics.obsolescenceRate), metrics.obsolescenceRate <= 0.10 ? '#16a34a' : '#dc2626']);
+  if (metrics?.concentrationRisk !== undefined) metricRows.push(['Concentration', fmtPct(metrics.concentrationRisk), metrics.concentrationRisk * 100 <= c.maxConcentration ? '#16a34a' : '#dc2626']);
+  if (metrics?.turnoverRatio !== undefined) metricRows.push(['Turnover', fmtRatio(metrics.turnoverRatio), metrics.turnoverRatio >= c.minTurnover ? '#16a34a' : '#ca8a04']);
+  if (metrics?.obsolescenceRate !== undefined) metricRows.push(['Obsolescence', fmtPct(metrics.obsolescenceRate), metrics.obsolescenceRate * 100 <= c.maxObsolescence ? '#16a34a' : '#dc2626']);
 
   const rate = metrics?.rate || metrics?.effectiveRate || 0;
 
-  // Parse commentary from summaryText. Structure used to come through here as
-  // text via regex; it now comes through the structure prop as a structured
-  // object and is rendered by renderStructureSection below.
-  const lines = summaryText.split('\n');
-  const commentaryLines = [];
-  let inCommentary = false;
-  for (const line of lines) {
-    if (line.includes('ASSESSMENT NOTES')) { inCommentary = true; continue; }
-    if (line.includes('STRESS TEST') || line.includes('FACILITY STRUCTURE') || line.includes('SUGGESTED ENHANCEMENTS') || line.includes('DISCLAIMER')) { inCommentary = false; }
-    if (inCommentary && line.trim() && !/^[-=]+$/.test(line.trim())) commentaryLines.push(line.trim());
-  }
+  const requestLine = buildRequestLine(inputs, metrics, moduleKey, structure?.type || structure?.structureType || '');
+  const borrowerDescription = buildBorrowerDescription(inputs);
+  const sourcesAndUses = buildSourcesAndUses(inputs, metrics, moduleKey);
+
+  // Assessment comes through as an array. It used to be recovered by
+  // string-matching 'ASSESSMENT NOTES' out of summaryText, a blob this
+  // function was already handed, even though App.js had computed commentary
+  // as a proper array all along and simply never passed it down. Renaming a
+  // header inside any module's generateExportSummary silently emptied the
+  // section. Same fix commit 6d4dc77 applied to the structure section;
+  // commentary was the leftover.
+  //
+  // The summaryText fallback stays for callers that have not been updated,
+  // so an old call site degrades rather than losing the section outright.
+  const commentaryLines = Array.isArray(commentary) && commentary.length
+    ? commentary.map((c) => String(c).trim()).filter(Boolean)
+    : parseCommentaryFromSummary(summaryText);
 
   // Render the Suggested Structure section directly from the structured
   // getSuggestedStructure output. Module-aware so AR's reporting requirements,
@@ -589,7 +332,7 @@ export function generateBrandedPdfHtml({ summaryText, inputs, metrics, riskScore
     <div style="font-size:11px;font-weight:700;color:#991b1b;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">Red Flags</div>
     ${redFlagItems.map((f) => `<div style="display:flex;gap:8px;align-items:baseline;margin-bottom:4px">
       <span style="color:#dc2626;font-size:11px;flex-shrink:0">&#10148;</span>
-      <span style="font-size:11px;color:#1f2937"><strong>${esc(f.label)}</strong> ${esc(f.caption)} — target ${esc(f.target)} <span style="color:#6b7280">(sub-score ${Math.round(f.score)}/100)</span></span>
+      <span style="font-size:11px;color:#1f2937"><strong>${esc(f.label)}</strong> ${esc(f.caption)}, target ${esc(f.target)} <span style="color:#6b7280">(sub-score ${Math.round(f.score)}/100)</span></span>
     </div>`).join('')}
   </div>`;
 
@@ -604,7 +347,7 @@ export function generateBrandedPdfHtml({ summaryText, inputs, metrics, riskScore
 <html>
 <head>
 <meta charset="utf-8"/>
-<title>Screening Memo — ${esc(companyName)}</title>
+<title>Screening Memo: ${esc(companyName)}</title>
 <style>
   @page { margin: 0.6in 0.7in; size: letter; }
   @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
@@ -630,6 +373,23 @@ export function generateBrandedPdfHtml({ summaryText, inputs, metrics, riskScore
     ${brandingHeader}
   </div>
 
+  ${requestLine ? `<!-- Transaction Summary -->
+  <div class="section">
+    <div class="section-title">Transaction Summary</div>
+    <div style="font-size:13px;color:#1f2937;font-weight:500;margin-bottom:${borrowerDescription ? '8px' : '0'}">${esc(requestLine)}</div>
+    ${borrowerDescription ? `<div style="font-size:11px;color:#475569;line-height:1.55">${esc(borrowerDescription)}</div>` : ''}
+  </div>` : ''}
+
+  ${sourcesAndUses ? `<!-- Sources and Uses -->
+  <div class="section">
+    <div class="section-title">Sources and Uses</div>
+    <table>
+      <tr><td style="color:#64748b;width:180px">Equipment cost</td><td style="font-weight:500;text-align:right;font-family:monospace">${fmtCurrency(sourcesAndUses.cost)}</td></tr>
+      <tr><td style="color:#64748b">Borrower contribution</td><td style="font-weight:500;text-align:right;font-family:monospace">${fmtCurrency(sourcesAndUses.down)}${sourcesAndUses.cost ? ` <span style="color:#64748b;font-weight:400">(${((sourcesAndUses.down / sourcesAndUses.cost) * 100).toFixed(1)}%)</span>` : ''}</td></tr>
+      <tr><td style="color:#1f2937;font-weight:600;border-top:1px solid #cbd5e1">Amount financed</td><td style="font-weight:700;text-align:right;font-family:monospace;border-top:1px solid #cbd5e1">${fmtCurrency(sourcesAndUses.financed)}</td></tr>
+    </table>
+  </div>` : ''}
+
   <!-- Score + Verdict Banner -->
   <div style="display:flex;gap:12px;margin-bottom:24px">
     <div style="flex:1;background:${scoreBg};border:1px solid ${scoreBorder};border-left:4px solid ${scoreColor};border-radius:6px;padding:14px 20px;display:flex;align-items:center;gap:12px">
@@ -648,7 +408,6 @@ export function generateBrandedPdfHtml({ summaryText, inputs, metrics, riskScore
   </div>
 
   ${(() => {
-    const c = { ...DEFAULT_CRITERIA, ...(criteria || {}) };
     const verdictLabel = (verdict || (screeningResult?.verdict || '')).toUpperCase() || '—';
     return `<div style="display:flex;flex-wrap:wrap;gap:14px;margin-bottom:18px;padding:10px 14px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;font-size:11px;color:#475569">
       <span>Composite: <strong style="color:#1f2937">${score}</strong></span>
@@ -715,6 +474,28 @@ export function generateBrandedPdfHtml({ summaryText, inputs, metrics, riskScore
   <!-- Suggested Structure (module-aware, structured) -->
   ${renderStructureSection()}
 
+  <!-- Source Documents -->
+  <div class="section">
+    <div class="section-title">Source Documents</div>
+    ${sourceDocuments.length ? `
+      <table>
+        <thead><tr><th>Document</th><th>Type</th><th style="text-align:right">Read on</th></tr></thead>
+        <tbody>
+          ${sourceDocuments.map((d) => `<tr>
+            <td style="font-weight:500">${esc(d.fileName)}</td>
+            <td style="color:#64748b">${esc(d.documentType || '')}</td>
+            <td style="text-align:right;color:#64748b">${esc(d.addedOn || '')}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+      <div style="font-size:10px;color:#64748b;margin-top:6px;line-height:1.5">
+        Figures were extracted from the documents above and reviewed by the analyst before scoring. The score is computed from the reviewed inputs, not from the documents directly.
+      </div>
+    ` : `
+      <div style="font-size:11px;color:#475569">Inputs were entered manually. No source documents are attached to this deal.</div>
+    `}
+  </div>
+
   <!-- Footer -->
   <div style="margin-top:30px;padding-top:12px;border-top:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:flex-end;gap:24px">
     <div style="font-size:9px;color:#94a3b8;max-width:420px">
@@ -732,7 +513,7 @@ export function generateBrandedPdfHtml({ summaryText, inputs, metrics, riskScore
 </html>`;
 }
 
-export default function ExportPanel({ summaryText, inputs, metrics, riskScore, recommendation, screeningResult, profile, moduleLabel, moduleKey, factors, structure, stressResults, borrowerExtras, criteria }) {
+export default function ExportPanel({ summaryText, inputs, metrics, riskScore, recommendation, screeningResult, profile, moduleLabel, moduleKey, factors, structure, stressResults, borrowerExtras, criteria, commentary, sourceDocuments = [] }) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
@@ -761,6 +542,7 @@ export default function ExportPanel({ summaryText, inputs, metrics, riskScore, r
       summaryText, inputs, metrics, riskScore, recommendation, screeningResult,
       orgName, analystName, moduleLabel: moduleLabel || 'Equipment Finance', branding,
       moduleKey, factors, structure, stressResults, borrowerExtras, criteria,
+      commentary, sourceDocuments,
     });
 
     setPdfLoading(true);

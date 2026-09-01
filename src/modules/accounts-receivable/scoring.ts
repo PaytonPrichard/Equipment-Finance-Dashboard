@@ -301,11 +301,11 @@ export function generateCommentary(
 
   if (pctOver90 > 10) {
     comments.push(
-      `${pctOver90.toFixed(1)}% of AR is over 90 days past due — significant collection risk. Ineligible buckets will materially reduce the borrowing base. Recommend detailed aging analysis and reserve for bad debt.`
+      `${pctOver90.toFixed(1)}% of AR is over 90 days past due. Significant collection risk. Ineligible buckets will materially reduce the borrowing base. Recommend detailed aging analysis and reserve for bad debt.`
     );
   } else if (pctOver60 > 15) {
     comments.push(
-      `${pctOver60.toFixed(1)}% of AR is over 60 days — aging profile shows elevated delinquency. Monitor payment trends and consider tightening advance rate or adding dilution reserves.`
+      `${pctOver60.toFixed(1)}% of AR is over 60 days. Aging profile shows elevated delinquency. Monitor payment trends and consider tightening advance rate or adding dilution reserves.`
     );
   } else if (pctOver30 < 15) {
     comments.push(
@@ -313,14 +313,14 @@ export function generateCommentary(
     );
   } else {
     comments.push(
-      `${pctOver30.toFixed(1)}% of AR is over 30 days — moderate aging. Within acceptable range for ABL but warrants ongoing monitoring of payment velocity.`
+      `${pctOver30.toFixed(1)}% of AR is over 30 days. Moderate aging. Within acceptable range for ABL but warrants ongoing monitoring of payment velocity.`
     );
   }
 
   // Concentration
   if (metrics.concentrationRisk > CONCENTRATION_THRESHOLD) {
     comments.push(
-      `Top customer concentration of ${(metrics.concentrationRisk * 100).toFixed(1)}% exceeds the ${(CONCENTRATION_THRESHOLD * 100).toFixed(0)}% threshold — consider concentration sublimits or credit insurance on key accounts to mitigate single-obligor risk.`
+      `Top customer concentration of ${(metrics.concentrationRisk * 100).toFixed(1)}% exceeds the ${(CONCENTRATION_THRESHOLD * 100).toFixed(0)}% threshold. Consider concentration sublimits or credit insurance on key accounts to mitigate single-obligor risk.`
     );
   } else if (metrics.concentrationRisk > 0.15) {
     comments.push(
@@ -335,7 +335,7 @@ export function generateCommentary(
   // Dilution
   if (metrics.dilutionRate > DILUTION_THRESHOLD) {
     comments.push(
-      `Dilution rate of ${(metrics.dilutionRate * 100).toFixed(1)}% exceeds the ${(DILUTION_THRESHOLD * 100).toFixed(0)}% threshold — credits, returns, and allowances are eroding collateral value. Recommend a dilution reserve equal to the trailing 12-month dilution rate applied to the borrowing base.`
+      `Dilution rate of ${(metrics.dilutionRate * 100).toFixed(1)}% exceeds the ${(DILUTION_THRESHOLD * 100).toFixed(0)}% threshold. Credits, returns, and allowances are eroding collateral value. Recommend a dilution reserve equal to the trailing 12-month dilution rate applied to the borrowing base.`
     );
   } else {
     comments.push(
@@ -365,7 +365,7 @@ export function generateCommentary(
     );
   } else if (metrics.dscr > 0) {
     comments.push(
-      `DSCR of ${metrics.dscr.toFixed(2)}x is below typical ABL minimums — assess whether borrower has alternative liquidity sources or if the facility is self-liquidating through AR collections.`
+      `DSCR of ${metrics.dscr.toFixed(2)}x is below typical ABL minimums. Assess whether borrower has alternative liquidity sources or if the facility is self-liquidating through AR collections.`
     );
   }
 

@@ -184,3 +184,203 @@ describe('generateBrandedPdfHtml — Inventory Finance', () => {
     expect(html).toMatch(/<td>FCCR<\/td>/);
   });
 });
+
+// ───────────────────────────────────────────────────────────────
+// Phase 4: what a committee memo has to open with, and where its
+// numbers came from.
+// ───────────────────────────────────────────────────────────────
+
+describe('memo opens by stating the ask', () => {
+  const efInputs = {
+    ...EF_INITIAL,
+    companyName: 'Granite Ridge Materials LLC',
+    annualRevenue: 38400000,
+    ebitda: 7400000,
+    totalExistingDebt: 14200000,
+    yearsInBusiness: 16,
+    industrySector: 'Mining',
+    creditRating: 'Adequate',
+    equipmentType: 'Heavy Machinery',
+    equipmentCondition: 'New',
+    equipmentCost: 6275000,
+    downPayment: 941250,
+    financingType: 'EFA',
+    usefulLife: 12,
+    loanTerm: 84,
+    essentialUse: true,
+  };
+
+  test('transaction summary names the amount, term and borrower', () => {
+    // A reader used to get a score before knowing what was being asked for.
+    const html = buildPdfFor('equipment_finance', ef, efInputs);
+    expect(html).toContain('Transaction Summary');
+    expect(html).toContain('84-month');
+    expect(html).toContain('Granite Ridge Materials LLC');
+    // Amount financed is cost less the borrower contribution.
+    expect(html).toContain('$5,333,750');
+  });
+
+  test('borrower description comes from fields already collected', () => {
+    const html = buildPdfFor('equipment_finance', ef, efInputs);
+    expect(html).toContain('16 years');
+    expect(html).toContain('mining');
+    expect(html).toContain('adequate');
+  });
+
+  test('sources and uses reconciles to the amount financed', () => {
+    const html = buildPdfFor('equipment_finance', ef, efInputs);
+    expect(html).toContain('Sources and Uses');
+    expect(html).toContain('$6,275,000');   // equipment cost
+    expect(html).toContain('$941,250');     // borrower contribution
+    expect(html).toContain('(15.0%)');      // as a share of cost
+    expect(html).toContain('$5,333,750');   // financed
+  });
+
+  test('a deal with no company name does not render an empty request line', () => {
+    const html = buildPdfFor('equipment_finance', ef, { ...efInputs, companyName: '' });
+    expect(html).not.toContain('Transaction Summary');
+  });
+
+  test('AR and inventory state a revolver, not an equipment purchase', () => {
+    const arHtml = buildPdfFor('accounts_receivable', ar, {
+      ...AR_INITIAL,
+      companyName: 'AR Co',
+      annualRevenue: 40000000, ebitda: 6000000, totalExistingDebt: 12000000,
+      totalAROutstanding: 10000000, arUnder30: 70, arOver30: 20, arOver60: 7, arOver90: 3,
+      topCustomerConcentration: 15, dilutionRate: 3, requestedAdvanceRate: 85,
+    });
+    expect(arHtml).toContain('secured by accounts receivable');
+    // Sources and uses describes a fixed purchase, which a revolver is not.
+    expect(arHtml).not.toContain('Sources and Uses');
+  });
+});
+
+describe('memo says where its numbers came from', () => {
+  const inputs = {
+    ...EF_INITIAL,
+    companyName: 'Provenance Co',
+    annualRevenue: 50000000, ebitda: 8000000, totalExistingDebt: 15000000,
+    industrySector: 'Manufacturing', creditRating: 'Adequate',
+    equipmentType: 'Heavy Machinery', equipmentCondition: 'New',
+    equipmentCost: 5000000, downPayment: 500000, financingType: 'EFA',
+    usefulLife: 15, loanTerm: 84, essentialUse: true,
+  };
+
+  function buildWithSources(sourceDocuments) {
+    const metrics = ef.calculateMetrics(inputs);
+    const riskScore = ef.calculateRiskScore(inputs, metrics);
+    const recommendation = ef.getRecommendation(riskScore.composite);
+    const commentary = ef.generateCommentary(inputs, metrics, riskScore, DEFAULT_CRITERIA);
+    const structure = ef.getSuggestedStructure(inputs, metrics, riskScore.composite);
+    const screeningResult = evaluateScreening(DEFAULT_CRITERIA, metrics, riskScore, inputs, 'equipment_finance');
+    return generateBrandedPdfHtml({
+      summaryText: ef.generateExportSummary(inputs, metrics, riskScore, recommendation, commentary, structure, undefined, DEFAULT_CRITERIA),
+      inputs, metrics, riskScore, recommendation, screeningResult,
+      orgName: 'Test Bank', analystName: 'Test Analyst', moduleLabel: 'Equipment Finance',
+      branding: {}, factors: ef.describeFactors(inputs, metrics, riskScore),
+      structure, stressResults: ef.runStressTest(inputs), moduleKey: 'equipment_finance',
+      criteria: DEFAULT_CRITERIA, commentary, sourceDocuments,
+    });
+  }
+
+  test('lists each document that fed the inputs', () => {
+    const html = buildWithSources([
+      { fileName: '02_financial-statements.pdf', documentType: 'Financial statements', addedOn: 'Sep 1, 2026' },
+      { fileName: '03_equipment-quote.pdf', documentType: 'Equipment quote', addedOn: 'Sep 1, 2026' },
+    ]);
+    expect(html).toContain('Source Documents');
+    expect(html).toContain('02_financial-statements.pdf');
+    expect(html).toContain('Equipment quote');
+    expect(html).toContain('Sep 1, 2026');
+  });
+
+  test('says so plainly when the inputs were typed', () => {
+    const html = buildWithSources([]);
+    expect(html).toContain('Source Documents');
+    expect(html).toContain('entered manually');
+  });
+
+  test('states that the score comes from reviewed inputs, not the documents', () => {
+    // The claim the whole provenance story rests on.
+    const html = buildWithSources([
+      { fileName: 'x.pdf', documentType: 'Financial statements', addedOn: 'Sep 1, 2026' },
+    ]);
+    expect(html).toContain('reviewed by the analyst before scoring');
+    expect(html).toContain('not from the documents directly');
+  });
+
+  test('a filename cannot inject markup into the memo', () => {
+    const html = buildWithSources([
+      { fileName: '<img src=x onerror=alert(1)>.pdf', documentType: 'Other document', addedOn: 'Sep 1, 2026' },
+    ]);
+    expect(html).not.toContain('<img src=x');
+    expect(html).toContain('&lt;img src=x');
+  });
+});
+
+describe('assessment section is passed in, not re-parsed', () => {
+  const inputs = {
+    ...EF_INITIAL,
+    companyName: 'Assessment Co',
+    annualRevenue: 50000000, ebitda: 8000000, totalExistingDebt: 15000000,
+    industrySector: 'Manufacturing', creditRating: 'Adequate',
+    equipmentType: 'Heavy Machinery', equipmentCondition: 'New',
+    equipmentCost: 5000000, downPayment: 500000, financingType: 'EFA',
+    usefulLife: 15, loanTerm: 84, essentialUse: true,
+  };
+
+  function build({ summaryText, commentary }) {
+    const metrics = ef.calculateMetrics(inputs);
+    const riskScore = ef.calculateRiskScore(inputs, metrics);
+    const recommendation = ef.getRecommendation(riskScore.composite);
+    const structure = ef.getSuggestedStructure(inputs, metrics, riskScore.composite);
+    return generateBrandedPdfHtml({
+      summaryText, inputs, metrics, riskScore, recommendation,
+      screeningResult: evaluateScreening(DEFAULT_CRITERIA, metrics, riskScore, inputs, 'equipment_finance'),
+      orgName: 'Test Bank', analystName: 'Test Analyst', moduleLabel: 'Equipment Finance',
+      branding: {}, factors: ef.describeFactors(inputs, metrics, riskScore),
+      structure, stressResults: ef.runStressTest(inputs), moduleKey: 'equipment_finance',
+      criteria: DEFAULT_CRITERIA, commentary,
+    });
+  }
+
+  test('renaming a header in the text summary no longer empties the section', () => {
+    // This is the regression: the section was recovered by string-matching
+    // 'ASSESSMENT NOTES' out of a blob, so a header rename silently dropped it.
+    const html = build({
+      summaryText: 'COMPLETELY DIFFERENT HEADERS\nnothing matchable here',
+      commentary: ['Leverage is moderate at 1.9x EBITDA.', 'Essential-use equipment supports recovery.'],
+    });
+    expect(html).toContain('Leverage is moderate at 1.9x EBITDA.');
+    expect(html).toContain('Essential-use equipment supports recovery.');
+  });
+
+  test('an un-updated caller still gets its assessment from the text summary', () => {
+    const html = build({
+      summaryText: 'ASSESSMENT NOTES\n----------\n1. Legacy parsed line.\n\nSTRESS TEST\n',
+      commentary: null,
+    });
+    expect(html).toContain('Legacy parsed line.');
+  });
+});
+
+describe('the memo contains no model-generated prose', () => {
+  // The product claim: extraction only ever prefills fields for analyst
+  // review, and the memo is assembled from inputs, computed metrics and
+  // threshold-selected templates. If the memo ever reaches for the
+  // extraction path, that claim stops being true.
+  const fs = require('fs');
+  const path = require('path');
+  const source = fs.readFileSync(path.join(__dirname, 'ExportPanel.js'), 'utf-8');
+
+  test('ExportPanel imports nothing from the extraction path', () => {
+    expect(source).not.toMatch(/from\s+['"].*extract/i);
+    expect(source).not.toMatch(/from\s+['"].*parse-deal/i);
+    expect(source).not.toMatch(/anthropic/i);
+  });
+
+  test('ExportPanel makes no network calls of its own', () => {
+    expect(source).not.toMatch(/\bfetch\s*\(/);
+    expect(source).not.toMatch(/XMLHttpRequest/);
+  });
+});

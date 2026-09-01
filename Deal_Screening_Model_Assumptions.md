@@ -353,7 +353,54 @@ The checklist is dynamically generated based on the deal's risk profile. Items a
 
 ---
 
-## 12. What the Model Does NOT Do
+## 12. Provenance: where the numbers in a memo come from
+
+This section exists to be pointed at. If someone asks whether a Tranche
+committee memo contains anything a language model made up, the answer is no,
+and this is why.
+
+**The memo contains no model-generated prose.** Every string in the exported
+PDF is one of three things: a value the analyst confirmed on the form, a
+metric computed from those values by the scoring module, or a sentence
+selected from a fixed set by a numeric threshold. `generateCommentary` is an
+if/else ladder over DSCR, leverage, LTV, term coverage and industry tier.
+`getRecommendation` maps a composite score to one of four categories.
+Nothing in the export path calls an external service, and a test in
+`ExportPanel.test.js` fails if it ever starts to.
+
+**There is exactly one language model in the product, and it never scores
+anything.** `server-lib/extract.js` reads uploaded documents and returns
+field values. Those values populate the form for the analyst to review. They
+are not scored directly, not persisted directly, and not written to a deal
+until the analyst saves it. The model is a typist, not an underwriter.
+
+**Extraction is instructed to omit rather than guess.** A field the document
+does not state comes back blank. Values that fail normalization are dropped
+and reported as warnings instead of being kept, on the principle that a wrong
+prefilled value is worse than a blank one: a blank field prompts the analyst,
+a wrong one flows into the memo unnoticed. Credit rating is a worked example.
+The spec used to map silence to "Not Rated", which carries +100bps of spread,
+so a document that never discussed credit quality priced the deal 100bps
+wider than the same deal typed in by hand. It now omits the field.
+
+**Where documents disagree, the analyst is told.** Multi-document merge is
+deterministic JavaScript, not a second model call: a per-field-group
+precedence table plus a 1% numeric tolerance. The losing value and its source
+document are both shown, and the analyst can switch. Silently picking a value
+is the failure the merge layer is written to prevent.
+
+**The memo names its sources.** The Source Documents section lists every
+document that supplied a value, or states plainly that the inputs were
+entered manually. A reader can ask where a figure came from and get an
+answer.
+
+**The score is computed server-side.** `api/score-deal.js` recomputes from
+the stored inputs and ignores any score sent by the client, so the number on
+a memo is the platform's, not the caller's.
+
+---
+
+## 13. What the Model Does NOT Do
 
 - **Does not predict default.** The score reflects screening-level risk assessment, not a statistically validated probability of default.
 - **Does not consider management quality,** contract backlog, customer relationships, or qualitative business factors beyond industry and years in operation.
@@ -364,7 +411,7 @@ The checklist is dynamically generated based on the deal's risk profile. Items a
 
 ---
 
-## 13. Key Assumptions Summary
+## 14. Key Assumptions Summary
 
 1. SOFR of 4.50% -- must be updated to reflect current market conditions
 2. Base spread of 200 bps represents middle-market equipment finance
