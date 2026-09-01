@@ -123,6 +123,23 @@ export const EQUIPMENT_OPTIONS: EquipmentType[] = [
 
 export const CREDIT_OPTIONS: CreditRating[] = ['Strong', 'Adequate', 'Weak', 'Not Rated'];
 
+// ------- Underwriting targets -------
+// The target a factor is measured against when scoring and when the memo
+// prints "(target <X)". Distinct from DEFAULT_CRITERIA in
+// src/lib/screeningCriteria: those are the firm's pass/flag/fail policy
+// limits, these are the underwriting targets a deal is scored toward.
+// Both appear in the committee memo, so both must trace to one definition.
+// Previously duplicated across describeFactors, generateCommentary and
+// generateExportSummary, which is how the PDF came to state targets the
+// platform did not apply (AUDIT P0-3).
+export const FACTOR_TARGETS = {
+  minDscr: 1.25,
+  maxLeverage: 3.5,
+  maxLtv: 0.85,
+  maxTermCoverage: 80,
+  minYearsInBusiness: 5,
+} as const;
+
 export const INITIAL_INPUTS: EquipmentFinanceInputs = {
   companyName: '',
   yearsInBusiness: 0,

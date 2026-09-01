@@ -29,6 +29,7 @@ export interface DemoDeal {
   notes: string;
   created_at: string;
   updated_at: string;
+  stage_entered_at?: string | null;
 }
 
 interface CreateDemoDealParams {
@@ -88,6 +89,7 @@ export function createDemoPipelineDeal({ name, inputs, score, notes = '', assetC
     notes,
     created_at: now,
     updated_at: now,
+    stage_entered_at: now,
   };
   store().unshift(deal);
   return { ...deal };
@@ -101,7 +103,7 @@ function patch(id: string, updates: Partial<DemoDeal>): DemoDeal | null {
 }
 
 export function updateDemoPipelineStage(id: string, stage: string): DemoDeal | null {
-  return patch(id, { stage });
+  return patch(id, { stage, stage_entered_at: new Date().toISOString() });
 }
 
 export function updateDemoPipelineName(id: string, name: string): DemoDeal | null {

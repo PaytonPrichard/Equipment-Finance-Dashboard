@@ -38,6 +38,7 @@ import {
   FMV_RESIDUAL_PCT,
   TRAC_RESIDUAL_PCT,
   FINANCING_TYPES,
+  FACTOR_TARGETS,
 } from './constants';
 
 interface SuggestedStructure {
@@ -245,13 +246,13 @@ export function describeFactors(
   const f = riskScore?.factors || {};
   const tier = INDUSTRY_RISK_TIER[inputs.industrySector] || 'moderate';
   return [
-    { key: 'dscr', label: 'DSCR', score: f.dscr || 0, weight: 0.25, caption: `${(metrics.dscr || 0).toFixed(2)}x`, target: '≥ 1.25x', passed: (metrics.dscr || 0) >= 1.25 },
-    { key: 'leverage', label: 'Leverage', score: f.leverage || 0, weight: 0.20, caption: `${(metrics.leverage || 0).toFixed(1)}x`, target: '≤ 3.5x', passed: (metrics.leverage || 0) <= 3.5 },
+    { key: 'dscr', label: 'DSCR', score: f.dscr || 0, weight: 0.25, caption: `${(metrics.dscr || 0).toFixed(2)}x`, target: `≥ ${FACTOR_TARGETS.minDscr.toFixed(2)}x`, passed: (metrics.dscr || 0) >= FACTOR_TARGETS.minDscr },
+    { key: 'leverage', label: 'Leverage', score: f.leverage || 0, weight: 0.20, caption: `${(metrics.leverage || 0).toFixed(1)}x`, target: `≤ ${FACTOR_TARGETS.maxLeverage.toFixed(1)}x`, passed: (metrics.leverage || 0) <= FACTOR_TARGETS.maxLeverage },
     { key: 'industry', label: 'Industry', score: f.industry || 0, weight: 0.15, caption: `${inputs.industrySector || '—'} (${tier} risk)`, target: 'low-risk sector', passed: tier === 'low' },
     { key: 'essentiality', label: 'Essential use', score: f.essentiality || 0, weight: 0.10, caption: inputs.essentialUse ? 'Yes' : 'No', target: 'essential', passed: !!inputs.essentialUse },
-    { key: 'equipmentLtv', label: 'LTV', score: f.equipmentLtv || 0, weight: 0.10, caption: `${((metrics.ltv || 0) * 100).toFixed(0)}% (${inputs.equipmentCondition || '—'})`, target: '≤ 85%', passed: (metrics.ltv || 0) <= 0.85 },
-    { key: 'yearsInBusiness', label: 'Years in business', score: f.yearsInBusiness || 0, weight: 0.10, caption: `${inputs.yearsInBusiness || 0} yrs`, target: '≥ 5 yrs', passed: (inputs.yearsInBusiness || 0) >= 5 },
-    { key: 'termCoverage', label: 'Term coverage', score: f.termCoverage || 0, weight: 0.10, caption: `${(metrics.termCoverage || 0).toFixed(0)}% of useful life`, target: '< 80%', passed: (metrics.termCoverage || 0) < 80 },
+    { key: 'equipmentLtv', label: 'LTV', score: f.equipmentLtv || 0, weight: 0.10, caption: `${((metrics.ltv || 0) * 100).toFixed(0)}% (${inputs.equipmentCondition || '—'})`, target: `≤ ${(FACTOR_TARGETS.maxLtv * 100).toFixed(0)}%`, passed: (metrics.ltv || 0) <= FACTOR_TARGETS.maxLtv },
+    { key: 'yearsInBusiness', label: 'Years in business', score: f.yearsInBusiness || 0, weight: 0.10, caption: `${inputs.yearsInBusiness || 0} yrs`, target: `≥ ${FACTOR_TARGETS.minYearsInBusiness} yrs`, passed: (inputs.yearsInBusiness || 0) >= FACTOR_TARGETS.minYearsInBusiness },
+    { key: 'termCoverage', label: 'Term coverage', score: f.termCoverage || 0, weight: 0.10, caption: `${(metrics.termCoverage || 0).toFixed(0)}% of useful life`, target: `< ${FACTOR_TARGETS.maxTermCoverage}%`, passed: (metrics.termCoverage || 0) < FACTOR_TARGETS.maxTermCoverage },
   ];
 }
 
@@ -264,7 +265,7 @@ export function getRecommendation(compositeScore: number): Recommendation {
       detail: 'Recommend advancing to underwriting',
       colorClass: 'emerald',
       bgClass: 'bg-emerald-500/10 border-emerald-500/30',
-      textClass: 'text-emerald-400',
+      textClass: 'text-emerald-700',
       badgeBg: 'bg-emerald-500/20',
     };
   if (compositeScore >= 55)
@@ -273,7 +274,7 @@ export function getRecommendation(compositeScore: number): Recommendation {
       detail: 'Worth pursuing with identified mitigants',
       colorClass: 'lime',
       bgClass: 'bg-lime-500/10 border-lime-500/30',
-      textClass: 'text-lime-400',
+      textClass: 'text-lime-700',
       badgeBg: 'bg-lime-500/20',
     };
   if (compositeScore >= 35)
@@ -282,7 +283,7 @@ export function getRecommendation(compositeScore: number): Recommendation {
       detail: 'Requires additional diligence or structural enhancements',
       colorClass: 'amber',
       bgClass: 'bg-amber-500/10 border-amber-500/30',
-      textClass: 'text-amber-400',
+      textClass: 'text-amber-700',
       badgeBg: 'bg-amber-500/20',
     };
   return {
@@ -290,7 +291,7 @@ export function getRecommendation(compositeScore: number): Recommendation {
     detail: 'Likely does not meet credit thresholds',
     colorClass: 'rose',
     bgClass: 'bg-rose-500/10 border-rose-500/30',
-    textClass: 'text-rose-400',
+    textClass: 'text-rose-700',
     badgeBg: 'bg-rose-500/20',
   };
 }
@@ -561,8 +562,8 @@ export function generateExportSummary(
   lines.push('KEY METRICS');
   lines.push('-'.repeat(60));
   lines.push(`DSCR:             ${formatRatio(metrics.dscr)}  (min ${dscrFloor.toFixed(2)}x)`);
-  lines.push(`Leverage:         ${formatRatio(metrics.leverage)}  (target <3.5x)`);
-  lines.push(`LTV:              ${formatPercent(metrics.ltv * 100)}  (target <85%)`);
+  lines.push(`Leverage:         ${formatRatio(metrics.leverage)}  (target <${FACTOR_TARGETS.maxLeverage.toFixed(1)}x)`);
+  lines.push(`LTV:              ${formatPercent(metrics.ltv * 100)}  (target <${(FACTOR_TARGETS.maxLtv * 100).toFixed(0)}%)`);
   lines.push(`Term / Life:      ${formatPercent(metrics.termCoverage)}  (target <${termCoverageTarget}%)`);
   lines.push(`Rev. Conc.:       ${formatPercent(metrics.revenueConcentration)}  (target <${revConcTarget}%)`);
   lines.push(`EBITDA Margin:    ${formatPercent(metrics.ebitdaMargin)}`);

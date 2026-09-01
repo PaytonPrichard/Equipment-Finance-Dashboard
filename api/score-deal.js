@@ -101,9 +101,9 @@ module.exports = async function handler(req, res) {
       return res.status(400).json({ error: 'Invalid inputs', errors: validation.errors });
     }
 
-    const { score, error: scoreError } = await recomputeScore(asset_class, inputs);
+    const { score, error: scoreError, kind: scoreErrorKind } = await recomputeScore(asset_class, inputs);
     if (scoreError) {
-      return res.status(400).json({ error: scoreError });
+      return res.status(scoreErrorKind === 'request' ? 400 : 500).json({ error: scoreError });
     }
 
     const { data, error } = await supabaseAdmin
@@ -123,7 +123,7 @@ module.exports = async function handler(req, res) {
 
     if (error) {
       console.error('[score-deal] POST insert error:', error);
-      return res.status(500).json({ error: 'Failed to create deal', details: error.message });
+      return res.status(500).json({ error: 'Failed to create deal', details: process.env.NODE_ENV === 'development' ? error.message : undefined });
     }
 
     await writeAuditLog({
@@ -173,9 +173,9 @@ module.exports = async function handler(req, res) {
     if (!validation.valid) {
       return res.status(400).json({ error: 'Invalid inputs', errors: validation.errors });
     }
-    const { score: computedScore, error: scoreError } = await recomputeScore(assetClass, inputs);
+    const { score: computedScore, error: scoreError, kind: scoreErrorKind } = await recomputeScore(assetClass, inputs);
     if (scoreError) {
-      return res.status(400).json({ error: scoreError });
+      return res.status(scoreErrorKind === 'request' ? 400 : 500).json({ error: scoreError });
     }
 
     const updates = {
@@ -193,7 +193,7 @@ module.exports = async function handler(req, res) {
 
     if (error) {
       console.error('[score-deal] PATCH update error:', error);
-      return res.status(500).json({ error: 'Failed to update deal', details: error.message });
+      return res.status(500).json({ error: 'Failed to update deal', details: process.env.NODE_ENV === 'development' ? error.message : undefined });
     }
 
     await writeAuditLog({

@@ -24,6 +24,9 @@ export interface PipelineDealRow {
   notes: string;
   created_at: string;
   updated_at: string;
+  // Set on every stage change. "Days in stage" reads this, not updated_at,
+  // so editing a note no longer resets a deal's aging clock.
+  stage_entered_at?: string | null;
 }
 
 interface FetchResult {
@@ -120,10 +123,11 @@ export async function updatePipelineStage(
   if (fetchError) return { data: null, error: fetchError };
 
   const oldStage = (existing as { stage: string }).stage;
+  const now = new Date().toISOString();
 
   const { data, error } = await supabase
     .from('pipeline_deals')
-    .update({ stage: newStage, updated_at: new Date().toISOString() })
+    .update({ stage: newStage, updated_at: now, stage_entered_at: now })
     .eq('id', dealId)
     .select()
     .single();

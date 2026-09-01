@@ -236,6 +236,9 @@ function buildDeal(def, index) {
     notes: def.notes || '',
     created_at: updatedAt,
     updated_at: updatedAt,
+    // Demo deals have not moved since they were seeded, so stage age and
+    // last-touched age are the same.
+    stage_entered_at: updatedAt,
   };
 }
 

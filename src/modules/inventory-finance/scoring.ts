@@ -40,6 +40,7 @@ import {
   MAX_ADVANCE_RATE_WIP,
   OBSOLESCENCE_THRESHOLD,
   MIN_TURNOVER,
+  FACTOR_TARGETS,
 } from './constants';
 
 type InventoryExportCriteria = { minDscr?: number; minTurnover?: number; maxObsolescence?: number } | null | undefined;
@@ -331,12 +332,12 @@ export function describeFactors(
   const nolvFrac = (inputs.nolvPct || 0) / 100;
   const finishedPct = ((metrics.compositionMix && metrics.compositionMix.finishedPct) || 0) * 100;
   return [
-    { key: 'dscr', label: 'DSCR', score: f.dscr || 0, weight: 0.20, caption: `${(metrics.dscr || 0).toFixed(2)}x`, target: '≥ 1.25x', passed: (metrics.dscr || 0) >= 1.25 },
-    { key: 'leverage', label: 'Leverage', score: f.leverage || 0, weight: 0.15, caption: `${(metrics.leverage || 0).toFixed(1)}x`, target: '≤ 3.5x', passed: (metrics.leverage || 0) <= 3.5 },
+    { key: 'dscr', label: 'DSCR', score: f.dscr || 0, weight: 0.20, caption: `${(metrics.dscr || 0).toFixed(2)}x`, target: `≥ ${FACTOR_TARGETS.minDscr.toFixed(2)}x`, passed: (metrics.dscr || 0) >= FACTOR_TARGETS.minDscr },
+    { key: 'leverage', label: 'Leverage', score: f.leverage || 0, weight: 0.15, caption: `${(metrics.leverage || 0).toFixed(1)}x`, target: `≤ ${FACTOR_TARGETS.maxLeverage.toFixed(1)}x`, passed: (metrics.leverage || 0) <= FACTOR_TARGETS.maxLeverage },
     { key: 'inventoryQuality', label: 'Inventory turnover & obsolescence', score: f.inventoryQuality || 0, weight: 0.20, caption: `${(metrics.turnoverRatio || 0).toFixed(1)}x turn, ${((metrics.obsolescenceRate || 0) * 100).toFixed(1)}% obsolete`, target: `≥ ${MIN_TURNOVER.toFixed(1)}x turn, < ${(OBSOLESCENCE_THRESHOLD * 100).toFixed(0)}% obsolete`, passed: (metrics.turnoverRatio || 0) >= MIN_TURNOVER && (metrics.obsolescenceRate || 0) < OBSOLESCENCE_THRESHOLD },
-    { key: 'composition', label: 'Composition (finished goods)', score: f.composition || 0, weight: 0.15, caption: `${finishedPct.toFixed(0)}% finished goods`, target: '≥ 50% finished', passed: finishedPct >= 50 },
-    { key: 'liquidationValue', label: 'NOLV', score: f.liquidationValue || 0, weight: 0.10, caption: `${(nolvFrac * 100).toFixed(0)}%`, target: '≥ 55%', passed: nolvFrac >= 0.55 },
-    { key: 'yearsInBusiness', label: 'Years in business', score: f.yearsInBusiness || 0, weight: 0.10, caption: `${inputs.yearsInBusiness || 0} yrs`, target: '≥ 5 yrs', passed: (inputs.yearsInBusiness || 0) >= 5 },
+    { key: 'composition', label: 'Composition (finished goods)', score: f.composition || 0, weight: 0.15, caption: `${finishedPct.toFixed(0)}% finished goods`, target: `≥ ${FACTOR_TARGETS.minFinishedGoodsPct}% finished`, passed: finishedPct >= FACTOR_TARGETS.minFinishedGoodsPct },
+    { key: 'liquidationValue', label: 'NOLV', score: f.liquidationValue || 0, weight: 0.10, caption: `${(nolvFrac * 100).toFixed(0)}%`, target: `≥ ${(FACTOR_TARGETS.minNolv * 100).toFixed(0)}%`, passed: nolvFrac >= FACTOR_TARGETS.minNolv },
+    { key: 'yearsInBusiness', label: 'Years in business', score: f.yearsInBusiness || 0, weight: 0.10, caption: `${inputs.yearsInBusiness || 0} yrs`, target: `≥ ${FACTOR_TARGETS.minYearsInBusiness} yrs`, passed: (inputs.yearsInBusiness || 0) >= FACTOR_TARGETS.minYearsInBusiness },
     { key: 'industry', label: 'Industry', score: f.industry || 0, weight: 0.10, caption: `${inputs.industrySector || '—'} (${tier} risk)`, target: 'low-risk sector', passed: tier === 'low' },
   ];
 }
@@ -350,7 +351,7 @@ export function getRecommendation(compositeScore: number): Recommendation {
       detail: 'Recommend advancing to underwriting',
       colorClass: 'emerald',
       bgClass: 'bg-emerald-500/10 border-emerald-500/30',
-      textClass: 'text-emerald-400',
+      textClass: 'text-emerald-700',
       badgeBg: 'bg-emerald-500/20',
     };
   if (compositeScore >= 55)
@@ -359,7 +360,7 @@ export function getRecommendation(compositeScore: number): Recommendation {
       detail: 'Worth pursuing with identified mitigants',
       colorClass: 'lime',
       bgClass: 'bg-lime-500/10 border-lime-500/30',
-      textClass: 'text-lime-400',
+      textClass: 'text-lime-700',
       badgeBg: 'bg-lime-500/20',
     };
   if (compositeScore >= 35)
@@ -368,7 +369,7 @@ export function getRecommendation(compositeScore: number): Recommendation {
       detail: 'Requires additional diligence or structural enhancements',
       colorClass: 'amber',
       bgClass: 'bg-amber-500/10 border-amber-500/30',
-      textClass: 'text-amber-400',
+      textClass: 'text-amber-700',
       badgeBg: 'bg-amber-500/20',
     };
   return {
@@ -376,7 +377,7 @@ export function getRecommendation(compositeScore: number): Recommendation {
     detail: 'Likely does not meet credit thresholds',
     colorClass: 'rose',
     bgClass: 'bg-rose-500/10 border-rose-500/30',
-    textClass: 'text-rose-400',
+    textClass: 'text-rose-700',
     badgeBg: 'bg-rose-500/20',
   };
 }
@@ -811,7 +812,7 @@ export function generateExportSummary(
   lines.push('KEY METRICS');
   lines.push('-'.repeat(60));
   lines.push(`DSCR:             ${formatRatio(metrics.dscr)}  (min ${dscrFloor.toFixed(2)}x)`);
-  lines.push(`Leverage:         ${formatRatio(metrics.leverage)}  (target <3.5x)`);
+  lines.push(`Leverage:         ${formatRatio(metrics.leverage)}  (target <${FACTOR_TARGETS.maxLeverage.toFixed(1)}x)`);
   lines.push(`Turnover:         ${metrics.turnoverRatio.toFixed(1)}x  (min ${turnoverFloor.toFixed(1)}x)`);
   lines.push(`Obsolescence:     ${formatPercent(metrics.obsolescenceRate * 100)}  (threshold ${formatPercent(obsolescenceMaxPct)})`);
   lines.push(`Screening Rate:   ${(metrics.rate * 100).toFixed(2)}%`);

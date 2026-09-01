@@ -316,6 +316,7 @@ function AuthenticatedApp({ profile, user }) {
         const loadMod = getModule(draft.activeModule || DEFAULT_MODULE);
         if (draft.inputs) setInputs((prev) => ({ ...loadMod.INITIAL_INPUTS, ...draft.inputs }));
         if (draft.activeDeal !== undefined) setActiveDeal(draft.activeDeal);
+        if (draft.activePipelineDealId !== undefined) setActivePipelineDealId(draft.activePipelineDealId);
         if (Array.isArray(draft.recentDeals)) setRecentDeals(draft.recentDeals);
       }
       if (Array.isArray(data?.deal_templates)) {
@@ -335,14 +336,14 @@ function AuthenticatedApp({ profile, user }) {
     if (draftSaveTimer.current) clearTimeout(draftSaveTimer.current);
     draftSaveTimer.current = setTimeout(() => {
       upsertPreferences(userId, {
-        draft_inputs: { inputs, activeDeal, recentDeals, activeModule },
+        draft_inputs: { inputs, activeDeal, activePipelineDealId, recentDeals, activeModule },
       }).then(() => {
         setDraftStatus('saved');
         setTimeout(() => setDraftStatus(null), 3000);
       });
     }, 2000);
     return () => { if (draftSaveTimer.current) clearTimeout(draftSaveTimer.current); };
-  }, [inputs, activeDeal, recentDeals, activeModule, userId]);
+  }, [inputs, activeDeal, activePipelineDealId, recentDeals, activeModule, userId]);
 
   // SOFR change notification — compare current rate against last acknowledged rate
   useEffect(() => {
@@ -497,6 +498,21 @@ function AuthenticatedApp({ profile, user }) {
     setInputs(deal.inputs);
     setActiveDeal(null);
     setActivePipelineDealId(null);
+    setActiveTab('screening');
+  };
+
+  // Load a deal into the screening form. The asset class travels with the deal:
+  // scoring a deal under the wrong module produces silently wrong numbers, so
+  // the module switches first and the inputs are set wholesale (no field
+  // preservation, unlike handleModuleChange, which is for switching asset class
+  // on a deal you are actively building).
+  const loadDealIntoScreening = (dealInputs, dealId, assetClass) => {
+    if (assetClass && assetClass !== activeModule) {
+      setActiveModule(assetClass);
+    }
+    setInputs(dealInputs);
+    setActiveDeal(null);
+    setActivePipelineDealId(dealId || null);
     setActiveTab('screening');
   };
 
@@ -733,7 +749,7 @@ function AuthenticatedApp({ profile, user }) {
             <BatchScreening
               sofr={sofr}
               activeModule={activeModule}
-              onLoadDeal={(dealInputs) => { setInputs(dealInputs); setActiveDeal(null); setActiveTab('screening'); }}
+              onLoadDeal={loadDealIntoScreening}
             />
           </Suspense></ErrorBoundary>
         ) : activeTab === 'screening' ? (
@@ -1351,7 +1367,7 @@ function AuthenticatedApp({ profile, user }) {
               currentInputs={valid ? inputs : null}
               currentScore={valid ? riskScore.composite : null}
               activeModule={activeModule}
-              onLoadDeal={(dealInputs, dealId) => { setInputs(dealInputs); setActiveDeal(null); setActivePipelineDealId(dealId || null); setActiveTab('screening'); }}
+              onLoadDeal={loadDealIntoScreening}
               readOnly={isExpired}
             />
           </Suspense></ErrorBoundary>

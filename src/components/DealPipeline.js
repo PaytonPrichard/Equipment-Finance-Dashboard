@@ -57,9 +57,12 @@ function getDealValue(inputs) {
 }
 
 
-function daysInStage(updatedAt) {
-  if (!updatedAt) return 0;
-  const diff = Date.now() - new Date(updatedAt).getTime();
+// Days since the deal entered its current stage. Falls back to updated_at
+// for rows written before stage_entered_at existed.
+function daysInStage(deal) {
+  const since = deal?.stage_entered_at || deal?.updated_at;
+  if (!since) return 0;
+  const diff = Date.now() - new Date(since).getTime();
   return Math.max(0, Math.floor(diff / (1000 * 60 * 60 * 24)));
 }
 
@@ -246,7 +249,7 @@ export default function DealPipeline({ onLoadDeal, currentInputs, currentScore, 
   };
 
   const handleLoadDeal = (deal) => {
-    if (onLoadDeal) onLoadDeal(deal.inputs, deal.id);
+    if (onLoadDeal) onLoadDeal(deal.inputs, deal.id, deal.asset_class);
   };
 
   const handleStartNote = (deal) => {
@@ -563,7 +566,7 @@ export default function DealPipeline({ onLoadDeal, currentInputs, currentScore, 
                           <span className="text-[10px] text-gray-400">{getDealValue(deal.inputs)}</span>
                         )}
                         {(() => {
-                          const days = daysInStage(deal.updated_at);
+                          const days = daysInStage(deal);
                           return (
                             <span className={`text-[9px] font-medium ${days > 14 ? 'text-amber-400' : days > 7 ? 'text-gray-500' : 'text-gray-400'}`}>
                               {days === 0 ? 'Today' : days === 1 ? '1 day' : `${days} days`}

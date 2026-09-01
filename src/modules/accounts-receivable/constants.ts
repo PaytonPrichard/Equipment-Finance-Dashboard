@@ -52,6 +52,17 @@ export const MAX_ADVANCE_RATE: number = 0.85;
 export const CONCENTRATION_THRESHOLD: number = 0.25;
 export const DILUTION_THRESHOLD: number = 0.05;
 
+// ------- Underwriting targets -------
+// See the note on FACTOR_TARGETS in equipment-finance/constants.ts.
+// AR carries a lower DSCR floor than equipment finance because an ABL
+// revolver self-liquidates through collections; that floor lives in
+// DEFAULT_CRITERIA.minDscrAR and is not repeated here.
+export const FACTOR_TARGETS = {
+  maxLeverage: 4.0,
+  maxAgingOver30: 25,
+  minYearsInBusiness: 5,
+} as const;
+
 export const INITIAL_INPUTS: AccountsReceivableInputs = {
   // Shared borrower fields
   companyName: '',

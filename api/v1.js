@@ -69,16 +69,16 @@ async function handleDeals(req, res) {
     if (!validation.valid) {
       return res.status(400).json({ error: 'Invalid inputs', errors: validation.errors });
     }
-    const { score, error: scoreError } = await recomputeScore(asset_class, inputs);
+    const { score, error: scoreError, kind: scoreErrorKind } = await recomputeScore(asset_class, inputs);
     if (scoreError) {
-      return res.status(400).json({ error: scoreError });
+      return res.status(scoreErrorKind === 'request' ? 400 : 500).json({ error: scoreError });
     }
 
     const { data, error } = await supabaseAdmin
       .from('pipeline_deals')
       .insert({ org_id: orgId, user_id: null, name, stage: 'Screening', inputs, asset_class, score, notes: '' })
       .select().single();
-    if (error) return res.status(500).json({ error: 'Failed to create deal', details: error.message });
+    if (error) return res.status(500).json({ error: 'Failed to create deal', details: process.env.NODE_ENV === 'development' ? error.message : undefined });
 
     const payload = { id: data.id, name, stage: 'Screening', score };
     const createdResult = await dispatchWebhooks(orgId, 'deal.created', payload);
@@ -133,9 +133,9 @@ async function handleDeals(req, res) {
       if (!validation.valid) {
         return res.status(400).json({ error: 'Invalid inputs', errors: validation.errors });
       }
-      const { score: computedScore, error: scoreError } = await recomputeScore(assetClass, inputs);
+      const { score: computedScore, error: scoreError, kind: scoreErrorKind } = await recomputeScore(assetClass, inputs);
       if (scoreError) {
-        return res.status(400).json({ error: scoreError });
+        return res.status(scoreErrorKind === 'request' ? 400 : 500).json({ error: scoreError });
       }
       updates.inputs = inputs;
       updates.score = computedScore;
@@ -143,7 +143,7 @@ async function handleDeals(req, res) {
 
     const { data, error } = await supabaseAdmin
       .from('pipeline_deals').update(updates).eq('id', id).select().single();
-    if (error) return res.status(500).json({ error: 'Failed to update deal', details: error.message });
+    if (error) return res.status(500).json({ error: 'Failed to update deal', details: process.env.NODE_ENV === 'development' ? error.message : undefined });
 
     let stageResult = null;
     let scoredResult = null;

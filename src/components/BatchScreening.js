@@ -612,7 +612,7 @@ export default function BatchScreening({ sofr = DEFAULT_SOFR, onLoadDeal, active
                     <tr
                       key={deal.id}
                       className="border-b border-white/[0.02] hover:bg-gray-50 transition-colors cursor-pointer"
-                      onClick={() => onLoadDeal && onLoadDeal(deal.inputs)}
+                      onClick={() => onLoadDeal && onLoadDeal(deal.inputs, null, batchModule)}
                       title="Click to load into screening form"
                     >
                       {columns.map((col) => {

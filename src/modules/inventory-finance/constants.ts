@@ -58,6 +58,16 @@ export const OBSOLESCENCE_THRESHOLD: number = 0.10;
 // Minimum healthy turnover ratio
 export const MIN_TURNOVER: number = 4.0;
 
+// ------- Underwriting targets -------
+// See the note on FACTOR_TARGETS in equipment-finance/constants.ts.
+export const FACTOR_TARGETS = {
+  minDscr: 1.25,
+  maxLeverage: 3.5,
+  minFinishedGoodsPct: 50,
+  minNolv: 0.55,
+  minYearsInBusiness: 5,
+} as const;
+
 export const INITIAL_INPUTS: InventoryFinanceInputs = {
   // Shared borrower fields
   companyName: '',

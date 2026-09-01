@@ -38,6 +38,7 @@ import {
   MAX_ADVANCE_RATE,
   CONCENTRATION_THRESHOLD,
   DILUTION_THRESHOLD,
+  FACTOR_TARGETS,
 } from './constants';
 
 interface ARSuggestedStructure {
@@ -235,11 +236,11 @@ export function describeFactors(
     // ABL floor (minDscrAR), not the equipment-finance 1.25x. Keeps the factor
     // table consistent with evaluateScreening and the export summary.
     { key: 'dscr', label: 'DSCR', score: f.dscr || 0, weight: 0.25, caption: `${(metrics.dscr || 0).toFixed(2)}x`, target: `≥ ${DEFAULT_CRITERIA.minDscrAR.toFixed(2)}x`, passed: (metrics.dscr || 0) >= DEFAULT_CRITERIA.minDscrAR },
-    { key: 'leverage', label: 'Leverage', score: f.leverage || 0, weight: 0.15, caption: `${(metrics.leverage || 0).toFixed(1)}x`, target: '≤ 4.0x', passed: (metrics.leverage || 0) <= 4.0 },
-    { key: 'arQuality', label: 'AR aging', score: f.arQuality || 0, weight: 0.20, caption: `${pctOver30.toFixed(0)}% past 30 days`, target: '< 25%', passed: pctOver30 < 25 },
+    { key: 'leverage', label: 'Leverage', score: f.leverage || 0, weight: 0.15, caption: `${(metrics.leverage || 0).toFixed(1)}x`, target: `≤ ${FACTOR_TARGETS.maxLeverage.toFixed(1)}x`, passed: (metrics.leverage || 0) <= FACTOR_TARGETS.maxLeverage },
+    { key: 'arQuality', label: 'AR aging', score: f.arQuality || 0, weight: 0.20, caption: `${pctOver30.toFixed(0)}% past 30 days`, target: `< ${FACTOR_TARGETS.maxAgingOver30}%`, passed: pctOver30 < FACTOR_TARGETS.maxAgingOver30 },
     { key: 'concentration', label: 'Top customer concentration', score: f.concentration || 0, weight: 0.15, caption: `${((metrics.concentrationRisk || 0) * 100).toFixed(0)}%`, target: `≤ ${(CONCENTRATION_THRESHOLD * 100).toFixed(0)}%`, passed: (metrics.concentrationRisk || 0) <= CONCENTRATION_THRESHOLD },
     { key: 'dilution', label: 'Dilution', score: f.dilution || 0, weight: 0.10, caption: `${((metrics.dilutionRate || 0) * 100).toFixed(1)}%`, target: `≤ ${(DILUTION_THRESHOLD * 100).toFixed(0)}%`, passed: (metrics.dilutionRate || 0) <= DILUTION_THRESHOLD },
-    { key: 'yearsInBusiness', label: 'Years in business', score: f.yearsInBusiness || 0, weight: 0.10, caption: `${inputs.yearsInBusiness || 0} yrs`, target: '≥ 5 yrs', passed: (inputs.yearsInBusiness || 0) >= 5 },
+    { key: 'yearsInBusiness', label: 'Years in business', score: f.yearsInBusiness || 0, weight: 0.10, caption: `${inputs.yearsInBusiness || 0} yrs`, target: `≥ ${FACTOR_TARGETS.minYearsInBusiness} yrs`, passed: (inputs.yearsInBusiness || 0) >= FACTOR_TARGETS.minYearsInBusiness },
     { key: 'industry', label: 'Industry', score: f.industry || 0, weight: 0.05, caption: `${inputs.industrySector || '—'} (${tier} risk)`, target: 'low-risk sector', passed: tier === 'low' },
   ];
 }
@@ -253,7 +254,7 @@ export function getRecommendation(compositeScore: number): Recommendation {
       detail: 'Recommend advancing to underwriting',
       colorClass: 'emerald',
       bgClass: 'bg-emerald-500/10 border-emerald-500/30',
-      textClass: 'text-emerald-400',
+      textClass: 'text-emerald-700',
       badgeBg: 'bg-emerald-500/20',
     };
   if (compositeScore >= 55)
@@ -262,7 +263,7 @@ export function getRecommendation(compositeScore: number): Recommendation {
       detail: 'Worth pursuing with identified mitigants',
       colorClass: 'lime',
       bgClass: 'bg-lime-500/10 border-lime-500/30',
-      textClass: 'text-lime-400',
+      textClass: 'text-lime-700',
       badgeBg: 'bg-lime-500/20',
     };
   if (compositeScore >= 35)
@@ -271,7 +272,7 @@ export function getRecommendation(compositeScore: number): Recommendation {
       detail: 'Requires additional diligence or structural enhancements',
       colorClass: 'amber',
       bgClass: 'bg-amber-500/10 border-amber-500/30',
-      textClass: 'text-amber-400',
+      textClass: 'text-amber-700',
       badgeBg: 'bg-amber-500/20',
     };
   return {
@@ -279,7 +280,7 @@ export function getRecommendation(compositeScore: number): Recommendation {
     detail: 'Likely does not meet credit thresholds',
     colorClass: 'rose',
     bgClass: 'bg-rose-500/10 border-rose-500/30',
-    textClass: 'text-rose-400',
+    textClass: 'text-rose-700',
     badgeBg: 'bg-rose-500/20',
   };
 }
@@ -683,7 +684,7 @@ export function generateExportSummary(
   lines.push('KEY METRICS');
   lines.push('-'.repeat(60));
   lines.push(`DSCR:             ${formatRatio(metrics.dscr)}  (min ${dscrFloor.toFixed(2)}x for ABL)`);
-  lines.push(`Leverage:         ${formatRatio(metrics.leverage)}  (target <4.0x)`);
+  lines.push(`Leverage:         ${formatRatio(metrics.leverage)}  (target <${FACTOR_TARGETS.maxLeverage.toFixed(1)}x)`);
   lines.push(`Effective Rate:   ${(metrics.effectiveRate * 100).toFixed(2)}%`);
   lines.push(`Est. Annual Cost: ${formatCurrencyFull(metrics.newAnnualDebtService)} (at full draw)`);
   lines.push(`Exist. Debt Svc:  ${formatCurrencyFull(metrics.existingDebtService)}${metrics.debtServiceEstimated ? ' (estimated)' : ''}`);
