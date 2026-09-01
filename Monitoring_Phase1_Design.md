@@ -44,8 +44,9 @@ Migration file: `supabase_monitoring_phase1.sql` (run after the base schema and 
 ```sql
 -- ============================================================
 -- Monitoring Phase 1: Facilities, Covenants, Covenant Tests
--- Run in Supabase SQL Editor AFTER supabase_schema.sql and
--- supabase_module_refactor.sql (which adds pipeline_deals.asset_class).
+-- Run in Supabase SQL Editor AFTER supabase/migrations/supabase_schema.sql
+-- and supabase_module_refactor.sql (which adds pipeline_deals.asset_class).
+-- See supabase/README.md for the full apply order.
 -- ============================================================
 
 -- 1. Facilities (a funded deal under monitoring)

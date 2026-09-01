@@ -132,7 +132,7 @@ async function main() {
   await cleanupCrossRefs();
   await deleteUsers();
 
-  console.log('\nDone. Re-run supabase_audit_users.sql to verify only Joel Capital remains.');
+  console.log('\nDone. Re-run supabase/helpers/supabase_audit_users.sql to verify only Joel Capital remains.');
 }
 
 main().catch((err) => {

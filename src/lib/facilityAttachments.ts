@@ -4,7 +4,7 @@
 // Reuses the 'deal-documents' bucket and the storage-level helpers in
 // attachments.ts (validateFile, getDownloadUrl, formatFileSize). Only the
 // metadata table differs: facility_attachments, keyed by bigint facility_id
-// with an optional covenant_test_id. See supabase_facility_attachments.sql.
+// with an optional covenant_test_id. See supabase/migrations/supabase_facility_attachments.sql.
 // ============================================================
 
 import { supabase } from './supabase';

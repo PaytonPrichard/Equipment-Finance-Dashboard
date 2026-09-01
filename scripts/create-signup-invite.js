@@ -121,7 +121,7 @@ async function main() {
   if (error) {
     console.error('\nInsert failed:', error.message);
     if (/relation .*signup_invites.* does not exist/i.test(error.message)) {
-      console.error('The signup_invites table is not deployed. Run supabase_signup_invites.sql first.');
+      console.error('The signup_invites table is not deployed. Run supabase/migrations/supabase_signup_invites.sql first.');
     }
     process.exit(1);
   }
