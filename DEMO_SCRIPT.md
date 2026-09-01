@@ -1,7 +1,10 @@
-# Demo script
+# Demo script (live)
 
-A runbook for showing Tranche. Written to be driven live, and to double as
-the shot list if you record it.
+A runbook for driving Tranche live on a call or a screen share.
+
+For recording, see `VIDEO_SCRIPTS.md`, which has two timecoded shooting
+scripts with the voiceover written out. This document is the longer,
+conversational version: it assumes someone is watching you and can interrupt.
 
 Roughly **six minutes** at a comfortable pace. The cuts at the end say what to
 drop if you have three.
