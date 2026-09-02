@@ -109,6 +109,18 @@ export default function LandingPage({ onGetStarted, onSignIn }) {
   // Drives the nav from transparent-over-hero to solid once you scroll.
   const scrolled = useScrolledPast(24);
 
+  // The how-it-works section is a tall pinned scroller, so its top is a
+  // run-up rather than its content. Jumping to the element itself lands on
+  // blank page. Aim a sixth of the way in, which is the middle of step one.
+  const scrollToHowItWorks = () => {
+    const el = document.getElementById('how-it-works');
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const travel = rect.height - window.innerHeight;
+    const top = rect.top + window.scrollY + Math.max(0, travel) / 6;
+    window.scrollTo({ top: Math.round(top), behavior: 'smooth' });
+  };
+
   return (
     <div className="min-h-screen bg-white">
       {/* Nav */}
@@ -129,14 +141,14 @@ export default function LandingPage({ onGetStarted, onSignIn }) {
             <TrancheLogo size={32} />
             Tranche
           </span>
-          <div className="hidden md:flex items-center gap-8">
+          <div className="hidden md:flex items-center gap-7">
+            <button onClick={scrollToHowItWorks} className="text-[15px] text-gray-500 hover:text-gray-900 transition-colors">How it works</button>
             <button onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })} className="text-[15px] text-gray-500 hover:text-gray-900 transition-colors">Features</button>
             <button onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })} className="text-[15px] text-gray-500 hover:text-gray-900 transition-colors">Pricing</button>
-            <button onClick={() => document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })} className="text-[15px] text-gray-500 hover:text-gray-900 transition-colors">Contact</button>
+            <a href="?demo=1" className="text-[15px] text-gray-500 hover:text-gray-900 transition-colors">Demo</a>
           </div>
-          <div className="flex items-center gap-3">
-            <a href="?demo=1" className="hidden md:inline-block px-4 py-2 rounded-lg text-[15px] font-medium text-gray-600 hover:text-gray-900 transition-colors">View demo</a>
-            <button onClick={onSignIn} className="px-4 py-2 rounded-lg text-[15px] font-medium text-gray-600 hover:text-gray-900 transition-colors">Sign in</button>
+          <div className="flex items-center gap-2">
+            <button onClick={onSignIn} className="px-3 py-2 rounded-lg text-[15px] font-medium text-gray-600 hover:text-gray-900 transition-colors">Sign in</button>
             <button onClick={onGetStarted} className="px-5 py-2.5 rounded-lg text-[15px] font-semibold text-white hover:opacity-90 transition-all" style={{ backgroundColor: GOLD }}>Get started</button>
           </div>
         </div>
@@ -144,8 +156,19 @@ export default function LandingPage({ onGetStarted, onSignIn }) {
 
       {/* Hero */}
       <section className="relative overflow-hidden">
-        {/* Subtle warm gradient background */}
-        <div className="absolute inset-0 bg-gradient-to-b from-amber-50/40 via-white to-white" />
+        {/* Warm ground, plus a faint rule grid fading out toward the middle.
+            Without it the hero is a white field with text floating in it. */}
+        <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-b from-amber-50/50 via-white to-white" />
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 opacity-[0.04]"
+          style={{
+            backgroundImage: 'linear-gradient(#000 1px, transparent 1px), linear-gradient(90deg, #000 1px, transparent 1px)',
+            backgroundSize: '64px 64px',
+            maskImage: 'radial-gradient(ellipse 80% 60% at 50% 40%, transparent 20%, #000 100%)',
+            WebkitMaskImage: 'radial-gradient(ellipse 80% 60% at 50% 40%, transparent 20%, #000 100%)',
+          }}
+        />
         <div className="relative max-w-[1200px] mx-auto px-6 pt-20 md:pt-28 pb-20">
           <div className="grid lg:grid-cols-[1.05fr_0.95fr] gap-14 lg:gap-16 items-center">
 
@@ -234,79 +257,43 @@ export default function LandingPage({ onGetStarted, onSignIn }) {
       {/* How It Works */}
       <StepsScroller />
 
-      {/* Speed to Value */}
-      <section className="bg-gray-900">
-        <div className="max-w-[1200px] mx-auto px-6 py-20 md:py-28">
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-3 text-center tracking-tight">Your whole pipeline, scored by end of day</h2>
-          <p className="text-gray-400 text-center mb-12 text-lg">No 6-month rollout. No consultant engagement. One afternoon.</p>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-5 max-w-5xl mx-auto">
+      {/* Time to value */}
+      <section className="relative overflow-hidden" style={{ backgroundColor: '#FAFAF8' }}>
+        <div aria-hidden="true" className="absolute inset-0 opacity-[0.025]" style={{ backgroundImage: 'radial-gradient(circle, #000 1px, transparent 1px)', backgroundSize: '32px 32px' }} />
+        <div className="relative max-w-[1100px] mx-auto px-6 py-20 md:py-24">
+          <Reveal>
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3 text-center tracking-tight">
+              Your whole pipeline, scored by end of day
+            </h2>
+            <p className="text-gray-500 text-center mb-14 text-lg">
+              No rollout. No consultants. One afternoon.
+            </p>
+          </Reveal>
+
+          <RevealGroup className="grid grid-cols-2 md:grid-cols-4 gap-px bg-gray-200 border border-gray-200 rounded-2xl overflow-hidden">
             {[
-              {
-                time: '10 min', title: 'Upload your pipeline',
-                desc: 'Batch upload existing deals via CSV. Hundreds of deals scored at once.',
-                icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" /></svg>,
-              },
-              {
-                time: '5 min', title: 'Set credit policy',
-                desc: 'Configure DSCR, leverage, and concentration thresholds to match your firm.',
-                icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><line x1="4" y1="21" x2="4" y2="14" /><line x1="4" y1="10" x2="4" y2="3" /><line x1="12" y1="21" x2="12" y2="12" /><line x1="12" y1="8" x2="12" y2="3" /><line x1="20" y1="21" x2="20" y2="16" /><line x1="20" y1="12" x2="20" y2="3" /><line x1="1" y1="14" x2="7" y2="14" /><line x1="9" y1="8" x2="15" y2="8" /><line x1="17" y1="16" x2="23" y2="16" /></svg>,
-              },
-              {
-                time: '2 min', title: 'Invite your team',
-                desc: 'Send invite codes. Role-based access is set up automatically.',
-                icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="8.5" cy="7" r="4" /><line x1="20" y1="8" x2="20" y2="14" /><line x1="23" y1="11" x2="17" y2="11" /></svg>,
-              },
-              {
-                time: 'Done', title: 'Dashboard is live',
-                desc: 'Pipeline analytics, score distributions, and deal tracking. Ready to go.',
-                icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" /></svg>,
-              },
-            ].map((item, idx) => (
-              <div key={item.title} className="bg-gray-800/60 rounded-xl border border-gray-700/50 p-6 relative">
-                <div className="flex items-center gap-2.5 mb-4">
-                  <div className="w-9 h-9 rounded-lg flex items-center justify-center" style={{ backgroundColor: 'rgba(212,168,67,0.15)', color: GOLD }}>
-                    {item.icon}
-                  </div>
-                  <span className="text-[11px] font-bold uppercase tracking-wider" style={{ color: GOLD }}>{item.time}</span>
+              { time: '10', unit: 'min', title: 'Upload your pipeline', desc: 'Existing deals by CSV, scored in bulk.' },
+              { time: '5', unit: 'min', title: 'Set your policy', desc: 'DSCR, leverage and concentration thresholds.' },
+              { time: '2', unit: 'min', title: 'Invite the team', desc: 'Invite codes, with roles already configured.' },
+              { time: 'Live', unit: '', title: 'Dashboard is up', desc: 'Score distribution and pipeline analytics.' },
+            ].map((item) => (
+              <div key={item.title} className="bg-white p-6 h-full">
+                <div className="flex items-baseline gap-1 mb-4">
+                  <span className="text-[32px] font-extrabold tracking-tight tabular-nums" style={{ color: GOLD }}>{item.time}</span>
+                  {item.unit && <span className="text-[15px] font-semibold text-gray-400">{item.unit}</span>}
                 </div>
-                <h3 className="text-base font-semibold text-white mb-1.5">{item.title}</h3>
-                <p className="text-[15px] text-gray-400 leading-relaxed">{item.desc}</p>
-                {idx < 3 && (
-                  <div className="hidden md:block absolute top-1/2 -right-3 -translate-y-1/2">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-gray-600" strokeWidth="2">
-                      <polyline points="9 18 15 12 9 6" />
-                    </svg>
-                  </div>
-                )}
+                <h3 className="text-[15px] font-semibold text-gray-900 mb-1">{item.title}</h3>
+                <p className="text-[14px] text-gray-500 leading-relaxed">{item.desc}</p>
               </div>
             ))}
-          </div>
+          </RevealGroup>
 
-          {/* Integration callout */}
-          <div className="max-w-3xl mx-auto mt-12 p-6 rounded-2xl bg-gray-800/40 border border-gray-700/40">
-            <div className="flex items-start gap-4">
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5" style={{ backgroundColor: 'rgba(212,168,67,0.15)', color: GOLD }}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                  <polyline points="16 18 22 12 16 6" />
-                  <polyline points="8 6 2 12 8 18" />
-                </svg>
-              </div>
-              <div>
-                <h3 className="text-base font-semibold text-white mb-1.5">Already tracking deals in a CRM?</h3>
-                <p className="text-[15px] text-gray-400 leading-relaxed mb-3">
-                  Connect Salesforce, HubSpot, or any system with the Tranche API. Deals flow in automatically, scores flow back. No CSV needed.
-                </p>
-                <div className="flex items-center gap-5 text-[13px] text-gray-500">
-                  {['REST API', 'Webhooks', 'HMAC-signed payloads'].map(label => (
-                    <span key={label} className="flex items-center gap-1.5">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={GOLD} strokeWidth="2"><polyline points="20 6 9 17 4 12" /></svg>
-                      {label}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
+          <Reveal delay={120}>
+            <p className="text-center text-[15px] text-gray-500 mt-8">
+              Already tracking deals in a CRM? Salesforce, HubSpot and anything else
+              connect through the API. Deals flow in, scores flow back.
+            </p>
+          </Reveal>
         </div>
       </section>
 
@@ -314,7 +301,7 @@ export default function LandingPage({ onGetStarted, onSignIn }) {
       <section id="pricing" className="bg-white">
         <div className="max-w-[1200px] mx-auto px-6 py-20 md:py-28">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3 text-center tracking-tight">Simple pricing</h2>
-          <p className="text-gray-500 text-center mb-12 text-lg">Per-organization, not per-seat. Cancel anytime.</p>
+          <p className="text-gray-500 text-center mb-12 text-lg">Priced per organization, not per seat.</p>
           <RevealGroup className="grid grid-cols-1 md:grid-cols-3 gap-5 max-w-4xl mx-auto">
             {PRICING.map((plan) => (
               <div
@@ -361,76 +348,80 @@ export default function LandingPage({ onGetStarted, onSignIn }) {
               </div>
             ))}
           </RevealGroup>
-          <div className="flex items-center justify-center gap-6 mt-8 text-sm text-gray-400">
-            <span>Free trial</span>
-            <span>&middot;</span>
-            <span>No credit card required</span>
-            <span>&middot;</span>
-            <span>Annual: save 17%</span>
-          </div>
+          <p className="text-center text-[15px] text-gray-500 mt-10 max-w-lg mx-auto">
+            Every plan starts with a free trial. No card, and no checkout to click
+            through: we set the plan up with you.
+          </p>
         </div>
       </section>
 
-      {/* Final CTA */}
-      <section style={{ backgroundColor: '#0F0E0C' }}>
-        <div className="max-w-[1200px] mx-auto px-6 py-20 md:py-24 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4 tracking-tight">Ready to screen your first deal?</h2>
-          <p className="text-gray-400 mb-8 text-lg">Set up in 5 minutes. Screen your first deal in 2. No credit card, no contracts.</p>
-          <button onClick={onGetStarted} className="px-8 py-4 rounded-lg text-[16px] font-semibold text-gray-900 hover:opacity-90 transition-all shadow-lg" style={{ backgroundColor: GOLD, boxShadow: '0 4px 24px rgba(212, 168, 67, 0.25)' }}>
-            Request a Trial
-          </button>
+      {/* Close */}
+      <section id="contact" className="relative overflow-hidden" style={{ backgroundColor: '#12110E' }}>
+        <div
+          aria-hidden="true"
+          className="absolute inset-0"
+          style={{ background: 'radial-gradient(70% 90% at 50% 0%, rgba(212,168,67,0.10), transparent 70%)' }}
+        />
+        <div className="relative max-w-[1100px] mx-auto px-6 py-24 text-center">
+          <Reveal>
+            <h2 className="text-3xl md:text-[40px] font-bold text-white mb-4 tracking-tight">
+              Screen your first deal today
+            </h2>
+            <p className="text-gray-400 mb-9 text-lg max-w-xl mx-auto">
+              Try it on sample deals right now, or send us yours and we will set you up.
+            </p>
+            <div className="flex items-center justify-center gap-3 flex-wrap">
+              <button
+                onClick={onGetStarted}
+                className="px-7 py-3.5 rounded-lg text-[16px] font-semibold text-gray-900 hover:opacity-90 hover:-translate-y-0.5 transition-all"
+                style={{ backgroundColor: GOLD, boxShadow: '0 4px 24px rgba(212,168,67,0.25)' }}
+              >
+                Request a trial
+              </button>
+              <a
+                href="?demo=1"
+                className="px-7 py-3.5 rounded-lg text-[16px] font-semibold text-gray-200 border border-gray-700 hover:border-gray-500 hover:-translate-y-0.5 transition-all"
+              >
+                Open the demo
+              </a>
+            </div>
+            <p className="text-[15px] text-gray-500 mt-7">
+              Or email{' '}
+              <a href="mailto:team@gettranche.app" className="text-gray-300 hover:text-white transition-colors border-b border-gray-600">
+                team@gettranche.app
+              </a>
+              . We reply within a business day.
+            </p>
+          </Reveal>
         </div>
       </section>
 
-      {/* Contact */}
-      <section id="contact" style={{ backgroundColor: '#0F0E0C' }} className="border-t border-gray-800">
-        <div className="max-w-[1200px] mx-auto px-6 py-14 text-center">
-          <h2 className="text-2xl font-bold text-white mb-3">Get in touch</h2>
-          <p className="text-gray-400 text-base mb-6">Questions about Tranche, pricing, or pilot programs? We respond within one business day.</p>
-          <a
-            href="mailto:team@gettranche.app"
-            className="inline-flex items-center gap-2.5 px-6 py-3 rounded-lg border text-base font-medium text-white hover:bg-gray-800 transition-all"
-            style={{ borderColor: 'rgba(212,168,67,0.3)' }}
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={GOLD} strokeWidth="1.5">
-              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
-              <polyline points="22,6 12,13 2,6" />
-            </svg>
-            team@gettranche.app
-          </a>
-        </div>
-      </section>
-
-      {/* Trust Bar */}
-      <section style={{ backgroundColor: '#0F0E0C' }} className="border-t border-gray-800">
-        <div className="max-w-[1200px] mx-auto px-6 py-8">
-          <div className="flex items-center justify-center gap-10 flex-wrap">
-            {[
-              { icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>, label: 'Row-level data isolation' },
-              { icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" /></svg>, label: 'Role-based access' },
-              { icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>, label: 'Audit trail on deal changes' },
-            ].map(t => (
-              <div key={t.label} className="flex items-center gap-2.5 text-gray-500">
-                {t.icon}
-                <span className="text-[13px]">{t.label}</span>
-              </div>
+      {/* Footer. The three security claims used to have a band of their own
+          between the CTA and here, which made the page say goodbye four times.
+          They are quieter and better placed as a footer row. */}
+      <footer style={{ backgroundColor: '#12110E' }} className="border-t border-gray-800/60">
+        <div className="max-w-[1100px] mx-auto px-6 py-9">
+          <div className="flex items-center justify-center gap-x-8 gap-y-3 flex-wrap pb-7 mb-7 border-b border-gray-800/60">
+            {['Row-level data isolation', 'Role-based access', 'Audit trail on deal changes'].map((label) => (
+              <span key={label} className="flex items-center gap-2 text-[13px] text-gray-500">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={GOLD} strokeWidth="2" aria-hidden="true">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+                {label}
+              </span>
             ))}
           </div>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer style={{ backgroundColor: '#0F0E0C' }} className="border-t border-gray-800">
-        <div className="max-w-[1200px] mx-auto px-6 py-8 flex items-center justify-between gap-4 flex-wrap">
-          <span className="flex items-center gap-2 text-sm font-bold text-gray-500 tracking-tight">
-            <TrancheLogo size={20} framed={false} />
-            Tranche
-          </span>
-          <div className="flex items-center gap-5">
-            <a href="/privacy.html" className="text-xs text-gray-500 hover:text-gray-300 transition-colors">Privacy</a>
-            <a href="/terms.html" className="text-xs text-gray-500 hover:text-gray-300 transition-colors">Terms</a>
-            <a href="mailto:team@gettranche.app" className="text-xs text-gray-500 hover:text-gray-300 transition-colors">Contact</a>
-            <span className="text-xs text-gray-600">&copy; {new Date().getFullYear()}</span>
+          <div className="flex items-center justify-between gap-4 flex-wrap">
+            <span className="flex items-center gap-2 text-sm font-bold text-gray-400 tracking-tight">
+              <TrancheLogo size={20} framed={false} />
+              Tranche
+            </span>
+            <div className="flex items-center gap-5">
+              <a href="/privacy.html" className="text-xs text-gray-500 hover:text-gray-300 transition-colors">Privacy</a>
+              <a href="/terms.html" className="text-xs text-gray-500 hover:text-gray-300 transition-colors">Terms</a>
+              <a href="mailto:team@gettranche.app" className="text-xs text-gray-500 hover:text-gray-300 transition-colors">Contact</a>
+              <span className="text-xs text-gray-600">&copy; {new Date().getFullYear()}</span>
+            </div>
           </div>
         </div>
       </footer>

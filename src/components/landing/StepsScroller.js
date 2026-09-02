@@ -11,7 +11,7 @@
 // considered.
 // ============================================================
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useScrollProgress, useMediaQuery, prefersReducedMotion } from '../../hooks/useReveal';
 
 const GOLD = '#D4A843';
@@ -136,7 +136,39 @@ export default function StepsScroller() {
   const pinned = wide && !prefersReducedMotion();
   const [ref, progress] = useScrollProgress(pinned);
 
-  const active = pinned ? Math.min(STEPS.length - 1, Math.floor(progress * STEPS.length)) : -1;
+  // Clicking a step should work, because a numbered list of steps looks
+  // clickable whether or not it is. An explicit choice overrides the scroll
+  // position until the reader scrolls again.
+  const [picked, setPicked] = useState(null);
+
+  const scrolled = pinned
+    ? Math.min(STEPS.length - 1, Math.floor(progress * 0.999 * STEPS.length))
+    : -1;
+  const active = picked !== null ? picked : scrolled;
+
+  // Scrolling releases a click, so the section never gets stuck on a step
+  // the reader has scrolled away from.
+  useEffect(() => { setPicked(null); }, [scrolled]);
+
+  // Put the viewport where the given step is the scroll-driven answer, so
+  // clicking and scrolling agree rather than fighting.
+  //
+  // Measured from the rect rather than offsetTop: offsetTop is relative to
+  // the nearest positioned ancestor, which is not guaranteed to be the
+  // document once anything above gains a transform or a position.
+  const goToStep = (i) => {
+    setPicked(i);
+    const el = ref.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const sectionTop = rect.top + window.scrollY;
+    const travel = rect.height - window.innerHeight;
+    if (travel <= 0) return;
+    // Land in the middle of the step's band, so a nudge in either direction
+    // does not immediately flip to a neighbour.
+    const target = sectionTop + travel * ((i + 0.5) / STEPS.length);
+    window.scrollTo({ top: Math.round(target), behavior: 'smooth' });
+  };
 
   // ---- Stacked fallback ----
   if (!pinned) {
@@ -177,8 +209,35 @@ export default function StepsScroller() {
   // ---- Pinned ----
   return (
     <section id="how-it-works" ref={ref} className="bg-white relative" style={{ height: '280vh' }}>
-      <div className="sticky top-0 h-screen flex items-center">
-        <div className="max-w-[1200px] mx-auto px-6 w-full">
+      <div className="sticky top-0 h-screen flex items-center overflow-hidden">
+        {/* The pinned viewport is mostly margin by design, and empty margin
+            reads as unfinished rather than as restraint. A faint rule grid
+            and one warm wash give the whitespace a floor without competing
+            with the panel. */}
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 opacity-[0.035]"
+          style={{
+            backgroundImage: 'linear-gradient(#000 1px, transparent 1px), linear-gradient(90deg, #000 1px, transparent 1px)',
+            backgroundSize: '64px 64px',
+            maskImage: 'radial-gradient(ellipse 90% 70% at 50% 50%, transparent 30%, #000 100%)',
+            WebkitMaskImage: 'radial-gradient(ellipse 90% 70% at 50% 50%, transparent 30%, #000 100%)',
+          }}
+        />
+        <div
+          aria-hidden="true"
+          className="absolute inset-0"
+          style={{ background: 'radial-gradient(50% 45% at 72% 50%, rgba(212,168,67,0.06), transparent 70%)' }}
+        />
+        {/* Progress rail, so the reader can see how far the section runs. */}
+        <div aria-hidden="true" className="absolute left-0 top-0 bottom-0 w-px bg-gray-100">
+          <div
+            className="w-px transition-[height] duration-200 ease-out"
+            style={{ height: `${Math.round(progress * 100)}%`, backgroundColor: GOLD }}
+          />
+        </div>
+
+        <div className="relative max-w-[1200px] mx-auto px-6 w-full">
           <div className="grid grid-cols-2 gap-16 items-center">
 
             {/* Steps */}
@@ -193,10 +252,13 @@ export default function StepsScroller() {
                 {STEPS.map((s, i) => {
                   const isActive = i === active;
                   return (
-                    <div
+                    <button
                       key={s.n}
-                      className="flex gap-4 transition-opacity duration-400"
-                      style={{ opacity: isActive ? 1 : 0.32 }}
+                      type="button"
+                      onClick={() => goToStep(i)}
+                      aria-current={isActive ? 'step' : undefined}
+                      className="flex gap-4 text-left w-full transition-opacity duration-400 rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-4 focus-visible:ring-gray-300 hover:opacity-100"
+                      style={{ opacity: isActive ? 1 : 0.4 }}
                     >
                       <div className="flex flex-col items-center flex-shrink-0">
                         <span
@@ -216,7 +278,7 @@ export default function StepsScroller() {
                         <h3 className="text-[17px] font-semibold text-gray-900 mb-1.5">{s.title}</h3>
                         <p className="text-[15px] text-gray-500 leading-relaxed max-w-[42ch]">{s.desc}</p>
                       </div>
-                    </div>
+                    </button>
                   );
                 })}
               </div>
