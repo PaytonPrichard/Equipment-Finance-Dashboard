@@ -1,5 +1,9 @@
 import React from 'react';
 import TrancheLogo from './TrancheLogo';
+import HeroDemo from './landing/HeroDemo';
+import StepsScroller from './landing/StepsScroller';
+import Reveal, { RevealGroup } from './landing/Reveal';
+import { useScrolledPast } from '../hooks/useReveal';
 
 // ── Brand color ──────────────────────────────────────────────
 const GOLD = '#D4A843';
@@ -102,11 +106,25 @@ const PRICING = [
 ];
 
 export default function LandingPage({ onGetStarted, onSignIn }) {
+  // Drives the nav from transparent-over-hero to solid once you scroll.
+  const scrolled = useScrolledPast(24);
+
   return (
     <div className="min-h-screen bg-white">
       {/* Nav */}
-      <nav className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-100">
-        <div className="max-w-[1200px] mx-auto px-6 h-16 flex items-center justify-between">
+      <nav
+        className="sticky top-0 z-50 transition-all duration-300"
+        style={{
+          backgroundColor: scrolled ? 'rgba(255,255,255,0.92)' : 'rgba(255,255,255,0)',
+          backdropFilter: scrolled ? 'blur(12px)' : 'none',
+          borderBottom: `1px solid ${scrolled ? 'rgba(0,0,0,0.06)' : 'transparent'}`,
+          boxShadow: scrolled ? '0 1px 12px rgba(22,21,15,0.04)' : 'none',
+        }}
+      >
+        <div
+          className="max-w-[1200px] mx-auto px-6 flex items-center justify-between transition-all duration-300"
+          style={{ height: scrolled ? 60 : 72 }}
+        >
           <span className="flex items-center gap-2.5 text-xl font-extrabold text-gray-900 tracking-tight">
             <TrancheLogo size={32} />
             Tranche
@@ -128,42 +146,51 @@ export default function LandingPage({ onGetStarted, onSignIn }) {
       <section className="relative overflow-hidden">
         {/* Subtle warm gradient background */}
         <div className="absolute inset-0 bg-gradient-to-b from-amber-50/40 via-white to-white" />
-        <div className="relative max-w-[1200px] mx-auto px-6 pt-24 md:pt-32 pb-16 text-center">
-          <p className="text-[15px] font-semibold tracking-wide mb-6" style={{ color: GOLD }}>
-            Pre-origination deal screening for ABL lenders
-          </p>
-          <h1 className="text-4xl sm:text-5xl md:text-[56px] font-extrabold text-gray-900 leading-[1.1] mb-6 tracking-tight max-w-4xl mx-auto">
-            Screen equipment, AR, and inventory deals in minutes, not hours.
-          </h1>
-          <p className="text-lg md:text-xl text-gray-500 max-w-2xl mx-auto mb-10 leading-relaxed">
-            Upload a deal sheet or enter the basics. Automated risk scoring, configurable credit policy, and branded screening memos. Replace the spreadsheet your team uses to screen ABL deals.
-          </p>
-          <div className="flex items-center justify-center gap-4 mb-4 flex-wrap">
-            <button onClick={onGetStarted} className="px-7 py-3.5 rounded-lg text-[16px] font-semibold text-white shadow-lg hover:opacity-90 transition-all" style={{ backgroundColor: GOLD, boxShadow: '0 4px 24px rgba(212, 168, 67, 0.3)' }}>
-              Request a trial
-            </button>
-            <a href="?demo=1" className="px-7 py-3.5 rounded-lg text-[16px] font-semibold text-gray-700 border border-gray-300 hover:border-gray-400 transition-all">
-              View demo
-            </a>
-          </div>
-          <p className="text-sm text-gray-500">No credit card required. Live demo with sample deals, no signup needed.</p>
-        </div>
-      </section>
+        <div className="relative max-w-[1200px] mx-auto px-6 pt-20 md:pt-28 pb-20">
+          <div className="grid lg:grid-cols-[1.05fr_0.95fr] gap-14 lg:gap-16 items-center">
 
-      {/* Product Screenshot */}
-      <section className="max-w-[1100px] mx-auto px-6 pb-8">
-        <div className="rounded-2xl border border-gray-200 shadow-2xl shadow-gray-200/60 overflow-hidden">
-          <img
-            src="/screenshot.png"
-            alt="Tranche deal screening dashboard showing risk score, pass verdict, executive summary, and risk factor breakdown"
-            className="w-full"
-          />
+            {/* Copy */}
+            <div className="text-center lg:text-left">
+              <Reveal>
+                <p className="text-[15px] font-semibold tracking-wide mb-5" style={{ color: GOLD }}>
+                  Pre-origination deal screening for ABL lenders
+                </p>
+              </Reveal>
+              <Reveal delay={80}>
+                <h1 className="text-4xl sm:text-5xl md:text-[52px] font-extrabold text-gray-900 leading-[1.08] mb-6 tracking-tight text-balance">
+                  Screen equipment, AR, and inventory deals in minutes, not hours.
+                </h1>
+              </Reveal>
+              <Reveal delay={160}>
+                <p className="text-lg text-gray-500 mb-9 leading-relaxed max-w-xl mx-auto lg:mx-0">
+                  A deal arrives as documents that disagree with each other. Tranche reads them together, shows you where they disagree, scores the deal against your credit policy, and produces the memo.
+                </p>
+              </Reveal>
+              <Reveal delay={240}>
+                <div className="flex items-center justify-center lg:justify-start gap-4 mb-4 flex-wrap">
+                  <button onClick={onGetStarted} className="px-7 py-3.5 rounded-lg text-[16px] font-semibold text-white shadow-lg hover:opacity-90 hover:-translate-y-0.5 transition-all" style={{ backgroundColor: GOLD, boxShadow: '0 4px 24px rgba(212, 168, 67, 0.3)' }}>
+                    Request a trial
+                  </button>
+                  <a href="?demo=1" className="px-7 py-3.5 rounded-lg text-[16px] font-semibold text-gray-700 border border-gray-300 hover:border-gray-400 hover:-translate-y-0.5 transition-all">
+                    View demo
+                  </a>
+                </div>
+                <p className="text-sm text-gray-500">No credit card required. Live demo with sample deals, no signup needed.</p>
+              </Reveal>
+            </div>
+
+            {/* The product, doing its job */}
+            <Reveal delay={300}>
+              <HeroDemo />
+            </Reveal>
+
+          </div>
         </div>
       </section>
 
       {/* Who is this for */}
       <section className="max-w-[1200px] mx-auto px-6 py-12">
-        <div className="flex items-center justify-center gap-x-10 gap-y-4 flex-wrap">
+        <Reveal className="flex items-center justify-center gap-x-10 gap-y-4 flex-wrap">
           {[
             { title: 'Credit Analysts', desc: 'Screen 10x more deals.' },
             { title: 'Deal Teams', desc: 'Track pipeline to funded.' },
@@ -177,18 +204,20 @@ export default function LandingPage({ onGetStarted, onSignIn }) {
               </div>
             </React.Fragment>
           ))}
-        </div>
+        </Reveal>
       </section>
 
       {/* Features */}
       <section id="features" className="relative overflow-hidden" style={{ backgroundColor: '#FAFAF8' }}>
         <div className="absolute inset-0 opacity-[0.025]" style={{ backgroundImage: 'radial-gradient(circle, #000 1px, transparent 1px)', backgroundSize: '32px 32px' }} />
         <div className="relative max-w-[1200px] mx-auto px-6 py-20 md:py-28">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3 text-center tracking-tight">Purpose-built for ABL teams</h2>
-          <p className="text-gray-500 text-center mb-12 text-lg">No consultants. No 6-month implementation. Start screening today.</p>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          <Reveal>
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3 text-center tracking-tight">Purpose-built for ABL teams</h2>
+            <p className="text-gray-500 text-center mb-12 text-lg">No consultants. No 6-month implementation. Start screening today.</p>
+          </Reveal>
+          <RevealGroup className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {FEATURES.map((f) => (
-              <div key={f.title} className="bg-white rounded-xl border border-gray-200/80 p-6 hover:border-gray-300 hover:shadow-sm transition-all">
+              <div key={f.title} className="bg-white rounded-xl border border-gray-200/80 p-6 hover:border-gray-300 hover:shadow-sm hover:-translate-y-0.5 transition-all h-full">
                 <div className="flex items-center gap-3 mb-3">
                   <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: GOLD_LIGHT, color: GOLD }}>
                     {f.icon}
@@ -198,39 +227,12 @@ export default function LandingPage({ onGetStarted, onSignIn }) {
                 <p className="text-[15px] text-gray-500 leading-relaxed">{f.description}</p>
               </div>
             ))}
-          </div>
+          </RevealGroup>
         </div>
       </section>
 
       {/* How It Works */}
-      <section id="how-it-works" className="bg-white">
-        <div className="max-w-[1200px] mx-auto px-6 py-20 md:py-28">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3 text-center tracking-tight">Screen a deal in 3 steps</h2>
-          <p className="text-gray-500 text-center mb-14 text-lg">No learning curve. No training. Start today.</p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-            {[
-              { step: '1', title: 'Enter deal data', desc: 'Select asset class. Input borrower financials and collateral details.' },
-              { step: '2', title: 'Get instant results', desc: 'Risk score, pass/flag/fail verdict, stress test, and structure recommendations.' },
-              { step: '3', title: 'Export and track', desc: 'Download a branded PDF memo. Save to pipeline. Track through funding.' },
-            ].map((s, idx) => (
-              <div key={s.step} className="relative text-center">
-                {idx < 2 && (
-                  <div className="hidden md:block absolute top-6 -right-4">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-gray-300" strokeWidth="2">
-                      <polyline points="9 18 15 12 9 6" />
-                    </svg>
-                  </div>
-                )}
-                <div className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: GOLD }}>
-                  <span className="text-base font-bold text-white">{s.step}</span>
-                </div>
-                <h3 className="text-base font-semibold text-gray-900 mb-2">{s.title}</h3>
-                <p className="text-[15px] text-gray-500 leading-relaxed">{s.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      <StepsScroller />
 
       {/* Speed to Value */}
       <section className="bg-gray-900">
@@ -313,7 +315,7 @@ export default function LandingPage({ onGetStarted, onSignIn }) {
         <div className="max-w-[1200px] mx-auto px-6 py-20 md:py-28">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3 text-center tracking-tight">Simple pricing</h2>
           <p className="text-gray-500 text-center mb-12 text-lg">Per-organization, not per-seat. Cancel anytime.</p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 max-w-4xl mx-auto">
+          <RevealGroup className="grid grid-cols-1 md:grid-cols-3 gap-5 max-w-4xl mx-auto">
             {PRICING.map((plan) => (
               <div
                 key={plan.name}
@@ -358,7 +360,7 @@ export default function LandingPage({ onGetStarted, onSignIn }) {
                 </ul>
               </div>
             ))}
-          </div>
+          </RevealGroup>
           <div className="flex items-center justify-center gap-6 mt-8 text-sm text-gray-400">
             <span>Free trial</span>
             <span>&middot;</span>
