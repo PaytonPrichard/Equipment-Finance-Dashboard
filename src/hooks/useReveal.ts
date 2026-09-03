@@ -190,3 +190,55 @@ export function useLoopingSteps<T extends HTMLElement = HTMLDivElement>(
 
   return [ref, step];
 }
+
+/**
+ * Which of `ids` the reader is currently looking at, or null when none of
+ * them is (the hero, the footer, the gaps in between).
+ *
+ * Deliberately not an IntersectionObserver. These sections are taller than
+ * the viewport and not flush against each other, so "is it intersecting"
+ * answers the wrong question: two can be visible at once, or none can. What
+ * a nav highlight actually tracks is a single line just under the sticky
+ * bar, and whichever section straddles that line is the one being read.
+ *
+ * `offset` is the height of whatever is pinned over the top of the page.
+ */
+export function useActiveSection(ids: string[], offset: number = 88): string | null {
+  const [active, setActive] = useState<string | null>(null);
+  // ids is an array literal at the call site, so a new reference every
+  // render. Join it to a primitive and rebuild only when it really changes.
+  const key = ids.join(',');
+
+  useEffect(() => {
+    const list = key ? key.split(',') : [];
+    if (list.length === 0) return;
+
+    let frame = 0;
+    const read = () => {
+      frame = 0;
+      let current: string | null = null;
+      for (const id of list) {
+        const el = document.getElementById(id);
+        if (!el) continue;
+        const { top, bottom } = el.getBoundingClientRect();
+        if (top <= offset && bottom > offset) current = id;
+      }
+      setActive(current);
+    };
+    const onScroll = () => {
+      if (frame) return;
+      frame = window.requestAnimationFrame(read);
+    };
+
+    read();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onScroll);
+      if (frame) window.cancelAnimationFrame(frame);
+    };
+  }, [key, offset]);
+
+  return active;
+}

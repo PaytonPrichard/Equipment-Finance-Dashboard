@@ -3,7 +3,7 @@ import TrancheLogo from './TrancheLogo';
 import HeroDemo from './landing/HeroDemo';
 import StepsScroller from './landing/StepsScroller';
 import Reveal, { RevealGroup } from './landing/Reveal';
-import { useScrolledPast } from '../hooks/useReveal';
+import { useScrolledPast, useActiveSection } from '../hooks/useReveal';
 
 // ── Brand color ──────────────────────────────────────────────
 const GOLD = '#D4A843';
@@ -124,6 +124,9 @@ export default function LandingPage({ onGetStarted, onSignIn }) {
     window.scrollTo({ top: Math.round(top), behavior: 'smooth' });
   };
 
+  // 88px clears the nav at either of its two heights.
+  const activeSection = useActiveSection(['how-it-works', 'features', 'pricing'], 88);
+
   return (
     <div className="min-h-screen" style={{ backgroundColor: GROUND }}>
       {/* Nav */}
@@ -143,9 +146,33 @@ export default function LandingPage({ onGetStarted, onSignIn }) {
             Tranche
           </span>
           <div className="hidden md:flex items-center gap-7">
-            <button onClick={scrollToHowItWorks} className="text-[15px] text-gray-500 hover:text-gray-900 transition-colors">How it works</button>
-            <button onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })} className="text-[15px] text-gray-500 hover:text-gray-900 transition-colors">Features</button>
-            <button onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })} className="text-[15px] text-gray-500 hover:text-gray-900 transition-colors">Pricing</button>
+            {[
+              { id: 'features', label: 'Features' },
+              { id: 'how-it-works', label: 'How it works', go: scrollToHowItWorks },
+              { id: 'pricing', label: 'Pricing' },
+            ].map((item) => {
+              const isActive = activeSection === item.id;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => (item.go ? item.go() : document.getElementById(item.id)?.scrollIntoView({ behavior: 'smooth' }))}
+                  aria-current={isActive ? 'true' : undefined}
+                  className={`relative text-[15px] transition-colors ${isActive ? 'text-gray-900 font-medium' : 'text-gray-500 hover:text-gray-900'}`}
+                >
+                  {item.label}
+                  {/* The weight change alone shifts the label a hair and
+                      nudges its neighbours. The underline is what actually
+                      reads as "you are here"; it grows from the centre so
+                      the transition has a direction. */}
+                  <span
+                    aria-hidden="true"
+                    className="absolute left-0 right-0 -bottom-1.5 h-[2px] rounded-full origin-center transition-transform duration-300"
+                    style={{ backgroundColor: GOLD, transform: `scaleX(${isActive ? 1 : 0})` }}
+                  />
+                </button>
+              );
+            })}
+            {/* Demo leaves the page, so it is never "current". */}
             <a href="?demo=1" className="text-[15px] text-gray-500 hover:text-gray-900 transition-colors">Demo</a>
           </div>
           <div className="flex items-center gap-2">
@@ -265,7 +292,7 @@ export default function LandingPage({ onGetStarted, onSignIn }) {
       </section>
 
       {/* Features */}
-      <section id="features" className="relative overflow-hidden" style={{ backgroundColor: '#FAFAF8' }}>
+      <section id="features" className="scroll-mt-20 relative overflow-hidden" style={{ backgroundColor: '#FAFAF8' }}>
         <div className="absolute inset-0 opacity-[0.025]" style={{ backgroundImage: 'radial-gradient(circle, #000 1px, transparent 1px)', backgroundSize: '32px 32px' }} />
         <div className="relative max-w-[1180px] mx-auto px-8 py-24 md:py-32">
           <Reveal>
@@ -361,7 +388,7 @@ export default function LandingPage({ onGetStarted, onSignIn }) {
       </section>
 
       {/* Pricing */}
-      <section id="pricing" className="bg-white">
+      <section id="pricing" className="scroll-mt-20 bg-white">
         <div className="max-w-[1180px] mx-auto px-8 py-24 md:py-32">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3 text-center tracking-tight">Simple pricing</h2>
           <p className="text-gray-500 text-center mb-12 text-lg">Priced per organization, not per seat.</p>
