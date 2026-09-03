@@ -12,20 +12,14 @@ const GOLD = '#D4A843';
 const GROUND = '#E3DED2';
 const GOLD_LIGHT = '#F5EDD6';
 
-const FEATURES = [
+// Two things Tranche does that the alternatives do not: read a whole
+// document set across three asset classes, and hand back a memo a
+// committee can actually use. Those lead. The rest are one line each,
+// because six equal cards say six equal things and get read as none.
+const FEATURE_LEAD = [
   {
-    title: 'Instant Risk Scoring',
-    description: 'Pass/flag/fail verdict with composite score in under 2 minutes. DSCR, leverage, LTV, industry risk, and three other factors scored automatically.',
-    icon: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-        <polyline points="22 4 12 14.01 9 11.01" />
-      </svg>
-    ),
-  },
-  {
-    title: 'Multi-Asset Screening',
-    description: 'Equipment, accounts receivable, and inventory finance from one platform. Each asset class has its own scoring model and form schema.',
+    title: 'Screen three asset classes',
+    description: 'Equipment, accounts receivable, and inventory. Each with its own scoring model and form schema.',
     icon: (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
         <polygon points="12 2 2 7 12 12 22 7 12 2" />
@@ -35,8 +29,33 @@ const FEATURES = [
     ),
   },
   {
-    title: 'Configurable Credit Policy',
-    description: 'Set your own DSCR floors, leverage ceilings, and concentration limits. The screening model adapts to your firm, not the other way around.',
+    title: 'Produce the committee memo',
+    description: 'Transaction summary, sources and uses, factor scores, and the documents behind every number.',
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+        <polyline points="14 2 14 8 20 8" />
+        <line x1="16" y1="13" x2="8" y2="13" />
+        <line x1="16" y1="17" x2="8" y2="17" />
+      </svg>
+    ),
+  },
+];
+
+const FEATURE_MORE = [
+  {
+    title: 'Score a deal in two minutes',
+    description: 'Pass, flag or fail with a composite score.',
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+        <polyline points="22 4 12 14.01 9 11.01" />
+      </svg>
+    ),
+  },
+  {
+    title: 'Set your own thresholds',
+    description: 'DSCR floors, leverage ceilings, and concentration limits.',
     icon: (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
         <circle cx="12" cy="12" r="3" />
@@ -45,8 +64,8 @@ const FEATURES = [
     ),
   },
   {
-    title: 'Pipeline & Collaboration',
-    description: 'Track deals from screening through funded. Kanban board with stage gates, document attachments, role-based access, and full audit trail.',
+    title: 'Track deals through to funded',
+    description: 'Stages, documents, roles, and an audit trail on every change.',
     icon: (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
         <rect x="3" y="3" width="7" height="7" rx="1" />
@@ -57,20 +76,8 @@ const FEATURES = [
     ),
   },
   {
-    title: 'Branded Memos',
-    description: 'Generate credit committee-ready PDFs with your firm logo, colors, and disclaimers. One click from screening to deliverable.',
-    icon: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-        <polyline points="14 2 14 8 20 8" />
-        <line x1="16" y1="13" x2="8" y2="13" />
-        <line x1="16" y1="17" x2="8" y2="17" />
-      </svg>
-    ),
-  },
-  {
-    title: 'CRM Integrations',
-    description: 'REST API and webhooks connect Salesforce, HubSpot, or any CRM. Deals flow in, scores flow back. HMAC-signed payloads.',
+    title: 'Connect your CRM',
+    description: 'REST API and webhooks. Deals flow in, scores flow back.',
     icon: (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
         <polyline points="16 18 22 12 16 6" />
@@ -134,7 +141,6 @@ export default function LandingPage({ onGetStarted, onSignIn }) {
         className="sticky top-0 z-50 transition-all duration-300"
         style={{
           backgroundColor: GROUND,
-          borderBottom: `1px solid ${scrolled ? 'rgba(22,21,15,0.08)' : 'transparent'}`,
         }}
       >
         <div
@@ -299,19 +305,39 @@ export default function LandingPage({ onGetStarted, onSignIn }) {
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3 text-center tracking-tight">Purpose-built for ABL teams</h2>
             <p className="text-gray-500 text-center mb-12 text-lg">No consultants. No 6-month implementation. Start screening today.</p>
           </Reveal>
-          <RevealGroup className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-            {FEATURES.map((f) => (
-              <div key={f.title} className="bg-white rounded-xl border border-gray-200/80 p-6 hover:border-gray-300 hover:shadow-sm hover:-translate-y-0.5 transition-all h-full">
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0" style={{ backgroundColor: GOLD_LIGHT, color: GOLD }}>
+          {/* Reveal is applied per card rather than through RevealGroup:
+              the wrapper becomes the grid item, so the column spans have
+              to live on it or the leads never widen. */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {FEATURE_LEAD.map((f, i) => (
+              <Reveal key={f.title} delay={i * 70} className="md:col-span-2 h-full">
+                <div className="bg-white rounded-2xl border border-gray-200/80 p-7 md:p-8 hover:border-gray-300 hover:shadow-sm hover:-translate-y-0.5 transition-all h-full">
+                  <div
+                    className="w-11 h-11 rounded-xl flex items-center justify-center mb-5"
+                    style={{ backgroundColor: GOLD_LIGHT, color: GOLD }}
+                  >
                     {f.icon}
                   </div>
-                  <h3 className="text-base font-semibold text-gray-900">{f.title}</h3>
+                  <h3 className="text-[20px] font-semibold text-gray-900 mb-2 tracking-tight">{f.title}</h3>
+                  <p className="text-[15px] text-gray-500 leading-relaxed max-w-[42ch]">{f.description}</p>
                 </div>
-                <p className="text-[15px] text-gray-500 leading-relaxed">{f.description}</p>
-              </div>
+              </Reveal>
             ))}
-          </RevealGroup>
+            {FEATURE_MORE.map((f, i) => (
+              <Reveal key={f.title} delay={140 + i * 70} className="h-full">
+                <div className="bg-white rounded-xl border border-gray-200/80 p-5 hover:border-gray-300 hover:shadow-sm hover:-translate-y-0.5 transition-all h-full">
+                  <div
+                    className="w-8 h-8 rounded-lg flex items-center justify-center mb-3.5"
+                    style={{ backgroundColor: GOLD_LIGHT, color: GOLD }}
+                  >
+                    <span className="scale-[0.8] flex">{f.icon}</span>
+                  </div>
+                  <h3 className="text-[15px] font-semibold text-gray-900 mb-1">{f.title}</h3>
+                  <p className="text-[13.5px] text-gray-500 leading-relaxed">{f.description}</p>
+                </div>
+              </Reveal>
+            ))}
+          </div>
         </div>
       </section>
 
