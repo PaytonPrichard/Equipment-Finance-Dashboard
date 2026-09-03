@@ -1,18 +1,16 @@
 // ============================================================
-// StepsScroller — the three steps, pinned while you scroll past them.
+// StepsScroller — the three steps, explored by hover.
 //
-// The step copy stays on the left and the panel on the right changes as
-// each step becomes active, so the reader sees the product advance
-// through the process rather than reading three descriptions of it.
+// This was a scroll-pinned section: the page held still for nearly three
+// screens while the panel advanced. It demonstrated the product, but it
+// took the scroll away from the reader to do it, and a reader who wants to
+// move on should be able to.
 //
-// On phones this falls back to an ordinary stack. Pinning a section and
-// taking over the scroll on a small screen is hostile: there is no room
-// for a side-by-side, and it makes the page feel broken rather than
-// considered.
+// Now it is an ordinary section. Hovering a step shows its panel, and it
+// works by click and keyboard too, so nothing depends on having a pointer.
 // ============================================================
 
-import React, { useState, useEffect } from 'react';
-import { useScrollProgress, useMediaQuery, prefersReducedMotion } from '../../hooks/useReveal';
+import React, { useState } from 'react';
 
 const GOLD = '#D4A843';
 
@@ -21,40 +19,46 @@ const STEPS = [
     n: '1',
     title: 'Upload the file',
     desc: 'Application, financials, quote, cover email. Up to four at once. Each is classified and read in parallel.',
+    panelTitle: 'Four documents, read together',
   },
   {
     n: '2',
     title: 'Review the merge',
     desc: 'Fields populate from the document best placed to know. Where documents disagree, both values are shown with their sources.',
+    panelTitle: 'Merged, with the disagreements named',
   },
   {
     n: '3',
     title: 'Score and export',
     desc: 'Pass, flag or fail against your thresholds, with a committee memo that opens on the ask and closes by naming its sources.',
+    panelTitle: 'Scored against your thresholds',
   },
 ];
 
-// ---- The panel for each step ----
+// ---- Panels ----
 
 function DocumentsPanel() {
   const docs = [
-    ['01_credit-application.pdf', 'Credit application'],
-    ['02_financial-statements.pdf', 'Financial statements'],
-    ['03_equipment-quote.pdf', 'Equipment quote'],
-    ['04_broker-email.txt', 'Deal sheet'],
+    ['01_credit-application.pdf', 'Credit application', '12'],
+    ['02_financial-statements.pdf', 'Financial statements', '11'],
+    ['03_equipment-quote.pdf', 'Equipment quote', '8'],
+    ['04_broker-email.txt', 'Deal sheet', '18'],
   ];
   return (
     <div className="space-y-1.5">
-      {docs.map(([name, type]) => (
+      {docs.map(([name, type, fields]) => (
         <div key={name} className="flex items-center justify-between gap-3 rounded-lg bg-gray-50 px-3 py-2">
           <div className="min-w-0">
-            <div className="text-[11.5px] font-mono font-medium text-gray-900 truncate">{name}</div>
+            <div className="text-[11.5px] font-mono font-medium text-gray-900">{name}</div>
             <div className="text-[10.5px] text-gray-500">{type}</div>
           </div>
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-               strokeWidth="3" className="text-emerald-600 flex-shrink-0" aria-hidden="true">
-            <polyline points="20 6 9 17 4 12" />
-          </svg>
+          <div className="flex items-center gap-2.5 flex-shrink-0">
+            <span className="text-[10.5px] text-gray-400 font-mono tabular-nums">{fields} fields</span>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 strokeWidth="3" className="text-emerald-600" aria-hidden="true">
+              <polyline points="20 6 9 17 4 12" />
+            </svg>
+          </div>
         </div>
       ))}
     </div>
@@ -62,15 +66,19 @@ function DocumentsPanel() {
 }
 
 function MergePanel() {
+  // Identity first, then money, then the asset. A memo reads in that order,
+  // and burying the borrower's name under three figures made the table look
+  // arbitrary. Filenames lost their numeric prefix so the column fits
+  // without truncating to an ellipsis.
   const rows = [
-    ['EBITDA', '7,400,000', '02_financial-statements.pdf'],
-    ['Revenue', '38,400,000', '02_financial-statements.pdf'],
-    ['Equipment cost', '6,275,000', '03_equipment-quote.pdf'],
-    ['Company', 'Granite Ridge Materials LLC', '01_credit-application.pdf'],
+    { field: 'Company', value: 'Granite Ridge Materials LLC', src: 'credit-application.pdf', numeric: false },
+    { field: 'Revenue', value: '38,400,000', src: 'financial-statements.pdf', numeric: true },
+    { field: 'EBITDA', value: '7,400,000', src: 'financial-statements.pdf', numeric: true },
+    { field: 'Equipment cost', value: '6,275,000', src: 'equipment-quote.pdf', numeric: true },
   ];
   return (
     <div>
-      <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 mb-3">
+      <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 mb-4">
         <div className="text-[11.5px] font-semibold text-amber-900 mb-1">
           3 fields where the documents disagree
         </div>
@@ -81,252 +89,226 @@ function MergePanel() {
           <span className="font-mono tabular-nums">7,900,000</span>.
         </div>
       </div>
-      <div className="space-y-1">
-        {rows.map(([field, value, src]) => (
-          <div key={field} className="flex items-baseline justify-between gap-2 text-[11px] py-1 border-b border-gray-100 last:border-0">
-            <span className="text-gray-700 flex-shrink-0">{field}</span>
-            <span className="font-mono tabular-nums text-gray-900 truncate">{value}</span>
-            <span className="text-gray-400 font-mono text-[10px] truncate max-w-[140px]">{src}</span>
-          </div>
-        ))}
-      </div>
+
+      <table className="w-full text-[11px]">
+        <thead>
+          <tr className="text-[9.5px] uppercase tracking-wider text-gray-400">
+            <th className="text-left font-semibold pb-2">Field</th>
+            <th className="text-right font-semibold pb-2">Value</th>
+            <th className="text-right font-semibold pb-2">Source</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((r) => (
+            <tr key={r.field} className="border-t border-gray-100">
+              <td className="py-2 text-gray-700 whitespace-nowrap">{r.field}</td>
+              <td className={`py-2 pl-3 text-right text-gray-900 ${r.numeric ? 'font-mono tabular-nums' : 'font-medium'}`}>
+                {r.value}
+              </td>
+              <td className="py-2 pl-3 text-right text-gray-400 font-mono text-[10px] whitespace-nowrap">
+                {r.src}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }
 
 function VerdictPanel() {
+  // Each factor carries what it was measured against and what it is worth.
+  // A score of 35 with no target and no weight is a number the reader has to
+  // take on trust, which is the opposite of the point.
   const factors = [
-    ['DSCR', '2.26x', 93],
-    ['Leverage', '2.6x', 82],
-    ['Industry', 'Mining', 35],
-    ['LTV', '85%', 77],
+    { label: 'DSCR', value: '2.26x', target: 'target ≥ 1.25x', score: 93, weight: '25%' },
+    { label: 'Leverage', value: '2.6x', target: 'target ≤ 3.5x', score: 82, weight: '20%' },
+    { label: 'Industry', value: 'Mining', target: 'higher-risk sector', score: 35, weight: '15%' },
+    { label: 'LTV', value: '85%', target: 'target ≤ 85%', score: 77, weight: '10%' },
   ];
   return (
     <div>
-      <div className="flex items-center justify-between gap-3 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2.5 mb-3">
+      <div className="flex items-center justify-between gap-3 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2.5 mb-4">
         <div>
           <div className="text-[13px] font-bold text-emerald-800">PASS</div>
           <div className="text-[11px] text-emerald-700">Meets screening criteria</div>
         </div>
-        <div className="text-[22px] font-bold font-mono tabular-nums text-gray-900">80<span className="text-[12px] text-gray-400">/100</span></div>
+        <div className="text-[24px] font-bold font-mono tabular-nums text-gray-900 leading-none">
+          80<span className="text-[12px] text-gray-400">/100</span>
+        </div>
       </div>
-      <div className="space-y-1.5">
-        {factors.map(([label, value, score]) => (
-          <div key={label} className="flex items-center gap-3 text-[11px]">
-            <span className="text-gray-700 w-20 flex-shrink-0">{label}</span>
-            <span className="font-mono tabular-nums text-gray-500 w-14 flex-shrink-0">{value}</span>
-            <div className="flex-1 h-1.5 rounded-full bg-gray-100 overflow-hidden">
-              <div className="h-full rounded-full" style={{ width: `${score}%`, backgroundColor: score < 50 ? '#d97706' : GOLD }} />
-            </div>
-            <span className="font-mono tabular-nums text-gray-400 w-6 text-right flex-shrink-0">{score}</span>
-          </div>
-        ))}
-      </div>
+
+      <table className="w-full text-[11px]">
+        <thead>
+          <tr className="text-[9.5px] uppercase tracking-wider text-gray-400">
+            <th className="text-left font-semibold pb-2">Factor</th>
+            <th className="text-left font-semibold pb-2 pl-3">Value</th>
+            <th className="text-left font-semibold pb-2 pl-3">Measured against</th>
+            <th className="text-right font-semibold pb-2 pl-3">Weight</th>
+            <th className="text-right font-semibold pb-2 pl-3">Score</th>
+          </tr>
+        </thead>
+        <tbody>
+          {factors.map((f) => (
+            <tr key={f.label} className="border-t border-gray-100">
+              <td className="py-2 text-gray-800 font-medium whitespace-nowrap">{f.label}</td>
+              <td className="py-2 pl-3 font-mono tabular-nums text-gray-900 whitespace-nowrap">{f.value}</td>
+              <td className={`py-2 pl-3 whitespace-nowrap ${f.score < 50 ? 'text-amber-700' : 'text-gray-400'}`}>
+                {f.target}
+              </td>
+              <td className="py-2 pl-3 text-right font-mono tabular-nums text-gray-400">{f.weight}</td>
+              <td className="py-2 pl-3 text-right">
+                <span className="inline-flex items-center gap-2 justify-end">
+                  <span className="w-10 h-1.5 rounded-full bg-gray-100 overflow-hidden inline-block">
+                    <span
+                      className="h-full rounded-full block"
+                      style={{ width: `${f.score}%`, backgroundColor: f.score < 50 ? '#d97706' : GOLD }}
+                    />
+                  </span>
+                  <span className="font-mono tabular-nums text-gray-900 font-semibold w-5 text-right">{f.score}</span>
+                </span>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      <p className="text-[10.5px] text-gray-500 mt-4 leading-relaxed border-t border-gray-100 pt-3">
+        Industry carries 15% of the composite because sector cyclicality drives
+        recovery in a downturn. Mining scores low, and the deal still passes.
+        That is what the weighting is for.
+      </p>
     </div>
   );
 }
 
 const PANELS = [DocumentsPanel, MergePanel, VerdictPanel];
-const PANEL_TITLES = ['Four documents, read together', 'Merged, with the disagreements named', 'Scored against your thresholds'];
 
 export default function StepsScroller() {
-  // Pinning needs both the height for a side-by-side and a visitor who has
-  // not asked for less motion.
-  const wide = useMediaQuery('(min-width: 900px)');
-  const pinned = wide && !prefersReducedMotion();
-  const [ref, progress] = useScrollProgress(pinned);
+  const [active, setActive] = useState(0);
 
-  // Clicking a step should work, because a numbered list of steps looks
-  // clickable whether or not it is. An explicit choice overrides the scroll
-  // position until the reader scrolls again.
-  const [picked, setPicked] = useState(null);
+  return (
+    <section id="how-it-works" className="bg-white relative overflow-hidden">
+      <div
+        aria-hidden="true"
+        className="absolute inset-0 opacity-[0.035]"
+        style={{
+          backgroundImage: 'linear-gradient(#000 1px, transparent 1px), linear-gradient(90deg, #000 1px, transparent 1px)',
+          backgroundSize: '64px 64px',
+          maskImage: 'radial-gradient(ellipse 85% 65% at 50% 50%, transparent 25%, #000 100%)',
+          WebkitMaskImage: 'radial-gradient(ellipse 85% 65% at 50% 50%, transparent 25%, #000 100%)',
+        }}
+      />
 
-  const scrolled = pinned
-    ? Math.min(STEPS.length - 1, Math.floor(progress * 0.999 * STEPS.length))
-    : -1;
-  const active = picked !== null ? picked : scrolled;
+      <div className="relative max-w-[1200px] mx-auto px-6 py-20 md:py-28">
+        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3 text-center tracking-tight">
+          Screen a deal in 3 steps
+        </h2>
+        <p className="text-gray-500 text-center mb-14 text-lg">
+          Upload what you were sent. Review what it read. Export the memo.
+        </p>
 
-  // Scrolling releases a click, so the section never gets stuck on a step
-  // the reader has scrolled away from.
-  useEffect(() => { setPicked(null); }, [scrolled]);
+        <div className="grid lg:grid-cols-[0.8fr_1.2fr] gap-10 lg:gap-14 items-start">
 
-  // Put the viewport where the given step is the scroll-driven answer, so
-  // clicking and scrolling agree rather than fighting.
-  //
-  // Measured from the rect rather than offsetTop: offsetTop is relative to
-  // the nearest positioned ancestor, which is not guaranteed to be the
-  // document once anything above gains a transform or a position.
-  const goToStep = (i) => {
-    setPicked(i);
-    const el = ref.current;
-    if (!el) return;
-    const rect = el.getBoundingClientRect();
-    const sectionTop = rect.top + window.scrollY;
-    const travel = rect.height - window.innerHeight;
-    if (travel <= 0) return;
-    // Land in the middle of the step's band, so a nudge in either direction
-    // does not immediately flip to a neighbour.
-    const target = sectionTop + travel * ((i + 0.5) / STEPS.length);
-    window.scrollTo({ top: Math.round(target), behavior: 'smooth' });
-  };
-
-  // ---- Stacked fallback ----
-  if (!pinned) {
-    return (
-      <section id="how-it-works" className="bg-white">
-        <div className="max-w-[1200px] mx-auto px-6 py-20">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3 text-center tracking-tight">
-            Screen a deal in 3 steps
-          </h2>
-          <p className="text-gray-500 text-center mb-12 text-lg">
-            Upload what you were sent. Review what it read. Export the memo.
-          </p>
-          <div className="space-y-10 max-w-lg mx-auto">
+          {/* Steps */}
+          <div className="space-y-1.5">
             {STEPS.map((s, i) => {
-              const Panel = PANELS[i];
+              const isActive = i === active;
               return (
-                <div key={s.n}>
-                  <div className="flex items-center gap-3 mb-3">
-                    <span className="w-8 h-8 rounded-full flex items-center justify-center text-[13px] font-bold text-white flex-shrink-0"
-                          style={{ backgroundColor: GOLD }}>
-                      {s.n}
-                    </span>
-                    <h3 className="text-base font-semibold text-gray-900">{s.title}</h3>
+                <button
+                  key={s.n}
+                  type="button"
+                  onMouseEnter={() => setActive(i)}
+                  onFocus={() => setActive(i)}
+                  onClick={() => setActive(i)}
+                  aria-current={isActive ? 'step' : undefined}
+                  className="flex gap-4 text-left w-full rounded-xl p-4 transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-300"
+                  style={{
+                    backgroundColor: isActive ? '#FAF8F2' : 'transparent',
+                    boxShadow: `inset 2px 0 0 ${isActive ? GOLD : 'transparent'}`,
+                  }}
+                >
+                  <span
+                    className="w-7 h-7 rounded-full flex items-center justify-center text-[12px] font-bold flex-shrink-0 transition-colors duration-300 mt-0.5"
+                    style={{
+                      backgroundColor: isActive ? GOLD : '#f1f0ed',
+                      color: isActive ? '#fff' : '#9ca3af',
+                    }}
+                  >
+                    {s.n}
+                  </span>
+                  <div>
+                    <h3
+                      className="text-[16px] font-semibold mb-1 transition-colors duration-300"
+                      style={{ color: isActive ? '#111827' : '#6b7280' }}
+                    >
+                      {s.title}
+                    </h3>
+                    <p
+                      className="text-[14px] leading-relaxed transition-colors duration-300"
+                      style={{ color: isActive ? '#4b5563' : '#9ca3af' }}
+                    >
+                      {s.desc}
+                    </p>
                   </div>
-                  <p className="text-[15px] text-gray-500 leading-relaxed mb-4">{s.desc}</p>
-                  <div className="rounded-xl border border-gray-200 bg-white p-3 shadow-sm">
-                    <Panel />
-                  </div>
-                </div>
+                </button>
               );
             })}
+            <p className="text-[12px] text-gray-400 pl-4 pt-2">Hover a step to see it.</p>
           </div>
-        </div>
-      </section>
-    );
-  }
 
-  // ---- Pinned ----
-  return (
-    <section id="how-it-works" ref={ref} className="bg-white relative" style={{ height: '280vh' }}>
-      <div className="sticky top-0 h-screen flex items-center overflow-hidden">
-        {/* The pinned viewport is mostly margin by design, and empty margin
-            reads as unfinished rather than as restraint. A faint rule grid
-            and one warm wash give the whitespace a floor without competing
-            with the panel. */}
-        <div
-          aria-hidden="true"
-          className="absolute inset-0 opacity-[0.035]"
-          style={{
-            backgroundImage: 'linear-gradient(#000 1px, transparent 1px), linear-gradient(90deg, #000 1px, transparent 1px)',
-            backgroundSize: '64px 64px',
-            maskImage: 'radial-gradient(ellipse 90% 70% at 50% 50%, transparent 30%, #000 100%)',
-            WebkitMaskImage: 'radial-gradient(ellipse 90% 70% at 50% 50%, transparent 30%, #000 100%)',
-          }}
-        />
-        <div
-          aria-hidden="true"
-          className="absolute inset-0"
-          style={{ background: 'radial-gradient(50% 45% at 72% 50%, rgba(212,168,67,0.06), transparent 70%)' }}
-        />
-        {/* Progress rail, so the reader can see how far the section runs. */}
-        <div aria-hidden="true" className="absolute left-0 top-0 bottom-0 w-px bg-gray-100">
-          <div
-            className="w-px transition-[height] duration-200 ease-out"
-            style={{ height: `${Math.round(progress * 100)}%`, backgroundColor: GOLD }}
-          />
-        </div>
-
-        <div className="relative max-w-[1200px] mx-auto px-6 w-full">
-          <div className="grid grid-cols-2 gap-16 items-center">
-
-            {/* Steps */}
-            <div>
-              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3 tracking-tight">
-                Screen a deal in 3 steps
-              </h2>
-              <p className="text-gray-500 mb-10 text-lg">
-                Upload what you were sent. Review what it read. Export the memo.
-              </p>
-              <div className="space-y-7">
-                {STEPS.map((s, i) => {
+          {/* Panel */}
+          <div className="relative">
+            <div
+              aria-hidden="true"
+              className="absolute -inset-5 rounded-[26px] opacity-50 blur-2xl"
+              style={{ background: 'radial-gradient(60% 60% at 50% 40%, rgba(212,168,67,0.13), transparent 70%)' }}
+            />
+            <div className="relative rounded-2xl border border-gray-200 bg-white shadow-xl shadow-gray-200/50 overflow-hidden">
+              <div className="border-b border-gray-100 relative h-[40px]">
+                {STEPS.map((s, i) => (
+                  <span
+                    key={s.n}
+                    className="absolute inset-0 flex items-center px-4 text-[11.5px] font-semibold text-gray-900"
+                    style={{
+                      opacity: i === active ? 1 : 0,
+                      transition: i === active
+                        ? 'opacity 220ms ease-out 110ms'
+                        : 'opacity 100ms ease-in',
+                    }}
+                  >
+                    {s.panelTitle}
+                  </span>
+                ))}
+              </div>
+              <div className="relative p-4" style={{ minHeight: 336 }}>
+                {PANELS.map((Panel, i) => {
                   const isActive = i === active;
                   return (
-                    <button
-                      key={s.n}
-                      type="button"
-                      onClick={() => goToStep(i)}
-                      aria-current={isActive ? 'step' : undefined}
-                      className="flex gap-4 text-left w-full transition-opacity duration-400 rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-4 focus-visible:ring-gray-300 hover:opacity-100"
-                      style={{ opacity: isActive ? 1 : 0.4 }}
-                    >
-                      <div className="flex flex-col items-center flex-shrink-0">
-                        <span
-                          className="w-8 h-8 rounded-full flex items-center justify-center text-[13px] font-bold transition-colors duration-400"
-                          style={{
-                            backgroundColor: isActive ? GOLD : '#e5e7eb',
-                            color: isActive ? '#fff' : '#6b7280',
-                          }}
-                        >
-                          {s.n}
-                        </span>
-                        {i < STEPS.length - 1 && (
-                          <span className="w-px flex-1 mt-2 bg-gray-200" style={{ minHeight: 28 }} />
-                        )}
-                      </div>
-                      <div className="pb-1">
-                        <h3 className="text-[17px] font-semibold text-gray-900 mb-1.5">{s.title}</h3>
-                        <p className="text-[15px] text-gray-500 leading-relaxed max-w-[42ch]">{s.desc}</p>
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Panel */}
-            <div className="relative">
-              <div
-                aria-hidden="true"
-                className="absolute -inset-6 rounded-[28px] opacity-50 blur-2xl"
-                style={{ background: 'radial-gradient(60% 60% at 50% 40%, rgba(212,168,67,0.14), transparent 70%)' }}
-              />
-              <div className="relative rounded-2xl border border-gray-200 bg-white shadow-xl shadow-gray-200/50 overflow-hidden">
-                <div className="px-4 py-2.5 border-b border-gray-100 text-[11.5px] font-semibold text-gray-900 relative h-[38px]">
-                  {PANEL_TITLES.map((title, i) => (
-                    <span
-                      key={title}
-                      className="absolute inset-0 flex items-center px-4 transition-opacity duration-400 ease-out"
-                      style={{ opacity: i === Math.max(0, active) ? 1 : 0 }}
-                    >
-                      {title}
-                    </span>
-                  ))}
-                </div>
-                {/* Panels are stacked and cross-faded rather than swapped.
-                    Toggling display made the panel snap while the step text
-                    faded over 400ms, so the two visibly disagreed mid-scroll. */}
-                <div className="relative p-4" style={{ minHeight: 268 }}>
-                  {PANELS.map((Panel, i) => (
                     <div
                       key={i}
-                      aria-hidden={i !== active}
-                      className="transition-opacity duration-400 ease-out"
+                      aria-hidden={!isActive}
                       style={{
                         position: i === 0 ? 'relative' : 'absolute',
                         inset: i === 0 ? undefined : 16,
-                        opacity: i === active ? 1 : 0,
-                        pointerEvents: i === active ? 'auto' : 'none',
+                        opacity: isActive ? 1 : 0,
+                        pointerEvents: isActive ? 'auto' : 'none',
+                        // Out fast, in after it has gone. Cross-fading two
+                        // dense tables at the same time overlaps their rows
+                        // and both become unreadable mid-transition.
+                        transition: isActive
+                          ? 'opacity 220ms ease-out 110ms'
+                          : 'opacity 100ms ease-in',
                       }}
                     >
                       <Panel />
                     </div>
-                  ))}
-                </div>
+                  );
+                })}
               </div>
             </div>
-
           </div>
+
         </div>
       </div>
     </section>

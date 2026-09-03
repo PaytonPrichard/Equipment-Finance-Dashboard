@@ -198,7 +198,7 @@ export default function LandingPage({ onGetStarted, onSignIn }) {
                     View demo
                   </a>
                 </div>
-                <p className="text-sm text-gray-500">No credit card required. Live demo with sample deals, no signup needed.</p>
+                <p className="text-sm text-gray-500">Try the live demo on sample deals. No account needed.</p>
               </Reveal>
             </div>
 
@@ -211,23 +211,42 @@ export default function LandingPage({ onGetStarted, onSignIn }) {
         </div>
       </section>
 
-      {/* Who is this for */}
-      <section className="max-w-[1200px] mx-auto px-6 py-12">
-        <Reveal className="flex items-center justify-center gap-x-10 gap-y-4 flex-wrap">
-          {[
-            { title: 'Credit Analysts', desc: 'Screen 10x more deals.' },
-            { title: 'Deal Teams', desc: 'Track pipeline to funded.' },
-            { title: 'Credit Committees', desc: 'Standardized memos.' },
-          ].map((p, i) => (
-            <React.Fragment key={p.title}>
-              {i > 0 && <span className="hidden md:inline text-gray-200 text-lg select-none">/</span>}
-              <div className="text-center">
-                <span className="text-base font-semibold text-gray-900">{p.title}</span>
-                <span className="text-base text-gray-500 ml-2">{p.desc}</span>
-              </div>
-            </React.Fragment>
-          ))}
+      {/* Who it moves between */}
+      <section className="max-w-[1200px] mx-auto px-6 pt-4 pb-16">
+        <Reveal>
+          <p className="text-center text-[13px] font-semibold uppercase tracking-wider text-gray-400 mb-10">
+            One deal, three desks
+          </p>
         </Reveal>
+        <div className="relative max-w-4xl mx-auto">
+          {/* The line the deal travels along. */}
+          <div
+            aria-hidden="true"
+            className="hidden md:block absolute top-[26px] left-[16%] right-[16%] h-px"
+            style={{ background: 'linear-gradient(90deg, transparent, #e5e0d4 15%, #e5e0d4 85%, transparent)' }}
+          />
+          <RevealGroup className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-4 relative">
+            {[
+              { role: 'Credit analyst', does: 'Screens the file', gets: 'Verdict in two minutes' },
+              { role: 'Deal team', does: 'Moves it through stages', gets: 'Pipeline with an audit trail' },
+              { role: 'Credit committee', does: 'Makes the call', gets: 'A memo that names its sources' },
+            ].map((p) => (
+              <div key={p.role} className="text-center">
+                <div className="flex justify-center mb-4">
+                  <span
+                    className="w-[52px] h-[52px] rounded-full bg-white border flex items-center justify-center"
+                    style={{ borderColor: '#e5e0d4' }}
+                  >
+                    <span className="w-2 h-2 rounded-full" style={{ backgroundColor: GOLD }} />
+                  </span>
+                </div>
+                <div className="text-[15px] font-semibold text-gray-900 mb-1">{p.role}</div>
+                <div className="text-[13.5px] text-gray-500 mb-2">{p.does}</div>
+                <div className="text-[13px] text-gray-400">{p.gets}</div>
+              </div>
+            ))}
+          </RevealGroup>
+        </div>
       </section>
 
       {/* Features */}
@@ -259,41 +278,70 @@ export default function LandingPage({ onGetStarted, onSignIn }) {
 
       {/* Time to value */}
       <section className="relative overflow-hidden" style={{ backgroundColor: '#FAFAF8' }}>
-        <div aria-hidden="true" className="absolute inset-0 opacity-[0.025]" style={{ backgroundImage: 'radial-gradient(circle, #000 1px, transparent 1px)', backgroundSize: '32px 32px' }} />
-        <div className="relative max-w-[1100px] mx-auto px-6 py-20 md:py-24">
-          <Reveal>
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3 text-center tracking-tight">
-              Your whole pipeline, scored by end of day
-            </h2>
-            <p className="text-gray-500 text-center mb-14 text-lg">
-              No rollout. No consultants. One afternoon.
-            </p>
-          </Reveal>
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 opacity-[0.035]"
+          style={{
+            backgroundImage: 'linear-gradient(#000 1px, transparent 1px), linear-gradient(90deg, #000 1px, transparent 1px)',
+            backgroundSize: '64px 64px',
+            maskImage: 'radial-gradient(ellipse 80% 70% at 50% 50%, transparent 20%, #000 100%)',
+            WebkitMaskImage: 'radial-gradient(ellipse 80% 70% at 50% 50%, transparent 20%, #000 100%)',
+          }}
+        />
+        <div className="relative max-w-[1000px] mx-auto px-6 py-20 md:py-24">
+          <div className="grid lg:grid-cols-[0.9fr_1.1fr] gap-12 lg:gap-16 items-start">
 
-          <RevealGroup className="grid grid-cols-2 md:grid-cols-4 gap-px bg-gray-200 border border-gray-200 rounded-2xl overflow-hidden">
-            {[
-              { time: '10', unit: 'min', title: 'Upload your pipeline', desc: 'Existing deals by CSV, scored in bulk.' },
-              { time: '5', unit: 'min', title: 'Set your policy', desc: 'DSCR, leverage and concentration thresholds.' },
-              { time: '2', unit: 'min', title: 'Invite the team', desc: 'Invite codes, with roles already configured.' },
-              { time: 'Live', unit: '', title: 'Dashboard is up', desc: 'Score distribution and pipeline analytics.' },
-            ].map((item) => (
-              <div key={item.title} className="bg-white p-6 h-full">
-                <div className="flex items-baseline gap-1 mb-4">
-                  <span className="text-[32px] font-extrabold tracking-tight tabular-nums" style={{ color: GOLD }}>{item.time}</span>
-                  {item.unit && <span className="text-[15px] font-semibold text-gray-400">{item.unit}</span>}
-                </div>
-                <h3 className="text-[15px] font-semibold text-gray-900 mb-1">{item.title}</h3>
-                <p className="text-[14px] text-gray-500 leading-relaxed">{item.desc}</p>
-              </div>
-            ))}
-          </RevealGroup>
+            <Reveal>
+              <p className="text-[13px] font-semibold uppercase tracking-wider mb-4" style={{ color: GOLD }}>
+                Setup
+              </p>
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4 tracking-tight text-balance">
+                Live in under twenty minutes
+              </h2>
+              <p className="text-gray-500 text-lg leading-relaxed mb-6">
+                No rollout, no consultants, no implementation partner. Four things,
+                in one sitting.
+              </p>
+              <p className="text-[15px] text-gray-500 leading-relaxed">
+                Already tracking deals in a CRM? Salesforce, HubSpot and anything else
+                connect through the API. Deals flow in, scores flow back.
+              </p>
+            </Reveal>
 
-          <Reveal delay={120}>
-            <p className="text-center text-[15px] text-gray-500 mt-8">
-              Already tracking deals in a CRM? Salesforce, HubSpot and anything else
-              connect through the API. Deals flow in, scores flow back.
-            </p>
-          </Reveal>
+            <div className="relative">
+              {/* The rail the steps hang from. */}
+              <div
+                aria-hidden="true"
+                className="absolute left-[27px] top-3 bottom-6 w-px"
+                style={{ backgroundColor: '#e5e0d4' }}
+              />
+              <RevealGroup className="space-y-7">
+                {[
+                  { time: '10', unit: 'min', title: 'Upload your pipeline', desc: 'Existing deals by CSV, scored in bulk.' },
+                  { time: '5', unit: 'min', title: 'Set your credit policy', desc: 'DSCR, leverage and concentration thresholds.' },
+                  { time: '2', unit: 'min', title: 'Invite the team', desc: 'Invite codes, with roles already configured.' },
+                  { time: 'Live', unit: '', title: 'Dashboard is up', desc: 'Score distribution and pipeline analytics.' },
+                ].map((item) => (
+                  <div key={item.title} className="flex gap-5 items-start relative">
+                    <div
+                      className="w-14 h-14 rounded-full bg-white border flex flex-col items-center justify-center flex-shrink-0 relative z-10"
+                      style={{ borderColor: '#e5e0d4' }}
+                    >
+                      <span className="text-[17px] font-bold leading-none tabular-nums" style={{ color: GOLD }}>
+                        {item.time}
+                      </span>
+                      {item.unit && <span className="text-[9.5px] font-semibold text-gray-400 mt-0.5">{item.unit}</span>}
+                    </div>
+                    <div className="pt-2.5">
+                      <h3 className="text-[15.5px] font-semibold text-gray-900 mb-0.5">{item.title}</h3>
+                      <p className="text-[14px] text-gray-500 leading-relaxed">{item.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </RevealGroup>
+            </div>
+
+          </div>
         </div>
       </section>
 
@@ -349,8 +397,8 @@ export default function LandingPage({ onGetStarted, onSignIn }) {
             ))}
           </RevealGroup>
           <p className="text-center text-[15px] text-gray-500 mt-10 max-w-lg mx-auto">
-            Every plan starts with a free trial. No card, and no checkout to click
-            through: we set the plan up with you.
+            Every plan starts with a trial. Plans are arranged directly with us,
+            so there is nothing to check out and no contract to sign first.
           </p>
         </div>
       </section>
