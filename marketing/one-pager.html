@@ -1,7 +1,7 @@
 <title>Tranche Deal Screening</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=Source+Sans+3:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@400;600;700&family=IBM+Plex+Sans:wght@400;450;500;600;700&family=IBM+Plex+Mono:wght@400;500;700&display=swap">
 
 <style>
   /* ─────────────────────────────────────────────────────────────
@@ -83,7 +83,7 @@
   body {
     background: var(--ground);
     color: var(--ink);
-    font-family: "Source Sans 3", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-family: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     font-size: 15px;
     line-height: 1.62;
     -webkit-font-smoothing: antialiased;
@@ -107,7 +107,7 @@
     flex-wrap: wrap;
   }
   .eyebrow {
-    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
     font-size: 10px;
     font-weight: 500;
     letter-spacing: .16em;
@@ -115,7 +115,7 @@
     color: var(--gold);
   }
   .wordmark {
-    font-family: "Source Serif 4", Georgia, serif;
+    font-family: "IBM Plex Serif", Georgia, serif;
     font-size: 40px;
     font-weight: 700;
     letter-spacing: -.02em;
@@ -129,7 +129,7 @@
     max-width: 46ch;
   }
   .stamp {
-    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
     font-size: 10px;
     line-height: 1.7;
     color: var(--ink-soft);
@@ -141,7 +141,7 @@
   /* ---- Lede ---- */
 
   .lede {
-    font-family: "Source Serif 4", Georgia, serif;
+    font-family: "IBM Plex Serif", Georgia, serif;
     font-size: 21px;
     line-height: 1.5;
     color: var(--ink);
@@ -156,7 +156,7 @@
   section { margin-top: 44px; }
 
   h2 {
-    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
     font-size: 10px;
     font-weight: 700;
     letter-spacing: .18em;
@@ -177,12 +177,12 @@
   @media (min-width: 700px) { .steps { grid-template-columns: repeat(3, 1fr); } }
   .step { background: var(--surface); padding: 18px 18px 20px; }
   .step .n {
-    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
     font-size: 10px; font-weight: 700; letter-spacing: .1em;
     color: var(--gold);
   }
   .step h3 {
-    font-family: "Source Serif 4", Georgia, serif;
+    font-family: "IBM Plex Serif", Georgia, serif;
     font-size: 17px; font-weight: 600; margin: 6px 0 6px; color: var(--ink);
   }
   .step p { font-size: 13.5px; line-height: 1.55; margin: 0; }
@@ -207,12 +207,12 @@
   .conflict:first-of-type { border-top: 0; }
   .conflict b { color: var(--ink); font-weight: 600; }
   .conflict .num {
-    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
     font-variant-numeric: tabular-nums;
     color: var(--ink); font-size: 12px;
   }
   .conflict .file {
-    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
     font-size: 11px; color: var(--ink-soft);
   }
   .conflict .act { color: var(--gold); font-weight: 600; text-decoration: underline; text-underline-offset: 2px; }
@@ -222,7 +222,7 @@
   .tablewrap { overflow-x: auto; }
   table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
   th {
-    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
     font-size: 9.5px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
     color: var(--ink-soft); text-align: left;
     padding: 0 12px 7px 0; border-bottom: 1px solid var(--rule-strong); white-space: nowrap;
@@ -233,7 +233,7 @@
   }
   td:first-child { color: var(--ink); font-weight: 600; white-space: nowrap; }
   td.num {
-    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
     font-variant-numeric: tabular-nums; text-align: right; color: var(--ink);
   }
 
@@ -241,7 +241,7 @@
 
   .chip {
     display: inline-flex; align-items: center; gap: 6px;
-    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
     font-size: 10px; font-weight: 700; letter-spacing: .1em;
     padding: 3px 9px; border-radius: 3px; border: 1px solid;
   }
@@ -254,7 +254,7 @@
   @media (min-width: 700px) { .metrics { grid-template-columns: repeat(4, 1fr); } }
   .metric { background: var(--surface); padding: 14px 16px; }
   .metric .v {
-    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
     font-variant-numeric: tabular-nums;
     font-size: 22px; font-weight: 700; color: var(--ink); line-height: 1.1;
   }
@@ -286,7 +286,7 @@
   footer a:hover { color: var(--gold); }
   footer a:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; border-radius: 2px; }
   footer .fine {
-    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
     font-size: 9.5px; color: var(--ink-soft); letter-spacing: .06em; text-align: right;
   }
 

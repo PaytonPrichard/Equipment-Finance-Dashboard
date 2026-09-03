@@ -139,7 +139,10 @@ describe('generateBrandedPdfHtml — Accounts Receivable', () => {
   test('Sensitivity rows render finite numeric DSCR and FCCR values', () => {
     // The cell values come through the table; assert at least one row contains
     // a 0.00x-style ratio in monospace cells.
-    expect(html).toMatch(/font-family:monospace">\d+\.\d+x</);
+    // Matches the mono cell without pinning the exact font stack: this
+    // assertion is about the sensitivity table rendering finite ratios, not
+    // about which monospace family is configured.
+    expect(html).toMatch(/monospace">\d+\.\d+x</);
   });
 });
 

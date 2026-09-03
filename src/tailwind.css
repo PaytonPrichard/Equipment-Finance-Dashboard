@@ -1,8 +1,11 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: 'Inter', 'system-ui', '-apple-system', 'sans-serif';
-  --font-mono: 'JetBrains Mono', 'Fira Code', 'monospace';
+  /* IBM Plex. Drawn for technical documentation, which is what this
+     product produces. Sans and mono are the same family, so a figure in a
+     table and the sentence next to it belong to one system. */
+  --font-sans: 'IBM Plex Sans', 'system-ui', '-apple-system', 'sans-serif';
+  --font-mono: 'IBM Plex Mono', 'JetBrains Mono', 'monospace';
 
   --color-gold-300: #E8C96A;
   --color-gold-400: #D4A843;

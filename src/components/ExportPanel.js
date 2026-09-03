@@ -226,8 +226,8 @@ export function generateBrandedPdfHtml({ summaryText, inputs, metrics, riskScore
       const s = structure.sublimits;
       const row = (label, sub) => `<tr style="border-bottom:1px solid #f1f5f9">
         <td style="padding:4px 8px 4px 0;font-size:11px;color:#1f2937">${esc(label)}</td>
-        <td style="text-align:right;padding:4px 8px;font-size:11px;color:#1f2937;font-family:monospace">${(sub.advanceRate * 100).toFixed(0)}%</td>
-        <td style="text-align:right;padding:4px 0 4px 8px;font-size:11px;color:#1f2937;font-family:monospace">${fmtCurrency(sub.amount)}</td>
+        <td style="text-align:right;padding:4px 8px;font-size:11px;color:#1f2937;font-family:'IBM Plex Mono',ui-monospace,monospace">${(sub.advanceRate * 100).toFixed(0)}%</td>
+        <td style="text-align:right;padding:4px 0 4px 8px;font-size:11px;color:#1f2937;font-family:'IBM Plex Mono',ui-monospace,monospace">${fmtCurrency(sub.amount)}</td>
       </tr>`;
       parts.push(`<div style="font-size:10px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:0.06em;margin-top:8px;margin-bottom:4px">Borrowing Base Sublimits</div>
         <table style="width:100%;border-collapse:collapse;margin-bottom:8px">
@@ -321,10 +321,10 @@ export function generateBrandedPdfHtml({ summaryText, inputs, metrics, riskScore
           const fccrColor = (s.fccr != null && s.fccr < 1.0) ? '#dc2626' : (s.fccr != null && s.fccr < 1.25) ? '#ea580c' : '#1f2937';
           return `<tr style="border-bottom:1px solid #f1f5f9;${rowStyle}">
             <td style="padding:6px 8px 6px 0;color:#1f2937">${esc(s.label)}</td>
-            <td style="text-align:right;padding:6px 8px;color:#1f2937;font-family:monospace">${Math.round(s.score)}</td>
-            <td style="text-align:right;padding:6px 8px;color:${dscrColor};font-family:monospace">${fmtRatioCell(s.dscr)}</td>
-            <td style="text-align:right;padding:6px 8px;color:${fccrColor};font-family:monospace">${fmtRatioCell(s.fccr)}</td>
-            ${showBorrowingBase ? `<td style="text-align:right;padding:6px 0 6px 8px;color:#1f2937;font-family:monospace">${fmtMillions(s.borrowingBase)}</td>` : ''}
+            <td style="text-align:right;padding:6px 8px;color:#1f2937;font-family:'IBM Plex Mono',ui-monospace,monospace">${Math.round(s.score)}</td>
+            <td style="text-align:right;padding:6px 8px;color:${dscrColor};font-family:'IBM Plex Mono',ui-monospace,monospace">${fmtRatioCell(s.dscr)}</td>
+            <td style="text-align:right;padding:6px 8px;color:${fccrColor};font-family:'IBM Plex Mono',ui-monospace,monospace">${fmtRatioCell(s.fccr)}</td>
+            ${showBorrowingBase ? `<td style="text-align:right;padding:6px 0 6px 8px;color:#1f2937;font-family:'IBM Plex Mono',ui-monospace,monospace">${fmtMillions(s.borrowingBase)}</td>` : ''}
           </tr>`;
         }).join('')}
       </tbody>
@@ -368,7 +368,7 @@ export function generateBrandedPdfHtml({ summaryText, inputs, metrics, riskScore
   @page { margin: 0.6in 0.7in; size: letter; }
   @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
   * { box-sizing: border-box; }
-  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; color: #1e293b; background: #fff; margin: 0; padding: 0; line-height: 1.5; font-size: 12px; }
+  body { font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; color: #1e293b; background: #fff; margin: 0; padding: 0; line-height: 1.5; font-size: 12px; }
   .page { max-width: 780px; margin: 0 auto; padding: 24px 0; }
   .header { border-bottom: 3px solid ${accentColor}; padding-bottom: 16px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: flex-end; }
   .section { margin-bottom: 20px; }
@@ -400,9 +400,9 @@ export function generateBrandedPdfHtml({ summaryText, inputs, metrics, riskScore
   <div class="section">
     <div class="section-title">Sources and Uses</div>
     <table>
-      <tr><td style="color:#64748b;width:180px">Equipment cost</td><td style="font-weight:500;text-align:right;font-family:monospace">${fmtCurrency(sourcesAndUses.cost)}</td></tr>
-      <tr><td style="color:#64748b">Borrower contribution</td><td style="font-weight:500;text-align:right;font-family:monospace">${fmtCurrency(sourcesAndUses.down)}${sourcesAndUses.cost ? ` <span style="color:#64748b;font-weight:400">(${((sourcesAndUses.down / sourcesAndUses.cost) * 100).toFixed(1)}%)</span>` : ''}</td></tr>
-      <tr><td style="color:#1f2937;font-weight:600;border-top:1px solid #cbd5e1">Amount financed</td><td style="font-weight:700;text-align:right;font-family:monospace;border-top:1px solid #cbd5e1">${fmtCurrency(sourcesAndUses.financed)}</td></tr>
+      <tr><td style="color:#64748b;width:180px">Equipment cost</td><td style="font-weight:500;text-align:right;font-family:'IBM Plex Mono',ui-monospace,monospace">${fmtCurrency(sourcesAndUses.cost)}</td></tr>
+      <tr><td style="color:#64748b">Borrower contribution</td><td style="font-weight:500;text-align:right;font-family:'IBM Plex Mono',ui-monospace,monospace">${fmtCurrency(sourcesAndUses.down)}${sourcesAndUses.cost ? ` <span style="color:#64748b;font-weight:400">(${((sourcesAndUses.down / sourcesAndUses.cost) * 100).toFixed(1)}%)</span>` : ''}</td></tr>
+      <tr><td style="color:#1f2937;font-weight:600;border-top:1px solid #cbd5e1">Amount financed</td><td style="font-weight:700;text-align:right;font-family:'IBM Plex Mono',ui-monospace,monospace;border-top:1px solid #cbd5e1">${fmtCurrency(sourcesAndUses.financed)}</td></tr>
     </table>
   </div>` : ''}
 
@@ -470,7 +470,7 @@ export function generateBrandedPdfHtml({ summaryText, inputs, metrics, riskScore
     <table>
       <thead><tr><th>Metric</th><th style="text-align:right">Value</th><th>Status</th></tr></thead>
       <tbody>
-        ${metricRows.map(([label, value, color]) => `<tr><td>${esc(label)}</td><td style="text-align:right;font-weight:600;font-family:monospace">${esc(value)}</td><td><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${color}"></span></td></tr>`).join('')}
+        ${metricRows.map(([label, value, color]) => `<tr><td>${esc(label)}</td><td style="text-align:right;font-weight:600;font-family:'IBM Plex Mono',ui-monospace,monospace">${esc(value)}</td><td><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${color}"></span></td></tr>`).join('')}
       </tbody>
     </table>
   </div>
