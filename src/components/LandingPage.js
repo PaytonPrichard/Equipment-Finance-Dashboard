@@ -157,7 +157,17 @@ export default function LandingPage({ onGetStarted, onSignIn }) {
 
       {/* The sheet. Everything below sits on it. */}
       <div className="px-3 sm:px-5 pb-3 sm:pb-5">
-        <div className="bg-white rounded-[20px] sm:rounded-[28px] overflow-hidden shadow-sm">
+        <div
+          className="bg-white rounded-[20px] sm:rounded-[28px] overflow-hidden"
+          style={{
+            // Layered rather than one blur: a hairline to define the edge
+            // against the putty, a tight shadow for contact, and two wide
+            // soft ones for lift. Tinted warm (22,21,15) instead of black,
+            // so the shadow belongs to this ground rather than sitting on it.
+            boxShadow:
+              '0 0 0 1px rgba(22,21,15,0.045), 0 1px 2px rgba(22,21,15,0.04), 0 14px 32px -10px rgba(22,21,15,0.10), 0 44px 88px -36px rgba(22,21,15,0.16)',
+          }}
+        >
 
       {/* Hero */}
       <section className="relative overflow-hidden">

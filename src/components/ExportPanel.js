@@ -202,39 +202,39 @@ export function generateBrandedPdfHtml({ summaryText, inputs, metrics, riskScore
     if (!structure) return '';
     const parts = [];
     if (structure.structureType) {
-      parts.push(`<div style="font-size:11px;margin-bottom:3px"><span style="color:#64748b">Type:</span> <span style="color:#1e293b;font-weight:500">${esc(structure.structureType)}</span></div>`);
+      parts.push(`<div style="font-size:12.5px;margin-bottom:3px"><span style="color:#64748b">Type:</span> <span style="color:#1e293b;font-weight:500">${esc(structure.structureType)}</span></div>`);
     }
     if (structure.rateRange && Number.isFinite(structure.rateRange[0]) && Number.isFinite(structure.rateRange[1])) {
       const lo = structure.rateRange[0]; const hi = structure.rateRange[1];
-      parts.push(`<div style="font-size:11px;margin-bottom:3px"><span style="color:#64748b">Indicative rate:</span> <span style="color:#1e293b;font-weight:500">${(lo * 100).toFixed(2)}–${(hi * 100).toFixed(2)}%</span></div>`);
+      parts.push(`<div style="font-size:12.5px;margin-bottom:3px"><span style="color:#64748b">Indicative rate:</span> <span style="color:#1e293b;font-weight:500">${(lo * 100).toFixed(2)}–${(hi * 100).toFixed(2)}%</span></div>`);
     }
     if (structure.advanceRate != null) {
       const v = typeof structure.advanceRate === 'string' ? structure.advanceRate : `${(structure.advanceRate * 100).toFixed(1)}%`;
-      parts.push(`<div style="font-size:11px;margin-bottom:3px"><span style="color:#64748b">Advance rate:</span> <span style="color:#1e293b;font-weight:500">${esc(v)}</span></div>`);
+      parts.push(`<div style="font-size:12.5px;margin-bottom:3px"><span style="color:#64748b">Advance rate:</span> <span style="color:#1e293b;font-weight:500">${esc(v)}</span></div>`);
     }
     const facilitySize = structure.facilitySize ?? structure.maxCommitment;
     if (facilitySize) {
-      parts.push(`<div style="font-size:11px;margin-bottom:3px"><span style="color:#64748b">Facility size:</span> <span style="color:#1e293b;font-weight:500">${fmtCurrency(facilitySize)}</span></div>`);
+      parts.push(`<div style="font-size:12.5px;margin-bottom:3px"><span style="color:#64748b">Facility size:</span> <span style="color:#1e293b;font-weight:500">${fmtCurrency(facilitySize)}</span></div>`);
     }
     if (structure.fieldExamFrequency) {
-      parts.push(`<div style="font-size:11px;margin-bottom:3px"><span style="color:#64748b">Field exams:</span> <span style="color:#1e293b;font-weight:500">${esc(structure.fieldExamFrequency)}</span></div>`);
+      parts.push(`<div style="font-size:12.5px;margin-bottom:3px"><span style="color:#64748b">Field exams:</span> <span style="color:#1e293b;font-weight:500">${esc(structure.fieldExamFrequency)}</span></div>`);
     }
     if (structure.structure) {
-      parts.push(`<p style="font-size:11px;color:#334155;margin:8px 0">${esc(structure.structure)}</p>`);
+      parts.push(`<p style="font-size:12.5px;color:#334155;margin:8px 0">${esc(structure.structure)}</p>`);
     }
     if (structure.sublimits) {
       const s = structure.sublimits;
       const row = (label, sub) => `<tr style="border-bottom:1px solid #f1f5f9">
-        <td style="padding:4px 8px 4px 0;font-size:11px;color:#1f2937">${esc(label)}</td>
-        <td style="text-align:right;padding:4px 8px;font-size:11px;color:#1f2937;font-family:'IBM Plex Mono',ui-monospace,monospace">${(sub.advanceRate * 100).toFixed(0)}%</td>
-        <td style="text-align:right;padding:4px 0 4px 8px;font-size:11px;color:#1f2937;font-family:'IBM Plex Mono',ui-monospace,monospace">${fmtCurrency(sub.amount)}</td>
+        <td style="padding:4px 8px 4px 0;font-size:12.5px;color:#1f2937">${esc(label)}</td>
+        <td style="text-align:right;padding:4px 8px;font-size:12.5px;color:#1f2937;font-family:'IBM Plex Mono',ui-monospace,monospace">${(sub.advanceRate * 100).toFixed(0)}%</td>
+        <td style="text-align:right;padding:4px 0 4px 8px;font-size:12.5px;color:#1f2937;font-family:'IBM Plex Mono',ui-monospace,monospace">${fmtCurrency(sub.amount)}</td>
       </tr>`;
-      parts.push(`<div style="font-size:10px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:0.06em;margin-top:8px;margin-bottom:4px">Borrowing Base Sublimits</div>
+      parts.push(`<div style="font-size:11.5px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:0.06em;margin-top:8px;margin-bottom:4px">Borrowing Base Sublimits</div>
         <table style="width:100%;border-collapse:collapse;margin-bottom:8px">
           <thead><tr style="border-bottom:2px solid #e2e8f0">
-            <th style="text-align:left;padding:4px 8px 4px 0;font-size:10px;color:#64748b;font-weight:600">Category</th>
-            <th style="text-align:right;padding:4px 8px;font-size:10px;color:#64748b;font-weight:600">Cap</th>
-            <th style="text-align:right;padding:4px 0 4px 8px;font-size:10px;color:#64748b;font-weight:600">Eligible $</th>
+            <th style="text-align:left;padding:4px 8px 4px 0;font-size:11.5px;color:#64748b;font-weight:600">Category</th>
+            <th style="text-align:right;padding:4px 8px;font-size:11.5px;color:#64748b;font-weight:600">Cap</th>
+            <th style="text-align:right;padding:4px 0 4px 8px;font-size:11.5px;color:#64748b;font-weight:600">Eligible $</th>
           </tr></thead>
           <tbody>
             ${row('Raw Materials', s.rawMaterials)}
@@ -244,13 +244,13 @@ export function generateBrandedPdfHtml({ summaryText, inputs, metrics, riskScore
         </table>`);
     }
     if (structure.reportingRequirements && structure.reportingRequirements.length > 0) {
-      parts.push(`<div style="font-size:10px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:0.06em;margin-top:8px;margin-bottom:4px">Reporting Requirements</div>
+      parts.push(`<div style="font-size:11.5px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:0.06em;margin-top:8px;margin-bottom:4px">Reporting Requirements</div>
         <ul style="margin:0;padding-left:18px">
-          ${structure.reportingRequirements.map((r) => `<li style="font-size:11px;color:#1f2937;margin-bottom:2px">${esc(r)}</li>`).join('')}
+          ${structure.reportingRequirements.map((r) => `<li style="font-size:12.5px;color:#1f2937;margin-bottom:2px">${esc(r)}</li>`).join('')}
         </ul>`);
     }
     if (structure.sizingFlag) {
-      parts.push(`<div style="font-size:10px;color:#92400e;background:#fef3c7;border:1px solid #fde68a;border-radius:4px;padding:6px 8px;margin-top:8px;font-style:italic">${esc(structure.sizingFlag)}</div>`);
+      parts.push(`<div style="font-size:11.5px;color:#92400e;background:#fef3c7;border:1px solid #fde68a;border-radius:4px;padding:6px 8px;margin-top:8px;font-style:italic">${esc(structure.sizingFlag)}</div>`);
     }
     if (parts.length === 0) return '';
     return `<div class="section">
@@ -263,7 +263,7 @@ export function generateBrandedPdfHtml({ summaryText, inputs, metrics, riskScore
   const reasonsHtml = (screeningResult?.reasons || []).map(r => {
     const color = r.level === 'fail' ? '#dc2626' : '#ca8a04';
     const icon = r.level === 'fail' ? '&#10005;' : '&#9888;';
-    return `<div style="display:flex;gap:6px;align-items:flex-start;margin-bottom:4px"><span style="color:${color};font-size:11px;flex-shrink:0">${icon}</span><span style="font-size:11px;color:#475569">${esc(r.text)}</span></div>`;
+    return `<div style="display:flex;gap:6px;align-items:flex-start;margin-bottom:4px"><span style="color:${color};font-size:12.5px;flex-shrink:0">${icon}</span><span style="font-size:12.5px;color:#475569">${esc(r.text)}</span></div>`;
   }).join('');
 
   // Red flags — bottom sub-scores under 50, paired with their underlying metric.
@@ -290,10 +290,10 @@ export function generateBrandedPdfHtml({ summaryText, inputs, metrics, riskScore
     const accent = side === 'strength' ? '#16a34a' : '#dc2626';
     return `<div style="border-left:3px solid ${accent};padding:6px 10px;margin-bottom:6px;background:${side === 'strength' ? '#f0fdf4' : '#fef2f2'};border-radius:0 4px 4px 0">
       <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px">
-        <span style="font-size:11px;font-weight:700;color:#1f2937">${esc(f.label)}</span>
-        <span style="font-size:10px;color:${accent};font-weight:600;flex-shrink:0">${Math.round(f.score)}/100</span>
+        <span style="font-size:12.5px;font-weight:700;color:#1f2937">${esc(f.label)}</span>
+        <span style="font-size:11.5px;color:${accent};font-weight:600;flex-shrink:0">${Math.round(f.score)}/100</span>
       </div>
-      <div style="font-size:10px;color:#475569;margin-top:2px">${esc(f.caption)} <span style="color:#94a3b8">· target ${esc(f.target)}</span></div>
+      <div style="font-size:11.5px;color:#475569;margin-top:2px">${esc(f.caption)} <span style="color:#94a3b8">· target ${esc(f.target)}</span></div>
     </div>`;
   };
   // Sensitivity table — 4 stress scenarios with module-aware columns.
@@ -303,7 +303,7 @@ export function generateBrandedPdfHtml({ summaryText, inputs, metrics, riskScore
   const fmtRatioCell = (v) => (v == null || !Number.isFinite(v)) ? '—' : `${v.toFixed(2)}x`;
   const sensitivityHtml = (stressResults && stressResults.length > 0) ? `<div class="section" style="page-break-inside:avoid">
     <div class="section-title">Sensitivity Analysis</div>
-    <table style="width:100%;border-collapse:collapse;font-size:11px">
+    <table style="width:100%;border-collapse:collapse;font-size:12.5px">
       <thead>
         <tr style="border-bottom:2px solid #e2e8f0">
           <th style="text-align:left;padding:6px 8px 6px 0;color:#64748b;font-weight:600">Scenario</th>
@@ -335,27 +335,27 @@ export function generateBrandedPdfHtml({ summaryText, inputs, metrics, riskScore
     <div class="section-title">Strengths &amp; Risks</div>
     <div style="display:flex;gap:12px">
       <div style="flex:1">
-        <div style="font-size:10px;font-weight:700;color:#16a34a;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px">Strengths</div>
-        ${strengths.length > 0 ? strengths.map((f) => factorRow(f, 'strength')).join('') : '<div style="font-size:11px;color:#94a3b8;font-style:italic">No sub-scores above 75.</div>'}
+        <div style="font-size:11.5px;font-weight:700;color:#16a34a;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px">Strengths</div>
+        ${strengths.length > 0 ? strengths.map((f) => factorRow(f, 'strength')).join('') : '<div style="font-size:12.5px;color:#94a3b8;font-style:italic">No sub-scores above 75.</div>'}
       </div>
       <div style="flex:1">
-        <div style="font-size:10px;font-weight:700;color:#dc2626;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px">Risks</div>
-        ${concerns.length > 0 ? concerns.map((f) => factorRow(f, 'concern')).join('') : '<div style="font-size:11px;color:#94a3b8;font-style:italic">No sub-scores below 50.</div>'}
+        <div style="font-size:11.5px;font-weight:700;color:#dc2626;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px">Risks</div>
+        ${concerns.length > 0 ? concerns.map((f) => factorRow(f, 'concern')).join('') : '<div style="font-size:12.5px;color:#94a3b8;font-style:italic">No sub-scores below 50.</div>'}
       </div>
     </div>
   </div>`;
   const redFlagsHtml = redFlagItems.length === 0 ? '' : `<div class="section" style="margin-bottom:18px;background:#fef2f2;border:1px solid #fecaca;border-left:4px solid #dc2626;border-radius:6px;padding:12px 16px">
-    <div style="font-size:11px;font-weight:700;color:#991b1b;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">Red Flags</div>
+    <div style="font-size:12.5px;font-weight:700;color:#991b1b;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">Red Flags</div>
     ${redFlagItems.map((f) => `<div style="display:flex;gap:8px;align-items:baseline;margin-bottom:4px">
-      <span style="color:#dc2626;font-size:11px;flex-shrink:0">&#10148;</span>
-      <span style="font-size:11px;color:#1f2937"><strong>${esc(f.label)}</strong> ${esc(f.caption)}, target ${esc(f.target)} <span style="color:#6b7280">(sub-score ${Math.round(f.score)}/100)</span></span>
+      <span style="color:#dc2626;font-size:12.5px;flex-shrink:0">&#10148;</span>
+      <span style="font-size:12.5px;color:#1f2937"><strong>${esc(f.label)}</strong> ${esc(f.caption)}, target ${esc(f.target)} <span style="color:#6b7280">(sub-score ${Math.round(f.score)}/100)</span></span>
     </div>`).join('')}
   </div>`;
 
   const brandingHeader = orgName || logoUrl
     ? `<div style="text-align:right">
         ${logoUrl ? `<img src="${esc(logoUrl)}" alt="${esc(orgName)}" style="max-height:40px;max-width:180px;margin-bottom:4px" />` : ''}
-        ${orgName ? `<div style="font-size:11px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.1em;font-weight:600">${esc(orgName)}</div>` : ''}
+        ${orgName ? `<div style="font-size:12.5px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.1em;font-weight:600">${esc(orgName)}</div>` : ''}
       </div>`
     : '';
 
@@ -365,16 +365,16 @@ export function generateBrandedPdfHtml({ summaryText, inputs, metrics, riskScore
 <meta charset="utf-8"/>
 <title>Screening Memo: ${esc(companyName)}</title>
 <style>
-  @page { margin: 0.6in 0.7in; size: letter; }
+  @page { margin: 0.7in 0.8in; size: letter; }
   @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
   * { box-sizing: border-box; }
-  body { font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; color: #1e293b; background: #fff; margin: 0; padding: 0; line-height: 1.5; font-size: 12px; }
-  .page { max-width: 780px; margin: 0 auto; padding: 24px 0; }
+  body { font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; color: #1e293b; background: #fff; margin: 0; padding: 0; line-height: 1.5; font-size: 13.5px; }
+  .page { width: 100%; margin: 0; padding: 0; }
   .header { border-bottom: 3px solid ${accentColor}; padding-bottom: 16px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: flex-end; }
   .section { margin-bottom: 20px; }
-  .section-title { font-size: 12px; font-weight: 700; color: #1e293b; text-transform: uppercase; letter-spacing: 0.06em; margin: 0 0 10px 0; padding-bottom: 6px; border-bottom: 2px solid ${accentColor}; }
+  .section-title { font-size: 13.5px; font-weight: 700; color: #1e293b; text-transform: uppercase; letter-spacing: 0.06em; margin: 0 0 10px 0; padding-bottom: 6px; border-bottom: 2px solid ${accentColor}; }
   table { width: 100%; border-collapse: collapse; }
-  td, th { padding: 5px 12px 5px 0; font-size: 11px; border-bottom: 1px solid #f1f5f9; }
+  td, th { padding: 5px 12px 5px 0; font-size: 12.5px; border-bottom: 1px solid #f1f5f9; }
   th { text-align: left; color: #64748b; font-weight: 600; border-bottom: 2px solid #e2e8f0; }
 </style>
 </head>
@@ -382,9 +382,9 @@ export function generateBrandedPdfHtml({ summaryText, inputs, metrics, riskScore
 <div class="page">
   <div class="header">
     <div>
-      <div style="font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:0.1em;font-weight:600;margin-bottom:4px">${esc(memoTitle || moduleLabel + ' Screening')}</div>
-      <h1 style="font-size:22px;font-weight:800;color:#1e293b;margin:0">${esc(companyName)}</h1>
-      <div style="font-size:11px;color:#64748b;margin-top:2px">${esc(date)}${analystName ? ' &middot; ' + esc(analystName) : ''}</div>
+      <div style="font-size:11.5px;color:#64748b;text-transform:uppercase;letter-spacing:0.1em;font-weight:600;margin-bottom:4px">${esc(memoTitle || moduleLabel + ' Screening')}</div>
+      <h1 style="font-size:25px;font-weight:800;color:#1e293b;margin:0">${esc(companyName)}</h1>
+      <div style="font-size:12.5px;color:#64748b;margin-top:2px">${esc(date)}${analystName ? ' &middot; ' + esc(analystName) : ''}</div>
     </div>
     ${brandingHeader}
   </div>
@@ -392,8 +392,8 @@ export function generateBrandedPdfHtml({ summaryText, inputs, metrics, riskScore
   ${requestLine ? `<!-- Transaction Summary -->
   <div class="section">
     <div class="section-title">Transaction Summary</div>
-    <div style="font-size:13px;color:#1f2937;font-weight:500;margin-bottom:${borrowerDescription ? '8px' : '0'}">${esc(requestLine)}</div>
-    ${borrowerDescription ? `<div style="font-size:11px;color:#475569;line-height:1.55">${esc(borrowerDescription)}</div>` : ''}
+    <div style="font-size:14.5px;color:#1f2937;font-weight:500;margin-bottom:${borrowerDescription ? '8px' : '0'}">${esc(requestLine)}</div>
+    ${borrowerDescription ? `<div style="font-size:12.5px;color:#475569;line-height:1.55">${esc(borrowerDescription)}</div>` : ''}
   </div>` : ''}
 
   ${sourcesAndUses ? `<!-- Sources and Uses -->
@@ -410,22 +410,22 @@ export function generateBrandedPdfHtml({ summaryText, inputs, metrics, riskScore
   <div style="display:flex;gap:12px;margin-bottom:24px">
     <div style="flex:1;background:${scoreBg};border:1px solid ${scoreBorder};border-left:4px solid ${scoreColor};border-radius:6px;padding:14px 20px;display:flex;align-items:center;gap:12px">
       <div>
-        <span style="font-size:32px;font-weight:800;color:${scoreColor};line-height:1">${score}</span>
-        <span style="font-size:13px;font-weight:600;color:${scoreColor}aa">/100</span>
+        <span style="font-size:34px;font-weight:800;color:${scoreColor};line-height:1">${score}</span>
+        <span style="font-size:14.5px;font-weight:600;color:${scoreColor}aa">/100</span>
       </div>
       <div>
-        <div style="font-size:13px;font-weight:700;color:${scoreColor}">${esc(recommendation?.category || '')}</div>
-        <div style="font-size:11px;color:#475569">${esc(recommendation?.detail || '')}</div>
+        <div style="font-size:14.5px;font-weight:700;color:${scoreColor}">${esc(recommendation?.category || '')}</div>
+        <div style="font-size:12.5px;color:#475569">${esc(recommendation?.detail || '')}</div>
       </div>
     </div>
     ${verdict ? `<div style="background:${verdictBg};border:1px solid ${verdictColor}33;border-radius:6px;padding:14px 20px;display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:80px">
-      <div style="font-size:16px;font-weight:800;color:${verdictColor};letter-spacing:0.1em">${verdict}</div>
+      <div style="font-size:17.5px;font-weight:800;color:${verdictColor};letter-spacing:0.1em">${verdict}</div>
     </div>` : ''}
   </div>
 
   ${(() => {
     const verdictLabel = (verdict || (screeningResult?.verdict || '')).toUpperCase() || '—';
-    return `<div style="display:flex;flex-wrap:wrap;gap:14px;margin-bottom:18px;padding:10px 14px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;font-size:11px;color:#475569">
+    return `<div style="display:flex;flex-wrap:wrap;gap:14px;margin-bottom:18px;padding:10px 14px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;font-size:12.5px;color:#475569">
       <span>Composite: <strong style="color:#1f2937">${score}</strong></span>
       <span>Firm pass threshold: <strong style="color:#1f2937">${c.passScore}</strong></span>
       <span>Firm flag threshold: <strong style="color:#1f2937">${c.flagScore}</strong></span>
@@ -440,12 +440,12 @@ export function generateBrandedPdfHtml({ summaryText, inputs, metrics, riskScore
   <!-- Recommended Action -->
   <div class="section">
     <div class="section-title">Recommended Action</div>
-    <div style="font-size:14px;font-weight:700;color:${scoreColor};margin-bottom:4px">${esc(recommendation?.category || '')}</div>
-    <div style="font-size:12px;color:#475569;margin-bottom:${(structure?.enhancements?.length || 0) > 0 ? '12px' : '0'}">${esc(recommendation?.detail || '')}</div>
+    <div style="font-size:15.5px;font-weight:700;color:${scoreColor};margin-bottom:4px">${esc(recommendation?.category || '')}</div>
+    <div style="font-size:13.5px;color:#475569;margin-bottom:${(structure?.enhancements?.length || 0) > 0 ? '12px' : '0'}">${esc(recommendation?.detail || '')}</div>
     ${(structure?.enhancements?.length || 0) > 0 ? `
-      <div style="font-size:10px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px">Conditions / Mitigants</div>
+      <div style="font-size:11.5px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px">Conditions / Mitigants</div>
       <ul style="margin:0;padding-left:18px">
-        ${structure.enhancements.map((e) => `<li style="font-size:11px;color:#1f2937;margin-bottom:3px">${esc(e)}</li>`).join('')}
+        ${structure.enhancements.map((e) => `<li style="font-size:12.5px;color:#1f2937;margin-bottom:3px">${esc(e)}</li>`).join('')}
       </ul>
     ` : ''}
   </div>
@@ -454,13 +454,13 @@ export function generateBrandedPdfHtml({ summaryText, inputs, metrics, riskScore
   <div class="section">
     <div class="section-title">Deal Overview</div>
     <table>
-      <tr><td style="color:#64748b;width:140px">Industry</td><td style="font-weight:500">${esc(inputs?.industrySector || '')}</td></tr>
-      <tr><td style="color:#64748b">Credit Rating</td><td style="font-weight:500">${esc(inputs?.creditRating || '')}</td></tr>
-      <tr><td style="color:#64748b">Annual Revenue</td><td style="font-weight:500">${fmtCurrency(inputs?.annualRevenue)}${inputs?.priorYearRevenue > 0 ? ` <span style="color:#64748b;font-weight:400">· prior ${fmtCurrency(inputs.priorYearRevenue)} · ${(((inputs.annualRevenue / inputs.priorYearRevenue) - 1) * 100).toFixed(1)}% YoY</span>` : ''}</td></tr>
-      <tr><td style="color:#64748b">EBITDA</td><td style="font-weight:500">${fmtCurrency(inputs?.ebitda)}${inputs?.priorYearEbitda > 0 ? ` <span style="color:#64748b;font-weight:400">· prior ${fmtCurrency(inputs.priorYearEbitda)} · ${(((inputs.ebitda / inputs.priorYearEbitda) - 1) * 100).toFixed(1)}% YoY</span>` : ''}</td></tr>
-      <tr><td style="color:#64748b">Existing Debt</td><td style="font-weight:500">${fmtCurrency(inputs?.totalExistingDebt)}</td></tr>
-      ${inputs?.yearsInBusiness ? `<tr><td style="color:#64748b">Years in Business</td><td style="font-weight:500">${inputs.yearsInBusiness}</td></tr>` : ''}
-      <tr><td style="color:#64748b">Screening Rate</td><td style="font-weight:500">${(rate * 100).toFixed(2)}%</td></tr>
+      <tr><td style="color:#64748b;width:140px">Industry</td><td style="font-weight:500;text-align:right">${esc(inputs?.industrySector || '')}</td></tr>
+      <tr><td style="color:#64748b">Credit Rating</td><td style="font-weight:500;text-align:right">${esc(inputs?.creditRating || '')}</td></tr>
+      <tr><td style="color:#64748b">Annual Revenue</td><td style="font-weight:500;text-align:right">${fmtCurrency(inputs?.annualRevenue)}${inputs?.priorYearRevenue > 0 ? ` <span style="color:#64748b;font-weight:400">· prior ${fmtCurrency(inputs.priorYearRevenue)} · ${(((inputs.annualRevenue / inputs.priorYearRevenue) - 1) * 100).toFixed(1)}% YoY</span>` : ''}</td></tr>
+      <tr><td style="color:#64748b">EBITDA</td><td style="font-weight:500;text-align:right">${fmtCurrency(inputs?.ebitda)}${inputs?.priorYearEbitda > 0 ? ` <span style="color:#64748b;font-weight:400">· prior ${fmtCurrency(inputs.priorYearEbitda)} · ${(((inputs.ebitda / inputs.priorYearEbitda) - 1) * 100).toFixed(1)}% YoY</span>` : ''}</td></tr>
+      <tr><td style="color:#64748b">Existing Debt</td><td style="font-weight:500;text-align:right">${fmtCurrency(inputs?.totalExistingDebt)}</td></tr>
+      ${inputs?.yearsInBusiness ? `<tr><td style="color:#64748b">Years in Business</td><td style="font-weight:500;text-align:right">${inputs.yearsInBusiness}</td></tr>` : ''}
+      <tr><td style="color:#64748b">Screening Rate</td><td style="font-weight:500;text-align:right">${(rate * 100).toFixed(2)}%</td></tr>
     </table>
   </div>
 
@@ -468,9 +468,9 @@ export function generateBrandedPdfHtml({ summaryText, inputs, metrics, riskScore
   <div class="section">
     <div class="section-title">Key Metrics</div>
     <table>
-      <thead><tr><th>Metric</th><th style="text-align:right">Value</th><th>Status</th></tr></thead>
+      <thead><tr><th>Metric</th><th style="text-align:right">Value</th><th style="text-align:right;width:44px">Status</th></tr></thead>
       <tbody>
-        ${metricRows.map(([label, value, color]) => `<tr><td>${esc(label)}</td><td style="text-align:right;font-weight:600;font-family:'IBM Plex Mono',ui-monospace,monospace">${esc(value)}</td><td><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${color}"></span></td></tr>`).join('')}
+        ${metricRows.map(([label, value, color]) => `<tr><td>${esc(label)}</td><td style="text-align:right;font-weight:600;font-family:'IBM Plex Mono',ui-monospace,monospace">${esc(value)}</td><td style="text-align:right"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${color}"></span></td></tr>`).join('')}
       </tbody>
     </table>
   </div>
@@ -479,7 +479,7 @@ export function generateBrandedPdfHtml({ summaryText, inputs, metrics, riskScore
   ${commentaryLines.length > 0 ? `<div class="section">
     <div class="section-title">Assessment</div>
     <ol style="margin:0;padding-left:20px">
-      ${commentaryLines.map(l => { const m = l.match(/^\d+\.\s*(.*)/); return `<li style="margin-bottom:6px;font-size:11px;color:#334155">${esc(m ? m[1] : l)}</li>`; }).join('')}
+      ${commentaryLines.map(l => { const m = l.match(/^\d+\.\s*(.*)/); return `<li style="margin-bottom:6px;font-size:12.5px;color:#334155">${esc(m ? m[1] : l)}</li>`; }).join('')}
     </ol>
   </div>` : ''}
 
@@ -504,20 +504,20 @@ export function generateBrandedPdfHtml({ summaryText, inputs, metrics, riskScore
           </tr>`).join('')}
         </tbody>
       </table>
-      <div style="font-size:10px;color:#64748b;margin-top:6px;line-height:1.5">
+      <div style="font-size:11.5px;color:#64748b;margin-top:6px;line-height:1.5">
         Figures were extracted from the documents above and reviewed by the analyst before scoring. The score is computed from the reviewed inputs, not from the documents directly.
       </div>
     ` : `
-      <div style="font-size:11px;color:#475569">Inputs were entered manually. No source documents are attached to this deal.</div>
+      <div style="font-size:12.5px;color:#475569">Inputs were entered manually. No source documents are attached to this deal.</div>
     `}
   </div>
 
   <!-- Footer -->
   <div style="margin-top:30px;padding-top:12px;border-top:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:flex-end;gap:24px">
-    <div style="font-size:9px;color:#94a3b8;max-width:420px">
+    <div style="font-size:10.5px;color:#94a3b8;max-width:420px">
       Preliminary screening only. Not a credit decision. Final terms subject to full underwriting, credit committee approval, and documentation.
     </div>
-    <div style="font-size:9px;color:#94a3b8;text-align:right;line-height:1.5">
+    <div style="font-size:10.5px;color:#94a3b8;text-align:right;line-height:1.5">
       ${footerText ? '<div>' + esc(footerText) + '</div>' : ''}
       ${analystName ? `<div>Prepared by: ${esc(analystName)}</div>` : ''}
       <div>Inputs entered${analystName ? ' by ' + esc(analystName) : ''} on ${esc(date)}</div>
@@ -550,6 +550,17 @@ export default function ExportPanel({ summaryText, inputs, metrics, riskScore, r
 
   const [pdfLoading, setPdfLoading] = useState(false);
 
+// US letter, in millimetres, with the margins a memo actually uses.
+// 10mm was tight enough that the content read as a slab rather than
+// a typeset page.
+const PAGE_W_MM = 215.9;
+const MARGIN_X_MM = 20.32; // 0.8in
+const MARGIN_Y_MM = 17.78; // 0.7in
+const CONTENT_MM = PAGE_W_MM - MARGIN_X_MM * 2;
+// CSS resolves absolute units at 96px to the inch, so this is the
+// pixel width at which one CSS pixel is exactly one printed pixel.
+const CONTENT_PX = Math.round((CONTENT_MM * 96) / 25.4);
+
   const handleDownloadPdf = async () => {
     const orgName = profile?.organizations?.name || '';
     const analystName = profile?.full_name || profile?.email || '';
@@ -569,18 +580,29 @@ export default function ExportPanel({ summaryText, inputs, metrics, riskScore, r
       // Extract body content from the full HTML document
       const bodyMatch = html.match(/<body[^>]*>([\s\S]*)<\/body>/i);
       if (bodyMatch) container.innerHTML = bodyMatch[1];
-      container.style.width = '780px';
+      // Match html2pdf's capture container exactly, so the memo is
+      // laid out at the width it is printed at and nothing is scaled
+      // or clipped. Kept off-screen rather than in flow: it was
+      // previously appended visibly at full width for the duration of
+      // the render.
+      container.style.width = `${CONTENT_PX}px`;
+      container.style.position = 'fixed';
+      container.style.left = '-10000px';
+      container.style.top = '0';
       document.body.appendChild(container);
 
       const companyName = (inputs?.companyName || 'Deal').replace(/[^a-zA-Z0-9]/g, '_');
       const date = new Date().toISOString().slice(0, 10);
 
       await html2pdf().set({
-        margin: [10, 10, 10, 10],
+        margin: [MARGIN_Y_MM, MARGIN_X_MM, MARGIN_Y_MM, MARGIN_X_MM],
         filename: `${companyName}_screening_memo_${date}.pdf`,
         image: { type: 'jpeg', quality: 0.95 },
         html2canvas: { scale: 2, useCORS: true, letterRendering: true },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        // Letter, not A4. The stylesheet's @page always said letter;
+        // this is the half that disagreed, so every memo came out on
+        // the wrong paper size for a US credit committee.
+        jsPDF: { unit: 'mm', format: 'letter', orientation: 'portrait' },
         pagebreak: { mode: ['css', 'legacy'] },
       }).from(container).save();
 

@@ -431,3 +431,39 @@ describe('the request line reads correctly aloud', () => {
     }
   });
 });
+
+// ---------------------------------------------------------------
+// Page geometry. These four facts have to agree or the memo is laid
+// out at one width and printed at another, which is what silently
+// shrank every memo to ~92% and put it on A4 while the stylesheet
+// claimed letter. Asserted against the source because the geometry
+// lives in the download handler, not in the returned HTML.
+// ---------------------------------------------------------------
+describe('PDF page geometry', () => {
+  const src = require('fs').readFileSync(__dirname + '/ExportPanel.js', 'utf8');
+
+  test('targets US letter, matching the @page rule', () => {
+    expect(src).toMatch(/format: 'letter'/);
+    expect(src).toMatch(/@page \{ margin: 0\.7in 0\.8in; size: letter; \}/);
+  });
+
+  test('jsPDF margins are the same 0.8in / 0.7in the @page rule uses', () => {
+    expect(src).toMatch(/const MARGIN_X_MM = 20\.32;/);
+    expect(src).toMatch(/const MARGIN_Y_MM = 17\.78;/);
+    expect(src).toMatch(/margin: \[MARGIN_Y_MM, MARGIN_X_MM, MARGIN_Y_MM, MARGIN_X_MM\]/);
+  });
+
+  test('the capture container is the printable width, so nothing is scaled', () => {
+    // 215.9mm letter less two 20.32mm margins, at 96px to the inch.
+    const expected = Math.round(((215.9 - 20.32 * 2) * 96) / 25.4);
+    expect(expected).toBe(662);
+    expect(src).toMatch(/container\.style\.width = `\$\{CONTENT_PX\}px`/);
+    expect(src).not.toMatch(/container\.style\.width = '780px'/);
+  });
+
+  test('body type is set for paper, not for a screen', () => {
+    // 13.5 CSS px renders 1:1 at ~10pt, which is memo convention.
+    expect(src).toMatch(/line-height: 1\.5; font-size: 13\.5px;/);
+    expect(src).toMatch(/td, th \{ padding: 5px 12px 5px 0; font-size: 12\.5px;/);
+  });
+});
