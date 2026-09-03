@@ -46,7 +46,14 @@ export function RevealGroup({ children, className = '', step = 70, initial = 0 }
   return (
     <div className={className}>
       {React.Children.map(children, (child, i) =>
-        child ? <Reveal delay={initial + i * step}>{child}</Reveal> : child,
+        child ? (
+          // h-full so the wrapper does not break grid stretch: without it the
+          // real children stop being the grid items and cards in a row end up
+          // at whatever height their own content happens to need.
+          <Reveal delay={initial + i * step} className="h-full">
+            {child}
+          </Reveal>
+        ) : child,
       )}
     </div>
   );

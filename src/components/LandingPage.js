@@ -354,7 +354,7 @@ export default function LandingPage({ onGetStarted, onSignIn }) {
             {PRICING.map((plan) => (
               <div
                 key={plan.name}
-                className={`rounded-xl p-6 flex flex-col ${
+                className={`rounded-xl p-6 flex flex-col h-full ${
                   plan.highlight
                     ? 'bg-gray-900 text-white relative ring-2'
                     : 'bg-white border border-gray-200'
@@ -415,8 +415,8 @@ export default function LandingPage({ onGetStarted, onSignIn }) {
             <h2 className="text-3xl md:text-[40px] font-bold text-white mb-4 tracking-tight">
               Screen your first deal today
             </h2>
-            <p className="text-gray-400 mb-9 text-lg max-w-xl mx-auto">
-              Try it on sample deals right now, or send us yours and we will set you up.
+            <p className="text-gray-400 mb-9 text-lg max-w-lg mx-auto text-balance">
+              Try it on sample deals now, or send us yours and we will set you up.
             </p>
             <div className="flex items-center justify-center gap-3 flex-wrap">
               <button
