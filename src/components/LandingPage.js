@@ -7,6 +7,9 @@ import { useScrolledPast } from '../hooks/useReveal';
 
 // ── Brand color ──────────────────────────────────────────────
 const GOLD = '#D4A843';
+// Warm putty. Biased toward the gold rather than a neutral grey, so the
+// margin around the sheet reads as chosen rather than as unpainted.
+const GROUND = '#E3DED2';
 const GOLD_LIGHT = '#F5EDD6';
 
 const FEATURES = [
@@ -122,20 +125,18 @@ export default function LandingPage({ onGetStarted, onSignIn }) {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen" style={{ backgroundColor: GROUND }}>
       {/* Nav */}
       <nav
         className="sticky top-0 z-50 transition-all duration-300"
         style={{
-          backgroundColor: scrolled ? 'rgba(255,255,255,0.92)' : 'rgba(255,255,255,0)',
-          backdropFilter: scrolled ? 'blur(12px)' : 'none',
-          borderBottom: `1px solid ${scrolled ? 'rgba(0,0,0,0.06)' : 'transparent'}`,
-          boxShadow: scrolled ? '0 1px 12px rgba(22,21,15,0.04)' : 'none',
+          backgroundColor: GROUND,
+          borderBottom: `1px solid ${scrolled ? 'rgba(22,21,15,0.08)' : 'transparent'}`,
         }}
       >
         <div
-          className="max-w-[1200px] mx-auto px-6 flex items-center justify-between transition-all duration-300"
-          style={{ height: scrolled ? 60 : 72 }}
+          className="max-w-[1240px] mx-auto px-8 flex items-center justify-between transition-all duration-300"
+          style={{ height: scrolled ? 64 : 76 }}
         >
           <span className="flex items-center gap-2.5 text-xl font-extrabold text-gray-900 tracking-tight">
             <TrancheLogo size={32} />
@@ -154,6 +155,10 @@ export default function LandingPage({ onGetStarted, onSignIn }) {
         </div>
       </nav>
 
+      {/* The sheet. Everything below sits on it. */}
+      <div className="px-3 sm:px-5 pb-3 sm:pb-5">
+        <div className="bg-white rounded-[20px] sm:rounded-[28px] overflow-hidden shadow-sm">
+
       {/* Hero */}
       <section className="relative overflow-hidden">
         {/* Warm ground, plus a faint rule grid fading out toward the middle.
@@ -169,7 +174,7 @@ export default function LandingPage({ onGetStarted, onSignIn }) {
             WebkitMaskImage: 'radial-gradient(ellipse 80% 60% at 50% 40%, transparent 20%, #000 100%)',
           }}
         />
-        <div className="relative max-w-[1200px] mx-auto px-6 pt-20 md:pt-28 pb-20">
+        <div className="relative max-w-[1180px] mx-auto px-8 pt-24 md:pt-32 pb-24 md:pb-28">
           <div className="grid lg:grid-cols-[1.05fr_0.95fr] gap-14 lg:gap-16 items-center">
 
             {/* Copy */}
@@ -180,7 +185,7 @@ export default function LandingPage({ onGetStarted, onSignIn }) {
                 </p>
               </Reveal>
               <Reveal delay={80}>
-                <h1 className="text-4xl sm:text-5xl md:text-[52px] font-extrabold text-gray-900 leading-[1.08] mb-6 tracking-tight text-balance">
+                <h1 className="text-[42px] sm:text-[54px] md:text-[64px] font-extrabold text-gray-900 leading-[1.04] mb-7 tracking-[-0.025em] text-balance">
                   Screen equipment, AR, and inventory deals in minutes, not hours.
                 </h1>
               </Reveal>
@@ -212,7 +217,7 @@ export default function LandingPage({ onGetStarted, onSignIn }) {
       </section>
 
       {/* Who it moves between */}
-      <section className="max-w-[1200px] mx-auto px-6 pt-4 pb-16">
+      <section className="max-w-[1180px] mx-auto px-8 pt-4 pb-16">
         <Reveal>
           <p className="text-center text-[13px] font-semibold uppercase tracking-wider text-gray-400 mb-10">
             One deal, three desks
@@ -252,7 +257,7 @@ export default function LandingPage({ onGetStarted, onSignIn }) {
       {/* Features */}
       <section id="features" className="relative overflow-hidden" style={{ backgroundColor: '#FAFAF8' }}>
         <div className="absolute inset-0 opacity-[0.025]" style={{ backgroundImage: 'radial-gradient(circle, #000 1px, transparent 1px)', backgroundSize: '32px 32px' }} />
-        <div className="relative max-w-[1200px] mx-auto px-6 py-20 md:py-28">
+        <div className="relative max-w-[1180px] mx-auto px-8 py-24 md:py-32">
           <Reveal>
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3 text-center tracking-tight">Purpose-built for ABL teams</h2>
             <p className="text-gray-500 text-center mb-12 text-lg">No consultants. No 6-month implementation. Start screening today.</p>
@@ -288,7 +293,7 @@ export default function LandingPage({ onGetStarted, onSignIn }) {
             WebkitMaskImage: 'radial-gradient(ellipse 80% 70% at 50% 50%, transparent 20%, #000 100%)',
           }}
         />
-        <div className="relative max-w-[1000px] mx-auto px-6 py-20 md:py-24">
+        <div className="relative max-w-[1000px] mx-auto px-8 py-24 md:py-28">
           <div className="grid lg:grid-cols-[0.9fr_1.1fr] gap-12 lg:gap-16 items-start">
 
             <Reveal>
@@ -347,7 +352,7 @@ export default function LandingPage({ onGetStarted, onSignIn }) {
 
       {/* Pricing */}
       <section id="pricing" className="bg-white">
-        <div className="max-w-[1200px] mx-auto px-6 py-20 md:py-28">
+        <div className="max-w-[1180px] mx-auto px-8 py-24 md:py-32">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3 text-center tracking-tight">Simple pricing</h2>
           <p className="text-gray-500 text-center mb-12 text-lg">Priced per organization, not per seat.</p>
           <RevealGroup className="grid grid-cols-1 md:grid-cols-3 gap-5 max-w-4xl mx-auto">
@@ -410,7 +415,7 @@ export default function LandingPage({ onGetStarted, onSignIn }) {
           className="absolute inset-0"
           style={{ background: 'radial-gradient(70% 90% at 50% 0%, rgba(212,168,67,0.10), transparent 70%)' }}
         />
-        <div className="relative max-w-[1100px] mx-auto px-6 py-24 text-center">
+        <div className="relative max-w-[1080px] mx-auto px-8 py-24 text-center">
           <Reveal>
             <h2 className="text-3xl md:text-[40px] font-bold text-white mb-4 tracking-tight">
               Screen your first deal today
@@ -448,7 +453,7 @@ export default function LandingPage({ onGetStarted, onSignIn }) {
           between the CTA and here, which made the page say goodbye four times.
           They are quieter and better placed as a footer row. */}
       <footer style={{ backgroundColor: '#12110E' }} className="border-t border-gray-800/60">
-        <div className="max-w-[1100px] mx-auto px-6 py-9">
+        <div className="max-w-[1080px] mx-auto px-8 py-9">
           <div className="flex items-center justify-center gap-x-8 gap-y-3 flex-wrap pb-7 mb-7 border-b border-gray-800/60">
             {['Row-level data isolation', 'Role-based access', 'Audit trail on deal changes'].map((label) => (
               <span key={label} className="flex items-center gap-2 text-[13px] text-gray-500">
@@ -473,6 +478,9 @@ export default function LandingPage({ onGetStarted, onSignIn }) {
           </div>
         </div>
       </footer>
+
+        </div>
+      </div>
     </div>
   );
 }

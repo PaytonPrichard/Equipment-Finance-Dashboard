@@ -200,7 +200,7 @@ export default function StepsScroller() {
         }}
       />
 
-      <div className="relative max-w-[1200px] mx-auto px-6 py-20 md:py-28">
+      <div className="relative max-w-[1180px] mx-auto px-8 py-24 md:py-32">
         <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3 text-center tracking-tight">
           Screen a deal in 3 steps
         </h2>
