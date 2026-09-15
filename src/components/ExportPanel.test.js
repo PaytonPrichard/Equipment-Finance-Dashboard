@@ -4,7 +4,7 @@
 // firm thresholds, footer metadata, structured suggested-structure) render
 // for each module so a future refactor can't silently drop one.
 
-import { generateBrandedPdfHtml } from './ExportPanel';
+import { generateBrandedPdfHtml, memoCaptureMarkup, scopeMemoCss, stripAppStylesForCapture, MEMO_SCOPE } from './ExportPanel';
 import * as ef from '../modules/equipment-finance/scoring';
 import * as ar from '../modules/accounts-receivable/scoring';
 import * as inv from '../modules/inventory-finance/scoring';
@@ -465,5 +465,105 @@ describe('PDF page geometry', () => {
     // 13.5 CSS px renders 1:1 at ~10pt, which is memo convention.
     expect(src).toMatch(/line-height: 1\.5; font-size: 13\.5px;/);
     expect(src).toMatch(/td, th \{ padding: 5px 12px 5px 0; font-size: 12\.5px;/);
+  });
+});
+
+// ---------------------------------------------------------------
+// The PDF is rendered from a node in the live app, not from the memo
+// document. Taking only <body> dropped the <head> stylesheet, so from
+// the Sep 1 memo rework every section title, the header and the tables
+// printed unstyled while the stored HTML looked correct.
+// ---------------------------------------------------------------
+describe('the PDF capture keeps the memo stylesheet', () => {
+  const html = buildPdfFor('equipment_finance', ef, {
+    ...EF_INITIAL,
+    companyName: 'Style Co',
+    annualRevenue: 50000000, ebitda: 8000000, totalExistingDebt: 15000000,
+    industrySector: 'Manufacturing', creditRating: 'Adequate',
+    equipmentType: 'Heavy Machinery', equipmentCondition: 'New',
+    equipmentCost: 5000000, downPayment: 500000, financingType: 'EFA',
+    usefulLife: 15, loanTerm: 84, essentialUse: true,
+  });
+
+  test('carries the section, header and table rules, scoped to the container', () => {
+    const markup = memoCaptureMarkup(html);
+    expect(markup).toContain(`.${MEMO_SCOPE} .section-title {`);
+    expect(markup).toContain(`.${MEMO_SCOPE} .header {`);
+    expect(markup).toContain(`.${MEMO_SCOPE} td, .${MEMO_SCOPE} th {`);
+    expect(markup).toContain('Style Co');
+  });
+
+  test('no unscoped rule can restyle the app while the PDF renders', () => {
+    const css = memoCaptureMarkup(html).match(/<style>([\s\S]*?)<\/style>/)[1];
+    expect(css).not.toMatch(/@page|@media/);
+    for (const [, selectors] of css.matchAll(/([^{}]+)\{[^}]*\}/g)) {
+      for (const sel of selectors.split(',')) {
+        expect(sel.trim().startsWith(`.${MEMO_SCOPE}`)).toBe(true);
+      }
+    }
+  });
+
+  test('body and * map onto the container itself', () => {
+    const out = scopeMemoCss('body { margin: 0; } * { box-sizing: border-box; }', 'm');
+    expect(out).toMatch(/\.m \{\s*margin: 0;/);
+    expect(out).toMatch(/\.m, \.m \* \{\s*box-sizing: border-box;/);
+    expect(out).not.toMatch(/(^|\})\s*(body|\*)\s*\{/);
+  });
+
+  test('a section title in the capture node actually computes as styled', () => {
+    const container = document.createElement('div');
+    container.className = MEMO_SCOPE;
+    container.innerHTML = memoCaptureMarkup(html);
+    document.body.appendChild(container);
+    const title = container.querySelector('.section-title');
+    expect(title).not.toBeNull();
+    expect(getComputedStyle(title).textTransform).toBe('uppercase');
+    document.body.removeChild(container);
+  });
+
+  test('the download handler uses the scoped markup', () => {
+    const src = require('fs').readFileSync(__dirname + '/ExportPanel.js', 'utf8');
+    expect(src).toMatch(/container\.innerHTML = memoCaptureMarkup\(html\)/);
+  });
+});
+
+// ---------------------------------------------------------------
+// html2canvas 1.4.1 throws on oklch(), Tailwind 4's colour format, so
+// every download fell back to the print window and no memo snapshot was
+// ever stored. The clone it renders must carry only the memo's styles.
+// ---------------------------------------------------------------
+describe('the PDF clone carries no app stylesheet', () => {
+  function clonedDoc() {
+    const doc = document.implementation.createHTMLDocument('clone');
+    doc.head.innerHTML = `
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans">
+      <link rel="stylesheet" href="/static/css/main.abc123.css">
+      <style>:root { --color-gray-200: oklch(92.8% 0.006 264.531); }</style>`;
+    doc.body.innerHTML = `<div class="${MEMO_SCOPE}"><style>.${MEMO_SCOPE} .section-title { color: #1e293b; }</style><div class="section-title">Deal Overview</div></div>`;
+    return doc;
+  }
+
+  test('removes app CSS, keeps the web font and the memo stylesheet', () => {
+    const doc = clonedDoc();
+    stripAppStylesForCapture(doc);
+    const css = [...doc.querySelectorAll('style')].map((s) => s.textContent).join('');
+    expect(css).not.toContain('oklch');
+    expect(css).toContain(`.${MEMO_SCOPE} .section-title`);
+    const hrefs = [...doc.querySelectorAll('link[rel="stylesheet"]')].map((l) => l.getAttribute('href'));
+    expect(hrefs).toEqual(['https://fonts.googleapis.com/css2?family=IBM+Plex+Sans']);
+  });
+
+  test('the download handler strips the clone before html2canvas parses it', () => {
+    const src = require('fs').readFileSync(__dirname + '/ExportPanel.js', 'utf8');
+    expect(src).toMatch(/onclone: \(doc\) => stripAppStylesForCapture\(doc\)/);
+  });
+
+  test('the captured node is in flow, so the clone has a height', () => {
+    // html2pdf deep-clones this node into its own container. A fixed or
+    // absolute node measures zero high there, which printed one blank page.
+    const src = require('fs').readFileSync(__dirname + '/ExportPanel.js', 'utf8');
+    expect(src).toMatch(/wrapper\.style\.position = 'fixed'/);
+    expect(src).not.toMatch(/container\.style\.position/);
+    expect(src).toMatch(/\.from\(container\)/);
   });
 });

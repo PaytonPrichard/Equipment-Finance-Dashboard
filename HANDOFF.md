@@ -39,6 +39,25 @@ worth writing about.
    customised its spreads.
 4. **The memo printed at 92% on the wrong paper.** Laid out at 780px and
    printed into 718px of A4, while the stylesheet claimed letter.
+5. **Download PDF produced no PDF at all.** Found 2026-09-15. html2canvas
+   1.4.1, which html2pdf bundles, cannot parse `oklch()`, and that is how
+   Tailwind 4 defines its palette. Preflight border colours alone were enough
+   to throw, so every download fell through to the print-window fallback, and
+   `deal_memos` recorded nothing, because the snapshot is only written after a
+   successful download. Fixed by stripping the app's stylesheets from the
+   clone html2canvas renders, via its `onclone` hook. The memo carries its own
+   CSS, so it needs none of the app's.
+6. **The capture node was positioned, so the memo was one blank page.** Found
+   2026-09-15, behind the oklch error. html2pdf deep-clones the node it is
+   given into its own container, where a `position: fixed` element is out of
+   flow and measures zero high. The offscreen positioning now lives on a
+   wrapper and html2pdf is handed an in-flow node. Also: taking only `<body>`
+   from the memo document dropped its `<style>`, so section titles, the header
+   and the tables printed unstyled. The stylesheet is now scoped to the
+   capture container and carried in with the body.
+
+   Still open, cosmetic: the four-page memo leaves page 2 half empty and
+   splits the footer across the last two pages.
 
 ## Open — product
 

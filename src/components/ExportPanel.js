@@ -532,6 +532,51 @@ export function generateBrandedPdfHtml({ summaryText, inputs, metrics, riskScore
 </html>`;
 }
 
+// html2pdf renders a node inside the live app, not a document, so the memo's
+// <head> never reaches it. Taking only the <body> dropped the stylesheet, and
+// every class-styled element (section titles, the header, tables) printed
+// unstyled. The stylesheet is scoped to the capture container and carried in
+// with the body, so its body and * rules cannot restyle the app mid-render.
+export const MEMO_SCOPE = 'tranche-memo';
+
+export function scopeMemoCss(css, scope = MEMO_SCOPE) {
+  return css
+    .replace(/@page\s*\{[^}]*\}/g, '')
+    .replace(/@media print\s*\{[^{}]*\{[^}]*\}\s*\}/g, '')
+    .replace(/([^{}]+)\{([^}]*)\}/g, (_, selectors, decls) => {
+      const scoped = selectors
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean)
+        .map((sel) => {
+          if (sel === 'body' || sel === 'html') return `.${scope}`;
+          if (sel === '*') return `.${scope}, .${scope} *`;
+          return `.${scope} ${sel}`;
+        })
+        .join(', ');
+      return `${scoped} {${decls}}`;
+    });
+}
+
+export function memoCaptureMarkup(html, scope = MEMO_SCOPE) {
+  const css = [...html.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/gi)].map((m) => m[1]).join('\n');
+  const bodyMatch = html.match(/<body[^>]*>([\s\S]*)<\/body>/i);
+  return `<style>${scopeMemoCss(css, scope)}</style>${bodyMatch ? bodyMatch[1] : html}`;
+}
+
+// html2canvas 1.4.1 cannot parse oklch(), which is how Tailwind 4 defines its
+// palette. Any app rule reaching the memo subtree (preflight border colours
+// alone are enough) threw, html2pdf fell back to the print window, and no PDF
+// or memo snapshot was ever produced. The memo carries its own stylesheet, so
+// the clone html2canvas renders keeps only that and the web font.
+export function stripAppStylesForCapture(clonedDoc, scope = MEMO_SCOPE) {
+  clonedDoc.querySelectorAll('style, link[rel="stylesheet"]').forEach((node) => {
+    if (node.closest(`.${scope}`)) return;
+    if ((node.getAttribute('href') || '').includes('fonts.googleapis.com')) return;
+    node.remove();
+  });
+}
+
 export default function ExportPanel({ summaryText, inputs, metrics, riskScore, recommendation, screeningResult, profile, moduleLabel, moduleKey, factors, structure, stressResults, borrowerExtras, criteria, commentary, sourceDocuments = [], pipelineDealId = null, userId = null, sofr = null, sofrDate = null, onMemoSaved = null }) {
   const [copied, setCopied] = useState(false);
 
@@ -587,21 +632,28 @@ const CONTENT_PX = Math.round((CONTENT_MM * 96) / 25.4);
     setPdfLoading(true);
     try {
       const html2pdf = (await import('html2pdf.js')).default;
-      const container = document.createElement('div');
-      container.innerHTML = html;
-      // Extract body content from the full HTML document
-      const bodyMatch = html.match(/<body[^>]*>([\s\S]*)<\/body>/i);
-      if (bodyMatch) container.innerHTML = bodyMatch[1];
       // Match html2pdf's capture container exactly, so the memo is
       // laid out at the width it is printed at and nothing is scaled
       // or clipped. Kept off-screen rather than in flow: it was
       // previously appended visibly at full width for the duration of
       // the render.
+      //
+      // The offscreen positioning belongs on the wrapper, not on the node
+      // handed to html2pdf. html2pdf deep-clones that node into its own
+      // container, where a positioned element is out of flow and measures
+      // zero high, and the memo came out as one blank page.
+      const wrapper = document.createElement('div');
+      wrapper.style.position = 'fixed';
+      wrapper.style.left = '-10000px';
+      wrapper.style.top = '0';
+      wrapper.style.width = `${CONTENT_PX}px`;
+
+      const container = document.createElement('div');
+      container.className = MEMO_SCOPE;
+      container.innerHTML = memoCaptureMarkup(html);
       container.style.width = `${CONTENT_PX}px`;
-      container.style.position = 'fixed';
-      container.style.left = '-10000px';
-      container.style.top = '0';
-      document.body.appendChild(container);
+      wrapper.appendChild(container);
+      document.body.appendChild(wrapper);
 
       const companyName = (inputs?.companyName || 'Deal').replace(/[^a-zA-Z0-9]/g, '_');
       const date = new Date().toISOString().slice(0, 10);
@@ -610,7 +662,7 @@ const CONTENT_PX = Math.round((CONTENT_MM * 96) / 25.4);
         margin: [MARGIN_Y_MM, MARGIN_X_MM, MARGIN_Y_MM, MARGIN_X_MM],
         filename: `${companyName}_screening_memo_${date}.pdf`,
         image: { type: 'jpeg', quality: 0.95 },
-        html2canvas: { scale: 2, useCORS: true, letterRendering: true },
+        html2canvas: { scale: 2, useCORS: true, letterRendering: true, onclone: (doc) => stripAppStylesForCapture(doc) },
         // Letter, not A4. The stylesheet's @page always said letter;
         // this is the half that disagreed, so every memo came out on
         // the wrong paper size for a US credit committee.
@@ -618,7 +670,7 @@ const CONTENT_PX = Math.round((CONTENT_MM * 96) / 25.4);
         pagebreak: { mode: ['css', 'legacy'] },
       }).from(container).save();
 
-      document.body.removeChild(container);
+      document.body.removeChild(wrapper);
 
       // Only after the download succeeded. A failed export should not leave a
       // memo in the record that nobody ever held. Storage failing is logged
