@@ -358,6 +358,16 @@ describe('percentage groups that should sum to 100', () => {
 });
 
 describe('extractDealSheetSet', () => {
+  // Set the key here too. Without it these tests pass only when the shell
+  // running them happens to export ANTHROPIC_API_KEY.
+  const OLD_ENV = process.env;
+  beforeEach(() => {
+    process.env = { ...OLD_ENV, ANTHROPIC_API_KEY: 'test-key' };
+  });
+  afterAll(() => {
+    process.env = OLD_ENV;
+  });
+
   function sequencedFetch(inputsPerCall) {
     let i = 0;
     return async () => ({
