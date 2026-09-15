@@ -15,6 +15,13 @@ tabular figures, verdict chips. It follows the app's own palette (warm
 off-white ground, near-black ink, gold reserved for one thing at a time)
 rather than inventing a second visual identity.
 
+**Type.** One superfamily, three roles with one job each. IBM Plex Serif sets
+the wordmark, the lede and the step headings. IBM Plex Sans sets body text and
+every label: eyebrows, section heads, table headers, step numbers, chips, the
+footer rule. IBM Plex Mono is reserved for figures and filenames, so a
+monospace face on the page always means machine output. The sheet is 940px;
+running text stays capped at 66ch and the lede at 50ch.
+
 **Every claim on it is checkable:**
 
 | Claim | Where it comes from |

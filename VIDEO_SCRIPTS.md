@@ -55,10 +55,15 @@ live on a call. This one is for recording.
 The structure is deliberate: it opens on the finished memo, then rewinds. A
 viewer who has already seen where this ends up watches the middle differently.
 
+Every figure below was verified live against the Granite Ridge set on
+2026-09-03. Re-verify before any reshoot, per phase 0 of
+`RECORDING_RUNBOOK.md`. Record signed in, not in demo mode: the demo banner
+reads as a mockup.
+
 | Time | On screen | Voiceover |
 |---|---|---|
 | **0:00** | The finished committee memo, mid-page. Slow scroll through the metrics table. | "This is a committee memo for a $5.3 million equipment facility." |
-| **0:06** | Keep scrolling. Land on Source Documents. | "It took four documents and about ninety seconds. Here is the whole of it." |
+| **0:06** | Keep scrolling. Land on Source Documents. | "It took four documents and about two minutes. Here is the whole of it." |
 | **0:12** | Cut to a folder or desktop showing the four files: credit application, financial statements, equipment quote, broker email. | "A deal does not arrive as a form. It arrives as this." |
 | **0:20** | Hold on the four filenames. | "An application, two years of financials, a dealer quote, and a broker's cover email. Four documents about one borrower, and they do not agree with each other." |
 | **0:28** | Tranche, New Deal, empty. Drag all four in at once. Cut the wait. | "So the first thing it does is read all four together." |
@@ -66,10 +71,10 @@ viewer who has already seen where this ends up watches the middle differently.
 | **0:45** | Scroll to the amber conflict block. Hold. | "Because here is where the documents disagree." |
 | **0:52** | Cursor rests on the EBITDA line. | "The broker says EBITDA is just under 7.9 million. The reviewed financials say 7.4." |
 | **1:00** | Still on the EBITDA line. | "It took the financials. Statements outrank a broker summary on financial data. And it is telling me it did, with both numbers and both filenames." |
-| **1:08** | Click **Use that**. Right pane recomputes: margin 19.3 to 20.6. | "If I disagree, I override it, and everything downstream moves." |
+| **1:08** | Click **Use that**. Right pane recomputes: margin 19.3 to 20.6, debt yield 138.7 to 148.1. **Punch in on the metrics line in the edit.** The score stays 80 and the only thing that moves is two figures in a thin grey line, which is invisible at feed size unscaled. | "If I disagree, I override it, and everything downstream moves." |
 | **1:14** | Click **Use that** again to restore. Then expand **Show what came from where**. | "Every field traces to a document. Financials won on money. The dealer quote won on the equipment. The application won on who the borrower is." |
 | **1:24** | Right pane: score 80, PASS. | "Twenty fields, four documents, and none of them typed. It scores 80." |
-| **1:32** | Point at the red flag: mining, high risk. | "And it says which factor cost it points, not just the number." |
+| **1:32** | Scroll to **Preliminary Assessment Notes**, cursor on the Mining line: "Mining sector carries cyclical/operational risk; consider shorter tenor, step-up payments, or additional credit support." Not the Executive Summary, which never names the sector. | "And it says which factor cost it points, not just the number." |
 | **1:40** | Click **Download PDF**. Cut to the memo, top. Scroll: transaction summary, sources and uses. | "The memo opens on the ask, the way a memo should." |
 | **1:48** | Keep scrolling to Source Documents. Hold. | "And it closes by naming every document the figures came from." |
 | **1:55** | Hold on the memo. No logo card. | "Equipment finance, receivables, inventory. Tranche, at gettranche.app." |
