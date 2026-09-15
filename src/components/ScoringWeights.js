@@ -1,16 +1,8 @@
 import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { fetchPreferences, upsertPreferences } from '../lib/preferences';
+import { DEFAULT_WEIGHTS, validateWeights } from '../lib/scoringWeights';
 
-const DEFAULT_WEIGHTS = {
-  dscr: 25,
-  leverage: 20,
-  industry: 15,
-  essentiality: 10,
-  equipmentLtv: 10,
-  yearsInBusiness: 10,
-  termCoverage: 10,
-};
 
 const FACTOR_LABELS = {
   dscr: 'Debt Service Coverage',
@@ -21,14 +13,6 @@ const FACTOR_LABELS = {
   yearsInBusiness: 'Years in Business',
   termCoverage: 'Term Coverage',
 };
-
-function validateWeights(obj) {
-  if (!obj) return null;
-  const valid = Object.keys(DEFAULT_WEIGHTS).every(
-    (k) => typeof obj[k] === 'number' && obj[k] >= 0 && obj[k] <= 40
-  );
-  return valid ? obj : null;
-}
 
 function WeightSlider({ factorKey, label, value, onChange }) {
   const pct = ((value - 0) / (40 - 0)) * 100;
@@ -105,9 +89,15 @@ export default function ScoringWeights({ inputs, metrics, riskScore, onWeightsCh
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
 
-  // Debounced save to Supabase whenever weights change
+  // Debounced save to Supabase whenever weights change.
+  //
+  // The first run is skipped. It used to schedule a write of the defaults
+  // while the loader above was still fetching the real weights, so a slow
+  // fetch meant the defaults landed on top of saved settings.
+  const hasEditedRef = useRef(false);
   useEffect(() => {
     if (!userId) return;
+    if (!hasEditedRef.current) { hasEditedRef.current = true; return; }
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
     saveTimerRef.current = setTimeout(() => {
       upsertPreferences(userId, { scoring_weights: weights }).catch((err) =>

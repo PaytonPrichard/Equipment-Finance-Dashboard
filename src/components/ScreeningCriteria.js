@@ -60,8 +60,17 @@ export default function ScreeningCriteria({ activeModule, onCriteriaChange }) {
   }, [userId]);
 
   // Debounced save
+  // Skip the save that would otherwise fire on mount.
+  //
+  // Both effects used to run on first render: this one scheduled a write of
+  // the defaults, while the loader below fetched the real values. If the fetch
+  // was slower than the debounce, the defaults landed on top of saved settings.
+  // It self-corrected once the fetch resolved, unless the user navigated away
+  // inside that window.
+  const hasEditedRef = useRef(false);
   useEffect(() => {
     if (!userId) return;
+    if (!hasEditedRef.current) { hasEditedRef.current = true; return; }
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
     saveTimerRef.current = setTimeout(() => {
       upsertPreferences(userId, { screening_criteria: criteria }).catch(console.error);

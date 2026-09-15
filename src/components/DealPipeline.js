@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useRole } from '../hooks/useRole';
 import { useToast } from '../contexts/ToastContext';
@@ -15,6 +15,7 @@ import { exportPipelineCsv } from '../utils/csvExport';
 import DealDetail from './DealDetail';
 import { fetchAttachmentCounts } from '../lib/attachments';
 import { notifyStageChange } from '../lib/notifications';
+import { verdictForDeal } from '../lib/dealVerdict';
 
 const STAGES = [
   { key: 'Screening', color: 'gold' },
@@ -26,24 +27,24 @@ const STAGES = [
 
 const STAGE_STYLES = {
   Screening:      { bg: 'bg-gray-100',    border: 'border-gray-200',    text: 'text-gray-600',    dot: 'bg-gray-400' },
-  'Under Review': { bg: 'bg-amber-500/[0.08]',   border: 'border-amber-500/20',   text: 'text-amber-400',   dot: 'bg-amber-400' },
-  Approved:       { bg: 'bg-emerald-500/[0.08]',  border: 'border-emerald-500/20', text: 'text-emerald-400', dot: 'bg-emerald-400' },
-  Funded:         { bg: 'bg-teal-500/[0.08]',     border: 'border-teal-500/20',    text: 'text-teal-400',    dot: 'bg-teal-400' },
-  Declined:       { bg: 'bg-rose-500/[0.08]',     border: 'border-rose-500/20',    text: 'text-rose-400',    dot: 'bg-rose-400' },
+  'Under Review': { bg: 'bg-amber-50',    border: 'border-amber-200',   text: 'text-amber-700',   dot: 'bg-amber-500' },
+  Approved:       { bg: 'bg-emerald-50',  border: 'border-emerald-200', text: 'text-emerald-700', dot: 'bg-emerald-600' },
+  Funded:         { bg: 'bg-teal-50',     border: 'border-teal-200',    text: 'text-teal-700',    dot: 'bg-teal-600' },
+  Declined:       { bg: 'bg-rose-50',     border: 'border-rose-200',    text: 'text-rose-700',    dot: 'bg-rose-500' },
 };
 
 function scoreBg(s) {
-  if (s >= 75) return 'bg-emerald-500/[0.08] border-emerald-500/15';
-  if (s >= 55) return 'bg-lime-500/[0.08] border-lime-500/15';
-  if (s >= 35) return 'bg-amber-500/[0.08] border-amber-500/15';
-  return 'bg-rose-500/[0.08] border-rose-500/15';
+  if (s >= 75) return 'bg-emerald-50 border-emerald-200';
+  if (s >= 55) return 'bg-lime-50 border-lime-200';
+  if (s >= 35) return 'bg-amber-50 border-amber-200';
+  return 'bg-rose-50 border-rose-200';
 }
 
 function scoreColor(s) {
-  if (s >= 75) return 'text-emerald-400';
-  if (s >= 55) return 'text-lime-400';
-  if (s >= 35) return 'text-amber-400';
-  return 'text-rose-400';
+  if (s >= 75) return 'text-emerald-800';
+  if (s >= 55) return 'text-lime-800';
+  if (s >= 35) return 'text-amber-800';
+  return 'text-rose-800';
 }
 
 function fmtCost(v) {
@@ -67,14 +68,15 @@ function daysInStage(deal) {
   return Math.max(0, Math.floor(diff / (1000 * 60 * 60 * 24)));
 }
 
-function getVerdict(score) {
-  if (score == null) return null;
-  if (score >= 75) return { label: 'PASS', cls: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30' };
-  if (score >= 35) return { label: 'FLAG', cls: 'bg-amber-500/15 text-amber-400 border-amber-500/30' };
-  return { label: 'FAIL', cls: 'bg-rose-500/15 text-rose-400 border-rose-500/30' };
-}
+// Category to classes, mapped in the presentation layer rather than returned
+// from scoring (CLAUDE.md).
+const VERDICT_CLASSES = {
+  pass: 'bg-emerald-50 text-emerald-800 border-emerald-200',
+  flag: 'bg-amber-50 text-amber-800 border-amber-200',
+  fail: 'bg-rose-50 text-rose-800 border-rose-200',
+};
 
-export default function DealPipeline({ onLoadDeal, currentInputs, currentScore, activeModule = 'equipment_finance', readOnly, criteria }) {
+export default function DealPipeline({ onLoadDeal, currentInputs, currentScore, activeModule = 'equipment_finance', readOnly, criteria, sofr, orgSettings }) {
   const { user, profile } = useAuth();
   const { can } = useRole();
   const { addToast } = useToast();
@@ -106,6 +108,17 @@ export default function DealPipeline({ onLoadDeal, currentInputs, currentScore, 
 
   useEffect(() => { loadDeals(); }, [loadDeals]);
 
+  // One verdict per deal, computed against the firm's thresholds and the hard
+  // gates, exactly as the screening view does. Memoised across the board
+  // because each one recomputes metrics and a risk score from stored inputs.
+  const verdicts = useMemo(() => {
+    const out = {};
+    for (const deal of deals) {
+      out[deal.id] = verdictForDeal(deal, { criteria, sofr, orgSettings });
+    }
+    return out;
+  }, [deals, criteria, sofr, orgSettings]);
+
   // Focus the add-deal input when it appears
   useEffect(() => {
     if (isAdding && addInputRef.current) addInputRef.current.focus();
@@ -118,8 +131,18 @@ export default function DealPipeline({ onLoadDeal, currentInputs, currentScore, 
 
   /* --- Actions --- */
 
+  // A pipeline deal is a screened deal: the server recomputes its score from
+  // its inputs and rejects anything that will not validate. So this button
+  // cannot create a deal out of nothing, and used to try anyway, showing an
+  // optimistic card that vanished behind "Failed to add deal to pipeline".
+  const canAddFromForm = !!currentInputs && currentScore != null;
+
   const handleStartAdd = () => {
     if (readOnly) { addToast('Plan expired. Upgrade to add deals.', 'warning'); return; }
+    if (!canAddFromForm) {
+      addToast('Screen a deal on the New Deal tab first, then add it here.', 'warning');
+      return;
+    }
     setAddingName(currentInputs?.companyName || '');
     setIsAdding(true);
   };
@@ -162,12 +185,22 @@ export default function DealPipeline({ onLoadDeal, currentInputs, currentScore, 
     if (!userId || !orgId) return;
     const removed = deals.find((d) => d.id === id);
     if (removed && !canDeleteDeal(removed)) return;
+    // Remember where it was. The list is ordered updated_at desc, so appending
+    // on rollback silently dropped a deal that failed to delete to the bottom
+    // of its column.
+    const removedIndex = deals.findIndex((d) => d.id === id);
     setDeals((prev) => prev.filter((d) => d.id !== id));
 
     const { error } = await deletePipelineDeal(id, userId, orgId);
     if (error) {
       addToast('Failed to delete deal', 'error');
-      if (removed) setDeals((prev) => [...prev, removed]);
+      if (removed) {
+        setDeals((prev) => {
+          const next = [...prev];
+          next.splice(Math.max(0, removedIndex), 0, removed);
+          return next;
+        });
+      }
     }
   };
 
@@ -477,11 +510,24 @@ export default function DealPipeline({ onLoadDeal, currentInputs, currentScore, 
           ) : (
             <div className="flex items-center gap-2">
               <button
-                className="pill-btn px-3 py-1.5 rounded-lg text-[11px] font-medium text-gray-600"
+                className={`pill-btn px-3 py-1.5 rounded-lg text-[11px] font-medium ${
+                  canAddFromForm ? 'text-gray-600 hover:text-gray-900' : 'text-gray-300 cursor-default'
+                }`}
+                disabled={!canAddFromForm}
+                title={
+                  canAddFromForm
+                    ? 'Add the deal currently open on New Deal'
+                    : 'Screen a deal on the New Deal tab first. A pipeline deal carries its inputs and score.'
+                }
                 onClick={handleStartAdd}
               >
                 + Add to Pipeline
               </button>
+              {!canAddFromForm && (
+                <span className="text-[11px] text-gray-400">
+                  Screen a deal on New Deal to add it here.
+                </span>
+              )}
               {deals.length > 0 && (
                 <button
                   className="pill-btn px-3 py-1.5 rounded-lg text-[11px] font-medium text-gray-500 hover:text-gray-800 flex items-center gap-1.5"
@@ -554,7 +600,7 @@ export default function DealPipeline({ onLoadDeal, currentInputs, currentScore, 
                   return (
                     <div
                       key={deal.id}
-                      className="glass-card rounded-xl p-3 group transition-all hover:ring-1 hover:ring-white/[0.06]"
+                      className="glass-card rounded-xl p-3 group transition-all hover:border-gray-300 hover:shadow-sm"
                     >
                       {/* Company name + delete */}
                       <div className="flex items-start justify-between gap-1 mb-1.5">
@@ -570,19 +616,34 @@ export default function DealPipeline({ onLoadDeal, currentInputs, currentScore, 
                             autoFocus
                           />
                         ) : (
-                          <button
-                            className="text-sm font-semibold text-gray-800 truncate text-left hover:text-gray-600 transition-colors leading-tight"
-                            title="Open deal. Double-click to rename."
-                            aria-label={`Open ${deal.name}`}
-                            onClick={() => setOpenDealId(deal.id)}
-                            onDoubleClick={(e) => { e.preventDefault(); startRename(deal); }}
-                          >
-                            {deal.name}
-                          </button>
+                          <div className="flex items-center gap-1 min-w-0">
+                            <button
+                              className="text-sm font-semibold text-gray-800 truncate text-left hover:text-gray-600 transition-colors leading-tight"
+                              title="Open deal"
+                              aria-label={`Open ${deal.name}`}
+                              onClick={() => setOpenDealId(deal.id)}
+                              onDoubleClick={(e) => { e.preventDefault(); startRename(deal); }}
+                            >
+                              {deal.name}
+                            </button>
+                            {/* Rename used to be double-click only, advertised
+                                in a title attribute. Nobody finds that. */}
+                            <button
+                              className="text-gray-300 hover:text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
+                              title="Rename deal"
+                              aria-label={`Rename ${deal.name}`}
+                              onClick={() => startRename(deal)}
+                            >
+                              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <path d="M12 20h9" />
+                                <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z" />
+                              </svg>
+                            </button>
+                          </div>
                         )}
                         {showDelete && (
                           <button
-                            className="text-gray-300 hover:text-rose-400 text-sm leading-none opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 mt-0.5"
+                            className="text-gray-300 hover:text-rose-600 text-sm leading-none opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 mt-0.5"
                             title="Remove from pipeline"
                             aria-label="Delete deal"
                             onClick={() => handleDelete(deal.id)}
@@ -600,13 +661,16 @@ export default function DealPipeline({ onLoadDeal, currentInputs, currentScore, 
                           </span>
                         )}
                         {(() => {
-                          const v = getVerdict(deal.score);
-                          return v ? (
-                            <span className={`inline-flex items-center px-1.5 py-0.5 rounded-md border text-[9px] font-bold tracking-wider ${v.cls}`}>
+                          const v = verdicts[deal.id];
+                          return v && v.label ? (
+                            <span
+                              className={`inline-flex items-center px-1.5 py-0.5 rounded-md border text-[9px] font-bold tracking-wider ${VERDICT_CLASSES[v.category]}`}
+                              title={v.reasons.length ? v.reasons.map((r) => r.text).join('. ') : undefined}
+                            >
                               {v.label}
                             </span>
                           ) : (
-                            <span className="inline-flex items-center px-1.5 py-0.5 rounded-md border text-[9px] font-bold tracking-wider bg-amber-50 text-amber-600 border-amber-200">
+                            <span className="inline-flex items-center px-1.5 py-0.5 rounded-md border text-[9px] font-bold tracking-wider bg-gray-50 text-gray-600 border-gray-200">
                               Incomplete
                             </span>
                           );
@@ -624,7 +688,7 @@ export default function DealPipeline({ onLoadDeal, currentInputs, currentScore, 
                         {(() => {
                           const days = daysInStage(deal);
                           return (
-                            <span className={`text-[9px] font-medium ${days > 14 ? 'text-amber-400' : days > 7 ? 'text-gray-500' : 'text-gray-400'}`}>
+                            <span className={`text-[9px] font-medium ${days > 14 ? 'text-amber-700' : days > 7 ? 'text-gray-500' : 'text-gray-400'}`}>
                               {days === 0 ? 'Today' : days === 1 ? '1 day' : `${days} days`}
                             </span>
                           );
@@ -636,7 +700,7 @@ export default function DealPipeline({ onLoadDeal, currentInputs, currentScore, 
                         <div className="mb-2">
                           <textarea
                             ref={noteInputRef}
-                            className="w-full bg-white/5 rounded-lg px-2 py-1.5 text-[11px] text-gray-700 outline-none placeholder-gray-400 border border-gray-200 focus:border-gray-300 transition-colors resize-none"
+                            className="w-full bg-white rounded-lg px-2 py-1.5 text-[11px] text-gray-700 outline-none placeholder-gray-400 border border-gray-200 focus:border-gray-300 transition-colors resize-none"
                             rows={2}
                             placeholder="Add a note..."
                             value={noteText}
@@ -698,7 +762,13 @@ export default function DealPipeline({ onLoadDeal, currentInputs, currentScore, 
                               : 'text-gray-200 cursor-default'
                           }`}
                           disabled={!canMoveBack}
-                          title={canMoveBack ? `Move to ${stageKeys[stageIdx - 1]}` : ''}
+                          title={
+                            canMoveBack
+                              ? `Move to ${stageKeys[stageIdx - 1]}`
+                              : stageIdx <= 0
+                                ? 'Already at the first stage'
+                                : `You do not have permission to move deals to ${stageKeys[stageIdx - 1]}`
+                          }
                           aria-label="Move to previous stage"
                           onClick={() => canMoveBack && handleMove(deal.id, -1)}
                         >
@@ -715,7 +785,13 @@ export default function DealPipeline({ onLoadDeal, currentInputs, currentScore, 
                               : 'text-gray-200 cursor-default'
                           }`}
                           disabled={!canMoveForward}
-                          title={canMoveForward ? `Move to ${stageKeys[stageIdx + 1]}` : ''}
+                          title={
+                            canMoveForward
+                              ? `Move to ${stageKeys[stageIdx + 1]}`
+                              : stageIdx >= stageKeys.length - 1
+                                ? 'Already at the final stage'
+                                : `You do not have permission to move deals to ${stageKeys[stageIdx + 1]}`
+                          }
                           aria-label="Move to next stage"
                           onClick={() => canMoveForward && handleMove(deal.id, 1)}
                         >
@@ -745,6 +821,8 @@ export default function DealPipeline({ onLoadDeal, currentInputs, currentScore, 
       <DealDetail
         deal={openDeal}
         criteria={criteria}
+        sofr={sofr}
+        orgSettings={orgSettings}
         onClose={() => setOpenDealId(null)}
         onRename={renameDeal}
         onSaveNotes={saveNoteFor}

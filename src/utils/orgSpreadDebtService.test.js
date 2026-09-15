@@ -7,10 +7,12 @@
 // more generous rule than the defaults, on the highest-weighted factor and
 // the primary pass/fail gate.
 //
-// These tests describe the two shapes rather than reaching into App.js:
-// a term facility amortizes, a revolver does not.
+// The shape tests below predate the extraction of this logic out of App.js.
+// applyOrgSpread now exists as a real function, so the block at the bottom
+// exercises it directly rather than only describing what it should do.
 
 import { calculateMonthlyPayment } from './format';
+import { applyOrgSpread } from './dealMetrics';
 
 describe('debt service under an org spread override', () => {
   // The Granite Ridge facility from the sample corpus.
@@ -56,5 +58,82 @@ describe('debt service under an org spread override', () => {
     // borrowing-base facilities, and that is correct.
     const borrowingBase = 8500000;
     expect(borrowingBase * rate).toBeCloseTo(595000, 0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// The function itself. This is what App.js and the pipeline drawer both call,
+// so a regression here shows up on every surface at once rather than on one.
+// ---------------------------------------------------------------------------
+
+describe('applyOrgSpread', () => {
+  const termInputs = { ebitda: 7400000, loanTerm: 84, creditRating: 'Adequate' };
+  const termMetrics = {
+    rate: 0.07,
+    netFinanced: 5333750,
+    existingDebtService: 2310000,
+    newAnnualDebtService: 900000,
+    dscr: 2.3,
+    rateInfo: { baseSpread: 200, creditAdj: 0 },
+  };
+
+  test('returns the metrics untouched when the org has set no override', () => {
+    expect(applyOrgSpread(termMetrics, termInputs, {})).toBe(termMetrics);
+    expect(applyOrgSpread(termMetrics, termInputs, undefined)).toBe(termMetrics);
+  });
+
+  test('returns the metrics untouched when an override nets to zero change', () => {
+    // Setting the base spread to exactly what the module already used is not
+    // an override in any meaningful sense.
+    expect(applyOrgSpread(termMetrics, termInputs, { baseSpreadBps: 200 })).toBe(termMetrics);
+  });
+
+  test('a wider spread raises the rate and lowers coverage', () => {
+    const out = applyOrgSpread(termMetrics, termInputs, { baseSpreadBps: 400 });
+    expect(out.rate).toBeCloseTo(0.09, 6);
+    expect(out.effectiveRate).toBeCloseTo(0.09, 6);
+    expect(out.dscr).toBeLessThan(termMetrics.dscr);
+  });
+
+  test('a term facility amortizes rather than being priced interest only', () => {
+    // The bug this guards: newAnnualDebtService was netFinanced * rate, which
+    // understated annual debt service 2.6x on this facility and inflated DSCR
+    // by 22% for any firm that customised its spreads.
+    const out = applyOrgSpread(termMetrics, termInputs, { baseSpreadBps: 400 });
+    const interestOnly = termMetrics.netFinanced * out.rate;
+    expect(out.newAnnualDebtService).toBeGreaterThan(interestOnly * 1.2);
+    expect(out.newAnnualDebtService).toBeCloseTo(
+      calculateMonthlyPayment(termMetrics.netFinanced, out.rate, 84) * 12,
+      0,
+    );
+  });
+
+  test('a revolver stays interest only, because it does not amortize', () => {
+    const revolverMetrics = {
+      rate: 0.07,
+      borrowingBase: 8500000,
+      existingDebtService: 500000,
+      newAnnualDebtService: 595000,
+      dscr: 2.0,
+      rateInfo: { baseSpread: 250, creditAdj: 0 },
+    };
+    const out = applyOrgSpread(revolverMetrics, { ebitda: 3000000 }, { baseSpreadBps: 350 });
+    expect(out.rate).toBeCloseTo(0.08, 6);
+    expect(out.newAnnualDebtService).toBeCloseTo(8500000 * 0.08, 0);
+  });
+
+  test('the credit adjustment only applies to the rating it names', () => {
+    const strong = applyOrgSpread(
+      termMetrics,
+      { ...termInputs, creditRating: 'Strong' },
+      { creditSpreadStrong: -200 },
+    );
+    const adequate = applyOrgSpread(
+      termMetrics,
+      { ...termInputs, creditRating: 'Adequate' },
+      { creditSpreadStrong: -200 },
+    );
+    expect(strong.rate).toBeLessThan(termMetrics.rate);
+    expect(adequate).toBe(termMetrics);
   });
 });

@@ -287,7 +287,7 @@ export default function TeamManagement() {
   if (!can('org.manage_users')) {
     return (
       <div className="flex items-center justify-center py-20">
-        <div className="text-slate-500 text-sm">
+        <div className="text-gray-500 text-sm">
           You don't have permission to manage the team.
         </div>
       </div>
@@ -299,7 +299,7 @@ export default function TeamManagement() {
       <div className="glass-card rounded-2xl p-12 flex items-center justify-center">
         <div className="flex items-center gap-3">
           <div className="w-4 h-4 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin" />
-          <span className="text-[12px] text-slate-500">Loading team data...</span>
+          <span className="text-[12px] text-gray-500">Loading team data...</span>
         </div>
       </div>
     );
@@ -310,40 +310,38 @@ export default function TeamManagement() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-lg font-bold text-slate-100">Team Management</h2>
-          <p className="text-[11px] text-slate-500 mt-0.5">
+          <h2 className="text-lg font-bold text-gray-900">Team Management</h2>
+          <p className="text-[11px] text-gray-500 mt-0.5">
             Manage members, invites, and organization settings
-            {org?.name && (
-              <span className="text-slate-600"> — {org.name}</span>
-            )}
+            {org?.name && <span className="text-gray-400"> for {org.name}</span>}
           </p>
         </div>
       </div>
 
       {/* Plan Status */}
       <div className="glass-card rounded-2xl p-5">
-        <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-3">
+        <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3">
           Plan Status
         </h3>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div>
-            <div className="text-[11px] text-slate-500 mb-0.5">Current Plan</div>
-            <div className="text-sm font-semibold text-slate-200">
+            <div className="text-[11px] text-gray-500 mb-0.5">Current Plan</div>
+            <div className="text-sm font-semibold text-gray-900">
               {org?.plan || 'Free'}
             </div>
           </div>
           <div>
-            <div className="text-[11px] text-slate-500 mb-0.5">Plan Expires</div>
-            <div className="text-sm font-semibold text-slate-200">
+            <div className="text-[11px] text-gray-500 mb-0.5">Plan Expires</div>
+            <div className="text-sm font-semibold text-gray-900">
               {org?.plan_expires_at ? formatDate(org.plan_expires_at) : 'No expiry'}
             </div>
           </div>
           <div>
-            <div className="text-[11px] text-slate-500 mb-0.5">Members</div>
-            <div className="text-sm font-semibold text-slate-200">
+            <div className="text-[11px] text-gray-500 mb-0.5">Members</div>
+            <div className="text-sm font-semibold text-gray-900">
               {members.length}
               {org?.member_limit != null && (
-                <span className="text-slate-500 font-normal"> / {org.member_limit}</span>
+                <span className="text-gray-400 font-normal"> / {org.member_limit}</span>
               )}
             </div>
           </div>
@@ -353,21 +351,21 @@ export default function TeamManagement() {
       {/* Team Members */}
       <div className="glass-card rounded-2xl overflow-hidden">
         <div className="px-5 pt-5 pb-3">
-          <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+          <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
             Team Members
           </h3>
         </div>
 
         {members.length === 0 ? (
-          <div className="px-5 pb-5 text-[12px] text-slate-600">No members found.</div>
+          <div className="px-5 pb-5 text-[12px] text-gray-500">No members found.</div>
         ) : (
           <>
             {/* Table header */}
-            <div className="grid grid-cols-[1fr_1fr_160px_120px_80px] gap-2 px-5 py-2 border-b border-white/[0.04] bg-white/[0.01]">
+            <div className="grid grid-cols-[1fr_1fr_160px_120px_80px] gap-2 px-5 py-2 border-b border-gray-200 bg-gray-50">
               {['Name', 'Email', 'Role', 'Joined', ''].map((h) => (
                 <div
                   key={h || 'actions'}
-                  className="text-[10px] font-bold text-slate-600 uppercase tracking-widest"
+                  className="text-[10px] font-bold text-gray-500 uppercase tracking-widest"
                 >
                   {h}
                 </div>
@@ -375,7 +373,7 @@ export default function TeamManagement() {
             </div>
 
             {/* Table rows */}
-            <div className="divide-y divide-white/[0.03]">
+            <div className="divide-y divide-gray-100">
               {members.map((member) => {
                 const isSelf = member.id === user?.id;
 
@@ -385,16 +383,16 @@ export default function TeamManagement() {
                     className="grid grid-cols-[1fr_1fr_160px_120px_80px] gap-2 px-5 py-3 items-center"
                   >
                     {/* Name */}
-                    <div className="text-[12px] text-slate-300 truncate">
+                    <div className="text-[12px] text-gray-900 truncate">
                       {member.full_name || '--'}
                       {isSelf && (
-                        <span className="ml-1.5 text-[10px] text-slate-600">(you)</span>
+                        <span className="ml-1.5 text-[10px] text-gray-400">(you)</span>
                       )}
                     </div>
 
                     {/* Email */}
                     <div
-                      className="text-[12px] text-slate-400 truncate"
+                      className="text-[12px] text-gray-600 truncate"
                       title={member.email}
                     >
                       {member.email || '--'}
@@ -406,9 +404,9 @@ export default function TeamManagement() {
                         value={member.role || 'analyst'}
                         onChange={(e) => handleChangeRole(member.id, e.target.value)}
                         disabled={isSelf}
-                        className="bg-white/[0.03] border border-white/[0.06] rounded-lg px-2.5 py-1.5 text-[11px] text-slate-300 focus:outline-none focus:ring-1 focus:ring-gray-400/30 focus:border-gray-300 appearance-none cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed w-full"
+                        className="bg-white border border-gray-200 rounded-lg px-2.5 py-1.5 text-[11px] text-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-400/30 focus:border-gray-300 appearance-none cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed w-full"
                         style={{
-                          backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23475569' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E")`,
+                          backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E")`,
                           backgroundRepeat: 'no-repeat',
                           backgroundPosition: 'right 8px center',
                           paddingRight: '28px',
@@ -423,7 +421,7 @@ export default function TeamManagement() {
                     </div>
 
                     {/* Join date */}
-                    <div className="text-[11px] text-slate-500 font-mono">
+                    <div className="text-[11px] text-gray-500 font-mono">
                       {formatDate(member.created_at)}
                     </div>
 
@@ -434,7 +432,7 @@ export default function TeamManagement() {
                           onClick={() =>
                             handleRemoveMember(member.id, member.full_name)
                           }
-                          className="pill-btn px-3 py-1.5 rounded-lg text-[11px] font-medium text-rose-400 bg-rose-500/[0.08] border border-rose-500/15 hover:bg-rose-500/[0.15] transition-colors"
+                          className="pill-btn px-3 py-1.5 rounded-lg text-[11px] font-medium text-rose-600 bg-white border border-rose-200 hover:bg-rose-50 transition-colors"
                         >
                           Remove
                         </button>
@@ -451,10 +449,10 @@ export default function TeamManagement() {
       {/* Transfer Admin */}
       {members.filter((m) => m.id !== user?.id).length > 0 && (
         <div className="glass-card rounded-2xl p-5">
-          <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">
+          <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">
             Transfer Admin
           </h3>
-          <p className="text-[11px] text-slate-600 mb-4">
+          <p className="text-[11px] text-gray-500 mb-4">
             Permanently hand off admin rights to another team member. You will be demoted to Senior Analyst.
           </p>
 
@@ -468,7 +466,7 @@ export default function TeamManagement() {
                 defaultValue=""
                 className="bg-white border border-gray-200 rounded-xl px-3.5 py-2.5 text-gray-900 text-sm focus:outline-none focus:ring-1 focus:ring-gray-400/30 focus:border-gray-300 appearance-none cursor-pointer"
                 style={{
-                  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23475569' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E")`,
+                  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E")`,
                   backgroundRepeat: 'no-repeat',
                   backgroundPosition: 'right 10px center',
                   paddingRight: '32px',
@@ -486,16 +484,16 @@ export default function TeamManagement() {
             </div>
           ) : (
             <div className="space-y-3">
-              <div className="p-3 rounded-xl bg-amber-500/[0.06] border border-amber-500/15">
-                <p className="text-[12px] text-amber-300 font-medium mb-1">
+              <div className="p-3 rounded-xl bg-amber-50 border border-amber-200">
+                <p className="text-[12px] text-amber-900 font-medium mb-1">
                   Are you sure you want to transfer admin to {transferTarget.full_name || transferTarget.email}?
                 </p>
-                <p className="text-[11px] text-amber-400/70">
+                <p className="text-[11px] text-amber-700">
                   This action is immediate. You will lose admin access and be set to Senior Analyst.
                 </p>
               </div>
               <div>
-                <label className="text-[10px] font-semibold text-slate-600 uppercase tracking-widest block mb-1.5">
+                <label className="text-[10px] font-semibold text-gray-500 uppercase tracking-widest block mb-1.5">
                   Type TRANSFER to confirm
                 </label>
                 <input
@@ -510,13 +508,13 @@ export default function TeamManagement() {
                 <button
                   onClick={handleTransferAdmin}
                   disabled={transferConfirmText !== 'TRANSFER' || transferring}
-                  className="pill-btn px-4 py-2 rounded-xl text-[12px] font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/30 hover:bg-amber-500/30 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                  className="pill-btn px-4 py-2 rounded-xl text-[12px] font-semibold bg-amber-600 text-white border border-amber-600 hover:bg-amber-700 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
                 >
                   {transferring ? 'Transferring...' : 'Confirm Transfer'}
                 </button>
                 <button
                   onClick={() => { setTransferTarget(null); setTransferConfirmText(''); }}
-                  className="pill-btn px-4 py-2 rounded-xl text-[12px] font-medium text-slate-500"
+                  className="pill-btn px-4 py-2 rounded-xl text-[12px] font-medium text-gray-500 hover:text-gray-900"
                 >
                   Cancel
                 </button>
@@ -528,12 +526,12 @@ export default function TeamManagement() {
 
       {/* Create Invite */}
       <div className="glass-card rounded-2xl p-5">
-        <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4">
+        <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-4">
           Create Invite
         </h3>
         <form onSubmit={handleCreateInvite} className="flex items-end gap-3 flex-wrap">
           <div className="flex flex-col gap-1 flex-1 min-w-[180px]">
-            <label className="text-[10px] font-semibold text-slate-600 uppercase tracking-widest">
+            <label className="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">
               Email (optional)
             </label>
             <input
@@ -546,7 +544,7 @@ export default function TeamManagement() {
           </div>
 
           <div className="flex flex-col gap-1">
-            <label className="text-[10px] font-semibold text-slate-600 uppercase tracking-widest">
+            <label className="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">
               Role
             </label>
             <select
@@ -554,7 +552,7 @@ export default function TeamManagement() {
               onChange={(e) => setInviteRole(e.target.value)}
               className="bg-white border border-gray-200 rounded-xl px-3.5 py-2.5 text-gray-900 text-sm focus:outline-none focus:ring-1 focus:ring-gray-400/30 focus:border-gray-300 appearance-none cursor-pointer"
               style={{
-                backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23475569' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E")`,
+                backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E")`,
                 backgroundRepeat: 'no-repeat',
                 backgroundPosition: 'right 10px center',
                 paddingRight: '32px',
@@ -581,23 +579,23 @@ export default function TeamManagement() {
       {/* Pending Invites */}
       <div className="glass-card rounded-2xl overflow-hidden">
         <div className="px-5 pt-5 pb-3">
-          <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+          <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
             Pending Invites
           </h3>
         </div>
 
         {invites.length === 0 ? (
-          <div className="px-5 pb-5 text-[12px] text-slate-600">
+          <div className="px-5 pb-5 text-[12px] text-gray-500">
             No pending invites.
           </div>
         ) : (
           <>
             {/* Table header */}
-            <div className="grid grid-cols-[120px_1fr_120px_120px_140px] gap-2 px-5 py-2 border-b border-white/[0.04] bg-white/[0.01]">
+            <div className="grid grid-cols-[120px_1fr_120px_120px_140px] gap-2 px-5 py-2 border-b border-gray-200 bg-gray-50">
               {['Code', 'Email', 'Role', 'Expires', ''].map((h) => (
                 <div
                   key={h || 'actions'}
-                  className="text-[10px] font-bold text-slate-600 uppercase tracking-widest"
+                  className="text-[10px] font-bold text-gray-500 uppercase tracking-widest"
                 >
                   {h}
                 </div>
@@ -605,7 +603,7 @@ export default function TeamManagement() {
             </div>
 
             {/* Table rows */}
-            <div className="divide-y divide-white/[0.03]">
+            <div className="divide-y divide-gray-100">
               {invites.map((invite) => (
                 <div
                   key={invite.id}
@@ -617,17 +615,17 @@ export default function TeamManagement() {
                   </div>
 
                   {/* Email */}
-                  <div className="text-[12px] text-slate-400 truncate">
+                  <div className="text-[12px] text-gray-600 truncate">
                     {invite.email || '--'}
                   </div>
 
                   {/* Role */}
-                  <div className="text-[11px] text-slate-300">
+                  <div className="text-[11px] text-gray-700">
                     {ROLE_LABELS[invite.role] || invite.role || 'Analyst'}
                   </div>
 
                   {/* Expires */}
-                  <div className="text-[11px] text-slate-500 font-mono">
+                  <div className="text-[11px] text-gray-500 font-mono">
                     {invite.expires_at ? formatDate(invite.expires_at) : 'No expiry'}
                   </div>
 
@@ -635,13 +633,13 @@ export default function TeamManagement() {
                   <div className="flex items-center gap-2 justify-end">
                     <button
                       onClick={() => handleCopyCode(invite.invite_code)}
-                      className="pill-btn px-3 py-1.5 rounded-lg text-[11px] font-medium text-slate-300 bg-white border border-gray-200 hover:bg-white/[0.08] transition-colors"
+                      className="pill-btn px-3 py-1.5 rounded-lg text-[11px] font-medium text-gray-600 bg-white border border-gray-200 hover:bg-gray-50 transition-colors"
                     >
                       Copy
                     </button>
                     <button
                       onClick={() => handleRevokeInvite(invite.id)}
-                      className="pill-btn px-3 py-1.5 rounded-lg text-[11px] font-medium text-rose-400 bg-rose-500/[0.08] border border-rose-500/15 hover:bg-rose-500/[0.15] transition-colors"
+                      className="pill-btn px-3 py-1.5 rounded-lg text-[11px] font-medium text-rose-600 bg-white border border-rose-200 hover:bg-rose-50 transition-colors"
                     >
                       Revoke
                     </button>
@@ -655,15 +653,15 @@ export default function TeamManagement() {
 
       {/* Discount / Pilot Code */}
       <div className="glass-card rounded-2xl p-5">
-        <h3 className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4">
+        <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-4">
           Redeem Code
         </h3>
-        <p className="text-[12px] text-slate-500 mb-3">
+        <p className="text-[12px] text-gray-500 mb-3">
           Enter a discount or pilot code to upgrade your organization's plan.
         </p>
         <form onSubmit={handleRedeemDiscount} className="flex items-end gap-3">
           <div className="flex flex-col gap-1 flex-1 max-w-xs">
-            <label className="text-[10px] font-semibold text-slate-600 uppercase tracking-widest">
+            <label className="text-[10px] font-semibold text-gray-500 uppercase tracking-widest">
               Code
             </label>
             <input
@@ -678,7 +676,7 @@ export default function TeamManagement() {
           <button
             type="submit"
             disabled={redeemingCode || !discountCode.trim()}
-            className="pill-btn px-4 py-2.5 rounded-xl text-[12px] font-semibold bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/30 hover:from-emerald-400 hover:to-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+            className="pill-btn px-4 py-2.5 rounded-xl text-[12px] font-semibold bg-gradient-to-r from-gray-800 to-gray-900 text-white shadow-lg shadow-gray-300/20 hover:shadow-gray-300/30 hover:from-gray-700 hover:to-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           >
             {redeemingCode ? 'Redeeming...' : 'Redeem'}
           </button>
@@ -695,25 +693,25 @@ export default function TeamManagement() {
               </svg>
             </div>
             <div>
-              <h3 className="text-sm font-semibold text-slate-200">Credit Policy Defaults</h3>
-              <p className="text-[10px] text-slate-500">Set your firm's standard underwriting assumptions</p>
+              <h3 className="text-sm font-semibold text-gray-900">Credit Policy Defaults</h3>
+              <p className="text-[10px] text-gray-500">Set your firm's standard underwriting assumptions</p>
             </div>
           </div>
 
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-[11px] font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">Base Spread (bps)</label>
+                <label className="block text-[11px] font-semibold text-gray-500 mb-1.5 uppercase tracking-wider">Base Spread (bps)</label>
                 <input
                   type="number"
                   value={orgSettings.baseSpreadBps ?? 200}
                   onChange={(e) => setOrgSettings(s => ({ ...s, baseSpreadBps: parseInt(e.target.value) || 0 }))}
                   className="w-full px-3.5 py-3 rounded-xl bg-white border border-gray-200 text-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-gray-400/40 transition-all"
                 />
-                <p className="text-[9px] text-slate-600 mt-1">Default: 200 bps for equipment, 250 for AR, 275 for inventory</p>
+                <p className="text-[9px] text-gray-400 mt-1">Default: 200 bps for equipment, 250 for AR, 275 for inventory</p>
               </div>
               <div>
-                <label className="block text-[11px] font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">Strong Credit Adj (bps)</label>
+                <label className="block text-[11px] font-semibold text-gray-500 mb-1.5 uppercase tracking-wider">Strong Credit Adj (bps)</label>
                 <input
                   type="number"
                   value={orgSettings.creditSpreadStrong ?? -75}
@@ -724,7 +722,7 @@ export default function TeamManagement() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-[11px] font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">Weak Credit Adj (bps)</label>
+                <label className="block text-[11px] font-semibold text-gray-500 mb-1.5 uppercase tracking-wider">Weak Credit Adj (bps)</label>
                 <input
                   type="number"
                   value={orgSettings.creditSpreadWeak ?? 200}
@@ -733,7 +731,7 @@ export default function TeamManagement() {
                 />
               </div>
               <div>
-                <label className="block text-[11px] font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">Max AR Advance Rate (%)</label>
+                <label className="block text-[11px] font-semibold text-gray-500 mb-1.5 uppercase tracking-wider">Max AR Advance Rate (%)</label>
                 <input
                   type="number"
                   value={orgSettings.maxAdvanceRateAR ?? 85}
@@ -780,14 +778,14 @@ export default function TeamManagement() {
               </svg>
             </div>
             <div>
-              <h3 className="text-sm font-semibold text-slate-200">Memo Branding</h3>
-              <p className="text-[10px] text-slate-500">Customize how exported screening memos look</p>
+              <h3 className="text-sm font-semibold text-gray-900">Memo Branding</h3>
+              <p className="text-[10px] text-gray-500">Customize how exported screening memos look</p>
             </div>
           </div>
 
           <div className="space-y-4">
             <div>
-              <label className="block text-[11px] font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">Logo URL</label>
+              <label className="block text-[11px] font-semibold text-gray-500 mb-1.5 uppercase tracking-wider">Logo URL</label>
               <input
                 type="url"
                 value={brandingLogoUrl}
@@ -795,10 +793,10 @@ export default function TeamManagement() {
                 placeholder="https://yourfirm.com/logo.png"
                 className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-gray-200 text-gray-900 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-400/40 focus:border-gray-300 transition-all"
               />
-              <p className="text-[10px] text-slate-600 mt-1">Appears in the top-right corner of exported memos. Max height: 40px.</p>
+              <p className="text-[10px] text-gray-400 mt-1">Appears in the top-right corner of exported memos. Max height: 40px.</p>
               {brandingLogoUrl && (
-                <div className="mt-2 p-3 bg-white/[0.03] rounded-lg border border-white/[0.06]">
-                  <p className="text-[9px] text-slate-600 mb-1.5">Preview:</p>
+                <div className="mt-2 p-3 bg-gray-50 rounded-lg border border-gray-200">
+                  <p className="text-[9px] text-gray-400 mb-1.5">Preview:</p>
                   <img src={brandingLogoUrl} alt="Logo preview" style={{ maxHeight: 40, maxWidth: 180 }} onError={(e) => { e.target.style.display = 'none'; }} />
                 </div>
               )}
@@ -806,13 +804,13 @@ export default function TeamManagement() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-[11px] font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">Accent Color</label>
+                <label className="block text-[11px] font-semibold text-gray-500 mb-1.5 uppercase tracking-wider">Accent Color</label>
                 <div className="flex items-center gap-2">
                   <input
                     type="color"
                     value={brandingAccentColor}
                     onChange={(e) => setBrandingAccentColor(e.target.value)}
-                    className="w-8 h-8 rounded-lg border border-white/[0.08] cursor-pointer bg-transparent"
+                    className="w-8 h-8 rounded-lg border border-gray-200 cursor-pointer bg-white"
                   />
                   <input
                     type="text"
@@ -823,7 +821,7 @@ export default function TeamManagement() {
                 </div>
               </div>
               <div>
-                <label className="block text-[11px] font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">Memo Title</label>
+                <label className="block text-[11px] font-semibold text-gray-500 mb-1.5 uppercase tracking-wider">Memo Title</label>
                 <input
                   type="text"
                   value={brandingMemoTitle}
@@ -835,12 +833,12 @@ export default function TeamManagement() {
             </div>
 
             <div>
-              <label className="block text-[11px] font-semibold text-slate-500 mb-1.5 uppercase tracking-wider">Footer Text</label>
+              <label className="block text-[11px] font-semibold text-gray-500 mb-1.5 uppercase tracking-wider">Footer Text</label>
               <input
                 type="text"
                 value={brandingFooterText}
                 onChange={(e) => setBrandingFooterText(e.target.value)}
-                placeholder="e.g. Confidential — Internal Use Only"
+                placeholder="e.g. Confidential, internal use only"
                 className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-gray-200 text-gray-900 text-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-400/40 transition-all"
               />
             </div>

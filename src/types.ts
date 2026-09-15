@@ -317,10 +317,11 @@ export interface ScreeningCriteria {
 
 export type AuditAction =
   | 'create' | 'update' | 'delete' | 'view' | 'move' | 'update_stage' | 'login' | 'logout'
-  | 'create_facility' | 'seed_covenants' | 'update_covenant' | 'record_test' | 'waive_covenant' | 'close_facility';
+  | 'create_facility' | 'seed_covenants' | 'update_covenant' | 'record_test' | 'waive_covenant' | 'close_facility'
+  | 'generate_memo';
 export type AuditEntityType =
   | 'saved_deal' | 'pipeline_deal' | 'user' | 'org' | 'session' | 'invitation'
-  | 'facility' | 'covenant' | 'covenant_test';
+  | 'facility' | 'covenant' | 'covenant_test' | 'deal_memo';
 
 // ───────────────────────────────────────────────────────────────
 // Monitoring — facilities and covenants (post-close, lender-side)

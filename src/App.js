@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useRef, lazy, Suspense } from 'react';
+import React, { useState, useMemo, useEffect, useCallback, useRef, lazy, Suspense } from 'react';
 import { useAuth } from './contexts/AuthContext';
 import { supabase } from './lib/supabase';
 import LoginPage from './components/LoginPage';
@@ -34,9 +34,13 @@ import DealRecommendation from './components/DealRecommendation';
 import SuggestedStructure from './components/SuggestedStructure';
 import ScreeningVerdict from './components/ScreeningVerdict';
 import ScreeningCriteria from './components/ScreeningCriteria';
-import { DEFAULT_CRITERIA, evaluateScreening } from './lib/screeningCriteria';
+import { DEFAULT_CRITERIA, evaluateScreening, validateCriteria } from './lib/screeningCriteria';
+import { validateWeights } from './lib/scoringWeights';
+import { computeDealMetrics } from './utils/dealMetrics';
 import StressTestPanel from './components/StressTestPanel';
 import ExportPanel from './components/ExportPanel';
+import MemoHistory from './components/MemoHistory';
+import { fetchMemosForDeal, describeMemoDrift } from './lib/memos';
 import ExecutiveSummary from './components/ExecutiveSummary';
 import { fetchSavedDeals } from './lib/deals';
 import { updatePipelineDeal } from './lib/pipeline';
@@ -48,7 +52,6 @@ import {
   formatPercent,
   formatCurrencyFull,
   formatCurrency,
-  calculateMonthlyPayment,
 } from './utils/format';
 import { getModule, getAvailableModules, DEFAULT_MODULE } from './modules';
 import { computeBorrowerExtras, fccrStatus, liquidityCoverageStatus, revenueGrowthStatus } from './utils/borrowerMetrics';
@@ -291,6 +294,12 @@ function AuthenticatedApp({ profile, user }) {
     setActiveDeal(null);
     setExtraction(null);
     setExtractionFiles([]);
+    // The inputs no longer describe the deal that was open, so the binding to
+    // it has to go too. Leaving it set meant "Update Pipeline Deal" would
+    // PATCH inventory inputs onto an equipment deal: the server validates
+    // against the stored asset class and rejects it, and the analyst got
+    // "Failed to update deal" with no reason given.
+    setActivePipelineDealId(null);
   };
 
   const [inputs, setInputs] = useState(EQ_INITIAL_INPUTS_CONST);
@@ -336,6 +345,8 @@ function AuthenticatedApp({ profile, user }) {
   }, [extraction]);
   const [activeDeal, setActiveDeal] = useState(null);
   const [activePipelineDealId, setActivePipelineDealId] = useState(null);
+  // Memos already frozen for the open deal, newest first.
+  const [dealMemos, setDealMemos] = useState([]);
   // ?tab= opens a chosen screen directly, so a demo link can land on the
   // pipeline or the memo rather than always on an empty New Deal form.
   const [activeTab, setActiveTab] = useState(() => {
@@ -394,6 +405,19 @@ function AuthenticatedApp({ profile, user }) {
       if (Array.isArray(data?.deal_templates)) {
         setDealTemplates(data.deal_templates);
       }
+      // The firm's credit policy and factor weights are loaded here, at
+      // startup, because this is the only place guaranteed to run.
+      //
+      // They used to be loaded exclusively by ScreeningCriteria and
+      // ScoringWeights, which mount only inside the screening results pane.
+      // Collapsing that pane is a persisted layout preference, so an analyst
+      // who customised their thresholds and then collapsed the pane screened
+      // every subsequent deal against the defaults, with nothing saying so.
+      // A layout preference must not change scoring.
+      const savedCriteria = validateCriteria(data?.screening_criteria);
+      if (savedCriteria) setScreeningCriteria(savedCriteria);
+      const savedWeights = validateWeights(data?.scoring_weights);
+      if (savedWeights) setCustomWeights(savedWeights);
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
@@ -464,51 +488,15 @@ function AuthenticatedApp({ profile, user }) {
   // Org credit policy overrides
   const orgSettings = useMemo(() => profile?.organizations?.org_settings || {}, [profile?.organizations?.org_settings]);
 
-  // Dynamic module calculations (with org rate adjustments)
-  const metrics = useMemo(() => {
-    const baseMetrics = mod.calculateMetrics(inputs, sofr);
-
-    // Apply org-level spread overrides if set
-    if (orgSettings.baseSpreadBps !== undefined || orgSettings.creditSpreadStrong !== undefined || orgSettings.creditSpreadWeak !== undefined) {
-      const orgSpreadAdj = (orgSettings.baseSpreadBps !== undefined ? orgSettings.baseSpreadBps - (baseMetrics.rateInfo?.baseSpread || 200) : 0)
-        + (inputs.creditRating === 'Strong' && orgSettings.creditSpreadStrong !== undefined ? orgSettings.creditSpreadStrong - (baseMetrics.rateInfo?.creditAdj || -75) : 0)
-        + (inputs.creditRating === 'Weak' && orgSettings.creditSpreadWeak !== undefined ? orgSettings.creditSpreadWeak - (baseMetrics.rateInfo?.creditAdj || 200) : 0);
-
-      if (orgSpreadAdj !== 0) {
-        const adjRate = (baseMetrics.rate || baseMetrics.effectiveRate || 0) + orgSpreadAdj / 10000;
-        // Debt service has to be recomputed the same way the module computes
-        // it, or the org override silently changes the definition of DSCR.
-        //
-        // This used to read `netFinanced * adjRate` for term facilities:
-        // interest only, against a module that amortizes
-        // (newAnnualDebtService = monthlyPayment * 12). On a $5.3M 84-month
-        // facility at 7% that understated annual debt service by 2.6x
-        // ($373K against $966K) and inflated DSCR from 2.26x to 2.76x. DSCR
-        // is the highest-weighted factor and the primary gate, so any org
-        // that set a custom spread in Settings was scoring against a
-        // different, more generous rule than the defaults.
-        //
-        // Revolvers are a different instrument: an ABL facility does not
-        // amortize, so borrowingBase * rate is the right shape there and is
-        // left alone.
-        const adjNewDS = baseMetrics.netFinanced
-          ? calculateMonthlyPayment(baseMetrics.netFinanced, adjRate, inputs.loanTerm) * 12
-          : baseMetrics.borrowingBase
-            ? baseMetrics.borrowingBase * adjRate
-            : baseMetrics.newAnnualDebtService;
-        const totalDS = baseMetrics.existingDebtService + (adjNewDS || baseMetrics.newAnnualDebtService);
-        const adjDscr = inputs.ebitda && totalDS > 0 ? inputs.ebitda / totalDS : baseMetrics.dscr;
-        return {
-          ...baseMetrics,
-          rate: adjRate,
-          effectiveRate: adjRate,
-          newAnnualDebtService: adjNewDS || baseMetrics.newAnnualDebtService,
-          dscr: adjDscr,
-        };
-      }
-    }
-    return baseMetrics;
-  }, [inputs, sofr, mod, orgSettings]);
+  // Dynamic module calculations, at the live rate and under the firm's
+  // spreads. Shared with the pipeline drawer through utils/dealMetrics, which
+  // is why this is no longer written out inline: the drawer used to compute
+  // its own metrics with neither the rate nor the override, and showed a
+  // different DSCR for the same deal.
+  const metrics = useMemo(
+    () => computeDealMetrics(mod, inputs, sofr, orgSettings),
+    [inputs, sofr, mod, orgSettings],
+  );
   const baseRiskScore = useMemo(() => mod.calculateRiskScore(inputs, metrics), [inputs, metrics, mod]);
   const borrowerExtras = useMemo(() => computeBorrowerExtras(inputs, metrics), [inputs, metrics]);
 
@@ -546,6 +534,50 @@ function AuthenticatedApp({ profile, user }) {
   const screeningResult = useMemo(
     () => valid ? evaluateScreening(screeningCriteria, metrics, riskScore, inputs, activeModule) : null,
     [screeningCriteria, metrics, riskScore, inputs, activeModule, valid]
+  );
+
+  // Memos frozen against the open deal. Reloaded when the deal changes, and
+  // again when a fresh one is written, so the notice below the verdict is
+  // never a stale read of the record.
+  const loadDealMemos = useCallback((dealId) => {
+    if (!dealId) { setDealMemos([]); return; }
+    fetchMemosForDeal(dealId).then(({ data }) => setDealMemos(data || []));
+  }, []);
+
+  useEffect(() => {
+    loadDealMemos(activePipelineDealId);
+  }, [activePipelineDealId, loadDealMemos]);
+
+  // Restore field provenance for a deal that was bound before a reload.
+  //
+  // The draft carries inputs, module and deal id, but not the extraction, so
+  // after a refresh memoSourceDocuments was empty and the memo lost its
+  // "where these numbers came from" section entirely. The provenance is
+  // already stored on the pipeline row; it was just never read back on this
+  // path, only on loadDealIntoScreening. Runs only when there is nothing in
+  // memory to lose.
+  const restoredProvenanceFor = useRef(null);
+  useEffect(() => {
+    if (!activePipelineDealId || extraction) return;
+    if (restoredProvenanceFor.current === activePipelineDealId) return;
+    restoredProvenanceFor.current = activePipelineDealId;
+    const row = pipelineDealsList.find((d) => d.id === activePipelineDealId);
+    if (!row?.extraction_provenance) return;
+    const restored = fromStoredProvenance(row.extraction_provenance);
+    if (restored) setExtraction(restored);
+  }, [activePipelineDealId, extraction, pipelineDealsList]);
+
+  // The gap between the memo in the file and the model as it stands today.
+  // Silent divergence is the actual defect here: a reopened deal used to
+  // recompute against the current SOFR and the current criteria with nothing
+  // saying so.
+  const memoDrift = useMemo(
+    () => describeMemoDrift(dealMemos[0], {
+      score: riskScore?.composite ?? null,
+      verdict: screeningResult?.verdict ?? null,
+      sofr,
+    }),
+    [dealMemos, riskScore, screeningResult, sofr]
   );
 
   // Track recently screened deals
@@ -830,18 +862,46 @@ function AuthenticatedApp({ profile, user }) {
                       </>
                     )}
                   </div>
-                  {valid && <ExportPanel summaryText={summaryText} inputs={inputs} metrics={metrics} riskScore={riskScore} recommendation={recommendation} screeningResult={screeningResult} profile={profile} moduleLabel={moduleLabel} moduleKey={activeModule} factors={mod.describeFactors ? mod.describeFactors(inputs, metrics, riskScore) : []} structure={structure} stressResults={stressResults} borrowerExtras={borrowerExtras} criteria={screeningCriteria} commentary={commentary} sourceDocuments={memoSourceDocuments} />}
+                  {valid && <ExportPanel summaryText={summaryText} inputs={inputs} metrics={metrics} riskScore={riskScore} recommendation={recommendation} screeningResult={screeningResult} profile={profile} moduleLabel={moduleLabel} moduleKey={activeModule} factors={mod.describeFactors ? mod.describeFactors(inputs, metrics, riskScore) : []} structure={structure} stressResults={stressResults} borrowerExtras={borrowerExtras} criteria={screeningCriteria} commentary={commentary} sourceDocuments={memoSourceDocuments} pipelineDealId={activePipelineDealId} userId={userId} sofr={sofr} sofrDate={sofrDate} onMemoSaved={() => loadDealMemos(activePipelineDealId)} />}
                   {activePipelineDealId && valid && (
                     <button
                       onClick={async () => {
+                        // Rewriting a deal that a committee has already seen,
+                        // or that has moved past screening, is a different act
+                        // from editing a draft. The memo on file stays frozen
+                        // either way; what changes is that the deal's live
+                        // numbers walk away from it. Say so before it happens.
+                        const openDeal = pipelineDealsList.find((d) => d.id === activePipelineDealId);
+                        const stage = openDeal?.stage;
+                        const decided = stage && stage !== 'Screening';
+                        if (dealMemos.length > 0 || decided) {
+                          const why = dealMemos.length > 0 && decided
+                            ? `This deal is in ${stage} and has a committee memo on file.`
+                            : dealMemos.length > 0
+                              ? 'This deal has a committee memo on file.'
+                              : `This deal has moved to ${stage}.`;
+                          const ok = await confirm({
+                            title: 'Rescore this deal?',
+                            body: `${why} The memo already generated does not change. The deal's score and inputs will, and the two will no longer match until you generate a new memo.`,
+                            confirmLabel: 'Rescore',
+                          });
+                          if (!ok) return;
+                        }
                         const { error } = await updatePipelineDeal(activePipelineDealId, inputs, riskScore.composite);
                         if (error) {
                           addToast('Failed to update deal', 'error');
                         } else {
                           addToast('Pipeline deal updated', 'success');
+                          setPipelineDealsList((prev) =>
+                            prev.map((d) =>
+                              d.id === activePipelineDealId
+                                ? { ...d, inputs, score: riskScore.composite, updated_at: new Date().toISOString() }
+                                : d,
+                            ),
+                          );
                         }
                       }}
-                      className="px-4 py-2 rounded-xl bg-gold-500/15 text-[11px] font-semibold text-gold-300 border border-gold-500/30 hover:bg-gold-500/20 hover:border-gold-500/40 transition-all"
+                      className="px-4 py-2 rounded-xl bg-white text-[11px] font-semibold text-gray-700 border border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-all"
                     >
                       Update Pipeline Deal
                     </button>
@@ -854,7 +914,7 @@ function AuthenticatedApp({ profile, user }) {
                           return;
                         }
                         setSavingToPipeline(true);
-                        const dealName = (inputs.companyName || '').trim() || `Untitled Deal — ${new Date().toLocaleDateString()}`;
+                        const dealName = (inputs.companyName || '').trim() || `Untitled Deal, ${new Date().toLocaleDateString()}`;
                         const { createPipelineDeal } = await import('./lib/pipeline');
                         const { data, error } = await createPipelineDeal(
                           dealName, inputs, riskScore?.composite ?? null, activeModule,
@@ -901,7 +961,7 @@ function AuthenticatedApp({ profile, user }) {
                   )}
                   <button
                     onClick={clearForm}
-                    className="pill-btn px-3 py-2 rounded-lg text-[11px] font-medium text-gray-400 hover:text-slate-400"
+                    className="pill-btn px-3 py-2 rounded-lg text-[11px] font-medium text-gray-400 hover:text-gray-600"
                   >
                     Clear
                   </button>
@@ -1108,7 +1168,7 @@ function AuthenticatedApp({ profile, user }) {
                               key={deal.id}
                               onClick={() => loadRecentDeal(deal)}
                               className="pill-btn px-3 py-1.5 rounded-lg text-[11px] font-medium flex items-center gap-1.5 text-gray-500 hover:text-gray-700 transition-colors"
-                              title={`${deal.industry} — Score ${s} — ${new Date(deal.timestamp).toLocaleDateString()}`}
+                              title={`${deal.industry}, score ${s}, ${new Date(deal.timestamp).toLocaleDateString()}`}
                             >
                               <span className={`inline-flex items-center justify-center w-4 h-4 rounded-full text-[8px] font-bold leading-none text-gray-900 ${chipColor}`}>
                                 {s}
@@ -1238,7 +1298,7 @@ function AuthenticatedApp({ profile, user }) {
                             className={`px-2 py-0.5 rounded text-[9px] font-semibold transition-colors ${
                               activeModule === m.key
                                 ? 'bg-gold-500/15 text-gold-400 border border-gold-500/30'
-                                : 'text-gray-400 hover:text-slate-400 border border-transparent'
+                                : 'text-gray-400 hover:text-gray-700 border border-transparent'
                             }`}
                           >
                             {m.name.replace(' Finance', '')}
@@ -1247,6 +1307,9 @@ function AuthenticatedApp({ profile, user }) {
                       </div>
                     </div>
                   </div>
+
+                  {/* Memo on file, and whether the live model still agrees with it */}
+                  <MemoHistory memos={dealMemos} drift={memoDrift} />
 
                   {/* Screening Verdict */}
                   {screeningResult && (
@@ -1571,6 +1634,8 @@ function AuthenticatedApp({ profile, user }) {
               onLoadDeal={loadDealIntoScreening}
               readOnly={isExpired}
               criteria={screeningCriteria}
+              sofr={sofr}
+              orgSettings={orgSettings}
             />
           </Suspense></ErrorBoundary>
         ) : activeTab === 'monitoring' ? (

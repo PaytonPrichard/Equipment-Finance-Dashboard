@@ -11,14 +11,16 @@
 // one is a real refactor and not what this is for.
 //
 // Metrics here are recomputed live from inputs, exactly as the screening view
-// does. Nothing about a deal's results is stored, so this is the only way to
-// show them. That also means they move when SOFR or the firm's criteria move;
-// see the note in AUDIT.md about pinning rate and criteria at score time.
+// does, at the same rate and under the same org spread overrides. Nothing
+// about a deal's live results is stored, so this is the only way to show them,
+// and they move when SOFR or the firm's criteria move. What does not move is
+// the committee memo: those are frozen in deal_memos, and the memo section
+// below links to the record rather than to this recomputation.
 // ============================================================
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { getModule } from '../modules';
-import { evaluateScreening, DEFAULT_CRITERIA } from '../lib/screeningCriteria';
+import { verdictForDeal } from '../lib/dealVerdict';
+import { fetchMemosForDeal } from '../lib/memos';
 import DealAttachments from './DealAttachments';
 import { fetchAuditLog } from '../lib/audit';
 
@@ -38,13 +40,6 @@ const VERDICT_STYLES = {
   fail: { chip: 'bg-rose-50 text-rose-800 border-rose-200', dot: 'bg-rose-600' },
   none: { chip: 'bg-gray-50 text-gray-600 border-gray-200', dot: 'bg-gray-400' },
 };
-
-function verdictFor(score) {
-  if (score == null) return 'none';
-  if (score >= 75) return 'pass';
-  if (score >= 35) return 'flag';
-  return 'fail';
-}
 
 function fmtDate(iso) {
   if (!iso) return null;
@@ -104,11 +99,16 @@ export default function DealDetail({
   canDelete,
   canMoveToStage,
   criteria,
+  sofr,
+  orgSettings,
 }) {
   const [name, setName] = useState('');
   const [notes, setNotes] = useState('');
   const [activity, setActivity] = useState([]);
   const [activityState, setActivityState] = useState('idle'); // idle | loading | done | error
+  // Committee memos on file. The drawer is where you go to understand a deal,
+  // so it has to say whether one was ever taken to committee.
+  const [memos, setMemos] = useState([]);
   const notesDirty = useRef(false);
   const panelRef = useRef(null);
 
@@ -136,6 +136,15 @@ export default function DealDetail({
     return () => { cancelled = true; };
   }, [deal?.id]);
 
+  useEffect(() => {
+    if (!deal?.id) { setMemos([]); return; }
+    let cancelled = false;
+    fetchMemosForDeal(deal.id).then(({ data }) => {
+      if (!cancelled) setMemos(data || []);
+    });
+    return () => { cancelled = true; };
+  }, [deal?.id]);
+
   const close = useCallback(() => {
     // Don't drop an unsaved note on the way out.
     if (notesDirty.current) onSaveNotes(deal.id, notes);
@@ -152,33 +161,22 @@ export default function DealDetail({
   if (!deal) return null;
 
   const moduleKey = deal.asset_class || 'equipment_finance';
-  const mod = getModule(moduleKey);
 
-  // Recomputed live, like the screening view. Guarded because a deal saved
-  // with partial inputs still has to open.
-  let metrics = null;
-  let riskScore = null;
-  let screening = null;
-  try {
-    metrics = mod.calculateMetrics(deal.inputs || {});
-    riskScore = mod.calculateRiskScore(deal.inputs || {}, metrics);
-    screening = evaluateScreening(
-      criteria || DEFAULT_CRITERIA,
-      metrics,
-      riskScore,
-      deal.inputs || {},
-      moduleKey,
-    );
-  } catch {
-    // Leave them null; the panel renders without the metric block.
-  }
-
+  // One verdict, from the same evaluator the screening view uses, so it
+  // honours the firm's thresholds and the hard gates. The chip used to come
+  // from a local score-only helper on hardcoded 75/35 breakpoints, printed
+  // directly above the reason list produced by the real evaluator, so a deal
+  // at 82 that breached the LTV ceiling read PASS above its own failure
+  // reasons. The rate and the org spread overrides travel in too: this panel
+  // used to price every deal at the module default.
+  const evaluated = verdictForDeal(deal, { criteria, sofr, orgSettings });
+  const metrics = evaluated.metrics;
   const score = deal.score != null ? Math.round(deal.score) : null;
-  const verdict = verdictFor(score);
+  const verdict = evaluated.category;
   const style = VERDICT_STYLES[verdict];
   const stageIdx = STAGES.indexOf(deal.stage);
   const metricRows = keyMetricsFor(moduleKey, metrics);
-  const reasons = screening?.reasons || [];
+  const reasons = evaluated.reasons;
 
   const commitName = () => {
     const trimmed = name.trim();
@@ -246,7 +244,7 @@ export default function DealDetail({
           <div className="flex items-center gap-2 mt-3">
             <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[11px] font-semibold ${style.chip}`}>
               <span className={`w-1.5 h-1.5 rounded-full ${style.dot}`} />
-              {score != null ? `${verdict.toUpperCase()} · ${score}/100` : 'Not scored'}
+              {score != null ? `${evaluated.label || verdict.toUpperCase()} · ${score}/100` : 'Not scored'}
             </span>
             {deal.inputs && (
               <span className="text-[11px] text-gray-500">
@@ -319,6 +317,38 @@ export default function DealDetail({
               Documents
             </h3>
             <DealAttachments dealId={deal.id} dealType="pipeline" />
+          </section>
+
+          {/* ---- Committee memos ---- */}
+          <section>
+            <h3 className="text-[11px] font-semibold text-gray-500 uppercase tracking-wide mb-2">
+              Committee memos
+            </h3>
+            {memos.length === 0 ? (
+              <p className="text-[12px] text-gray-400">
+                None generated. A memo is recorded when one is downloaded from the screening view.
+              </p>
+            ) : (
+              <ul className="space-y-1.5">
+                {memos.map((m) => (
+                  <li key={m.id} className="flex items-center justify-between gap-3 text-[12px]">
+                    <span className="text-gray-700 truncate">
+                      {fmtDate(m.created_at)}
+                      {m.verdict ? `, ${m.verdict}` : ''}
+                      {m.score != null ? ` at ${Math.round(m.score)}` : ''}
+                      {m.profiles?.full_name || m.profiles?.email
+                        ? `, by ${m.profiles.full_name || m.profiles.email}`
+                        : ''}
+                    </span>
+                    {m.score != null && score != null && Math.round(m.score) !== score && (
+                      <span className="shrink-0 text-[11px] text-amber-700">
+                        deal now {score}
+                      </span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
           </section>
 
           {/* ---- Stage ---- */}
@@ -415,8 +445,23 @@ function describeAudit(entry) {
     case 'update':
       if ('name' in newV) return `Renamed from "${oldV.name || 'untitled'}"`;
       if ('notes' in newV) return newV.notes ? 'Notes updated' : 'Notes cleared';
-      if ('score' in newV) return `Rescored ${oldV.score ?? '?'} to ${newV.score ?? '?'}`;
       return 'Updated';
+    // What the server writes when a deal is re-screened. This case did not
+    // exist, so every rescore rendered the literal string "update_inputs".
+    // The score sentence lived under 'update', an action the rescore path
+    // never writes, so it had never once appeared.
+    case 'update_inputs': {
+      const from = oldV.score ?? null;
+      const to = newV.score ?? null;
+      if (from != null && to != null && Math.round(from) !== Math.round(to)) {
+        return `Rescored ${Math.round(from)} to ${Math.round(to)}`;
+      }
+      return 'Inputs updated, score unchanged';
+    }
+    case 'generate_memo':
+      return newV.verdict && newV.score != null
+        ? `Committee memo generated, ${newV.verdict} at ${Math.round(newV.score)}`
+        : 'Committee memo generated';
     case 'delete':
       return 'Deleted';
     default:

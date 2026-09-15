@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { exportScreeningCsv } from '../utils/csvExport';
 import { DEFAULT_CRITERIA } from '../lib/screeningCriteria';
+import { createMemoSnapshot } from '../lib/memos';
 import packageJson from '../../package.json';
 
 const APP_VERSION = process.env.REACT_APP_VERSION || packageJson.version || 'dev';
@@ -122,9 +123,11 @@ function parseCommentaryFromSummary(summaryText) {
   return out;
 }
 
-export function generateBrandedPdfHtml({ summaryText, inputs, metrics, riskScore, recommendation, screeningResult, orgName, analystName, moduleLabel, branding, factors = [], structure = null, stressResults = [], moduleKey = 'equipment_finance', borrowerExtras = null, criteria = null, commentary = null, sourceDocuments = [] }) {
+export function generateBrandedPdfHtml({ summaryText, inputs, metrics, riskScore, recommendation, screeningResult, orgName, analystName, moduleLabel, branding, factors = [], structure = null, stressResults = [], moduleKey = 'equipment_finance', borrowerExtras = null, criteria = null, commentary = null, sourceDocuments = [], generatedAt = null }) {
   const companyName = inputs?.companyName || 'N/A';
-  const date = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  // Read from the model, not the clock. A memo reopened next quarter has to
+  // print the date it went to committee, not the date it was reopened.
+  const date = new Date(generatedAt || Date.now()).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
   const score = riskScore?.composite ?? 0;
   const verdict = screeningResult?.verdict?.toUpperCase() || '';
   const b = branding || {};
@@ -529,7 +532,7 @@ export function generateBrandedPdfHtml({ summaryText, inputs, metrics, riskScore
 </html>`;
 }
 
-export default function ExportPanel({ summaryText, inputs, metrics, riskScore, recommendation, screeningResult, profile, moduleLabel, moduleKey, factors, structure, stressResults, borrowerExtras, criteria, commentary, sourceDocuments = [] }) {
+export default function ExportPanel({ summaryText, inputs, metrics, riskScore, recommendation, screeningResult, profile, moduleLabel, moduleKey, factors, structure, stressResults, borrowerExtras, criteria, commentary, sourceDocuments = [], pipelineDealId = null, userId = null, sofr = null, sofrDate = null, onMemoSaved = null }) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
@@ -565,12 +568,21 @@ const CONTENT_PX = Math.round((CONTENT_MM * 96) / 25.4);
     const orgName = profile?.organizations?.name || '';
     const analystName = profile?.full_name || profile?.email || '';
     const branding = profile?.organizations?.branding || {};
-    const html = generateBrandedPdfHtml({
+
+    // The model is assembled first and the memo is rendered from it, so what
+    // gets stored is exactly what produced the PDF rather than a second
+    // reconstruction of it. SOFR and the date are carried explicitly: they
+    // are the two values that would otherwise be read from live state on a
+    // re-render, and they are what makes a regenerated memo disagree with
+    // the one taken to committee.
+    const model = {
       summaryText, inputs, metrics, riskScore, recommendation, screeningResult,
       orgName, analystName, moduleLabel: moduleLabel || 'Equipment Finance', branding,
       moduleKey, factors, structure, stressResults, borrowerExtras, criteria,
       commentary, sourceDocuments,
-    });
+      sofr, sofrDate, generatedAt: new Date().toISOString(),
+    };
+    const html = generateBrandedPdfHtml(model);
 
     setPdfLoading(true);
     try {
@@ -607,6 +619,29 @@ const CONTENT_PX = Math.round((CONTENT_MM * 96) / 25.4);
       }).from(container).save();
 
       document.body.removeChild(container);
+
+      // Only after the download succeeded. A failed export should not leave a
+      // memo in the record that nobody ever held. Storage failing is logged
+      // and swallowed: the analyst has their PDF either way, and a thrown
+      // error here would read as a failed export.
+      if (pipelineDealId && userId && profile?.org_id) {
+        try {
+          const { data, duplicate, error } = await createMemoSnapshot({
+            dealId: pipelineDealId,
+            orgId: profile.org_id,
+            userId,
+            assetClass: moduleKey || 'equipment_finance',
+            model,
+            html,
+            appVersion: APP_VERSION,
+          });
+          if (error) console.warn('Memo snapshot failed:', error);
+          else if (data && onMemoSaved) onMemoSaved(data);
+          else if (duplicate && onMemoSaved) onMemoSaved(null);
+        } catch (snapErr) {
+          console.warn('Memo snapshot failed:', snapErr);
+        }
+      }
     } catch (err) {
       // Fallback to print dialog if html2pdf fails
       console.warn('PDF generation failed, falling back to print:', err);
