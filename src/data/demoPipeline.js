@@ -181,7 +181,7 @@ const DEAL_DEFS = [
     name: 'Summit IT Solutions',
     stage: 'Funded',
     daysAgo: 45,
-    notes: 'Funded 3/14. Server refresh complete. Three months of payments on time.',
+    notes: 'Funded 3/14. Two managed-service contracts not renewed in Q2. Coverage still inside covenant, monitoring closely.',
     inputs: {
       companyName: 'Summit IT Solutions LLC',
       yearsInBusiness: 12, annualRevenue: 24000000, ebitda: 4400000,

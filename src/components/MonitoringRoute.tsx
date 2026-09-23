@@ -454,7 +454,9 @@ function SetupView({ deal, sofr, orgId, userId, onCancel, onCreated }: SetupView
         </button>
         <h2 className="text-lg font-semibold text-gray-900">Set up monitoring</h2>
         <p className="text-sm text-gray-500 mt-0.5">
-          {borrowerName}. Covenants are pre-filled from what you screened. Confirm them against the signed agreement.
+          {/* Borrower names routinely end in "Co." or "Inc.", and appending a
+              sentence period to one produced "Heartland Foods Manufacturing Co..". */}
+          {borrowerName.replace(/\.\s*$/, '')}. Covenants are pre-filled from what you screened. Confirm them against the signed agreement.
         </p>
       </div>
 
@@ -464,10 +466,17 @@ function SetupView({ deal, sofr, orgId, userId, onCancel, onCreated }: SetupView
         </label>
         <div className="flex items-center gap-2">
           <span className="text-gray-400 text-sm">$</span>
+          {/* Separators, the same as every other currency field on the deal
+              form. A raw 1530000 in the first field of the screen is the one
+              number here nobody can read at a glance. */}
           <input
-            type="number"
-            value={commitment}
-            onChange={(e) => setCommitment(e.target.value)}
+            type="text"
+            inputMode="numeric"
+            value={commitment ? Number(commitment).toLocaleString() : ''}
+            onChange={(e) => {
+              const raw = e.target.value.replace(/[^0-9.]/g, '');
+              setCommitment(raw);
+            }}
             placeholder="Commitment amount"
             className="flex-1 rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 focus:border-gold-500 focus:outline-none"
           />
@@ -811,7 +820,11 @@ function CovenantDetailRow({ covenant, tests, attachments, orgId, userId, onReco
         <div className="min-w-0">
           <p className="text-sm font-medium text-gray-900">{covenant.name}</p>
           <p className="text-[11px] text-gray-400">
-            {formatTarget(covenant)} · {FREQ_LABEL[covenant.test_frequency]}
+            {/* A reporting covenant's target IS its cadence, so printing the
+                target and then the frequency read "Quarterly · Quarterly". */}
+            {covenant.kind === 'reporting'
+              ? FREQ_LABEL[covenant.test_frequency]
+              : `${formatTarget(covenant)} · ${FREQ_LABEL[covenant.test_frequency]}`}
             {covenant.next_test_date ? ` · next ${covenant.next_test_date}` : ''}
           </p>
         </div>

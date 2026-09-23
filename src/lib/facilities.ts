@@ -385,10 +385,20 @@ export async function fetchPortfolioDrift(orgId: string): Promise<Result<DriftRo
   const facById: Record<string, typeof facilities[number]> = {};
   for (const f of facilities) facById[String(f.id)] = f;
 
-  const latestVal: Record<string, number | null> = {};
+  // Latest reading per covenant, by test date rather than by arrival order.
+  //
+  // This used to take the first row it saw and rely on the caller having
+  // sorted them newest first. The Supabase branch orders by test_date desc so
+  // it held there; the demo branch returns the in-memory store in insertion
+  // order, which is oldest first, so "Current" showed the *first* reading a
+  // facility ever filed. A facility whose DSCR had fallen from 5.70x to 2.38x
+  // read as 5.41x, understating exactly the drift this view exists to show.
+  const latest: Record<string, { date: string; value: number | null }> = {};
   for (const t of tests) {
     const k = String(t.covenant_id);
-    if (!(k in latestVal)) latestVal[k] = t.reported_value;
+    if (!latest[k] || t.test_date > latest[k].date) {
+      latest[k] = { date: t.test_date, value: t.reported_value };
+    }
   }
 
   const rows: DriftRow[] = [];
@@ -403,7 +413,7 @@ export async function fetchPortfolioDrift(orgId: string): Promise<Result<DriftRo
       direction: c.direction,
       unit: c.unit,
       underwritten: extractUnderwritten(c.metric_key, f.underwritten_snapshot),
-      current: latestVal[String(c.id)] ?? null,
+      current: latest[String(c.id)]?.value ?? null,
       threshold: c.flag_value,
     });
   }

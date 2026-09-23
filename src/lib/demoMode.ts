@@ -3,6 +3,11 @@
 // when the URL doesn't carry the param yet).
 
 import { getInitialDemoPipeline } from '../data/demoPipeline';
+import {
+  getInitialDemoFacilities,
+  getInitialDemoCovenants,
+  getInitialDemoCovenantTests,
+} from '../data/demoMonitoring';
 import { addFrequency } from './covenants';
 import type {
   DealInputs,
@@ -138,9 +143,12 @@ let _facilities: FacilityRow[] | null = null;
 let _covenants: CovenantRow[] | null = null;
 let _tests: CovenantTestRow[] | null = null;
 
-function facilityStore(): FacilityRow[] { if (_facilities === null) _facilities = []; return _facilities; }
-function covenantStore(): CovenantRow[] { if (_covenants === null) _covenants = []; return _covenants; }
-function testStore(): CovenantTestRow[] { if (_tests === null) _tests = []; return _tests; }
+// Seeded rather than empty. These started as empty arrays, so every visitor
+// who clicked Monitoring in the demo landed on "No facilities yet", which is
+// the one screen the pitch promises and the demo could not show.
+function facilityStore(): FacilityRow[] { if (_facilities === null) _facilities = getInitialDemoFacilities() as FacilityRow[]; return _facilities; }
+function covenantStore(): CovenantRow[] { if (_covenants === null) _covenants = getInitialDemoCovenants() as CovenantRow[]; return _covenants; }
+function testStore(): CovenantTestRow[] { if (_tests === null) _tests = getInitialDemoCovenantTests() as CovenantTestRow[]; return _tests; }
 
 export function createDemoFacility(orgId: string, userId: string, params: CreateFacilityParams): FacilityRow {
   const now = new Date().toISOString();
@@ -262,8 +270,14 @@ export function listDemoCovenants(orgId: string): CovenantRow[] {
   return covenantStore().filter((c) => c.org_id === orgId).map((c) => ({ ...c }));
 }
 
+// Newest first, matching the covenant_tests query this stands in for. The
+// store is in insertion order, which is oldest first, and callers that assume
+// the query's ordering read the wrong end of the history.
 export function listDemoTests(orgId: string): CovenantTestRow[] {
-  return testStore().filter((t) => t.org_id === orgId).map((t) => ({ ...t }));
+  return testStore()
+    .filter((t) => t.org_id === orgId)
+    .sort((a, b) => (a.test_date < b.test_date ? 1 : -1))
+    .map((t) => ({ ...t }));
 }
 
 // ───────────────────────────────────────────────────────────────
