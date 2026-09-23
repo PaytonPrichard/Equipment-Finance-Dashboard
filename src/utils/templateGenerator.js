@@ -330,10 +330,10 @@ export async function generateXlsxTemplate(moduleKey, mod) {
   });
   // Override column A with a loud sentinel + overwrite the company-name cell.
   const sampleNameCell = sheet.getCell(SAMPLE_ROW, 1);
-  sampleNameCell.value = 'SAMPLE  —  delete this row';
+  sampleNameCell.value = 'SAMPLE, delete this row';
   sampleNameCell.font = { bold: true, italic: true, color: { argb: COLOR.RED }, size: 11 };
   sampleNameCell.note = {
-    texts: [{ text: 'This is a sample row showing realistic data so you can see the formatting. Overwrite the cells with your real deals or delete the row before uploading. Either way works — the parser also filters out rows that still say "(sample)" as a safety net.' }],
+    texts: [{ text: 'This is a sample row showing realistic data so you can see the formatting. Overwrite the cells with your real deals or delete the row before uploading. Either way works. The parser also filters out rows that still say "(sample)" as a safety net.' }],
   };
   sheet.getRow(SAMPLE_ROW).height = 22;
 

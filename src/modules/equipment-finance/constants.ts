@@ -74,12 +74,12 @@ export const FINANCING_TYPES: Record<FinancingType, FinancingTypeInfo> = {
   EFA: {
     label: 'EFA',
     fullName: 'Equipment Finance Agreement',
-    description: 'Secured loan — borrower owns equipment, fully amortizing payments',
+    description: 'Secured loan. Borrower owns equipment, fully amortizing payments',
   },
   FMV: {
     label: 'FMV Lease',
     fullName: 'Fair Market Value Lease',
-    description: 'Lessee returns or purchases at fair market value at term end — lower payments',
+    description: 'Lessee returns or purchases at fair market value at term end, with lower payments',
   },
   TRAC: {
     label: 'TRAC Lease',

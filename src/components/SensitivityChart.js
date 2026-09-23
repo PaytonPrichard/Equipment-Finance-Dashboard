@@ -217,7 +217,7 @@ export default function SensitivityChart({ inputs, sofr = DEFAULT_SOFR }) {
             strokeDasharray="4 4"
             strokeOpacity={0.3}
             label={{
-              value: '75 — Strong',
+              value: '75, Strong',
               position: 'right',
               fill: '#10b981',
               fontSize: 9,
@@ -230,7 +230,7 @@ export default function SensitivityChart({ inputs, sofr = DEFAULT_SOFR }) {
             strokeDasharray="4 4"
             strokeOpacity={0.3}
             label={{
-              value: '35 — Weak',
+              value: '35, Weak',
               position: 'right',
               fill: '#f43f5e',
               fontSize: 9,

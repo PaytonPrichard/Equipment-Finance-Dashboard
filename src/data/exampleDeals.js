@@ -2,7 +2,7 @@ const exampleDeals = [
   {
     id: 'strong',
     label: 'Strong: $3.5M CNC Line',
-    subtitle: 'Manufacturing — EFA',
+    subtitle: 'Manufacturing · EFA',
     inputs: {
       companyName: 'Midwest Precision Machining Inc.',
       yearsInBusiness: 18,
@@ -24,7 +24,7 @@ const exampleDeals = [
   {
     id: 'moderate',
     label: 'Moderate: $15M Crane Lease',
-    subtitle: 'Construction — EFA',
+    subtitle: 'Construction · EFA',
     inputs: {
       companyName: 'Meridian Heavy Construction LLC',
       yearsInBusiness: 6,
@@ -46,7 +46,7 @@ const exampleDeals = [
   {
     id: 'fmv',
     label: 'FMV: $4.2M MRI System',
-    subtitle: 'Healthcare — FMV Lease',
+    subtitle: 'Healthcare · FMV Lease',
     inputs: {
       companyName: 'Regional Health Partners',
       yearsInBusiness: 32,
@@ -68,7 +68,7 @@ const exampleDeals = [
   {
     id: 'trac',
     label: 'TRAC: $8M Fleet',
-    subtitle: 'Logistics — TRAC Lease',
+    subtitle: 'Logistics · TRAC Lease',
     inputs: {
       companyName: 'Pacific Coast Trucking Corp.',
       yearsInBusiness: 15,
@@ -90,7 +90,7 @@ const exampleDeals = [
   {
     id: 'weak',
     label: 'Weak: $18M Aircraft',
-    subtitle: 'Aviation — FMV Lease',
+    subtitle: 'Aviation · FMV Lease',
     inputs: {
       companyName: 'SkyConnect Regional Air LLC',
       yearsInBusiness: 3,

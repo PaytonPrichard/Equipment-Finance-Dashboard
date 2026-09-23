@@ -47,7 +47,7 @@ export default function StressTestPanel({ stressResults, beaconSlot }) {
           {beaconSlot}
         </h3>
         <p className="text-[11px] text-gray-400">
-          EBITDA stress scenarios — same debt service obligations
+          EBITDA stress scenarios against the same debt service
         </p>
       </div>
 

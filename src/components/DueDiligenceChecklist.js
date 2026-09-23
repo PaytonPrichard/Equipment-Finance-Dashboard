@@ -19,7 +19,7 @@ function generateChecklist(inputs, metrics, riskScore) {
       id: 'dscr-trend',
       category: 'Financial',
       priority: 'high',
-      question: 'Request trailing 12-month EBITDA by quarter — is cash flow trending up or down?',
+      question: 'Request trailing 12-month EBITDA by quarter. Is cash flow trending up or down?',
       why: `DSCR of ${metrics.dscr.toFixed(2)}x has limited cushion. A declining trend would further weaken coverage.`,
     });
   }
@@ -40,7 +40,7 @@ function generateChecklist(inputs, metrics, riskScore) {
       category: 'Financial',
       priority: 'high',
       question: 'Obtain full debt schedule with maturities, rates, and covenants on all existing obligations',
-      why: `Leverage of ${metrics.leverage.toFixed(1)}x — need to understand refinancing risk and covenant headroom.`,
+      why: `Leverage of ${metrics.leverage.toFixed(1)}x. Need to understand refinancing risk and covenant headroom.`,
     });
   }
   if (metrics.leverage > 5.0) {
@@ -59,7 +59,7 @@ function generateChecklist(inputs, metrics, riskScore) {
       id: 'actual-ds',
       category: 'Financial',
       priority: 'medium',
-      question: `Confirm actual annual debt service — currently estimated at ${Math.round(metrics.existingDebtService).toLocaleString()}/yr based on ${(0.08 * 100).toFixed(0)}% blended rate`,
+      question: `Confirm actual annual debt service. Currently estimated at ${Math.round(metrics.existingDebtService).toLocaleString()}/yr based on ${(0.08 * 100).toFixed(0)}% blended rate`,
       why: 'Estimated debt service may overstate or understate actual obligations. Actual figures improve DSCR accuracy.',
     });
   }
@@ -70,7 +70,7 @@ function generateChecklist(inputs, metrics, riskScore) {
       id: 'rev-diversification',
       category: 'Operational',
       priority: 'medium',
-      question: 'Request customer concentration breakdown — what % of revenue comes from top 3 customers?',
+      question: 'Request customer concentration breakdown. What % of revenue comes from top 3 customers?',
       why: `Equipment cost is ${metrics.revenueConcentration.toFixed(0)}% of revenue. High customer concentration would compound this risk.`,
     });
   }
@@ -102,7 +102,7 @@ function generateChecklist(inputs, metrics, riskScore) {
       category: 'Collateral',
       priority: 'medium',
       question: 'What is the borrower\'s maintenance program for this equipment? Request maintenance history if used.',
-      why: `Loan term covers ${metrics.termCoverage.toFixed(0)}% of useful life — equipment condition at term-end is critical.`,
+      why: `Loan term covers ${metrics.termCoverage.toFixed(0)}% of useful life. Equipment condition at term-end is critical.`,
     });
   }
 
@@ -113,7 +113,7 @@ function generateChecklist(inputs, metrics, riskScore) {
       category: 'Credit',
       priority: 'high',
       question: 'Obtain personal financial statement (PFS) and tax returns from principal owner(s)',
-      why: `Only ${inputs.yearsInBusiness} years in business — need owner's financial backing as secondary repayment source.`,
+      why: `Only ${inputs.yearsInBusiness} years in business. Need owner's financial backing as secondary repayment source.`,
     });
     items.push({
       id: 'business-plan',
@@ -132,7 +132,7 @@ function generateChecklist(inputs, metrics, riskScore) {
       category: 'Operational',
       priority: 'medium',
       question: `Where is ${inputs.industrySector} in its current cycle? Request borrower's view on near-term outlook and backlog/pipeline.`,
-      why: `${inputs.industrySector} is cyclical — timing in the cycle affects default probability.`,
+      why: `${inputs.industrySector} is cyclical. Timing in the cycle affects default probability.`,
     });
   }
 
@@ -143,7 +143,7 @@ function generateChecklist(inputs, metrics, riskScore) {
       category: 'Collateral',
       priority: 'medium',
       question: 'Confirm why this equipment is not essential to operations. What alternatives does the borrower have?',
-      why: 'Non-essential equipment has weaker recovery profiles — borrower may abandon it in distress.',
+      why: 'Non-essential equipment has weaker recovery profiles. Borrower may abandon it in distress.',
     });
   }
 
@@ -153,7 +153,7 @@ function generateChecklist(inputs, metrics, riskScore) {
       id: 'remarketing',
       category: 'Collateral',
       priority: 'high',
-      question: `Assess remarketing outlook for ${inputs.equipmentType} — are there active secondary markets and reliable dealers?`,
+      question: `Assess remarketing outlook for ${inputs.equipmentType}. Are there active secondary markets and reliable dealers?`,
       why: 'Lessor bears residual value risk on FMV leases. Weak remarketing = potential loss at maturity.',
     });
   }
@@ -162,7 +162,7 @@ function generateChecklist(inputs, metrics, riskScore) {
       id: 'trac-residual',
       category: 'Collateral',
       priority: 'medium',
-      question: 'Validate that the TRAC residual assumption is defensible — check used vehicle valuation guides (e.g., NADA, Black Book)',
+      question: 'Validate that the TRAC residual assumption is defensible. Check used vehicle valuation guides (e.g., NADA, Black Book)',
       why: 'If lessee defaults on the guaranteed residual, the lessor must recover via disposition.',
     });
   }
@@ -174,7 +174,7 @@ function generateChecklist(inputs, metrics, riskScore) {
       category: 'Structure',
       priority: 'high',
       question: 'Has the borrower been asked about an equity contribution? Even 10-15% significantly reduces LTV risk.',
-      why: `LTV of ${(metrics.ltv * 100).toFixed(0)}% with no down payment — skin in the game reduces moral hazard.`,
+      why: `LTV of ${(metrics.ltv * 100).toFixed(0)}% with no down payment. Skin in the game reduces moral hazard.`,
     });
   }
 
@@ -185,7 +185,7 @@ function generateChecklist(inputs, metrics, riskScore) {
       category: 'Credit',
       priority: 'high',
       question: 'Is a personal or corporate guarantee available? If so, assess guarantor\'s net worth and liquidity.',
-      why: 'Below-moderate screening score — additional credit support is likely needed for approval.',
+      why: 'Below-moderate screening score. Additional credit support is likely needed for approval.',
     });
   }
 

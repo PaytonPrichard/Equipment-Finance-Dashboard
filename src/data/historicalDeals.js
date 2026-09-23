@@ -436,7 +436,7 @@ const historicalDeals = [
       monthsCompleted: 38,
       paymentsMade: 38,
       paymentsOnTime: 32,
-      notes: 'Grain prices fell 28% — DSCR dropped below 1.0x for two quarters. Currently restructuring payment schedule.',
+      notes: 'Grain prices fell 28%. DSCR dropped below 1.0x for two quarters. Currently restructuring payment schedule.',
     },
     inputs: {
       companyName: 'Heartland Grain Cooperative',
@@ -520,7 +520,7 @@ const historicalDeals = [
       monthsCompleted: 30,
       paymentsMade: 30,
       paymentsOnTime: 24,
-      notes: 'Severe drought reduced crop yields 40%. Insurance claims pending for two growing seasons. Six late payments — currently on modified payment plan.',
+      notes: 'Severe drought reduced crop yields 40%. Insurance claims pending for two growing seasons. Six late payments, currently on a modified payment plan.',
     },
     inputs: {
       companyName: 'Prairie Harvest Equipment Co.',
@@ -548,7 +548,7 @@ const historicalDeals = [
       monthsCompleted: 28,
       paymentsMade: 28,
       paymentsOnTime: 22,
-      notes: 'Major customer filed bankruptcy, reducing orders by 35%. Assembly line running at 55% capacity. Six late payments — covenant waiver under negotiation.',
+      notes: 'Major customer filed bankruptcy, reducing orders by 35%. Assembly line running at 55% capacity. Six late payments, covenant waiver under negotiation.',
     },
     inputs: {
       companyName: 'Apex Manufacturing Corp.',
@@ -578,7 +578,7 @@ const historicalDeals = [
       monthsCompleted: 28,
       paymentsMade: 22,
       paymentsOnTime: 14,
-      notes: 'Ceased operations month 28. Aircraft repossessed — sold at auction for 42% of original cost. Total loss: $7.2M.',
+      notes: 'Ceased operations month 28. Aircraft repossessed, sold at auction for 42% of original cost. Total loss: $7.2M.',
     },
     inputs: {
       companyName: 'SkyConnect Regional Air LLC',
@@ -606,7 +606,7 @@ const historicalDeals = [
       monthsCompleted: 18,
       paymentsMade: 12,
       paymentsOnTime: 8,
-      notes: 'Commodity price crash. Missed 6 payments in final year. Equipment recovered — sold for 55% of cost. Loss: $3.1M.',
+      notes: 'Commodity price crash. Missed 6 payments in final year. Equipment recovered, sold for 55% of cost. Loss: $3.1M.',
     },
     inputs: {
       companyName: 'Canyon Rock Mining LLC',
@@ -718,7 +718,7 @@ const historicalDeals = [
       monthsCompleted: 12,
       paymentsMade: 8,
       paymentsOnTime: 5,
-      notes: 'Underbid multiple projects causing cash flow collapse. Principal fraud discovered — falsified revenue figures. Equipment unrecoverable. Total loss: $6M.',
+      notes: 'Underbid multiple projects causing cash flow collapse. Principal fraud discovered, with falsified revenue figures. Equipment unrecoverable. Total loss: $6M.',
     },
     inputs: {
       companyName: 'Sunrise Construction Services LLC',

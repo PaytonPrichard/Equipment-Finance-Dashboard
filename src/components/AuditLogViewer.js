@@ -255,7 +255,7 @@ export default function AuditLogViewer() {
           <p className="text-[11px] text-gray-400 mt-0.5">
             Track all changes across deals and pipelines
             {profile?.full_name && (
-              <span className="text-gray-400"> — Viewing as {profile.full_name}</span>
+              <span className="text-gray-400">. Viewing as {profile.full_name}</span>
             )}
           </p>
         </div>

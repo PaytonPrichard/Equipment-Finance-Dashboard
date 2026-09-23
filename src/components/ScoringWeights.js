@@ -241,7 +241,7 @@ export default function ScoringWeights({ inputs, metrics, riskScore, onWeightsCh
               </span>
               {!isBalanced && (
                 <span className="text-[10px] text-amber-400/80">
-                  {total < 100 ? `${100 - total}% under` : `${total - 100}% over`} — score will be normalized
+                  {total < 100 ? `${100 - total}% under` : `${total - 100}% over`}. Score will be normalized
                 </span>
               )}
               {isBalanced && (

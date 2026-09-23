@@ -68,7 +68,7 @@ export function generateRequestInfoEmail({ dealName, brokerName, missingFields, 
 
   const fieldList = missingFields.map((f) => `  - ${f.label}`).join('\n');
 
-  const subject = encodeURIComponent(`Additional Information Needed — ${obligor} Equipment Financing`);
+  const subject = encodeURIComponent(`Additional information needed for ${obligor} equipment financing`);
 
   const body = encodeURIComponent(
     `Hi ${broker},\n\n` +

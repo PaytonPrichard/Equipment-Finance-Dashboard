@@ -141,7 +141,7 @@ export default function HistoricalDealsTable({ deals, sofr = DEFAULT_SOFR }) {
                 {/* Alignment icon */}
                 <div className="flex-shrink-0" title={
                   deal.aligned === true ? 'Correctly predicted' :
-                  deal.aligned === 'conservative' ? 'Conservative — deal outperformed' : 'Risk not flagged'
+                  deal.aligned === 'conservative' ? 'Conservative, deal outperformed' : 'Risk not flagged'
                 }>
                   {deal.aligned === true ? (
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-emerald-400" strokeWidth="2.5">

@@ -119,7 +119,7 @@ export default function IndustryBenchmarks({ inputs, metrics, riskScore, sofr = 
               <line x1="12" y1="17" x2="12.01" y2="17" />
             </svg>
             <span className="text-[11px] text-amber-300">
-              Limited sample — only {dealCount} comparable deal{dealCount !== 1 ? 's' : ''}. Averages may not be representative.
+              Limited sample, only {dealCount} comparable deal{dealCount !== 1 ? 's' : ''}. Averages may not be representative.
             </span>
           </div>
         )}

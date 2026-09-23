@@ -638,10 +638,10 @@ function IntegrationsSection({ addToast }) {
           </div>
           <div className="border-t border-gray-200 pt-3 space-y-2">
             <p className="text-gray-500 text-[10px] uppercase tracking-wider font-sans mb-1">Endpoints</p>
-            <p className="text-gray-700"><span className="text-emerald-600">POST</span> /api/v1?resource=deals — Create a deal</p>
-            <p className="text-gray-700"><span className="text-blue-600">GET</span> /api/v1?resource=deals — List pipeline deals</p>
-            <p className="text-gray-700"><span className="text-blue-600">GET</span> /api/v1?resource=deals&amp;id=123 — Get specific deal</p>
-            <p className="text-gray-700"><span className="text-amber-600">PATCH</span> /api/v1?resource=deals&amp;id=123 — Update stage or notes</p>
+            <p className="text-gray-700"><span className="text-emerald-600">POST</span> /api/v1?resource=deals · Create a deal</p>
+            <p className="text-gray-700"><span className="text-blue-600">GET</span> /api/v1?resource=deals · List pipeline deals</p>
+            <p className="text-gray-700"><span className="text-blue-600">GET</span> /api/v1?resource=deals&amp;id=123 · Get specific deal</p>
+            <p className="text-gray-700"><span className="text-amber-600">PATCH</span> /api/v1?resource=deals&amp;id=123 · Update stage or notes</p>
           </div>
         </div>
       </div>
