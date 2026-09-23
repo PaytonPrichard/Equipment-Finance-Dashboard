@@ -248,6 +248,17 @@ function buildRequestBody(moduleKey, mediaType, fileBase64) {
   return {
     model: process.env.ANTHROPIC_MODEL || DEFAULT_MODEL,
     max_tokens: MAX_OUTPUT_TOKENS,
+    // No temperature here. It is deprecated on claude-sonnet-5 and the API
+    // rejects any request carrying it, which fails every extraction with
+    // "`temperature` is deprecated for this model".
+    //
+    // Extraction is still not fully reproducible: on 2026-09-23 the same
+    // credit application read "Mining / Heavy Machinery" one day and
+    // "Construction / Construction Equipment" the next, which moved the
+    // deal's conflict count from 3 to 5. Both readings are defensible for a
+    // quarry operator, which is the point: the instability is in the
+    // ambiguous categoricals, and the lever is the field guidance in the
+    // system prompt, not a sampling parameter.
     system: buildSystemPrompt(moduleKey),
     tools: [tool],
     tool_choice: { type: 'tool', name: 'record_extracted_deal' },

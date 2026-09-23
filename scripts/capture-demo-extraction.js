@@ -105,6 +105,26 @@ function diff(fixture, fresh) {
   });
   if (error) throw new Error(error);
 
+  // A failed call is not a drifted reading, and must never be reported as
+  // one. extractDealSheetSet deliberately lets one bad document through
+  // rather than failing the batch, so a request the API rejects comes back
+  // as a document classified "other" with no fields. Diffed against the
+  // fixture that reads as every field on every page having changed. Sending
+  // a deprecated `temperature` produced exactly that: four rejected calls
+  // and a confident report of 53 differences.
+  const failed = documents.filter((d) => d.error || (d.found || []).length === 0);
+  if (failed.length > 0) {
+    console.error(`Extraction failed for ${failed.length} of ${documents.length} documents. This is not drift.`);
+    console.error('');
+    for (const d of failed) {
+      console.error(`  ${d.fileName}: ${d.error || 'no fields returned'}`);
+    }
+    console.error('');
+    console.error('Nothing written and nothing compared. Fix the call, then run this again.');
+    process.exitCode = 1;
+    return;
+  }
+
   const payload = {
     _comment:
       'Real output of server-lib/extract.js against test-deal-sheets/equipment/granite-ridge-multidoc, ' +

@@ -72,6 +72,14 @@ describe('buildRequestBody', () => {
     expect(body.system).toContain(new Date().toISOString().slice(0, 10));
   });
 
+  test('no temperature is sent', () => {
+    // Deprecated on claude-sonnet-5. Sending it fails every extraction with
+    // "`temperature` is deprecated for this model", which surfaces as four
+    // documents classified "other" with no fields at all.
+    const body = buildRequestBody(MODULE, 'application/pdf', 'X');
+    expect(body.temperature).toBeUndefined();
+  });
+
   test('text files are decoded inline', () => {
     const base64 = Buffer.from('Equipment cost: $5M').toString('base64');
     const body = buildRequestBody(MODULE, 'text/plain', base64);
