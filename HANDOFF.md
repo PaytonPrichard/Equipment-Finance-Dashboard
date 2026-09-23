@@ -1,15 +1,43 @@
 # Tranche — where things stand
 
-Last updated 2026-09-23. Production is `main`, deployed to gettranche.app, but
-the working tree is **ahead of production** and not yet deployed: see
-"Site runthrough, 2026-09-23" below.
+Last updated 2026-09-23. Production is `main` @ `6a8862c`, deployed to
+gettranche.app. `FRED_API_KEY` is set and `/api/sofr` is live.
 
-338 client tests, 40 server tests, build clean.
+345 client tests, 41 server tests, build clean.
+
+**Recording the product video:** `https://www.gettranche.app/?demo=1&capture=1`,
+then follow "The day, compressed" at the end of `RECORDING_RUNBOOK.md`.
 
 ## Site runthrough, 2026-09-23
 
-A pass over the live site and the demo path, ahead of recording the demo video.
-Everything below is fixed in the working tree and waiting on one deploy.
+A pass over the live site and the demo path, ahead of recording the demo
+video. All of it is deployed.
+
+Later the same day, four more things came out of actually running the
+pre-shoot checks rather than reading them:
+
+- **Extraction is not reproducible, and there is no lever left.** Two live
+  runs against the same four files gave three conflicts, then five, then
+  four: `industrySector` flipped Mining to Construction, `equipmentType`
+  Heavy Machinery to Construction Equipment, `equipmentCondition` dropped
+  out. Every figure carrying the memo held in all of them. `temperature: 0`
+  is deprecated on claude-sonnet-5 and the API rejects requests carrying it,
+  so the remaining lever is field guidance in the system prompt. The
+  `industrySector` description says "Borrower industry" but never says *not
+  the equipment*, and a quarry buying construction machinery is exactly the
+  case that breaks. **Open.**
+- **Recording mode reversed to `?demo=1`**, which replays the fixture, after
+  the above. Drag and drop works in demo mode, so nothing about the shoot
+  changes; the runbook's claim otherwise was wrong.
+- **The demo had no credible identity.** "Demo Analyst" of "Demo Capital
+  Partners" sat in the app header on every screen and across the memo's
+  masthead and footer. Now J. Peter of Keystone Credit Partners, matching
+  `scripts/preview-memo.js`. `capture=1` hides the banner for recording, and
+  only the banner.
+- **The memo preview was misleading.** It wrote bare HTML, so a browser laid
+  it out at window width and the memo looked badly designed when it is
+  designed for a 662px column. It now renders in a letter sheet with page
+  rules drawn after html2pdf's own break pass.
 
 **Not fixed in code, needs a deploy to take effect.** `FRED_API_KEY` was never
 set in Vercel, so `/api/sofr` returned `{"rate":null,"error":"Server
