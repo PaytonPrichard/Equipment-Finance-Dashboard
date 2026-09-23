@@ -594,6 +594,20 @@ export default function DealInputForm({ inputs, onChange, schema, modules, activ
   const missingKeys = new Set(missingFields.map(f => f.key));
   const hasIncomplete = missingFields.length > 0;
 
+  // Where the screening rate actually came from.
+  //
+  // This used to be a binary: say "live" if the source string contained it,
+  // otherwise say "cached". So when the FRED fetch failed and the app fell
+  // back to the hardcoded DEFAULT_SOFR, the chip claimed a cached FRED
+  // reading that had never been fetched. On a product whose argument is that
+  // every number traces to a source, the rate has to say when it is a
+  // stand-in.
+  const sofrRateLabel = sofrSource?.includes('live')
+    ? { text: 'live', className: 'text-emerald-500', title: 'Fetched from FRED just now.' }
+    : sofrSource?.includes('cached')
+      ? { text: 'cached', className: 'text-gray-300', title: 'Last FRED reading, fetched within the past four hours.' }
+      : { text: 'default', className: 'text-amber-600', title: 'Live SOFR is unavailable, so screening is using the built-in default rate.' };
+
   return (
     <div className="space-y-5">
       {/* Required note + SOFR + Incomplete badge */}
@@ -615,8 +629,11 @@ export default function DealInputForm({ inputs, onChange, schema, modules, activ
           {sofr > 0 && (
             <span className="text-[10px] text-gray-400 font-mono">
               SOFR {(sofr * 100).toFixed(2)}%
-              <span className={`ml-1 text-[9px] ${sofrSource?.includes('live') ? 'text-emerald-500' : 'text-gray-300'}`}>
-                {sofrSource?.includes('live') ? 'live' : 'cached'}
+              <span
+                className={`ml-1 text-[9px] ${sofrRateLabel.className}`}
+                title={sofrRateLabel.title}
+              >
+                {sofrRateLabel.text}
               </span>
             </span>
           )}
