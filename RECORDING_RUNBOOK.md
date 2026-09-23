@@ -313,17 +313,44 @@ Most LinkedIn video is watched with the sound off.
 
 ---
 
-## Order, compressed
+## The day, compressed
 
-1. Dry run against the script, fix the script, not the product
-2. Clean the machine
-3. Set up OBS once
-4. Shoot ten silent clips, two takes each
-5. Assemble the picture, cut every wait
-6. Voiceover onto the locked picture, one line per take
-7. Auto-caption, then proofread every number
-8. Export, watch muted, watch at 1.5x, watch on the phone
-9. Native upload to LinkedIn with the one-pager
+Everything below is in the phases above. This is the sequence to follow with
+the phases open beside you.
+
+**Before you touch OBS**
+
+1. `npm run test:all`. Green means the product still says what the script
+   says. A failure in `demoExtraction.test.js` names the beat that moved.
+2. Open `https://www.gettranche.app/?demo=1&capture=1`. Production, not
+   localhost: the dev server does not serve `/api/`, so a local recording
+   shows SOFR as an amber **default 4.25%** instead of **live 3.87%**, from
+   0:28 onward.
+3. Drag the four files from `test-deal-sheets/equipment/granite-ridge-multidoc/`
+   onto the upload panel. Confirm **3 fields where the documents disagree**.
+   That number is the video. If it is not 3, stop and read the note on
+   recording mode at the top of this file.
+4. **Click Download PDF and open the file.** Do not skip this. The memo
+   download has broken twice before, both times silently: once because
+   html2canvas could not parse `oklch()` and once because the capture node
+   measured zero high. Neither showed an error on screen. You are checking a
+   PDF exists, opens, and runs 3 pages with nothing cut mid-table.
+5. Read the voiceover column aloud, timed. Past 2:05, cut 0:12 to 0:20.
+
+**Then**
+
+6. Clean the machine, phase 1. Every item there has ended somebody's take.
+7. Set up OBS, phase 2. Once, forever.
+8. Shoot the ten silent clips, two takes each, phase 3.
+9. Assemble the picture, cut every wait, phase 4.
+10. Voiceover onto the locked picture, one line per take, phase 5.
+11. Auto-caption, then proofread every number, phase 6.
+12. Export, watch muted, watch at 1.5x, watch on the phone, phase 7.
+13. Native upload to LinkedIn with the one-pager, phase 8.
+
+**If a number on screen disagrees with the script**, the script is wrong and
+the product is right. Fix the script. That rule is the whole reason phase 0
+exists.
 
 Video B in `VIDEO_SCRIPTS.md` reuses phases 1 through 3 wholesale. Shoot both
 sets of clips in the same session while the machine is already clean.

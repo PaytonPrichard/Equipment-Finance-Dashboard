@@ -6,8 +6,8 @@ For recording, see `VIDEO_SCRIPTS.md`, which has two timecoded shooting
 scripts with the voiceover written out. This document is the longer,
 conversational version: it assumes someone is watching you and can interrupt.
 
-Roughly **six minutes** at a comfortable pace. The cuts at the end say what to
-drop if you have three.
+Roughly **seven minutes** at a comfortable pace. The cuts at the end say what
+to drop if you have three.
 
 ---
 
@@ -32,6 +32,7 @@ open in a file picker beforehand. Four files. Do not go hunting for them on came
 
 - `?demo=1` — New Deal, empty
 - `?demo=1&tab=pipeline` — the board
+- `?demo=1&tab=monitoring` — funded facilities and covenant drift
 - `?demo=1&tab=dashboard` — portfolio view
 
 ---
@@ -159,7 +160,34 @@ side: it names leverage at 5.7x against a 5x maximum, and LTV at 106%.
 
 ---
 
-## 7. Close (30s)
+## 7. What happens after it funds (45s)
+
+The part nobody else in this category connects, and the reason the pipeline
+beat before it matters. Go to **Monitoring** (`?demo=1&tab=monitoring`).
+
+Two funded facilities. Covenants on both were pre-filled from the screening
+assumptions, not typed again.
+
+**Say:** "The thresholds this deal was screened against became the covenants
+it is monitored against. Nobody re-entered them, and nobody had to remember
+what we underwrote to."
+
+Open **Summit IT Solutions**. Its quarterly financials are overdue and last
+quarter's compliance certificate came in late.
+
+Then switch to the **Performance** tab. This is the one to hold on.
+
+**Say:** "We underwrote Summit at 5.70x DSCR. It is reporting 2.38x. The
+covenant is 1.25x, so nothing is in breach and nothing would have alerted.
+But the credit has moved a long way from the deal we approved, and that gap
+is the thing you want to see before it becomes a breach."
+
+That is the whole argument for screen-to-monitor continuity in one screen.
+If they only remember one thing after the memo, make it this.
+
+---
+
+## 8. Close (30s)
 
 **Say:** "Three asset classes: equipment finance, receivables, inventory.
 Same document ingest, same memo, different collateral logic. It is screening
@@ -204,8 +232,9 @@ against.
 No. It is preliminary screening. That is stated on the memo and in the terms.
 
 **"What happens after a deal is funded?"**
-Covenants seed from the screening assumptions, and the monitoring view tracks
-tests against them. That is where the screen-to-monitor continuity lives.
+Show them rather than answer: `?demo=1&tab=monitoring`, then Performance.
+Covenants seed from the screening assumptions and the drift view compares
+what is being reported against what was underwritten. Section 7.
 
 ---
 
