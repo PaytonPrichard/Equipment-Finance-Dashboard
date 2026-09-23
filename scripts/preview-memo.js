@@ -25,7 +25,104 @@ const esbuild = require('esbuild');
 const REPO = path.join(__dirname, '..');
 const OUT_DIR = path.join(REPO, 'outputs');
 
+// App.js stamps the day the documents were read. Matching it here keeps
+// the preview honest: the fixture used to say Sep 1 forever, so the memo
+// looked like it had been written weeks after anyone opened the file.
+const READ_ON = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
 const MODULE_KEY = process.argv[2] || 'equipment_finance';
+
+// US letter at 96dpi, with the margins the PDF actually uses.
+const PAGE_W = 816;        // 8.5in
+const PAD_X = 76.8;        // 0.8in
+const PAD_Y = 67.2;        // 0.7in
+const CONTENT_H = 921.6;   // 11in less the top and bottom margins
+
+/**
+ * Wrap the memo in a letter-sized sheet.
+ *
+ * Without this the file is the bare memo, and a browser lays it out at
+ * whatever the window happens to be. At 1900px wide every table stretches
+ * edge to edge, currency columns sit a hand's width from their labels, and
+ * the whole thing reads as badly designed. It is not: it is designed for a
+ * 662px column and never gets to be one here.
+ *
+ * So: true page width, true margins, and a dashed rule wherever a page
+ * break will fall, which is the thing you actually want to check.
+ */
+function asSheet(html) {
+  const style = `
+  <style>
+    html, body { background: #6b7280; margin: 0; padding: 36px 0; }
+    .preview-note {
+      width: ${PAGE_W}px; margin: 0 auto 12px; color: #f3f4f6;
+      font: 12px/1.5 -apple-system, Segoe UI, Roboto, sans-serif;
+    }
+    .preview-note b { color: #fff; }
+    .sheet {
+      width: ${PAGE_W}px; margin: 0 auto; background: #fff; position: relative;
+      padding: ${PAD_Y}px ${PAD_X}px; box-shadow: 0 2px 24px rgba(0,0,0,0.4);
+    }
+    .sheet-guides {
+      position: absolute; left: 0; right: 0; top: ${PAD_Y}px; bottom: 0;
+      pointer-events: none;
+      background: repeating-linear-gradient(
+        to bottom,
+        transparent 0, transparent ${CONTENT_H - 1}px,
+        rgba(225,29,72,0.5) ${CONTENT_H - 1}px, rgba(225,29,72,0.5) ${CONTENT_H}px
+      );
+    }
+  </style>`;
+
+  // Paginate the preview the way html2pdf paginates the PDF.
+  //
+  // Drawing rules every ${CONTENT_H}px onto the raw flow shows where the
+  // boundary WOULD fall if nothing were protected, which is not what gets
+  // printed: html2pdf reads break-inside per element and inserts a spacer to
+  // push anything that would be cut. Without this the preview drew a line
+  // through the middle of Deal Overview, a break the real PDF does not have.
+  //
+  // Same algorithm, same order, so the rules and the content agree.
+  const paginate = `<script>
+    (function () {
+      var PAGE = ${CONTENT_H};
+      var sheet = document.querySelector('.sheet');
+      // Measure from the content element, not from the sheet plus its
+      // padding. The padding is fractional (0.7in is 67.2px), so deriving
+      // the origin arithmetically put the first block at -0.5px, which
+      // floors to page -1 and reads as straddling. The whole memo got
+      // pushed down a page before its own header.
+      var content = sheet.querySelector('.page') || sheet;
+      var base = content.getBoundingClientRect().top + window.scrollY;
+      var els = [].slice.call(sheet.querySelectorAll('*'));
+      for (var i = 0; i < els.length; i++) {
+        var el = els[i];
+        if (el.className === 'sheet-guides') continue;
+        var cs = getComputedStyle(el);
+        if (cs.breakInside !== 'avoid' && cs.pageBreakInside !== 'avoid') continue;
+        var r = el.getBoundingClientRect();
+        var top = r.top + window.scrollY - base;
+        var bot = r.bottom + window.scrollY - base;
+        if (Math.floor(top / PAGE) === Math.floor(bot / PAGE)) continue;
+        if ((bot - top) / PAGE > 1) continue;
+        var pad = document.createElement('div');
+        pad.style.display = 'block';
+        pad.style.height = (PAGE - (top % PAGE)) + 'px';
+        el.parentNode.insertBefore(pad, el);
+      }
+      var pages = Math.ceil((sheet.scrollHeight - ${PAD_Y} * 2) / PAGE);
+      document.querySelector('.preview-note').innerHTML +=
+        ' &middot; <b>' + pages + ' pages</b>';
+    })();
+  <\/script>`;
+
+  const note = `<div class="preview-note">Letter, at true size. <b>Dashed red</b> is where a page break falls.</div>`;
+  const body = html.match(/<body[^>]*>([\s\S]*)<\/body>/i);
+  const inner = body ? body[1] : html;
+  return html
+    .replace(/<\/head>/i, `${style}</head>`)
+    .replace(/<body[^>]*>[\s\S]*<\/body>/i, `<body>${note}<div class="sheet"><div class="sheet-guides"></div>${inner}</div>${paginate}</body>`);
+}
 
 const FIXTURES = {
   equipment_finance: {
@@ -56,10 +153,10 @@ const FIXTURES = {
       essentialUse: true,
     },
     sourceDocuments: [
-      { fileName: '01_credit-application.pdf', documentType: 'Credit application', addedOn: 'Sep 1, 2026' },
-      { fileName: '02_financial-statements.pdf', documentType: 'Financial statements', addedOn: 'Sep 1, 2026' },
-      { fileName: '03_equipment-quote.pdf', documentType: 'Equipment quote', addedOn: 'Sep 1, 2026' },
-      { fileName: '04_broker-email.txt', documentType: 'Deal sheet', addedOn: 'Sep 1, 2026' },
+      { fileName: '01_credit-application.pdf', documentType: 'Credit application', addedOn: READ_ON },
+      { fileName: '02_financial-statements.pdf', documentType: 'Financial statements', addedOn: READ_ON },
+      { fileName: '03_equipment-quote.pdf', documentType: 'Equipment quote', addedOn: READ_ON },
+      { fileName: '04_broker-email.txt', documentType: 'Deal sheet', addedOn: READ_ON },
     ],
   },
   accounts_receivable: {
@@ -81,10 +178,10 @@ const FIXTURES = {
       existingABLFacility: true,
     },
     sourceDocuments: [
-      { fileName: '01_credit-application.pdf', documentType: 'Credit application', addedOn: 'Sep 1, 2026' },
-      { fileName: '02_ar-aging.pdf', documentType: 'AR aging report', addedOn: 'Sep 1, 2026' },
-      { fileName: '03_borrowing-base-certificate.pdf', documentType: 'Borrowing base certificate', addedOn: 'Sep 1, 2026' },
-      { fileName: '04_customer-concentration.pdf', documentType: 'AR aging report', addedOn: 'Sep 1, 2026' },
+      { fileName: '01_credit-application.pdf', documentType: 'Credit application', addedOn: READ_ON },
+      { fileName: '02_ar-aging.pdf', documentType: 'AR aging report', addedOn: READ_ON },
+      { fileName: '03_borrowing-base-certificate.pdf', documentType: 'Borrowing base certificate', addedOn: READ_ON },
+      { fileName: '04_customer-concentration.pdf', documentType: 'AR aging report', addedOn: READ_ON },
     ],
   },
   inventory_finance: {
@@ -105,10 +202,10 @@ const FIXTURES = {
       nolvPct: 58, perishable: false,
     },
     sourceDocuments: [
-      { fileName: '01_credit-application.pdf', documentType: 'Credit application', addedOn: 'Sep 1, 2026' },
-      { fileName: '02_inventory-report.pdf', documentType: 'Financial statements', addedOn: 'Sep 1, 2026' },
-      { fileName: '03_nolv-appraisal.pdf', documentType: 'Appraisal', addedOn: 'Sep 1, 2026' },
-      { fileName: '04_broker-email.txt', documentType: 'Deal sheet', addedOn: 'Sep 1, 2026' },
+      { fileName: '01_credit-application.pdf', documentType: 'Credit application', addedOn: READ_ON },
+      { fileName: '02_inventory-report.pdf', documentType: 'Financial statements', addedOn: READ_ON },
+      { fileName: '03_nolv-appraisal.pdf', documentType: 'Appraisal', addedOn: READ_ON },
+      { fileName: '04_broker-email.txt', documentType: 'Deal sheet', addedOn: READ_ON },
     ],
   },
 };
@@ -173,7 +270,7 @@ async function bundle(entry, globalName) {
 
   fs.mkdirSync(OUT_DIR, { recursive: true });
   const out = path.join(OUT_DIR, `memo-preview-${MODULE_KEY}.html`);
-  fs.writeFileSync(out, html, 'utf-8');
+  fs.writeFileSync(out, asSheet(html), 'utf-8');
 
   console.log(`Score ${riskScore.composite}/100, verdict ${screeningResult.verdict}`);
   console.log(`Wrote ${out}`);
