@@ -20,6 +20,34 @@ const fs = require('fs');
 const path = require('path');
 
 const REPO = path.join(__dirname, '..');
+
+// Read .env.local the way the dev server does, so this script does not need
+// the key exported into the shell first. Anything already in the environment
+// wins, and nothing here is a dependency: it is six lines rather than a
+// transitive dotenv.
+function loadEnvFile(file) {
+  if (!fs.existsSync(file)) return;
+  for (const line of fs.readFileSync(file, 'utf-8').split('\n')) {
+    const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)\s*$/i);
+    if (!m) continue;
+    if (process.env[m[1]] !== undefined) continue;
+    process.env[m[1]] = m[2].replace(/^["']|["']$/g, '');
+  }
+}
+loadEnvFile(path.join(REPO, '.env.local'));
+loadEnvFile(path.join(REPO, '.env'));
+
+if (!process.env.ANTHROPIC_API_KEY) {
+  console.error('ANTHROPIC_API_KEY is not set.');
+  console.error('');
+  console.error('This script calls the real extraction, so it needs the key.');
+  console.error('Add it to .env.local as a line reading:');
+  console.error('');
+  console.error('  ANTHROPIC_API_KEY=sk-ant-...');
+  console.error('');
+  console.error('.env.local is gitignored. See .env.example for the full list.');
+  process.exit(1);
+}
 const { extractDealSheetSet } = require(path.join(REPO, 'server-lib', 'extract.js'));
 
 const DIR = path.join(REPO, 'test-deal-sheets', 'equipment', 'granite-ridge-multidoc');
