@@ -33,40 +33,38 @@ No paid software. No new dependencies in the repo.
 
 ---
 
-## Phase 0. Dry run and fix the script (45 min, do this first)
+## Phase 0. Dry run (20 min, do this first)
 
 You are not recording yet. You are checking that the product still says what
-the script claims it says. The script was written before the September 3 flow
-audit. Verify, then edit the script to match reality. Never edit the product
-to match the script the night before a shoot.
+the script claims it says. Never edit the product to match the script the
+night before a shoot.
 
-1. `npm start`. Sign in on your real account.
-2. New Deal, equipment finance. Drag in all four files from
-   `test-deal-sheets/equipment/granite-ridge-multidoc/`.
-3. Walk Video A top to bottom with the script open beside you and check every
-   number it puts on screen:
+Most of this used to be a checklist of ten figures to read off the screen and
+compare against the script by hand. It is now
+`src/data/demoExtraction.test.js`, which drives the real merge and the real
+scoring and asserts every figure Video A says out loud, each test named by
+the timestamp of its beat. A scoring change that would have broken a beat
+fails there instead of surfacing halfway through a take.
 
-   - [ ] Four documents classified, and the labels read the way 0:36 says
-   - [ ] The conflict block says **3** fields disagree
-   - [ ] EBITDA row shows **7,400,000** from `02_financial-statements.pdf`
-         against **7,900,000** from `04_broker-email.txt`
-   - [ ] Clicking **Use that** moves margin **19.3 to 20.6** and debt yield
-         **138.7 to 148.1**
-   - [ ] Clicking it again restores
-   - [ ] **Show what came from where** expands and is legible at 1080p
-   - [ ] Score is **80, PASS**
-   - [ ] A red flag names mining as high risk
-   - [ ] The memo Transaction Summary reads **$5,333,750, 84-month EFA**
-   - [ ] The memo Source Documents section lists all four files
-
-4. Fix the script where it is wrong. Two known drifts to settle now:
-   - Video A 0:06 says "about ninety seconds". `DEMO_SCRIPT.md` says "about
-     two minutes". Pick one and make both documents say it.
-   - Video A 0:28 says "drag all four in at once", which is true on a real
-     account and false in demo mode. You are recording signed in, so this one
-     is correct as written. Leave it.
-5. Time yourself reading the voiceover column aloud at a normal pace. If it
+1. `npm run test:all`. If `demoExtraction.test.js` fails, the name of the
+   failing test is the beat that moved. Fix the script, not the product.
+2. `node scripts/capture-demo-extraction.js --check`. One API call. It runs a
+   live extraction against the four Granite Ridge files and compares it to the
+   fixture. The tests above lock the fixture, and demo mode replays it, but
+   you are recording signed in, which runs the live extraction. This is the
+   step that tells you the two still agree. If it reports drift, either
+   re-capture and re-run the tests, or record in demo mode instead.
+3. `npm start`, sign in, and walk Video A once with the script open. You are
+   looking at the things a test cannot see: whether **Show what came from
+   where** is legible at 1080p, whether the memo pages break cleanly, whether
+   anything is visually broken on the path.
+4. Time yourself reading the voiceover column aloud at a normal pace. If it
    runs past 2:05, cut 0:12 to 0:20 as the script already tells you to.
+
+One drift worth knowing about: the screening rate is live SOFR from FRED, and
+the 80 the voiceover says holds while SOFR is at or below about 4.5%. Above
+that the same deal scores 79. The test carries that band, so you will see it
+fail rather than discover it on tape.
 
 **Do not fix product bugs in this phase.** If something is visibly broken,
 write it down and decide tomorrow whether it blocks the shoot. The residual

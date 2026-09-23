@@ -25,11 +25,21 @@ live on a call. This one is for recording.
 - Light theme. The product is designed for it.
 
 **Data**
-- Use `?demo=1`. It runs the real scoring and the real merge against seeded
-  data, and the upload replays a captured extraction rather than spending an
-  API call. Nothing on screen is fake; nothing is slow.
+- **Record signed in on a real account, not `?demo=1`.** `DemoBanner` puts a
+  permanent amber "sample data, changes won't be saved" bar across the top,
+  and a prospect reads that as a mockup. This applies to both videos. Demo
+  mode is what you link people to afterwards. It is not what you film.
+- The cost of that choice is that the upload runs a real extraction rather
+  than replaying the captured one, so the figures are not guaranteed the way
+  they are in demo mode. Run `node scripts/capture-demo-extraction.js --check`
+  the day before. It compares a live extraction against the fixture and tells
+  you if anything moved. One API call.
+- The figures below are locked by `src/data/demoExtraction.test.js`, named by
+  the timestamp of the beat each one belongs to. Run the tests before a shoot
+  and a scoring change that would have broken a beat fails there first.
 - Check the pipeline looks lived-in before you start: fifteen deals, mixed
-  verdicts, notes on the cards.
+  verdicts, notes on the cards. Monitoring carries two facilities, one
+  tracking its underwrite and one that has drifted well below it.
 
 **Cursor**
 - Move deliberately. Slow is fine, jittery is not.
@@ -55,10 +65,9 @@ live on a call. This one is for recording.
 The structure is deliberate: it opens on the finished memo, then rewinds. A
 viewer who has already seen where this ends up watches the middle differently.
 
-Every figure below was verified live against the Granite Ridge set on
-2026-09-03. Re-verify before any reshoot, per phase 0 of
-`RECORDING_RUNBOOK.md`. Record signed in, not in demo mode: the demo banner
-reads as a mockup.
+Every figure below is asserted in `src/data/demoExtraction.test.js`, by the
+timestamp of its beat. Run the tests rather than checking them by hand, per
+phase 0 of `RECORDING_RUNBOOK.md`.
 
 | Time | On screen | Voiceover |
 |---|---|---|
