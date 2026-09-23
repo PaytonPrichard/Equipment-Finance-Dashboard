@@ -34,7 +34,7 @@ import DealRecommendation from './components/DealRecommendation';
 import SuggestedStructure from './components/SuggestedStructure';
 import ScreeningVerdict from './components/ScreeningVerdict';
 import ScreeningCriteria from './components/ScreeningCriteria';
-import { DEFAULT_CRITERIA, evaluateScreening, validateCriteria } from './lib/screeningCriteria';
+import { DEFAULT_CRITERIA, dscrFloorFor, evaluateScreening, validateCriteria } from './lib/screeningCriteria';
 import { validateWeights } from './lib/scoringWeights';
 import { computeDealMetrics } from './utils/dealMetrics';
 import StressTestPanel from './components/StressTestPanel';
@@ -131,6 +131,14 @@ class ErrorBoundary extends React.Component {
   }
 }
 
+// Status gradients for the metric cards.
+//
+// These breakpoints are the bands in Deal_Screening_Model_Assumptions.md
+// (e.g. term coverage under 60% is excellent, 60-80% is good). They are
+// presentation only. They are NOT targets, and printing one as a target is
+// what made the Term / Life card read "Target < 60%" while the factor table
+// underneath it judged the same deal against 80%. The threshold line on each
+// card now comes from FACTOR_TARGETS and the firm's criteria instead.
 function getDscrStatus(d) {
   if (d > 2.0) return 'excellent';
   if (d >= 1.5) return 'good';
@@ -535,6 +543,35 @@ function AuthenticatedApp({ profile, user }) {
     () => valid ? evaluateScreening(screeningCriteria, metrics, riskScore, inputs, activeModule) : null,
     [screeningCriteria, metrics, riskScore, inputs, activeModule, valid]
   );
+
+  // What each metric card prints under its value, and when it raises a flag.
+  //
+  // Both used to be string and number literals inline on the card. That put a
+  // third copy of every threshold in the app, and it drifted: the cards
+  // claimed targets the factor table did not use, and none of them moved when
+  // a firm changed its policy in Settings. Targets come from the module's
+  // FACTOR_TARGETS (what a deal is scored toward), ceilings from the firm's
+  // own criteria (what makes it flag or fail), and the operators match the
+  // factor table exactly, because the two sit one scroll apart.
+  const cardLimits = useMemo(() => {
+    const targets = mod.FACTOR_TARGETS || {};
+    const c = { ...DEFAULT_CRITERIA, ...screeningCriteria };
+    const floor = dscrFloorFor(c, activeModule);
+    return {
+      dscrFloor: floor,
+      dscr: `Target ≥ ${floor.toFixed(2)}x`,
+      leverage: `Target ≤ ${targets.maxLeverage}x · Max ${c.maxLeverage.toFixed(1)}x`,
+      leverageMax: c.maxLeverage,
+      // criteria.maxLtv is a percentage, FACTOR_TARGETS.maxLtv a fraction.
+      ltv: `Target ≤ ${(targets.maxLtv * 100).toFixed(0)}% · Max ${c.maxLtv.toFixed(0)}%`,
+      ltvMax: c.maxLtv / 100,
+      // Target and ceiling coincide here, so printing both would just say 80 twice.
+      termCoverage: `Target ≤ ${targets.maxTermCoverage}%`,
+      termCoverageMax: c.maxTermCoverage,
+      revenueConcentration: `Target ≤ ${c.maxRevenueConcentration}%`,
+      revenueConcentrationMax: c.maxRevenueConcentration,
+    };
+  }, [mod, screeningCriteria, activeModule]);
 
   // Memos frozen against the open deal. Reloaded when the deal changes, and
   // again when a fresh one is written, so the notice below the verdict is
@@ -1344,15 +1381,15 @@ function AuthenticatedApp({ profile, user }) {
                         title="DSCR" value={formatRatio(metrics.dscr)}
                         subtitle={`${formatCurrency(inputs.ebitda)} / ${formatCurrency(metrics.existingDebtService + metrics.newAnnualDebtService)} DS`}
                         status={getDscrStatus(metrics.dscr)}
-                        threshold="Min 1.25x · Target 1.50x+"
-                        flag={metrics.dscr < 1.25 ? 'Below threshold' : null}
+                        threshold={cardLimits.dscr}
+                        flag={metrics.dscr < cardLimits.dscrFloor ? 'Below threshold' : null}
                       />
                       <MetricCard
                         title="Leverage" value={formatRatio(metrics.leverage)}
                         subtitle="Total Debt / EBITDA"
                         status={getLeverageStatus(metrics.leverage)}
-                        threshold="Target < 3.5x · Max 5.0x"
-                        flag={metrics.leverage > 5.0 ? 'Elevated' : null}
+                        threshold={cardLimits.leverage}
+                        flag={metrics.leverage > cardLimits.leverageMax ? 'Elevated' : null}
                       />
                     </div>
 
@@ -1410,22 +1447,22 @@ function AuthenticatedApp({ profile, user }) {
                           title="LTV" value={formatPercent(metrics.ltv * 100)}
                           subtitle={(inputs.downPayment || 0) > 0 ? `${formatCurrency(inputs.downPayment)} equity` : 'Financed / value'}
                           status={getLtvStatus(metrics.ltv)}
-                          threshold="Target < 85% · Max 100%"
-                          flag={metrics.ltv > 1.0 ? 'Over 100%' : null}
+                          threshold={cardLimits.ltv}
+                          flag={metrics.ltv > cardLimits.ltvMax ? `Over ${(cardLimits.ltvMax * 100).toFixed(0)}%` : null}
                         />
                         <MetricCard
                           title="Term / Life" value={formatPercent(metrics.termCoverage)}
                           subtitle={`${(inputs.loanTerm / 12).toFixed(1)}yr / ${inputs.usefulLife}yr`}
                           status={getTermStatus(metrics.termCoverage)}
-                          threshold="Target < 60% · Max 80%"
-                          flag={metrics.termCoverage > 80 ? 'Exceeds 80%' : null}
+                          threshold={cardLimits.termCoverage}
+                          flag={metrics.termCoverage > cardLimits.termCoverageMax ? `Exceeds ${cardLimits.termCoverageMax}%` : null}
                         />
                         <MetricCard
                           title="Rev. Conc." value={formatPercent(metrics.revenueConcentration)}
                           subtitle="Equip Cost / Revenue"
                           status={getRevConcStatus(metrics.revenueConcentration)}
-                          threshold="Target < 15% · Watch > 25%"
-                          flag={metrics.revenueConcentration > 25 ? 'High' : null}
+                          threshold={cardLimits.revenueConcentration}
+                          flag={metrics.revenueConcentration > cardLimits.revenueConcentrationMax ? 'High' : null}
                         />
                       </>
                     )}

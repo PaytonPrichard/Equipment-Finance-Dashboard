@@ -55,6 +55,22 @@ export const DEFAULT_CRITERIA: ScreeningCriteria = {
   maxObsolescence: 10,
 };
 
+/**
+ * The DSCR floor a deal is judged against.
+ *
+ * AR facilities self-liquidate through collections, so they carry a lower
+ * floor than a term facility. This used to be inline in evaluateScreening,
+ * which meant the DSCR metric card printed a hardcoded "Min 1.25x" on an AR
+ * deal that was actually being judged at 1.10x.
+ */
+export function dscrFloorFor(
+  criteria: Partial<ScreeningCriteria> | null | undefined,
+  moduleKey: AssetClass,
+): number {
+  const c: ScreeningCriteria = { ...DEFAULT_CRITERIA, ...criteria };
+  return moduleKey === 'accounts_receivable' ? c.minDscrAR : c.minDscr;
+}
+
 export function evaluateScreening(
   criteria: Partial<ScreeningCriteria> | null | undefined,
   metrics: ModuleMetrics,
@@ -73,11 +89,10 @@ export function evaluateScreening(
   }
 
   // ---- DSCR ----
-  // AR module uses a lower floor (ABL norm); other modules use minDscr.
-  const dscrFloor = moduleKey === 'accounts_receivable' ? c.minDscrAR : c.minDscr;
+  const dscrFloor = dscrFloorFor(c, moduleKey);
   if (dscrFloor > 0 && metrics.dscr > 0 && metrics.dscr < dscrFloor) {
     if (metrics.dscr < 1.0) {
-      reasons.push({ level: 'fail', text: `DSCR ${metrics.dscr.toFixed(2)}x is below 1.0x — insufficient to service debt` });
+      reasons.push({ level: 'fail', text: `DSCR ${metrics.dscr.toFixed(2)}x is below 1.0x, insufficient to service debt` });
     } else {
       reasons.push({ level: 'flag', text: `DSCR ${metrics.dscr.toFixed(2)}x is below minimum (${dscrFloor}x)` });
     }
