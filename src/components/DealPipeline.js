@@ -16,6 +16,7 @@ import DealDetail from './DealDetail';
 import { fetchAttachmentCounts } from '../lib/attachments';
 import { notifyStageChange } from '../lib/notifications';
 import { verdictForDeal } from '../lib/dealVerdict';
+import { backStage, blockedReason, canTransition, forwardStage, isTerminalStage } from '../lib/pipelineStages';
 
 const STAGES = [
   { key: 'Screening', color: 'gold' },
@@ -223,17 +224,21 @@ export default function DealPipeline({ onLoadDeal, currentInputs, currentScore, 
     return false;
   };
 
-  const handleMove = async (id, direction) => {
+  /**
+   * Move a deal to a named stage.
+   *
+   * This took a +1/-1 delta before, which is how a funded deal could be
+   * stepped into Declined and a declined deal stepped back into Funded: both
+   * are adjacent in the array and nothing else was consulted. The target is
+   * now named by the caller and checked against STAGE_MOVES, so the rule
+   * holds for the board's arrows and the drawer's stage picker alike.
+   */
+  const handleMove = async (id, newStage) => {
     if (!userId || !orgId) return;
-    const stageKeys = STAGES.map((s) => s.key);
     const deal = deals.find((d) => d.id === id);
-    if (!deal) return;
+    if (!deal || !newStage) return;
 
-    const idx = stageKeys.indexOf(deal.stage);
-    const nextIdx = idx + direction;
-    if (nextIdx < 0 || nextIdx >= stageKeys.length) return;
-
-    const newStage = stageKeys[nextIdx];
+    if (!canTransition(deal.stage, newStage)) return;
 
     // Check permission for target stage
     if (!canMoveToStage(newStage)) return;
@@ -412,7 +417,6 @@ export default function DealPipeline({ onLoadDeal, currentInputs, currentScore, 
     if (grouped[d.stage]) grouped[d.stage].push(d);
   });
 
-  const stageKeys = STAGES.map((s) => s.key);
 
   if (loading) {
     return <SkeletonPipeline />;
@@ -592,9 +596,10 @@ export default function DealPipeline({ onLoadDeal, currentInputs, currentScore, 
                 )}
 
                 {columnDeals.map((deal) => {
-                  const stageIdx = stageKeys.indexOf(deal.stage);
-                  const canMoveBack = stageIdx > 0 && canMoveToStage(stageKeys[stageIdx - 1]);
-                  const canMoveForward = stageIdx < stageKeys.length - 1 && canMoveToStage(stageKeys[stageIdx + 1]);
+                  const backTarget = backStage(deal.stage);
+                  const forwardTarget = forwardStage(deal.stage);
+                  const canMoveBack = Boolean(backTarget) && canMoveToStage(backTarget);
+                  const canMoveForward = Boolean(forwardTarget) && canMoveToStage(forwardTarget);
                   const showDelete = canDeleteDeal(deal);
 
                   return (
@@ -686,9 +691,16 @@ export default function DealPipeline({ onLoadDeal, currentInputs, currentScore, 
                           <span className="text-[10px] text-gray-400">{getDealValue(deal.inputs)}</span>
                         )}
                         {(() => {
+                          // Aging is a prompt to go and do something about a
+                          // deal, so it only means anything while the deal is
+                          // still being worked. A funded deal sitting 45 days
+                          // in Funded was reading amber, which says a problem
+                          // where there is none. Terminal stages still show
+                          // how long ago, just never as a warning.
                           const days = daysInStage(deal);
+                          const stale = !isTerminalStage(deal.stage);
                           return (
-                            <span className={`text-[9px] font-medium ${days > 14 ? 'text-amber-700' : days > 7 ? 'text-gray-500' : 'text-gray-400'}`}>
+                            <span className={`text-[9px] font-medium ${stale && days > 14 ? 'text-amber-700' : stale && days > 7 ? 'text-gray-500' : 'text-gray-400'}`}>
                               {days === 0 ? 'Today' : days === 1 ? '1 day' : `${days} days`}
                             </span>
                           );
@@ -764,18 +776,16 @@ export default function DealPipeline({ onLoadDeal, currentInputs, currentScore, 
                           disabled={!canMoveBack}
                           title={
                             canMoveBack
-                              ? `Move to ${stageKeys[stageIdx - 1]}`
-                              : stageIdx <= 0
-                                ? 'Already at the first stage'
-                                : `You do not have permission to move deals to ${stageKeys[stageIdx - 1]}`
+                              ? `Move to ${backTarget}`
+                              : blockedReason(deal.stage, backTarget, canMoveToStage(backTarget))
                           }
                           aria-label="Move to previous stage"
-                          onClick={() => canMoveBack && handleMove(deal.id, -1)}
+                          onClick={() => canMoveBack && handleMove(deal.id, backTarget)}
                         >
                           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="inline -mt-px">
                             <polyline points="15 18 9 12 15 6" />
                           </svg>
-                          {canMoveBack && <span className="ml-0.5">{stageKeys[stageIdx - 1]}</span>}
+                          {canMoveBack && <span className="ml-0.5">{backTarget}</span>}
                         </button>
 
                         <button
@@ -787,15 +797,13 @@ export default function DealPipeline({ onLoadDeal, currentInputs, currentScore, 
                           disabled={!canMoveForward}
                           title={
                             canMoveForward
-                              ? `Move to ${stageKeys[stageIdx + 1]}`
-                              : stageIdx >= stageKeys.length - 1
-                                ? 'Already at the final stage'
-                                : `You do not have permission to move deals to ${stageKeys[stageIdx + 1]}`
+                              ? `Move to ${forwardTarget}`
+                              : blockedReason(deal.stage, forwardTarget, canMoveToStage(forwardTarget))
                           }
                           aria-label="Move to next stage"
-                          onClick={() => canMoveForward && handleMove(deal.id, 1)}
+                          onClick={() => canMoveForward && handleMove(deal.id, forwardTarget)}
                         >
-                          {canMoveForward && <span className="mr-0.5">{stageKeys[stageIdx + 1]}</span>}
+                          {canMoveForward && <span className="mr-0.5">{forwardTarget}</span>}
                           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="inline -mt-px">
                             <polyline points="9 18 15 12 9 6" />
                           </svg>

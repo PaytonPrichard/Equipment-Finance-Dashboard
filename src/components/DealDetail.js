@@ -23,8 +23,7 @@ import { verdictForDeal } from '../lib/dealVerdict';
 import { fetchMemosForDeal } from '../lib/memos';
 import DealAttachments from './DealAttachments';
 import { fetchAuditLog } from '../lib/audit';
-
-const STAGES = ['Screening', 'Under Review', 'Approved', 'Funded', 'Declined'];
+import { STAGE_ORDER as STAGES, blockedReason, canTransition } from '../lib/pipelineStages';
 
 const ASSET_CLASS_LABELS = {
   equipment_finance: 'Equipment finance',
@@ -174,7 +173,6 @@ export default function DealDetail({
   const score = deal.score != null ? Math.round(deal.score) : null;
   const verdict = evaluated.category;
   const style = VERDICT_STYLES[verdict];
-  const stageIdx = STAGES.indexOf(deal.stage);
   const metricRows = keyMetricsFor(moduleKey, metrics);
   const reasons = evaluated.reasons;
 
@@ -357,15 +355,17 @@ export default function DealDetail({
               Stage
             </h3>
             <div className="flex flex-wrap gap-1.5">
-              {STAGES.map((s, i) => {
+              {STAGES.map((s) => {
                 const isCurrent = s === deal.stage;
-                const allowed = isCurrent || canMoveToStage(s);
+                // Permission is not the only thing that can block a move.
+                // Funded to Declined is legal for an admin and still wrong.
+                const allowed = isCurrent || (canTransition(deal.stage, s) && canMoveToStage(s));
                 return (
                   <button
                     key={s}
                     disabled={!allowed || isCurrent}
-                    onClick={() => onMoveStage(deal.id, i - stageIdx)}
-                    title={allowed ? undefined : `You do not have permission to move deals to ${s}`}
+                    onClick={() => onMoveStage(deal.id, s)}
+                    title={isCurrent ? undefined : blockedReason(deal.stage, s, canMoveToStage(s)) ?? undefined}
                     className={`px-2.5 py-1 rounded-lg text-[11px] font-medium border transition-all ${
                       isCurrent
                         ? 'bg-gray-900 text-white border-gray-900'
