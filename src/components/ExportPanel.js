@@ -304,7 +304,7 @@ export function generateBrandedPdfHtml({ summaryText, inputs, metrics, riskScore
   const showBorrowingBase = moduleKey === 'accounts_receivable' || moduleKey === 'inventory_finance';
   const fmtMillions = (v) => (v == null || !Number.isFinite(v)) ? '—' : `$${(v / 1_000_000).toFixed(1)}M`;
   const fmtRatioCell = (v) => (v == null || !Number.isFinite(v)) ? '—' : `${v.toFixed(2)}x`;
-  const sensitivityHtml = (stressResults && stressResults.length > 0) ? `<div class="section" style="page-break-inside:avoid">
+  const sensitivityHtml = (stressResults && stressResults.length > 0) ? `<div class="section">
     <div class="section-title">Sensitivity Analysis</div>
     <table style="width:100%;border-collapse:collapse;font-size:12.5px">
       <thead>
@@ -334,7 +334,10 @@ export function generateBrandedPdfHtml({ summaryText, inputs, metrics, riskScore
     </table>
   </div>` : '';
 
-  const strengthsConcernsHtml = (strengths.length === 0 && concerns.length === 0) ? '' : `<div class="section" style="page-break-before:always">
+  // No forced break before this section. It used to carry
+  // page-break-before:always, which threw away whatever was left of the
+  // preceding page and is what left page 2 half empty.
+  const strengthsConcernsHtml = (strengths.length === 0 && concerns.length === 0) ? '' : `<div class="section">
     <div class="section-title">Strengths &amp; Risks</div>
     <div style="display:flex;gap:12px">
       <div style="flex:1">
@@ -375,6 +378,20 @@ export function generateBrandedPdfHtml({ summaryText, inputs, metrics, riskScore
   .page { width: 100%; margin: 0; padding: 0; }
   .header { border-bottom: 3px solid ${accentColor}; padding-bottom: 16px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: flex-end; }
   .section { margin-bottom: 20px; }
+  /* Pagination.
+     html2pdf renders the whole memo to a single canvas and then slices it
+     into pages, so any block without a rule is cut wherever the boundary
+     happens to fall. Deal Overview straddled the page 1 break and printed
+     with its table sliced through a row. Every top-level block now keeps
+     itself whole and the memo packs naturally, which is also what removed
+     the half-empty page: there used to be a forced break before Strengths
+     and Risks, and a forced break wastes whatever is left of the page it
+     leaves behind.
+     The tr rule is a safety net. No section is near a page tall today, but
+     if one ever grows past that, break-inside on the section cannot be
+     honoured and this makes it break between rows rather than through one. */
+  .page > div, .section, .keep-together { page-break-inside: avoid; break-inside: avoid; }
+  tr { page-break-inside: avoid; break-inside: avoid; }
   .section-title { font-size: 13.5px; font-weight: 700; color: #1e293b; text-transform: uppercase; letter-spacing: 0.06em; margin: 0 0 10px 0; padding-bottom: 6px; border-bottom: 2px solid ${accentColor}; }
   table { width: 100%; border-collapse: collapse; }
   td, th { padding: 5px 12px 5px 0; font-size: 12.5px; border-bottom: 1px solid #f1f5f9; }
@@ -493,7 +510,13 @@ export function generateBrandedPdfHtml({ summaryText, inputs, metrics, riskScore
   <!-- Suggested Structure (module-aware, structured) -->
   ${renderStructureSection()}
 
-  <!-- Source Documents -->
+  <!-- Source Documents + Footer.
+       Wrapped so they move as a unit. Apart, the page boundary landed
+       between them on the inventory memo and the last page carried nothing
+       but the disclaimer, which reads as a printing accident. Together they
+       are about a third of a page, so keeping them whole is always
+       affordable. -->
+  <div class="keep-together">
   <div class="section">
     <div class="section-title">Source Documents</div>
     ${sourceDocuments.length ? `
@@ -517,7 +540,10 @@ export function generateBrandedPdfHtml({ summaryText, inputs, metrics, riskScore
 
   <!-- Footer -->
   <div style="margin-top:30px;padding-top:12px;border-top:1px solid #e2e8f0;display:flex;justify-content:space-between;align-items:flex-end;gap:24px">
-    <div style="font-size:10.5px;color:#94a3b8;max-width:420px">
+    <!-- 420px here left the right column about 218px of a 662px page, which
+         is narrow enough that "Inputs entered by ... on September 23, 2026"
+         wrapped with the year alone on its own line. -->
+    <div style="font-size:10.5px;color:#94a3b8;max-width:340px">
       Preliminary screening only. Not a credit decision. Final terms subject to full underwriting, credit committee approval, and documentation.
     </div>
     <div style="font-size:10.5px;color:#94a3b8;text-align:right;line-height:1.5">
@@ -526,6 +552,7 @@ export function generateBrandedPdfHtml({ summaryText, inputs, metrics, riskScore
       <div>Inputs entered${analystName ? ' by ' + esc(analystName) : ''} on ${esc(date)}</div>
       <div>${orgName ? esc(orgName) + ' &middot; ' : ''}Tranche v${esc(APP_VERSION)}</div>
     </div>
+  </div>
   </div>
 </div>
 </body>
@@ -541,6 +568,13 @@ export const MEMO_SCOPE = 'tranche-memo';
 
 export function scopeMemoCss(css, scope = MEMO_SCOPE) {
   return css
+    // Comments first. The rule matcher below treats everything between two
+    // braces as a selector list and splits it on commas, so a comment
+    // containing a comma had its own prose scoped as if it were selectors,
+    // and the real selector that followed it was left unscoped and stopped
+    // applying inside the capture container. Latent until the stylesheet
+    // grew its first multi-line comment.
+    .replace(/\/\*[\s\S]*?\*\//g, '')
     .replace(/@page\s*\{[^}]*\}/g, '')
     .replace(/@media print\s*\{[^{}]*\{[^}]*\}\s*\}/g, '')
     .replace(/([^{}]+)\{([^}]*)\}/g, (_, selectors, decls) => {

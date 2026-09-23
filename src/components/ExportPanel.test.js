@@ -567,3 +567,78 @@ describe('the PDF clone carries no app stylesheet', () => {
     expect(src).toMatch(/\.from\(container\)/);
   });
 });
+
+// html2pdf renders the whole memo to one canvas and slices it at fixed page
+// heights, so a block with no rule is cut wherever the boundary happens to
+// fall. Layout is not testable here, but the rules that drive it are, and
+// getting them wrong is invisible until someone opens the PDF.
+describe('the memo paginates without cutting anything in half', () => {
+  const memos = [
+    ['equipment finance', 'equipment_finance', ef, { ...EF_INITIAL, companyName: 'EF Test Co', annualRevenue: 38400000, priorYearRevenue: 34900000, ebitda: 7400000, priorYearEbitda: 6600000, yearsInBusiness: 16, totalExistingDebt: 14200000, equipmentCost: 6275000, downPayment: 941250, usefulLife: 12, loanTerm: 84, industrySector: 'Mining' }],
+    ['accounts receivable', 'accounts_receivable', ar, { ...AR_INITIAL, companyName: 'AR Test Co', annualRevenue: 42000000, ebitda: 5200000, yearsInBusiness: 14, totalExistingDebt: 11000000 }],
+    ['inventory finance', 'inventory_finance', inv, { ...INV_INITIAL, companyName: 'Inv Test Co', annualRevenue: 51000000, ebitda: 6800000, yearsInBusiness: 19, totalExistingDebt: 13000000 }],
+  ];
+
+  test.each(memos)('%s keeps every block whole', (_label, key, mod, inputs) => {
+    const html = buildPdfFor(key, mod, inputs);
+    expect(html).toContain('.page > div, .section, .keep-together { page-break-inside: avoid; break-inside: avoid; }');
+    expect(html).toContain('tr { page-break-inside: avoid; break-inside: avoid; }');
+  });
+
+  test.each(memos)('%s forces no page break', (_label, key, mod, inputs) => {
+    // A forced break throws away whatever is left of the page it leaves
+    // behind. Strengths & Risks carried one, and that is what left page 2
+    // of the equipment memo half empty.
+    const html = buildPdfFor(key, mod, inputs);
+    expect(html).not.toMatch(/page-break-before\s*:\s*always/);
+    expect(html).not.toMatch(/break-before\s*:\s*(always|page)/);
+  });
+
+  test.each(memos)('%s keeps the footer with the documents it cites', (_label, key, mod, inputs) => {
+    // Apart, the boundary landed between them on the inventory memo and the
+    // last page carried nothing but the disclaimer.
+    const html = buildPdfFor(key, mod, inputs);
+    const wrapper = html.indexOf('<div class="keep-together">');
+    // The section title, not the bare words: those also appear in the
+    // comment that explains why the wrapper is there.
+    const sources = html.indexOf('<div class="section-title">Source Documents</div>');
+    const footer = html.indexOf('Preliminary screening only');
+    expect(wrapper).toBeGreaterThan(-1);
+    expect(sources).toBeGreaterThan(wrapper);
+    expect(footer).toBeGreaterThan(sources);
+  });
+
+  test('the pagination rules survive being scoped for capture', () => {
+    // scopeMemoCss rewrites every selector. If it mangled these the rules
+    // would silently stop applying inside the capture container, which is
+    // the only place they matter.
+    const html = buildPdfFor('equipment_finance', ef, { ...EF_INITIAL, companyName: 'EF Test Co', annualRevenue: 38400000, ebitda: 7400000, equipmentCost: 6275000, usefulLife: 12, loanTerm: 84 });
+    const css = scopeMemoCss(html.match(/<style[^>]*>([\s\S]*?)<\/style>/)[1]);
+    expect(css).toContain(`.${MEMO_SCOPE} .page > div`);
+    expect(css).toContain(`.${MEMO_SCOPE} .keep-together`);
+    expect(css).toContain(`.${MEMO_SCOPE} tr`);
+  });
+});
+
+describe('scopeMemoCss', () => {
+  test('a comment containing a comma does not become a selector', () => {
+    // The rule matcher reads everything up to a brace as a selector list and
+    // splits it on commas. A comment sitting above a rule was therefore
+    // scoped as prose and the rule beneath it was left unscoped, so it
+    // stopped applying inside the capture container.
+    const css = `
+      /* One rule, two rules, three rules. */
+      .page > div { color: red; }
+    `;
+    const out = scopeMemoCss(css);
+    expect(out).toContain(`.${MEMO_SCOPE} .page > div`);
+    expect(out).not.toContain('three rules');
+    expect(out).not.toMatch(/\/\*/);
+  });
+
+  test('a comma-separated selector list is still scoped in full', () => {
+    const out = scopeMemoCss('.a, .b > i { color: red; }');
+    expect(out).toContain(`.${MEMO_SCOPE} .a`);
+    expect(out).toContain(`.${MEMO_SCOPE} .b > i`);
+  });
+});

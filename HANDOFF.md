@@ -4,7 +4,7 @@ Last updated 2026-09-23. Production is `main`, deployed to gettranche.app, but
 the working tree is **ahead of production** and not yet deployed: see
 "Site runthrough, 2026-09-23" below.
 
-326 client tests, 40 server tests, build clean.
+338 client tests, 40 server tests, build clean.
 
 ## Site runthrough, 2026-09-23
 
@@ -155,8 +155,48 @@ worth writing about.
    and the tables printed unstyled. The stylesheet is now scoped to the
    capture container and carried in with the body.
 
-   Still open, cosmetic: the four-page memo leaves page 2 half empty and
-   splits the footer across the last two pages.
+   Fixed 2026-09-23, see "Memo pagination" below.
+
+## Memo pagination, 2026-09-23
+
+The memo is a flat run of blocks and html2pdf renders the whole thing to one
+canvas, then slices it at fixed page heights. Anything without a rule is cut
+wherever the boundary lands. Three defects came out of that, measured in
+Chrome at the 662px width the memo is actually captured at.
+
+1. **A forced break wasted most of a page.** Strengths & Risks carried
+   `page-break-before: always`, which throws away whatever is left of the
+   page it leaves behind. Page 2 held Key Metrics and Assessment and then
+   stopped, 473px short of a 922px page. Removed. Nothing in the memo forces
+   a break now, and a test asserts that for all three asset classes.
+2. **Deal Overview was sliced through its table.** It straddled the page 1
+   boundary with no rule protecting it. This one was not on the list and was
+   the worst of the three, because a table cut mid-row reads as broken
+   software rather than as a layout preference.
+3. **The footer split across the last two pages**, and on the inventory memo
+   the boundary fell between Source Documents and the footer, so the last
+   page carried nothing but the disclaimer.
+
+Fixed by protecting every top-level block (`page-break-inside: avoid`, which
+html2pdf reads per element and honours by inserting a padding div), and by
+wrapping Source Documents and the footer in one `keep-together` block so the
+memo cannot end on a page that only disclaims. A `tr` rule is the safety net
+for a section that ever grows past a page: it would then break between rows
+rather than through one.
+
+Equipment went 4 pages to 3, inventory 4 to 3, AR stayed at 4. No block is
+split in any of them.
+
+**A latent bug in `scopeMemoCss` surfaced while doing it.** It reads
+everything up to a brace as a selector list and splits it on commas, so the
+first stylesheet comment containing a comma had its own prose scoped as
+selectors and left the real rule beneath it unscoped, where it silently
+stopped applying inside the capture container. Comments are now stripped
+first. This was dormant only because the memo stylesheet had never carried a
+comment.
+
+`node scripts/preview-memo.js [module]` renders any of the three to
+`outputs/`, which is how all of this was measured.
 
 ## Open — product
 
