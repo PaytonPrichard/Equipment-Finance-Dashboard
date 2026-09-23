@@ -1,9 +1,108 @@
 # Tranche — where things stand
 
-Last updated 2026-09-03. Production is `main` @ `538188c`, pushed and deployed
-to gettranche.app.
+Last updated 2026-09-23. Production is `main`, deployed to gettranche.app, but
+the working tree is **ahead of production** and not yet deployed: see
+"Site runthrough, 2026-09-23" below.
 
-258 client tests, 40 server tests, build clean.
+326 client tests, 40 server tests, build clean.
+
+## Site runthrough, 2026-09-23
+
+A pass over the live site and the demo path, ahead of recording the demo video.
+Everything below is fixed in the working tree and waiting on one deploy.
+
+**Not fixed in code, needs a deploy to take effect.** `FRED_API_KEY` was never
+set in Vercel, so `/api/sofr` returned `{"rate":null,"error":"Server
+configuration error"}` and every deal on the live site was priced at the 4.25%
+`DEFAULT_SOFR` fallback while real SOFR was 3.87%. The key is set now. It
+applies on the next deploy, since Vercel only injects env vars into a new
+deployment. At 3.87% the Granite Ridge demo deal still scores 80, so this does
+not move the video's number; the test carries the band where it would.
+
+**The rate lied about where it came from.** The chip under the deal form was a
+binary: print "live" if the source string said so, otherwise print "cached".
+With the FRED fetch failing and nothing in localStorage, it claimed a cached
+FRED reading that had never been fetched. It now distinguishes live, cached and
+default, and says so in a tooltip. Same class of defect as the credit rating
+defaulting from silence.
+
+**Three metric cards stated a target they did not hold themselves to.** The
+`threshold` string and the `flag` comparison on every card were literals inline
+in App.js, a third copy of the thresholds alongside `FACTOR_TARGETS` and
+`DEFAULT_CRITERIA`, and they had drifted:
+
+| Card | Printed | Showed | Factor table said |
+|---|---|---|---|
+| Term / Life | Target < 60% | 58.3% EXCELLENT | < 80% |
+| LTV | Target < 85% | 85.0% GOOD | ≤ 85% |
+| Rev. Conc. | Target < 15% | 16.3% GOOD | < 15% |
+
+Term coverage printed two different targets one scroll apart. The literals are
+gone: targets now come from the module's `FACTOR_TARGETS`, ceilings from the
+firm's own criteria, and the operators match the factor table. The 60 / 15 /
+1.50 breakpoints were never targets; they are the status bands in
+`Deal_Screening_Model_Assumptions.md` and they stay, as gradients only. Two
+latent bugs went with them: the DSCR card hardcoded "Min 1.25x" on AR deals
+actually judged at 1.10x (now `dscrFloorFor`, shared with `evaluateScreening`),
+and no card moved when a firm changed its policy in Settings.
+
+**Declined behaved as the stage after Funded.** Stage moves were `idx ± 1` over
+a flat array ending Funded, Declined, so the board offered "Declined ›" on a
+funded deal and "‹ Funded" on a declined one. The stage model now lives in
+`src/lib/pipelineStages.js` with an explicit transition map, enforced in
+`handleMove` and in the drawer's stage picker, which could reach any stage from
+any other. Declined is a branch off the working stages; Funded has no forward
+move; Declined reopens at Screening. 17 tests.
+
+**Aging fired on terminal stages.** `days > 14` went amber regardless of stage,
+so a funded deal at 45 days read as a problem. Now active stages only.
+
+**Monitoring was empty in demo mode.** Every prospect who clicked Monitoring in
+`?demo=1` got "No facilities yet", while the pitch, `DEMO_SCRIPT.md` and Video B
+all say the screening assumptions carry forward after a deal funds.
+`src/data/demoMonitoring.js` now seeds the two funded demo deals as facilities,
+built from the real `calculateMetrics` and `getDefaultCovenants` the way
+`demoPipeline.js` builds its scores. One tracks its underwrite. The other lost
+two contracts in Q2: DSCR 5.70x to 2.38x, leverage 1.56x to 3.44x, both still
+inside covenant, with the quarterly financials overdue. That gap between the
+underwrite and the current reading, with no covenant breached, is the drift
+view's whole argument.
+
+**A real bug the seeding exposed.** `fetchPortfolioDrift` took the first test
+row it saw per covenant and relied on the caller having sorted newest first.
+The Supabase branch orders by `test_date desc` so it held there; the demo
+branch returned insertion order, oldest first. "Current" showed the *first*
+reading a facility ever filed, understating exactly the drift the view exists
+to show. It now picks by `test_date`, and `listDemoTests` sorts to match the
+query it stands in for.
+
+**Copy.** All ~24 user-facing em dashes are gone, across `DueDiligenceChecklist`
+(12), `SettingsPanel` (4), `SensitivityChart`, `StressTestPanel`,
+`ScoringWeights`, `AuditLogViewer`, `HistoricalDealsTable`, `IndustryBenchmarks`,
+`incompleteFields`, `templateGenerator`, `exampleDeals`, `historicalDeals`,
+`screeningCriteria` and the equipment module's financing descriptions. The
+bare `'—'` no-value glyph stays. Also: "Heartland Foods Manufacturing Co.."
+printed a double period, the facility commitment field showed a raw
+`1530000` with no separators, and reporting covenants read "Quarterly ·
+Quarterly" because a reporting covenant's target is its cadence.
+
+**Not a defect, recorded because it was raised as one.** `getDefaultCovenants`
+seeds every covenant from the firm's screening criteria, one source, so DSCR at
+1.25 and leverage at 5.0 are the same kind of number and the basis is already
+consistent. What that does mean: a facility underwritten at 5.69x DSCR carries
+the same 1.25x covenant as one underwritten at 1.3x, because the seed is the
+policy floor rather than a cushion below the underwritten case. That is why
+neither funded demo deal can breach a financial covenant without an implausible
+collapse, and it is an open design question rather than a bug.
+
+**Demo prep.** `src/data/demoExtraction.test.js` asserts every figure Video A
+says out loud, each test named by the timestamp of its beat, driving the real
+merge and the real scoring. That replaces phase 0's by-hand checklist.
+`scripts/capture-demo-extraction.js --check` runs a live extraction and diffs it
+against the fixture without writing, which is the pre-shoot question when
+recording signed in rather than in demo mode. `VIDEO_SCRIPTS.md` contradicted
+itself on recording mode, telling you to use `?demo=1` in the shared preamble
+and to record signed in in Video A's header. Settled as signed in, for both.
 
 ## What shipped
 

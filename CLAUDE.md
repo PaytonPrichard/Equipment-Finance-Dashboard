@@ -74,7 +74,7 @@ When adding scoring logic, add a test. When changing a threshold, update the spe
 ## Active Migrations and Refactors
 
 - **TypeScript migration:** tsconfig is set up with `allowJs: true`, `strict: false`. Phase 1 starts with `src/types.ts` and `src/utils/format.ts`. See AUDIT.md.
-- **Threshold consolidation:** several inconsistencies between `screeningCriteria.js`, scoring modules, and exported PDF copy. Source of truth should be `DEFAULT_CRITERIA` per module.
+- **Threshold consolidation:** two layers, both legitimate, and they must not be confused. `FACTOR_TARGETS` per module is what a deal is *scored toward*. `DEFAULT_CRITERIA` (overridden per firm) is what makes it *pass, flag or fail*. A metric card prints the target, then the firm's ceiling. The status bands in `Deal_Screening_Model_Assumptions.md` (term coverage under 60% is excellent, and so on) are presentation gradients and must never be printed as targets: doing that is how the Term / Life card came to claim a 60% target while the factor table below it judged the same deal at 80%. The screening view was consolidated 2026-09-23. Still to check against the same rule: the exported PDF copy.
 - **App.js split:** plan is route-level components (LandingRoute, NewDealRoute, PipelineRoute, DashboardRoute) + a `useDealScoring(inputs)` hook.
 
 See AUDIT.md for the full punch list.
