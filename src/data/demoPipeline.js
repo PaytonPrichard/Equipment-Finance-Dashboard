@@ -250,14 +250,29 @@ export function getInitialDemoPipeline() {
   return DEMO_DEALS.map((d) => ({ ...d }));
 }
 
+// The analyst and firm behind the demo.
+//
+// These are not decoration. `full_name` sits in the app header on every
+// screen, and both names are printed on the committee memo: the firm in the
+// memo's masthead, and "Prepared by" plus the firm in its footer. "Demo
+// Analyst" of "Demo Capital Partners" on a credit memo reads as a toy, and
+// it is the first and last thing on screen in the product video.
+//
+// A fictional lender is the right match for an already fictional borrower,
+// and these are the same two names scripts/preview-memo.js uses, so the
+// memo looks the same however it was produced. Nothing is hidden by this:
+// the demo banner still says DEMO to anyone driving the live demo.
+export const DEMO_ANALYST_NAME = 'J. Peter';
+export const DEMO_ORG_NAME = 'Keystone Credit Partners';
+
 export const DEMO_PROFILE = {
   id: DEMO_USER_ID,
   email: 'demo@gettranche.app',
-  full_name: 'Demo Analyst',
+  full_name: DEMO_ANALYST_NAME,
   role: 'admin',
   org_id: DEMO_ORG_ID,
   organizations: {
-    name: 'Demo Capital Partners',
+    name: DEMO_ORG_NAME,
     branding: { primaryColor: '#D4A843', logoUrl: null },
     org_settings: {},
   },
@@ -267,5 +282,5 @@ export const DEMO_USER = {
   id: DEMO_USER_ID,
   email: 'demo@gettranche.app',
   email_confirmed_at: new Date().toISOString(),
-  user_metadata: { full_name: 'Demo Analyst' },
+  user_metadata: { full_name: DEMO_ANALYST_NAME },
 };

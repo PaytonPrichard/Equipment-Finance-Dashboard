@@ -70,6 +70,30 @@ export function enableDemoMode(): void {
   _enabled = true;
 }
 
+/**
+ * Capture mode: demo mode with the banner off, for screen recording.
+ *
+ * The banner's job is to tell someone driving the live demo that what they
+ * type will not be saved. A recording has nobody driving, so the sentence is
+ * addressed to no one, and a permanent amber bar across a two-minute product
+ * video reads as a mockup.
+ *
+ * Deliberately narrow. It only hides the banner: the data is the same sample
+ * data, the analyst and firm are the same fictional ones, and every "not
+ * available in the demo" message elsewhere is untouched. It is opt-in per
+ * URL, never remembered, and requires demo=1 as well, so the live demo that
+ * prospects drive cannot lose its disclosure by accident.
+ */
+export function isCaptureMode(): boolean {
+  if (typeof window === 'undefined') return false;
+  if (!isDemoMode()) return false;
+  try {
+    return new URLSearchParams(window.location.search).get('capture') === '1';
+  } catch {
+    return false;
+  }
+}
+
 function store(): DemoDeal[] {
   if (_pipeline === null) _pipeline = getInitialDemoPipeline() as DemoDeal[];
   return _pipeline;

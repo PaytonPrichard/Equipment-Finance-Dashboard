@@ -41,7 +41,22 @@ Two smaller consequences, both in your favour:
 - It costs no API call, so you can shoot the upload beat as many times as
   you like.
 
-What you are accepting is the banner in frame for the whole video.
+**Record against production, at
+`https://www.gettranche.app/?demo=1&capture=1`.**
+
+`capture=1` drops the banner. It works only alongside `demo=1`, is never
+remembered, and hides nothing else: the data is the same sample data and the
+borrower is fictional either way.
+
+Two things it does not fix, both now handled elsewhere:
+- The analyst and firm used to read "Demo Analyst" of "Demo Capital
+  Partners", in the app header on every screen and printed on the committee
+  memo's masthead and footer. They are now J. Peter of Keystone Credit
+  Partners, the same names `scripts/preview-memo.js` uses.
+- `npm start` does not serve `/api/`, so a local recording shows SOFR as an
+  amber **default 4.25%** rather than **live 3.87%**, on screen from 0:28
+  onward. That is the reason to record against production rather than
+  localhost.
 
 **Tools: OBS Studio to record, CapCut to edit. Both free, both Windows.**
 

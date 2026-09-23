@@ -1,10 +1,13 @@
 import React from 'react';
-import { isDemoMode } from '../lib/demoMode';
+import { isDemoMode, isCaptureMode } from '../lib/demoMode';
 
 const GOLD = '#D4A843';
 
 export default function DemoBanner(): React.ReactElement | null {
   if (!isDemoMode()) return null;
+  // ?demo=1&capture=1 drops the bar for screen recording. See isCaptureMode
+  // for why that is not the same as hiding that this is sample data.
+  if (isCaptureMode()) return null;
 
   const exitDemo = () => {
     const url = new URL(window.location.href);
