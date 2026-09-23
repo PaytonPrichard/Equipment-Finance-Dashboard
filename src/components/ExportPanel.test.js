@@ -55,8 +55,24 @@ describe('generateBrandedPdfHtml — Equipment Finance', () => {
   };
   const html = buildPdfFor('equipment_finance', ef, inputs);
 
-  test('renders the Recommended Action section', () => {
-    expect(html).toContain('Recommended Action');
+  test('states the recommendation once, in the score banner', () => {
+    // "Recommended Action" used to restate the banner directly beneath it:
+    // same category, same colour, same detail line, within about 200px on
+    // page one. Derived from the module rather than hardcoded, so this
+    // still holds if the fixture's verdict moves.
+    const metrics = ef.calculateMetrics(inputs);
+    const rec = ef.getRecommendation(ef.calculateRiskScore(inputs, metrics).composite);
+    const count = (t) => html.split(t).length - 1;
+    expect(count(rec.category)).toBe(1);
+    expect(count(rec.detail)).toBe(1);
+    expect(html).not.toContain('Recommended Action');
+  });
+
+  test('term coverage says what it is a percentage of', () => {
+    // 58% means nothing without the two numbers behind it, and term
+    // coverage is this product's framing rather than a standard ratio.
+    expect(html).toMatch(/Term Coverage/);
+    expect(html).toContain(`${(inputs.loanTerm / 12).toFixed(1)}yr / ${inputs.usefulLife}yr`);
   });
 
   test('renders the firm-threshold strip with pass/flag thresholds', () => {
@@ -130,10 +146,9 @@ describe('generateBrandedPdfHtml — Accounts Receivable', () => {
     expect(html).toMatch(/borrowing base certificate/i);
   });
 
-  test('Recommended Action shows conditions when enhancements exist', () => {
-    expect(html).toContain('Recommended Action');
-    // High concentration + high dilution triggers enhancements
-    expect(html).toContain('Conditions / Mitigants');
+  test('conditions get their own section when there are any', () => {
+    // High concentration + high dilution triggers enhancements.
+    expect(html).toContain('Conditions and Mitigants');
   });
 
   test('Sensitivity rows render finite numeric DSCR and FCCR values', () => {

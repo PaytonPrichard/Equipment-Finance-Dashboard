@@ -123,6 +123,22 @@ function parseCommentaryFromSummary(summaryText) {
   return out;
 }
 
+// Two notes about the body below, kept here rather than as HTML comments,
+// because anything in the template ships inside every downloaded memo and
+// every stored snapshot.
+//
+// There is no "Recommended Action" section. It used to open by restating
+// the score banner directly above it: same category, same colour, same
+// detail line, within about 200px on page one, so a committee reader met
+// the recommendation twice before reaching a new fact. The banner keeps it,
+// because the banner carries the score and the verdict alongside. What only
+// that block had was the conditions, so that is all it is now, and it
+// renders only when there are some.
+//
+// Source Documents and the footer are wrapped together. Apart, the page
+// boundary landed between them on the inventory memo and the last page
+// carried nothing but the disclaimer. Together they are about a third of a
+// page, so keeping them whole is always affordable.
 export function generateBrandedPdfHtml({ summaryText, inputs, metrics, riskScore, recommendation, screeningResult, orgName, analystName, moduleLabel, branding, factors = [], structure = null, stressResults = [], moduleKey = 'equipment_finance', borrowerExtras = null, criteria = null, commentary = null, sourceDocuments = [], generatedAt = null }) {
   const companyName = inputs?.companyName || 'N/A';
   // Read from the model, not the clock. A memo reopened next quarter has to
@@ -170,7 +186,17 @@ export function generateBrandedPdfHtml({ summaryText, inputs, metrics, riskScore
   if (borrowerExtras?.fccr != null) metricRows.push(['FCCR', fmtRatio(borrowerExtras.fccr), borrowerExtras.fccr >= dscrFloor ? '#16a34a' : borrowerExtras.fccr >= 1.0 ? '#ca8a04' : '#dc2626']);
   if (metrics?.leverage !== undefined) metricRows.push(['Leverage', fmtRatio(metrics.leverage), metrics.leverage <= c.maxLeverage ? '#16a34a' : metrics.leverage <= c.maxLeverage * 1.5 ? '#ca8a04' : '#dc2626']);
   if (metrics?.ltv !== undefined) metricRows.push(['LTV', fmtPct(metrics.ltv), metrics.ltv * 100 <= c.maxLtv ? '#16a34a' : metrics.ltv <= 1.2 ? '#ca8a04' : '#dc2626']);
-  if (metrics?.termCoverage !== undefined) metricRows.push(['Term Coverage', metrics.termCoverage.toFixed(0) + '%', metrics.termCoverage <= c.maxTermCoverage ? '#16a34a' : '#dc2626']);
+  if (metrics?.termCoverage !== undefined) {
+    // DSCR, FCCR, leverage and LTV are standard and travel on their own.
+    // Term coverage as a percent of useful life is this product's framing,
+    // and 58% means nothing to a reader who has not been told what it is a
+    // percentage of. The screening view spells it out as "7.0yr / 12yr";
+    // the memo did not, and the memo is the artifact that leaves the room.
+    const years = (inputs?.loanTerm || 0) / 12;
+    const life = inputs?.usefulLife || 0;
+    const note = years > 0 && life > 0 ? `${years.toFixed(1)}yr / ${life}yr` : '';
+    metricRows.push(['Term Coverage', metrics.termCoverage.toFixed(0) + '%', metrics.termCoverage <= c.maxTermCoverage ? '#16a34a' : '#dc2626', note]);
+  }
   if (metrics?.borrowingBase !== undefined) metricRows.push(['Borrowing Base', fmtCurrency(metrics.borrowingBase), '#334155']);
   if (metrics?.dso !== undefined) metricRows.push(['DSO', Math.round(metrics.dso) + ' days', metrics.dso <= 60 ? '#16a34a' : '#ca8a04']);
   if (metrics?.concentrationRisk !== undefined) metricRows.push(['Concentration', fmtPct(metrics.concentrationRisk), metrics.concentrationRisk * 100 <= c.maxConcentration ? '#16a34a' : '#dc2626']);
@@ -457,18 +483,13 @@ export function generateBrandedPdfHtml({ summaryText, inputs, metrics, riskScore
 
   ${redFlagsHtml}
 
-  <!-- Recommended Action -->
-  <div class="section">
-    <div class="section-title">Recommended Action</div>
-    <div style="font-size:15.5px;font-weight:700;color:${scoreColor};margin-bottom:4px">${esc(recommendation?.category || '')}</div>
-    <div style="font-size:13.5px;color:#475569;margin-bottom:${(structure?.enhancements?.length || 0) > 0 ? '12px' : '0'}">${esc(recommendation?.detail || '')}</div>
-    ${(structure?.enhancements?.length || 0) > 0 ? `
-      <div style="font-size:11.5px;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px">Conditions / Mitigants</div>
-      <ul style="margin:0;padding-left:18px">
-        ${structure.enhancements.map((e) => `<li style="font-size:12.5px;color:#1f2937;margin-bottom:3px">${esc(e)}</li>`).join('')}
-      </ul>
-    ` : ''}
-  </div>
+  <!-- Conditions and Mitigants -->
+  ${(structure?.enhancements?.length || 0) > 0 ? `<div class="section">
+    <div class="section-title">Conditions and Mitigants</div>
+    <ul style="margin:0;padding-left:18px">
+      ${structure.enhancements.map((e) => `<li style="font-size:12.5px;color:#1f2937;margin-bottom:3px">${esc(e)}</li>`).join('')}
+    </ul>
+  </div>` : ''}
 
   <!-- Deal Overview -->
   <div class="section">
@@ -490,7 +511,7 @@ export function generateBrandedPdfHtml({ summaryText, inputs, metrics, riskScore
     <table>
       <thead><tr><th>Metric</th><th style="text-align:right">Value</th><th style="text-align:right;width:44px">Status</th></tr></thead>
       <tbody>
-        ${metricRows.map(([label, value, color]) => `<tr><td>${esc(label)}</td><td style="text-align:right;font-weight:600;font-family:'IBM Plex Mono',ui-monospace,monospace">${esc(value)}</td><td style="text-align:right"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${color}"></span></td></tr>`).join('')}
+        ${metricRows.map(([label, value, color, note]) => `<tr><td>${esc(label)}</td><td style="text-align:right;font-weight:600;font-family:'IBM Plex Mono',ui-monospace,monospace">${esc(value)}${note ? ` <span style="color:#64748b;font-weight:400">· ${esc(note)}</span>` : ''}</td><td style="text-align:right"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${color}"></span></td></tr>`).join('')}
       </tbody>
     </table>
   </div>
@@ -510,12 +531,7 @@ export function generateBrandedPdfHtml({ summaryText, inputs, metrics, riskScore
   <!-- Suggested Structure (module-aware, structured) -->
   ${renderStructureSection()}
 
-  <!-- Source Documents + Footer.
-       Wrapped so they move as a unit. Apart, the page boundary landed
-       between them on the inventory memo and the last page carried nothing
-       but the disclaimer, which reads as a printing accident. Together they
-       are about a third of a page, so keeping them whole is always
-       affordable. -->
+  <!-- Source Documents + Footer -->
   <div class="keep-together">
   <div class="section">
     <div class="section-title">Source Documents</div>
