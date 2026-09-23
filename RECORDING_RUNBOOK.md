@@ -14,12 +14,34 @@ second video you make will take an hour.
 
 ## The two decisions, already made
 
-**Record on a real signed-in account, not `?demo=1`.**
-`DemoBanner.tsx` puts a permanent amber "DEMO. Sample data. Changes won't be
-saved" bar across the top of the window. A prospect reads that as a mockup.
-Video A only ever shows New Deal and the memo, so a real account covers every
-shot. Cost is one extraction call against the four Granite Ridge files.
-Demo mode is what you link people to. It is not what you film.
+**Record in `?demo=1`.** Reversed on 2026-09-23, and the reason is worth
+keeping.
+
+The original call was to record signed in, because `DemoBanner.tsx` puts a
+permanent amber "sample data, changes won't be saved" bar across the top and
+a prospect reads that as a mockup. That reasoning assumed a live extraction
+reproduces what the script says. It does not. Two runs against the same four
+Granite Ridge files, half an hour apart, gave three conflicts, then five,
+then four. Every figure that carries the memo held in all of them, but the
+conflict count is the one number the video is built around, and 0:45 says
+three.
+
+Demo mode replays a captured extraction, so it says three every time.
+
+The thing that made this an easy call: **drag and drop works in demo mode.**
+`DealSheetUpload.js` routes a drop to the captured replay, spinner and all,
+so the gesture at 0:28 is exactly the same on camera. The old note here
+claiming 0:28 was "false in demo mode" was wrong; only the button label
+changes. You can drag the four real files onto the zone and the fixture
+loads behind it.
+
+Two smaller consequences, both in your favour:
+- The wait is 900ms of deliberate spinner, not six seconds of real
+  extraction, so there is nothing to cut out of `02_upload`.
+- It costs no API call, so you can shoot the upload beat as many times as
+  you like.
+
+What you are accepting is the banner in frame for the whole video.
 
 **Tools: OBS Studio to record, CapCut to edit. Both free, both Windows.**
 
@@ -48,23 +70,23 @@ fails there instead of surfacing halfway through a take.
 
 1. `npm run test:all`. If `demoExtraction.test.js` fails, the name of the
    failing test is the beat that moved. Fix the script, not the product.
-2. `node scripts/capture-demo-extraction.js --check`. One API call. It runs a
-   live extraction against the four Granite Ridge files and compares it to the
-   fixture. The tests above lock the fixture, and demo mode replays it, but
-   you are recording signed in, which runs the live extraction. This is the
-   step that tells you the two still agree. If it reports drift, either
-   re-capture and re-run the tests, or record in demo mode instead.
-3. `npm start`, sign in, and walk Video A once with the script open. You are
+2. Skip `--check` when recording in demo mode. It compares a live
+   extraction against the fixture, and demo mode never runs a live
+   extraction, so it answers a question you are not asking. Run it only if
+   you go back to recording signed in.
+3. `npm start`, open `?demo=1`, and walk Video A once with the script open.
+   Confirm the conflict block reads **3 fields where the documents
+   disagree** before you shoot anything. You are
    looking at the things a test cannot see: whether **Show what came from
    where** is legible at 1080p, whether the memo pages break cleanly, whether
    anything is visually broken on the path.
 4. Time yourself reading the voiceover column aloud at a normal pace. If it
    runs past 2:05, cut 0:12 to 0:20 as the script already tells you to.
 
-One drift worth knowing about: the screening rate is live SOFR from FRED, and
-the 80 the voiceover says holds while SOFR is at or below about 4.5%. Above
-that the same deal scores 79. The test carries that band, so you will see it
-fail rather than discover it on tape.
+One drift worth knowing about: the screening rate is live SOFR from FRED,
+which demo mode does not replay, and the 80 the voiceover says holds while
+SOFR is at or below about 4.5%. It was 3.87% on 2026-09-23. The test carries
+that band, so you will see it fail rather than discover it on tape.
 
 **Do not fix product bugs in this phase.** If something is visibly broken,
 write it down and decide tomorrow whether it blocks the shoot. The residual
@@ -161,8 +183,9 @@ Technique, all of it learned the hard way:
   retake.
 - **Shoot every clip twice**, back to back. The second take is almost always
   the one you use and it costs thirty seconds.
-- `02_upload` will have roughly six seconds of extraction wait. Record it
-  anyway, you cut it out later. Never let a spinner appear in the final cut.
+- `02_upload` in demo mode waits 900ms, not the six seconds a real
+  extraction takes, so there is nothing to cut. Still never let the spinner
+  land in the final cut.
 
 ---
 

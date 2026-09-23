@@ -25,18 +25,19 @@ live on a call. This one is for recording.
 - Light theme. The product is designed for it.
 
 **Data**
-- **Record signed in on a real account, not `?demo=1`.** `DemoBanner` puts a
-  permanent amber "sample data, changes won't be saved" bar across the top,
-  and a prospect reads that as a mockup. This applies to both videos. Demo
-  mode is what you link people to afterwards. It is not what you film.
-- The cost of that choice is that the upload runs a real extraction rather
-  than replaying the captured one, so the figures are not guaranteed the way
-  they are in demo mode. Run `node scripts/capture-demo-extraction.js --check`
-  the day before. It compares a live extraction against the fixture and tells
-  you if anything moved. One API call.
+- **Record in `?demo=1`.** It replays a captured extraction, so the conflict
+  block says three every time. A live extraction does not: the same four
+  files gave three conflicts, then five, then four across runs on
+  2026-09-23. Every figure that carries the memo held in all of them, but
+  the conflict count is what this video is built around.
+- Drag and drop works in demo mode, so 0:28 is shot exactly as written. The
+  drop routes to the captured replay behind a 900ms spinner. Only the button
+  label differs, and you never touch the button.
 - The figures below are locked by `src/data/demoExtraction.test.js`, named by
   the timestamp of the beat each one belongs to. Run the tests before a shoot
   and a scoring change that would have broken a beat fails there first.
+- The screening rate is the one thing demo mode does not replay. It comes
+  from FRED live, and 80 holds while SOFR is at or below about 4.5%.
 - Check the pipeline looks lived-in before you start: fifteen deals, mixed
   verdicts, notes on the cards. Monitoring carries two facilities, one
   tracking its underwrite and one that has drifted well below it.
@@ -46,8 +47,8 @@ live on a call. This one is for recording.
 - Never hunt. If you have to look for something, cut and re-take.
 
 **Latency**
-- Cut every wait in the edit. The extraction takes about six seconds; on tape
-  that is six seconds of nothing. Cut to the result.
+- Cut every wait in the edit. In demo mode the upload spinner is 900ms rather
+  than the six seconds a live extraction takes, so there is little to cut.
 - Never let a spinner appear in the final cut.
 
 **Audio**
