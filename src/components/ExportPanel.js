@@ -401,7 +401,14 @@ export function generateBrandedPdfHtml({ summaryText, inputs, metrics, riskScore
   @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
   * { box-sizing: border-box; }
   body { font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; color: #1e293b; background: #fff; margin: 0; padding: 0; line-height: 1.5; font-size: 13.5px; }
-  .page { width: 100%; margin: 0; padding: 0; }
+  /* The 16px at the bottom is not decoration.
+     html2pdf slices the rendered canvas at page boundaries and the last cut
+     lands a pixel or two short of the content box. With the footer's
+     disclaimer ending 1px from that edge, the bottom of its descenders was
+     shaved off in the PDF. Real, but small enough to read as a printing
+     artifact rather than a bug, which is the worst kind. The slack means a
+     rounding error costs white space instead of letters. */
+  .page { width: 100%; margin: 0; padding: 0 0 16px 0; }
   .header { border-bottom: 3px solid ${accentColor}; padding-bottom: 16px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: flex-end; }
   .section { margin-bottom: 20px; }
   /* Pagination.

@@ -657,3 +657,21 @@ describe('scopeMemoCss', () => {
     expect(out).toContain(`.${MEMO_SCOPE} .b > i`);
   });
 });
+
+describe('the last line of the memo survives the page slice', () => {
+  test('the page reserves slack below its final element', () => {
+    // html2pdf slices the canvas at page boundaries and the final cut lands
+    // a pixel or two inside the content box. The footer's disclaimer ended
+    // 1px from that edge, so its descenders were shaved in the PDF. Without
+    // slack here, a rounding error costs letters instead of white space.
+    const html = buildPdfFor('equipment_finance', ef, {
+      ...EF_INITIAL, companyName: 'EF Test Co', annualRevenue: 50_000_000,
+      ebitda: 2_000_000, equipmentCost: 5_000_000, usefulLife: 15, loanTerm: 84,
+    });
+    const rule = html.match(/\.page \{[^}]*\}/);
+    expect(rule).not.toBeNull();
+    const padding = rule[0].match(/padding:\s*0\s+0\s+(\d+)px\s+0/);
+    expect(padding).not.toBeNull();
+    expect(Number(padding[1])).toBeGreaterThanOrEqual(8);
+  });
+});
