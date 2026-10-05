@@ -156,10 +156,10 @@ function generateTakeaways(
 }
 
 const TYPE_STYLES: Record<TakeawayType, { icon: string; bg: string }> = {
-  positive: { icon: 'text-emerald-400', bg: 'bg-emerald-500/[0.04]' },
+  positive: { icon: 'text-emerald-700', bg: 'bg-emerald-500/[0.04]' },
   neutral:  { icon: 'text-gray-600',    bg: 'bg-gray-50'            },
-  caution:  { icon: 'text-amber-400',   bg: 'bg-amber-500/[0.04]'  },
-  negative: { icon: 'text-rose-400',    bg: 'bg-rose-500/[0.04]'   },
+  caution:  { icon: 'text-amber-700',   bg: 'bg-amber-500/[0.04]'  },
+  negative: { icon: 'text-rose-700',    bg: 'bg-rose-500/[0.04]'   },
 };
 
 const TYPE_ICONS: Record<TakeawayType, React.ReactElement> = {

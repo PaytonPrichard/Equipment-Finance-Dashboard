@@ -4,17 +4,17 @@ import { calculateMetrics, calculateRiskScore, formatCurrency, formatRatio, form
 function ScoreBadge({ score, baseScore }) {
   const delta = score - baseScore;
   const color =
-    score >= 75 ? 'text-emerald-400' :
-    score >= 55 ? 'text-lime-400' :
-    score >= 35 ? 'text-amber-400' :
-    'text-rose-400';
+    score >= 75 ? 'text-emerald-700' :
+    score >= 55 ? 'text-lime-700' :
+    score >= 35 ? 'text-amber-700' :
+    'text-rose-700';
 
   return (
     <div className="text-center">
       <span className={`text-3xl font-bold font-mono ${color}`}>{score}</span>
       <span className="text-sm text-gray-400 font-mono">/100</span>
       {delta !== 0 && (
-        <div className={`text-sm font-mono font-semibold mt-0.5 ${delta > 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+        <div className={`text-sm font-mono font-semibold mt-0.5 ${delta > 0 ? 'text-emerald-700' : 'text-rose-700'}`}>
           {delta > 0 ? '+' : ''}{delta} pts
         </div>
       )}
@@ -158,7 +158,7 @@ export default function WhatIfPanel({ inputs, metrics: baseMetrics, riskScore: b
         </div>
         <div className="flex items-center gap-3">
           {hasChanges && !isOpen && (
-            <span className={`text-sm font-bold font-mono ${adjRiskScore.composite >= baseRiskScore.composite ? 'text-emerald-400' : 'text-rose-400'}`}>
+            <span className={`text-sm font-bold font-mono ${adjRiskScore.composite >= baseRiskScore.composite ? 'text-emerald-700' : 'text-rose-700'}`}>
               {adjRiskScore.composite > baseRiskScore.composite ? '+' : ''}{adjRiskScore.composite - baseRiskScore.composite} pts
             </span>
           )}
@@ -265,7 +265,7 @@ export default function WhatIfPanel({ inputs, metrics: baseMetrics, riskScore: b
                   <div key={m.label} className="bg-gray-50 rounded-xl px-3 py-2.5">
                     <span className="text-[10px] text-gray-400">{m.label}</span>
                     <p className={`font-mono text-sm font-semibold ${
-                      !changed ? 'text-gray-700' : improved ? 'text-emerald-400' : 'text-rose-400'
+                      !changed ? 'text-gray-700' : improved ? 'text-emerald-700' : 'text-rose-700'
                     }`}>
                       {m.format(m.adj)}
                     </p>

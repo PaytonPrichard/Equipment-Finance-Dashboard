@@ -26,42 +26,42 @@ function getMetricColor(status: MetricStatus | undefined): MetricColorConfig {
     case 'excellent':
       return {
         label: 'Excellent',
-        text: 'text-emerald-400',
+        text: 'text-emerald-700',
         bg: 'bg-emerald-500/[0.06]',
         border: 'border-emerald-500/15',
         dot: 'bg-emerald-400',
         glow: 'shadow-emerald-500/5',
-        labelBg: 'bg-emerald-500/10 text-emerald-400',
+        labelBg: 'bg-emerald-500/10 text-emerald-700',
       };
     case 'good':
       return {
         label: 'Good',
-        text: 'text-teal-400',
+        text: 'text-teal-700',
         bg: 'bg-teal-500/[0.06]',
         border: 'border-teal-500/15',
         dot: 'bg-teal-400',
         glow: 'shadow-teal-500/5',
-        labelBg: 'bg-teal-500/10 text-teal-400',
+        labelBg: 'bg-teal-500/10 text-teal-700',
       };
     case 'adequate':
       return {
         label: 'Adequate',
-        text: 'text-amber-400',
+        text: 'text-amber-700',
         bg: 'bg-amber-500/[0.06]',
         border: 'border-amber-500/15',
         dot: 'bg-amber-400',
         glow: 'shadow-amber-500/5',
-        labelBg: 'bg-amber-500/10 text-amber-400',
+        labelBg: 'bg-amber-500/10 text-amber-700',
       };
     case 'weak':
       return {
         label: 'Weak',
-        text: 'text-rose-400',
+        text: 'text-rose-700',
         bg: 'bg-rose-500/[0.06]',
         border: 'border-rose-500/15',
         dot: 'bg-rose-400',
         glow: 'shadow-rose-500/5',
-        labelBg: 'bg-rose-500/10 text-rose-400',
+        labelBg: 'bg-rose-500/10 text-rose-700',
       };
     default:
       return {
@@ -104,12 +104,12 @@ export default function MetricCard({ title, value, subtitle, status, flag, thres
       )}
       {flag && (
         <div className="mt-2.5 flex items-center gap-1.5 px-2 py-1 rounded-lg bg-amber-500/[0.06]">
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-amber-400 flex-shrink-0" strokeWidth="2.5">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-amber-700 flex-shrink-0" strokeWidth="2.5">
             <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
             <line x1="12" y1="9" x2="12" y2="13" />
             <line x1="12" y1="17" x2="12.01" y2="17" />
           </svg>
-          <span className="text-[10px] text-amber-400 font-medium">{flag}</span>
+          <span className="text-[10px] text-amber-700 font-medium">{flag}</span>
         </div>
       )}
     </div>
