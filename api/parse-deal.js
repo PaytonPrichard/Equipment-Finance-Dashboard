@@ -10,6 +10,7 @@ const { supabaseAdmin } = require('../server-lib/supabaseAdmin');
 const { handlePreflight } = require('../server-lib/cors');
 const { checkRateLimit } = require('../server-lib/rateLimit');
 const { checkPlanStatus } = require('../server-lib/planCheck');
+const { claimExtractionQuota, quotaExceededMessage } = require('../server-lib/extractionQuota');
 const { extractDealSheetSet, SUPPORTED_MODULES } = require('../server-lib/extract');
 
 // A deal arrives as a set: an application, financials, a quote, a cover
@@ -35,7 +36,7 @@ async function authenticateRequest(req) {
 module.exports = async function handler(req, res) {
   if (handlePreflight(req, res)) return;
 
-  if (!checkRateLimit(req, res, 'default')) {
+  if (!checkRateLimit(req, res, 'extract')) {
     return res.status(429).json({ error: 'Too many requests. Please try again shortly.' });
   }
 
@@ -82,6 +83,13 @@ module.exports = async function handler(req, res) {
   }
   if (totalChars > MAX_TOTAL_BASE64_CHARS) {
     return res.status(413).json({ error: 'Those documents are too large together. Maximum is about 12MB per upload.' });
+  }
+
+  // Claimed after validation, so a rejected upload costs nothing, and
+  // before the model call, so an over-limit one costs nothing either.
+  const quota = await claimExtractionQuota(user.id, files.length);
+  if (!quota.allowed) {
+    return res.status(429).json({ error: quotaExceededMessage(quota.limit) });
   }
 
   const result = await extractDealSheetSet({ moduleKey: asset_class, files });

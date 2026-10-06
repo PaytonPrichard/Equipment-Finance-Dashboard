@@ -13,6 +13,7 @@ const LIMITS = {
   api: { windowMs: 60 * 1000, max: 120 },              // 120 req/min for public API
   requestAccess: { windowMs: 60 * 60 * 1000, max: 5 }, // 5 req/hr for public access-request form
   signup: { windowMs: 60 * 60 * 1000, max: 5 },        // 5 req/hr for invite-code signup
+  extract: { windowMs: 60 * 1000, max: 10 },           // 10 req/min: each is up to 4 model calls
 };
 
 function cleanup() {

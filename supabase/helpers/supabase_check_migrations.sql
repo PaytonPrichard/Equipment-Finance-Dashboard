@@ -87,6 +87,12 @@ WITH checks AS (
   -- supabase_discount_code_rate_limit.sql
   UNION ALL SELECT 'supabase_discount_code_rate_limit.sql', 'table: public.discount_code_attempts',
     EXISTS(SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name='discount_code_attempts')
+
+  -- supabase_extraction_quota.sql
+  UNION ALL SELECT 'supabase_extraction_quota.sql', 'table: public.extraction_usage',
+    EXISTS(SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name='extraction_usage')
+  UNION ALL SELECT 'supabase_extraction_quota.sql', 'function: public.claim_extraction_quota',
+    EXISTS(SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace WHERE n.nspname='public' AND p.proname='claim_extraction_quota')
 )
 SELECT
   migration,
