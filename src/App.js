@@ -767,7 +767,10 @@ function AuthenticatedApp({ profile, user }) {
   return (
     <TutorialProvider userId={userId}>
     <TutorialWelcomeHandler loadExample={loadExample} exampleDeals={exampleDeals} addToast={addToast} />
-    <div className="min-h-screen">
+    {/* overflow-x-clip, not hidden: hidden would make this a scroll
+        container and break the sticky header. Stops a tooltip near the
+        right edge from giving the page a sideways scroll on a phone. */}
+    <div className="min-h-screen overflow-x-clip">
       <DemoBanner />
       <Header activeTab={activeTab} onTabChange={setActiveTab} onOpenGuide={() => setGuideOpen(true)} onOpenSettings={() => setSettingsOpen(true)} />
       <Suspense fallback={null}>
@@ -822,11 +825,15 @@ function AuthenticatedApp({ profile, user }) {
         </div>
       )}
 
-      {/* Toolbar — pinned below the app header so its actions stay reachable */}
+      {/* Toolbar — pinned below the app header so its actions stay reachable.
+          Not pinned on a phone, where it wraps to several rows and would
+          hold a quarter of the screen. */}
       {(activeTab === 'screening' || activeTab === 'batch') && (
-      <div className="sticky top-11 md:top-14 z-30 border-b border-gray-200 bg-white/95 backdrop-blur-sm">
+      <div className="relative md:sticky md:top-14 z-30 border-b border-gray-200 bg-white/95 backdrop-blur-sm">
         <div className="max-w-[1600px] mx-auto px-3 md:px-6 py-2">
-          <div className="flex items-center gap-2">
+          {/* Wraps on a phone. The page clips sideways overflow, so a row
+              that ran off the edge would hide Download PDF and Save. */}
+          <div className="flex flex-wrap items-center gap-2">
             {/* Single / Batch toggle */}
             <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-0.5">
               <button
@@ -848,7 +855,7 @@ function AuthenticatedApp({ profile, user }) {
             </div>
             {activeTab === 'screening' && (
               <>
-                <div className="ml-auto flex items-center gap-2">
+                <div className="ml-auto flex flex-wrap items-center justify-end gap-2">
                   {/* Templates */}
                   <div className="relative">
                     <button

@@ -25,7 +25,9 @@ export default function Header({ activeTab, onTabChange, onOpenGuide, onOpenSett
         <h1 className="text-base md:text-lg font-extrabold tracking-tight text-gray-900 flex-shrink-0 flex items-center gap-2">
           <TrancheLogo size={24} className="md:hidden" />
           <TrancheLogo size={28} className="hidden md:block" />
-          <span>Tranche</span>
+          {/* The logo carries the brand on a phone; the word does not fit
+              beside the tabs and the actions at 390px. */}
+          <span className="hidden sm:inline">Tranche</span>
         </h1>
 
         {/* Tabs */}
@@ -61,7 +63,7 @@ export default function Header({ activeTab, onTabChange, onOpenGuide, onOpenSett
           {tutorial?.resetTutorial && (
             <button
               onClick={tutorial.resetTutorial}
-              className="w-7 h-7 md:w-8 md:h-8 rounded-lg flex items-center justify-center text-gray-600 hover:text-gray-900 hover:bg-gray-100 border border-gray-200 hover:border-gray-300 transition-all"
+              className="w-7 h-7 md:w-8 md:h-8 rounded-lg hidden sm:flex items-center justify-center text-gray-600 hover:text-gray-900 hover:bg-gray-100 border border-gray-200 hover:border-gray-300 transition-all"
               title="Replay tutorial"
               aria-label="Replay tutorial"
             >

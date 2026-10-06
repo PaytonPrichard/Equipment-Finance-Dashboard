@@ -773,7 +773,7 @@ const CONTENT_PX = Math.round((CONTENT_MM * 96) / 25.4);
   const btnPdf = 'bg-gray-100 border-gray-200 text-gray-600 hover:text-gray-700 hover:border-gray-300';
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex flex-wrap items-center gap-2">
       <button onClick={handleCopy} className={`${btnBase} ${copied ? btnCopied : btnDefault}`}>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <rect x="9" y="9" width="13" height="13" rx="2"/>
