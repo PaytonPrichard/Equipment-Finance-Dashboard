@@ -3,11 +3,13 @@
 // - Rate limited to 5/hr per IP
 // - Writes a row to access_requests via service role
 // - Notifies admin via Resend (best-effort, never blocks DB write)
+// - Confirms to the requester with a fixed message (best-effort)
 // ============================================================
 
 const { handlePreflight } = require('../server-lib/cors');
 const { checkRateLimit } = require('../server-lib/rateLimit');
 const { supabaseAdmin } = require('../server-lib/supabaseAdmin');
+const { confirmationEmail } = require('../server-lib/accessRequestEmail');
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const FROM_EMAIL = process.env.NOTIFICATION_FROM_EMAIL || 'Tranche <notifications@gettranche.app>';
@@ -87,6 +89,31 @@ async function sendNotificationEmail({ name, email, firm, role, notes, requestId
   }
 }
 
+// Someone who submits and hears nothing assumes the form broke. Fixed
+// content only: see server-lib/accessRequestEmail.js for why.
+async function sendConfirmationEmail(email) {
+  if (!RESEND_API_KEY) return { sent: false, reason: 'config_missing' };
+  const { subject, text, html, replyTo } = confirmationEmail();
+  try {
+    const res = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${RESEND_API_KEY}`,
+      },
+      body: JSON.stringify({ from: FROM_EMAIL, to: email, subject, text, html, reply_to: replyTo }),
+    });
+    if (!res.ok) {
+      console.error('[request-access] Confirmation Resend error:', await res.text());
+      return { sent: false, reason: 'resend_error' };
+    }
+    return { sent: true };
+  } catch (err) {
+    console.error('[request-access] Confirmation Resend exception:', err);
+    return { sent: false, reason: 'resend_exception' };
+  }
+}
+
 module.exports = async function handler(req, res) {
   if (handlePreflight(req, res)) return;
 
@@ -139,8 +166,12 @@ module.exports = async function handler(req, res) {
     // be awaited: Vercel freezes the function as soon as the response is
     // sent, which kills fire-and-forget work mid-flight (seen as ECONNRESET
     // during the TLS handshake to api.resend.com).
-    await sendNotificationEmail({ name, email, firm, role, notes, requestId: inserted.id })
-      .catch((err) => console.error('[request-access] Email send failed:', err));
+    await Promise.all([
+      sendNotificationEmail({ name, email, firm, role, notes, requestId: inserted.id })
+        .catch((err) => console.error('[request-access] Email send failed:', err)),
+      sendConfirmationEmail(email)
+        .catch((err) => console.error('[request-access] Confirmation send failed:', err)),
+    ]);
 
     return res.status(200).json({ ok: true });
   } catch (err) {
