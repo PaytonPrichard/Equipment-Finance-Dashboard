@@ -85,6 +85,12 @@ export interface MergeResult {
   missing: string[];
   /** Documents that failed to parse, so the UI can say which. */
   failed: { fileName: string; error: string }[];
+  /**
+   * Fields where the form already held a value when the first document
+   * arrived, the analyst chose to keep it, and the document says otherwise.
+   * Not a correction: nobody looked at the document and disagreed.
+   */
+  keptFromForm?: string[];
 }
 
 // ---- Precedence ----
@@ -210,6 +216,31 @@ export function valuesAgree(a: unknown, b: unknown): boolean {
     return a.trim().toLowerCase() === b.trim().toLowerCase();
   }
   return a === b;
+}
+
+// ---- Labels ----
+
+/** Field keys to the names an analyst reads, for the audit view and the memo. */
+export const FIELD_LABELS: Record<string, string> = {
+  companyName: 'Company', annualRevenue: 'Revenue', priorYearRevenue: 'Prior revenue',
+  ebitda: 'EBITDA', priorYearEbitda: 'Prior EBITDA', yearsInBusiness: 'Years in business',
+  totalExistingDebt: 'Existing debt', actualAnnualDebtService: 'Annual debt service',
+  maintenanceCapex: 'Maintenance capex', cashOnHand: 'Cash', availableLiquidity: 'Liquidity',
+  industrySector: 'Industry', creditRating: 'Credit rating', equipmentType: 'Equipment type',
+  equipmentCondition: 'Condition', equipmentCost: 'Equipment cost', downPayment: 'Down payment',
+  financingType: 'Structure', usefulLife: 'Useful life', loanTerm: 'Term',
+  essentialUse: 'Essential use', totalAROutstanding: 'Total AR',
+  requestedAdvanceRate: 'Advance rate', arUnder30: 'AR 0-30', arOver30: 'AR 31-60',
+  arOver60: 'AR 61-90', arOver90: 'AR 90+', topCustomerConcentration: 'Top customer',
+  dilutionRate: 'Dilution', ineligiblesPct: 'Ineligibles', existingABLFacility: 'Existing ABL',
+  totalInventory: 'Total inventory', rawMaterials: 'Raw materials', workInProgress: 'WIP',
+  finishedGoods: 'Finished goods', obsoleteInventory: 'Obsolete',
+  inventoryTurnover: 'Turnover', averageDaysOnHand: 'Days on hand', nolvPct: 'NOLV',
+  perishable: 'Perishable',
+};
+
+export function fieldLabel(key: string): string {
+  return FIELD_LABELS[key] || key;
 }
 
 // ---- Merge ----
@@ -345,8 +376,12 @@ export type { AssetClass };
  * field no document ever supplied.
  *
  * Passing previousMerged as null treats every non-default value as an
- * analyst edit, which is the right reading for the first upload of a
- * session where they had already started typing.
+ * analyst edit. That is only right when the analyst said so. The form can
+ * also hold a restored draft or a reopened deal, and this function cannot
+ * tell those apart from typing. Uploading the Kestrel deal sheet over a
+ * Midwest Precision draft kept ten Midwest values and scored the hybrid.
+ * So the caller asks first (see formHoldsDeal) and, for a new deal, passes
+ * `initial` as `current`.
  */
 export function applyMergeToForm({
   initial,
@@ -379,6 +414,34 @@ export function applyMergeToForm({
 }
 
 /**
+ * Whether the form holds anything a first upload could collide with. A
+ * blank form needs no question; anything else might be a different deal.
+ */
+export function formHoldsDeal(
+  initial: Record<string, unknown>,
+  current: Record<string, unknown>,
+): boolean {
+  return Object.keys(current).some((key) => !valuesAgree(current[key], initial[key]));
+}
+
+/**
+ * The fields a first merge will keep from the form over a document that
+ * says something else. Run before applyMergeToForm with previousMerged null.
+ */
+export function keptOverDocuments(
+  initial: Record<string, unknown>,
+  current: Record<string, unknown>,
+  nextMerged: Record<string, unknown>,
+): string[] {
+  return Object.keys(nextMerged).filter(
+    (key) =>
+      key in current &&
+      !valuesAgree(current[key], initial[key]) &&
+      !valuesAgree(current[key], nextMerged[key]),
+  );
+}
+
+/**
  * The storable shape of a merge, for pipeline_deals.extraction_provenance.
  *
  * Only what the audit view and the memo need: where each field came from,
@@ -391,6 +454,8 @@ export interface StoredProvenance {
   conflicts: FieldConflict[];
   documents: { fileName: string; documentType: DocumentType; fieldCount: number }[];
   capturedAt: string;
+  /** Absent on rows saved before 2026-10-05. Read as empty. */
+  keptFromForm?: string[];
 }
 
 export function toStoredProvenance(result: MergeResult | null): StoredProvenance | null {
@@ -400,6 +465,7 @@ export function toStoredProvenance(result: MergeResult | null): StoredProvenance
     conflicts: result.conflicts,
     documents: sourceDocuments(result),
     capturedAt: new Date().toISOString(),
+    ...(result.keptFromForm?.length ? { keptFromForm: result.keptFromForm } : {}),
   };
 }
 
@@ -418,5 +484,6 @@ export function fromStoredProvenance(stored: unknown): MergeResult | null {
     conflicts: Array.isArray(s.conflicts) ? s.conflicts : [],
     missing: [],
     failed: [],
+    keptFromForm: Array.isArray(s.keptFromForm) ? s.keptFromForm : [],
   };
 }

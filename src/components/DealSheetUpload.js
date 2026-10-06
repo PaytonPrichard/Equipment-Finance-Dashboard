@@ -96,7 +96,11 @@ function fileToBase64(file) {
   });
 }
 
-export default function DealSheetUpload({ activeModule, onExtracted, onDocumentsChange }) {
+// beforeFirstUpload runs before the first document of a set is read, and
+// resolves false to abort. The form may hold a different deal; only the
+// analyst knows, so the parent asks. Asking before the parse means
+// cancelling costs nothing.
+export default function DealSheetUpload({ activeModule, onExtracted, onDocumentsChange, beforeFirstUpload }) {
   const fileInputRef = useRef(null);
   const [status, setStatus] = useState('idle'); // idle | parsing | done | error
   const [documents, setDocuments] = useState([]); // per-document extraction results
@@ -161,6 +165,11 @@ export default function DealSheetUpload({ activeModule, onExtracted, onDocuments
     if (reason) {
       setStatus('error');
       setError(reason);
+      return;
+    }
+
+    if (documents.length === 0 && beforeFirstUpload && !(await beforeFirstUpload())) {
+      if (fileInputRef.current) fileInputRef.current.value = '';
       return;
     }
 

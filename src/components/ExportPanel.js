@@ -139,7 +139,7 @@ function parseCommentaryFromSummary(summaryText) {
 // boundary landed between them on the inventory memo and the last page
 // carried nothing but the disclaimer. Together they are about a third of a
 // page, so keeping them whole is always affordable.
-export function generateBrandedPdfHtml({ summaryText, inputs, metrics, riskScore, recommendation, screeningResult, orgName, analystName, moduleLabel, branding, factors = [], structure = null, stressResults = [], moduleKey = 'equipment_finance', borrowerExtras = null, criteria = null, commentary = null, sourceDocuments = [], generatedAt = null }) {
+export function generateBrandedPdfHtml({ summaryText, inputs, metrics, riskScore, recommendation, screeningResult, orgName, analystName, moduleLabel, branding, factors = [], structure = null, stressResults = [], moduleKey = 'equipment_finance', borrowerExtras = null, criteria = null, commentary = null, sourceDocuments = [], keptFields = [], generatedAt = null }) {
   const companyName = inputs?.companyName || 'N/A';
   // Read from the model, not the clock. A memo reopened next quarter has to
   // print the date it went to committee, not the date it was reopened.
@@ -556,6 +556,9 @@ export function generateBrandedPdfHtml({ summaryText, inputs, metrics, riskScore
       <div style="font-size:11.5px;color:#64748b;margin-top:6px;line-height:1.5">
         Figures were extracted from the documents above and reviewed by the analyst before scoring. The score is computed from the reviewed inputs, not from the documents directly.
       </div>
+      ${keptFields.length ? `<div style="font-size:11.5px;color:#92400e;margin-top:4px;line-height:1.5">
+        Not from the documents: ${esc(keptFields.join(', '))}. These were in the form before upload and differ from what the documents say.
+      </div>` : ''}
     ` : `
       <div style="font-size:12.5px;color:#475569">Inputs were entered manually. No source documents are attached to this deal.</div>
     `}
@@ -634,7 +637,7 @@ export function stripAppStylesForCapture(clonedDoc, scope = MEMO_SCOPE) {
   });
 }
 
-export default function ExportPanel({ summaryText, inputs, metrics, riskScore, recommendation, screeningResult, profile, moduleLabel, moduleKey, factors, structure, stressResults, borrowerExtras, criteria, commentary, sourceDocuments = [], pipelineDealId = null, userId = null, sofr = null, sofrDate = null, onMemoSaved = null }) {
+export default function ExportPanel({ summaryText, inputs, metrics, riskScore, recommendation, screeningResult, profile, moduleLabel, moduleKey, factors, structure, stressResults, borrowerExtras, criteria, commentary, sourceDocuments = [], keptFields = [], pipelineDealId = null, userId = null, sofr = null, sofrDate = null, onMemoSaved = null }) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
@@ -681,7 +684,7 @@ const CONTENT_PX = Math.round((CONTENT_MM * 96) / 25.4);
       summaryText, inputs, metrics, riskScore, recommendation, screeningResult,
       orgName, analystName, moduleLabel: moduleLabel || 'Equipment Finance', branding,
       moduleKey, factors, structure, stressResults, borrowerExtras, criteria,
-      commentary, sourceDocuments,
+      commentary, sourceDocuments, keptFields,
       sofr, sofrDate, generatedAt: new Date().toISOString(),
     };
     const html = generateBrandedPdfHtml(model);

@@ -16,27 +16,9 @@
 // ============================================================
 
 import React, { useMemo, useState } from 'react';
-import { valuesAgree, DOCUMENT_TYPE_LABELS } from '../lib/extractionMerge';
+import { valuesAgree, DOCUMENT_TYPE_LABELS, fieldLabel } from '../lib/extractionMerge';
 
-const FIELD_LABELS = {
-  companyName: 'Company', annualRevenue: 'Revenue', priorYearRevenue: 'Prior revenue',
-  ebitda: 'EBITDA', priorYearEbitda: 'Prior EBITDA', yearsInBusiness: 'Years in business',
-  totalExistingDebt: 'Existing debt', actualAnnualDebtService: 'Annual debt service',
-  maintenanceCapex: 'Maintenance capex', cashOnHand: 'Cash', availableLiquidity: 'Liquidity',
-  industrySector: 'Industry', creditRating: 'Credit rating', equipmentType: 'Equipment type',
-  equipmentCondition: 'Condition', equipmentCost: 'Equipment cost', downPayment: 'Down payment',
-  financingType: 'Structure', usefulLife: 'Useful life', loanTerm: 'Term',
-  essentialUse: 'Essential use', totalAROutstanding: 'Total AR',
-  requestedAdvanceRate: 'Advance rate', arUnder30: 'AR 0-30', arOver30: 'AR 31-60',
-  arOver60: 'AR 61-90', arOver90: 'AR 90+', topCustomerConcentration: 'Top customer',
-  dilutionRate: 'Dilution', ineligiblesPct: 'Ineligibles', existingABLFacility: 'Existing ABL',
-  totalInventory: 'Total inventory', rawMaterials: 'Raw materials', workInProgress: 'WIP',
-  finishedGoods: 'Finished goods', obsoleteInventory: 'Obsolete',
-  inventoryTurnover: 'Turnover', averageDaysOnHand: 'Days on hand', nolvPct: 'NOLV',
-  perishable: 'Perishable',
-};
-
-const labelFor = (k) => FIELD_LABELS[k] || k;
+const labelFor = fieldLabel;
 
 function display(v) {
   if (v === undefined || v === null || v === '') return '—';
@@ -48,15 +30,21 @@ function display(v) {
 // How a field got its current value. The distinction that matters is
 // extracted-and-accepted versus extracted-and-corrected: the second means
 // a person looked at the document and disagreed with the reading.
+//
+// Kept is neither. The value was in the form before the document arrived
+// and the analyst chose to keep their entries. Calling it a correction
+// claims a review that never happened.
 const ORIGIN = {
   extracted: { label: 'From document', cls: 'text-gray-500' },
   corrected: { label: 'Analyst corrected', cls: 'text-amber-700 font-medium' },
+  kept: { label: 'Entered before upload', cls: 'text-amber-700 font-medium' },
   manual: { label: 'Entered by analyst', cls: 'text-gray-500' },
 };
 
-function classifyField(field, currentValue, source) {
+function classifyField(field, currentValue, source, kept) {
   if (!source) return 'manual';
-  return valuesAgree(currentValue, source.value) ? 'extracted' : 'corrected';
+  if (valuesAgree(currentValue, source.value)) return 'extracted';
+  return kept.includes(field) ? 'kept' : 'corrected';
 }
 
 export default function DealProvenance({
@@ -72,6 +60,7 @@ export default function DealProvenance({
 
   const rows = useMemo(() => {
     const sources = provenance?.fieldSources || {};
+    const kept = provenance?.keptFromForm || [];
     const out = [];
     for (const [field, value] of Object.entries(inputs || {})) {
       const isDefault = valuesAgree(value, moduleInitialInputs[field]);
@@ -80,15 +69,16 @@ export default function DealProvenance({
       // information; showing it would bury the rows that do.
       if (!source && isDefault) continue;
       if (value === undefined || value === null || value === '') continue;
-      out.push({ field, value, source, origin: classifyField(field, value, source) });
+      out.push({ field, value, source, origin: classifyField(field, value, source, kept) });
     }
-    const rank = { corrected: 0, extracted: 1, manual: 2 };
+    const rank = { corrected: 0, kept: 1, extracted: 2, manual: 3 };
     return out.sort((a, b) => rank[a.origin] - rank[b.origin] || labelFor(a.field).localeCompare(labelFor(b.field)));
   }, [inputs, provenance, moduleInitialInputs]);
 
   const documents = provenance?.documents || [];
   const conflicts = provenance?.conflicts || [];
   const corrected = rows.filter((r) => r.origin === 'corrected');
+  const keptRows = rows.filter((r) => r.origin === 'kept');
   const visibleRows = showAllFields ? rows : rows.slice(0, 8);
 
   const composite = riskScore?.composite ?? null;
@@ -169,9 +159,12 @@ export default function DealProvenance({
           <div className="text-[10px] font-semibold text-gray-500 uppercase tracking-wide">
             Field by field
           </div>
-          {corrected.length > 0 && (
+          {(corrected.length > 0 || keptRows.length > 0) && (
             <div className="text-[11px] text-amber-700">
-              {corrected.length} corrected by you
+              {[
+                corrected.length > 0 && `${corrected.length} corrected by you`,
+                keptRows.length > 0 && `${keptRows.length} kept over the documents`,
+              ].filter(Boolean).join(' · ')}
             </div>
           )}
         </div>
@@ -196,6 +189,9 @@ export default function DealProvenance({
                     {ORIGIN[r.origin].label}
                     {r.origin === 'corrected' && (
                       <span className="text-gray-400"> (was {display(r.source.value)})</span>
+                    )}
+                    {r.origin === 'kept' && (
+                      <span className="text-gray-400"> (document says {display(r.source.value)})</span>
                     )}
                   </td>
                   <td className="py-1.5 text-gray-400 truncate max-w-[180px]">

@@ -11,7 +11,7 @@ import { isDemoMode } from './lib/demoMode';
 import DemoBanner from './components/DemoBanner';
 import { useToast } from './contexts/ToastContext';
 import { TutorialProvider, useTutorial } from './contexts/TutorialContext';
-import { useConfirm } from './contexts/ConfirmContext';
+import { useConfirm, useChoice } from './contexts/ConfirmContext';
 import WelcomeTutorial from './components/WelcomeTutorial';
 import TutorialBeacon from './components/TutorialBeacon';
 import { useSessionGuard } from './hooks/useSessionGuard';
@@ -23,6 +23,10 @@ import DealSheetUpload from './components/DealSheetUpload';
 import DealProvenance from './components/DealProvenance';
 import {
   applyMergeToForm,
+  formHoldsDeal,
+  keptOverDocuments,
+  valuesAgree,
+  fieldLabel,
   DOCUMENT_TYPE_LABELS,
   toStoredProvenance,
   fromStoredProvenance,
@@ -253,6 +257,7 @@ function AuthenticatedApp({ profile, user }) {
   const { signOut: authSignOut } = useAuth();
   const { addToast } = useToast();
   const confirm = useConfirm();
+  const choose = useChoice();
   const draftSaveTimer = useRef(null);
   const { plan, maxUsers, isExpired, isExpiringSoon, daysRemaining } = useOrgPlan();
 
@@ -317,6 +322,9 @@ function AuthenticatedApp({ profile, user }) {
   // produced the numbers stop evaporating after parsing.
   const [extraction, setExtraction] = useState(null);
   const [extractionFiles, setExtractionFiles] = useState([]);
+  // What the analyst said to do with the form when the first document of a
+  // set arrived: 'new' or 'keep'. Read once by the merge that follows.
+  const firstUploadMode = useRef(null);
 
   // Documents the memo cites. Only files that actually supplied a value
   // appear: one that lost every field it claimed did not contribute to the
@@ -349,8 +357,21 @@ function AuthenticatedApp({ profile, user }) {
       fieldSources: extraction.fieldSources || {},
       conflicts: extraction.conflicts || [],
       documents: Array.from(byFile.values()),
+      keptFromForm: extraction.keptFromForm || [],
     };
   }, [extraction]);
+
+  // Kept fields the memo must disclose, as labels: only those still
+  // disagreeing with their document. Typing the document's figure back in
+  // settles it. Labelled here because ExportPanel stays clear of the
+  // extraction path.
+  const memoKeptFields = useMemo(() => {
+    if (!extraction?.keptFromForm?.length) return [];
+    return extraction.keptFromForm.filter((k) => {
+      const src = extraction.fieldSources?.[k];
+      return src && !valuesAgree(inputs[k], src.value);
+    }).map(fieldLabel);
+  }, [extraction, inputs]);
   const [activeDeal, setActiveDeal] = useState(null);
   const [activePipelineDealId, setActivePipelineDealId] = useState(null);
   // Memos already frozen for the open deal, newest first.
@@ -674,6 +695,32 @@ function AuthenticatedApp({ profile, user }) {
     clearExtraction();
   };
 
+  // The first document of a set, dropped on a form that already holds
+  // something. That something may be a restored draft, a reopened deal or
+  // the analyst's own typing, and nothing in the form says which. Merging
+  // without asking scored Kestrel's deal sheet under Midwest Precision's
+  // revenue, EBITDA and cost. A blank form has nothing to lose, so no question.
+  const askBeforeFirstUpload = async () => {
+    if (!formHoldsDeal(mod.INITIAL_INPUTS, inputs)) {
+      firstUploadMode.current = 'new';
+      return true;
+    }
+    const name = (inputs.companyName || '').trim();
+    const mode = await choose({
+      title: name ? `The form holds ${name}` : 'The form already has entries',
+      body:
+        'Start a new deal from these documents, or keep your entries and fill only the blanks.' +
+        (activePipelineDealId ? ' A new deal leaves the saved pipeline copy as it is.' : ''),
+      options: [
+        { value: 'keep', label: 'Keep my entries' },
+        { value: 'new', label: 'Start a new deal', primary: true },
+      ],
+    });
+    if (!mode) return false;
+    firstUploadMode.current = mode;
+    return true;
+  };
+
   // A document set belongs to one deal. Carrying it across a new deal, a
   // loaded deal, or an asset class switch would re-attach the wrong source
   // documents and show provenance from a different borrower.
@@ -899,7 +946,7 @@ function AuthenticatedApp({ profile, user }) {
                       </>
                     )}
                   </div>
-                  {valid && <ExportPanel summaryText={summaryText} inputs={inputs} metrics={metrics} riskScore={riskScore} recommendation={recommendation} screeningResult={screeningResult} profile={profile} moduleLabel={moduleLabel} moduleKey={activeModule} factors={mod.describeFactors ? mod.describeFactors(inputs, metrics, riskScore) : []} structure={structure} stressResults={stressResults} borrowerExtras={borrowerExtras} criteria={screeningCriteria} commentary={commentary} sourceDocuments={memoSourceDocuments} pipelineDealId={activePipelineDealId} userId={userId} sofr={sofr} sofrDate={sofrDate} onMemoSaved={() => loadDealMemos(activePipelineDealId)} />}
+                  {valid && <ExportPanel summaryText={summaryText} inputs={inputs} metrics={metrics} riskScore={riskScore} recommendation={recommendation} screeningResult={screeningResult} profile={profile} moduleLabel={moduleLabel} moduleKey={activeModule} factors={mod.describeFactors ? mod.describeFactors(inputs, metrics, riskScore) : []} structure={structure} stressResults={stressResults} borrowerExtras={borrowerExtras} criteria={screeningCriteria} commentary={commentary} sourceDocuments={memoSourceDocuments} keptFields={memoKeptFields} pipelineDealId={activePipelineDealId} userId={userId} sofr={sofr} sofrDate={sofrDate} onMemoSaved={() => loadDealMemos(activePipelineDealId)} />}
                   {activePipelineDealId && valid && (
                     <button
                       onClick={async () => {
@@ -1072,20 +1119,37 @@ function AuthenticatedApp({ profile, user }) {
                   </div>
                   <DealSheetUpload
                     activeModule={activeModule}
+                    beforeFirstUpload={askBeforeFirstUpload}
                     onExtracted={(mergedInputs, mergeResult) => {
                       // Defaults, then the merged extraction, then anything
                       // the analyst typed or corrected. Keeps the fae01c1
                       // cross-deal reset while letting a second document add
                       // to the first instead of replacing it.
+                      //
+                      // The first document of a set is different: the form
+                      // may hold another deal, and the analyst has just said
+                      // whether to start over or keep what is there.
+                      const mode = mergeResult ? firstUploadMode.current : null;
+                      if (mergeResult) firstUploadMode.current = null;
+                      if (mode === 'new') {
+                        // A new borrower must not save over the old one's
+                        // pipeline row.
+                        setActiveDeal(null);
+                        setActivePipelineDealId(null);
+                      }
+                      const kept =
+                        mode === 'keep' ? keptOverDocuments(mod.INITIAL_INPUTS, inputs, mergedInputs)
+                        : mode === 'new' ? []
+                        : extraction?.keptFromForm || [];
                       setInputs((prev) =>
                         applyMergeToForm({
                           initial: mod.INITIAL_INPUTS,
-                          current: prev,
-                          previousMerged: extraction ? extraction.inputs : null,
+                          current: mode === 'new' ? mod.INITIAL_INPUTS : prev,
+                          previousMerged: mode || !extraction ? null : extraction.inputs,
                           nextMerged: mergedInputs,
                         }),
                       );
-                      setExtraction(mergeResult);
+                      setExtraction(mergeResult ? { ...mergeResult, keptFromForm: kept } : null);
                     }}
                     onDocumentsChange={setExtractionFiles}
                   />

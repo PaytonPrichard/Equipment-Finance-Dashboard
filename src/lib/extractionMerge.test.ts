@@ -12,6 +12,10 @@ import {
   valuesAgree,
   groupForField,
   applyMergeToForm,
+  formHoldsDeal,
+  keptOverDocuments,
+  toStoredProvenance,
+  fromStoredProvenance,
   NUMERIC_TOLERANCE,
 } from './extractionMerge';
 import type { DocumentExtraction } from './extractionMerge';
@@ -442,5 +446,89 @@ describe('applyMergeToForm', () => {
     // previousMerged said false, current says false, so no edit was made
     // and the new extraction wins.
     expect(out.essentialUse).toBe(true);
+  });
+});
+
+describe('a first upload onto a form that holds another deal', () => {
+  // Found 2026-10-05 on production. The Kestrel Medical Imaging deal sheet
+  // was uploaded over a restored Midwest Precision draft. Ten Midwest values
+  // outranked the document, the hybrid scored 94 PASS, and the audit panel
+  // called each one "Analyst corrected".
+  const initial = {
+    companyName: '',
+    annualRevenue: 0,
+    priorYearRevenue: 0,
+    ebitda: 0,
+    industrySector: 'Manufacturing',
+  };
+  const midwestDraft = {
+    companyName: 'Midwest Precision Machining Inc.',
+    annualRevenue: 42000000,
+    priorYearRevenue: 0,
+    ebitda: 7500000,
+    industrySector: 'Manufacturing',
+  };
+  const kestrel = {
+    companyName: 'Kestrel Medical Imaging Partners',
+    annualRevenue: 31400000,
+    priorYearRevenue: 29800000,
+    ebitda: 6800000,
+    industrySector: 'Healthcare',
+  };
+
+  test('a blank form holds no deal, so there is nothing to ask', () => {
+    expect(formHoldsDeal(initial, initial)).toBe(false);
+  });
+
+  test('a restored draft holds a deal', () => {
+    expect(formHoldsDeal(initial, midwestDraft)).toBe(true);
+  });
+
+  test('a single typed field is enough to ask', () => {
+    expect(formHoldsDeal(initial, { ...initial, companyName: 'Kestrel' })).toBe(true);
+  });
+
+  test('starting a new deal takes every value from the documents', () => {
+    const out = applyMergeToForm({ initial, current: initial, previousMerged: null, nextMerged: kestrel });
+    expect(out).toEqual(kestrel);
+  });
+
+  test('keeping entries is the old merge, and names what it kept', () => {
+    const out = applyMergeToForm({ initial, current: midwestDraft, previousMerged: null, nextMerged: kestrel });
+    expect(out.companyName).toBe('Midwest Precision Machining Inc.');
+    expect(out.annualRevenue).toBe(42000000);
+    // Blanks and defaults still fill from the document.
+    expect(out.priorYearRevenue).toBe(29800000);
+    expect(out.industrySector).toBe('Healthcare');
+    expect(keptOverDocuments(initial, midwestDraft, kestrel).sort()).toEqual(
+      ['annualRevenue', 'companyName', 'ebitda'],
+    );
+  });
+
+  test('an entry that matches the document was not kept over it', () => {
+    const current = { ...initial, ebitda: 6800000 };
+    expect(keptOverDocuments(initial, current, kestrel)).toEqual([]);
+  });
+});
+
+describe('stored provenance carries kept fields', () => {
+  const result = {
+    inputs: { ebitda: 6800000 },
+    fieldSources: { ebitda: { value: 6800000, fileName: 'k.pdf', documentType: 'deal_sheet' as const } },
+    conflicts: [],
+    missing: [],
+    failed: [],
+    keptFromForm: ['ebitda'],
+  };
+
+  test('a saved deal still says which values were kept', () => {
+    const restored = fromStoredProvenance(JSON.parse(JSON.stringify(toStoredProvenance(result))));
+    expect(restored?.keptFromForm).toEqual(['ebitda']);
+  });
+
+  test('rows saved before the field existed read as nothing kept', () => {
+    const stored = toStoredProvenance({ ...result, keptFromForm: [] });
+    expect(stored).not.toHaveProperty('keptFromForm');
+    expect(fromStoredProvenance(stored)?.keptFromForm).toEqual([]);
   });
 });

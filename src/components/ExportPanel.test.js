@@ -284,7 +284,7 @@ describe('memo says where its numbers came from', () => {
     usefulLife: 15, loanTerm: 84, essentialUse: true,
   };
 
-  function buildWithSources(sourceDocuments) {
+  function buildWithSources(sourceDocuments, keptFields = []) {
     const metrics = ef.calculateMetrics(inputs);
     const riskScore = ef.calculateRiskScore(inputs, metrics);
     const recommendation = ef.getRecommendation(riskScore.composite);
@@ -297,7 +297,7 @@ describe('memo says where its numbers came from', () => {
       orgName: 'Test Bank', analystName: 'Test Analyst', moduleLabel: 'Equipment Finance',
       branding: {}, factors: ef.describeFactors(inputs, metrics, riskScore),
       structure, stressResults: ef.runStressTest(inputs), moduleKey: 'equipment_finance',
-      criteria: DEFAULT_CRITERIA, commentary, sourceDocuments,
+      criteria: DEFAULT_CRITERIA, commentary, sourceDocuments, keptFields,
     });
   }
 
@@ -325,6 +325,21 @@ describe('memo says where its numbers came from', () => {
     ]);
     expect(html).toContain('reviewed by the analyst before scoring');
     expect(html).toContain('not from the documents directly');
+  });
+
+  test('names figures that were kept over the documents', () => {
+    // "Reviewed by the analyst" is untrue for a value that was in the form
+    // before the documents arrived. Committee has to see which ones.
+    const html = buildWithSources(
+      [{ fileName: 'kestrel.pdf', documentType: 'Deal sheet', addedOn: 'Oct 5, 2026' }],
+      ['Company', 'Revenue'],
+    );
+    expect(html).toContain('Not from the documents: Company, Revenue.');
+  });
+
+  test('says nothing extra when every figure came from the documents', () => {
+    const html = buildWithSources([{ fileName: 'x.pdf', documentType: 'Deal sheet', addedOn: 'Oct 5, 2026' }]);
+    expect(html).not.toContain('Not from the documents');
   });
 
   test('a filename cannot inject markup into the memo', () => {
