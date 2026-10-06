@@ -224,11 +224,13 @@ async function main() {
   {
     // A moves its own saved deal into B.
     const { data: own } = await adminA.client.from('saved_deals').insert({ org_id: orgA, user_id: adminA.id, name: `A own ${RUN}`, inputs }).select('id').single();
+    record('works', 'A saves a deal in its own org', !!own);
     if (own) {
       await adminA.client.from('saved_deals').update({ org_id: orgB }).eq('id', own.id);
       const { data: moved } = await svc.from('saved_deals').select('org_id').eq('id', own.id).single();
       record('write', 'A moves its own saved deal into B', moved.org_id === orgA);
       const { data: ownP } = await adminA.client.from('pipeline_deals').insert({ org_id: orgA, user_id: adminA.id, name: `A own ${RUN}`, inputs }).select('id').single();
+      record('works', 'A adds a pipeline deal in its own org', !!ownP);
       if (ownP) {
         await adminA.client.from('pipeline_deals').update({ org_id: orgB }).eq('id', ownP.id);
         const { data: movedP } = await svc.from('pipeline_deals').select('org_id').eq('id', ownP.id).single();
@@ -358,6 +360,18 @@ async function main() {
     const ow = await adminA.client.storage.from(BUCKET).upload(`${orgB}/injected.txt`, Buffer.from('x'), { contentType: 'text/plain' });
     if (!ow.error) created.objects.push(`${orgB}/injected.txt`);
     record('storage', "A writes into B's folder", !!ow.error, ow.error ? 'denied' : 'WRITTEN');
+    // Positive controls: a fix that blocked everything would pass every
+    // check above. A must still use its own folder, the way the app does.
+    const ownPath = `${orgA}/isolation/${Date.now()}_own.txt`;
+    const ownUp = await adminA.client.storage.from(BUCKET).upload(ownPath, Buffer.from('own'), { contentType: 'text/plain' });
+    if (!ownUp.error) created.objects.push(ownPath);
+    record('works', 'A uploads to its own folder', !ownUp.error, ownUp.error?.message || 'ok');
+    const ownDl = await adminA.client.storage.from(BUCKET).download(ownPath);
+    record('works', 'A downloads its own document', !ownDl.error, ownDl.error?.message || 'ok');
+    const ownSu = await adminA.client.storage.from(BUCKET).createSignedUrl(ownPath, 60);
+    record('works', 'A signs a link to its own document', !ownSu.error, ownSu.error?.message || 'ok');
+    const ownAnalyst = await analystA.client.storage.from(BUCKET).download(ownPath);
+    record('works', "A's analyst downloads the firm's document", !ownAnalyst.error, ownAnalyst.error?.message || 'ok');
     const anonDl = await anonClient().storage.from(BUCKET).download(objectPath);
     record('storage', 'anonymous download of a document', !!anonDl.error);
   }
