@@ -1,6 +1,7 @@
 import { supabase } from './supabase';
 
 interface StageChangeParams {
+  dealId: string | number;
   dealName: string;
   oldStage: string;
   newStage: string;
@@ -22,7 +23,7 @@ interface InviteResult {
 // Fire-and-forget notification for pipeline stage changes.
 // Calls the /api/notify endpoint which emails team members.
 // Fails silently — notifications should never block the UI.
-export async function notifyStageChange({ dealName, oldStage, newStage, orgId }: StageChangeParams): Promise<void> {
+export async function notifyStageChange({ dealId, dealName, oldStage, newStage, orgId }: StageChangeParams): Promise<void> {
   try {
     if (!supabase) return;
     const { data: { session } } = await supabase.auth.getSession();
@@ -34,7 +35,7 @@ export async function notifyStageChange({ dealName, oldStage, newStage, orgId }:
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${session.access_token}`,
       },
-      body: JSON.stringify({ type: 'stage_change', dealName, oldStage, newStage, orgId }),
+      body: JSON.stringify({ type: 'stage_change', dealId, dealName, oldStage, newStage, orgId }),
     }).catch(() => {}); // fire and forget
   } catch {
     // Never block UI for notification failures

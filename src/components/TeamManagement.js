@@ -154,10 +154,12 @@ export default function TeamManagement() {
     });
     if (!confirmed) return;
 
-    const { error } = await supabase
-      .from('profiles')
-      .update({ org_id: null, role: 'analyst' })
-      .eq('id', userId);
+    // A database function, not a profile update. RLS rejected the update
+    // silently (no rows, no error), so this used to report success while
+    // the member kept access. remove_member checks the caller is admin of
+    // the member's org and says why when it refuses.
+    const { data, error: rpcError } = await supabase.rpc('remove_member', { p_user_id: userId });
+    const error = rpcError || (data?.error ? { message: data.error } : null);
 
     if (error) {
       addToast('Failed to remove member: ' + error.message, 'error');

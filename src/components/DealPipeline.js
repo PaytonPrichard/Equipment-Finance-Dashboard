@@ -260,7 +260,7 @@ export default function DealPipeline({ onLoadDeal, currentInputs, currentScore, 
       );
     } else {
       // Fire-and-forget email notification to team
-      notifyStageChange({ dealName: deal.name, oldStage: deal.stage, newStage, orgId });
+      notifyStageChange({ dealId: deal.id, dealName: deal.name, oldStage: deal.stage, newStage, orgId });
     }
   };
 

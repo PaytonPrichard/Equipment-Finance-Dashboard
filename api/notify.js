@@ -1,5 +1,11 @@
 // ============================================================
 // Email Notification API — sends stage change emails via Resend
+//
+// Isolation, 2026-10-06: this used to take orgId, the deal name and the
+// invite address from the request body. Any signed-in user could email
+// every member of another firm, with text they wrote, from our domain. The
+// org now comes from the sender's own profile, the deal and the invite are
+// looked up inside that org, and everything in the HTML is escaped.
 // ============================================================
 
 const { handlePreflight } = require('../server-lib/cors');
@@ -8,6 +14,17 @@ const { supabaseAdmin } = require('../server-lib/supabaseAdmin');
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const FROM_EMAIL = process.env.NOTIFICATION_FROM_EMAIL || 'Tranche <notifications@gettranche.app>';
 const APP_URL = process.env.APP_URL || 'https://gettranche.app';
+
+const STAGES = ['Screening', 'Under Review', 'Approved', 'Funded', 'Declined'];
+
+function esc(s) {
+  return String(s ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
 
 const ROLE_LABELS = {
   analyst: 'Analyst',
@@ -50,10 +67,10 @@ function inviteEmail({ inviteCode, role, orgName, inviterName }) {
         <strong style="font-size: 16px; color: #111827;">Tranche</strong>
       </div>
       <p style="color: #111827; font-size: 16px; font-weight: 600; margin: 0 0 8px;">
-        You've been invited to ${orgName}.
+        You've been invited to ${esc(orgName)}.
       </p>
       <p style="color: #374151; font-size: 14px; margin: 0 0 16px;">
-        ${inviterName ? `${inviterName} invited you` : 'You were invited'} to join as <strong>${roleLabel}</strong> on Tranche, the deal screening platform for asset-based lenders.
+        ${inviterName ? `${esc(inviterName)} invited you` : 'You were invited'} to join as <strong>${esc(roleLabel)}</strong> on Tranche, the deal screening platform for asset-based lenders.
       </p>
       <div style="margin: 20px 0;">
         <a href="${signupUrl}" style="display: inline-block; background: #D4A843; color: #141210; text-decoration: none; font-weight: 600; font-size: 14px; padding: 10px 20px; border-radius: 8px;">
@@ -62,7 +79,7 @@ function inviteEmail({ inviteCode, role, orgName, inviterName }) {
       </div>
       <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px 16px; margin: 16px 0;">
         <span style="font-size: 11px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em;">Invite Code</span>
-        <p style="font-family: monospace; font-size: 16px; font-weight: 600; color: #111827; margin: 4px 0 0; letter-spacing: 0.05em;">${inviteCode}</p>
+        <p style="font-family: monospace; font-size: 16px; font-weight: 600; color: #111827; margin: 4px 0 0; letter-spacing: 0.05em;">${esc(inviteCode)}</p>
       </div>
       <p style="color: #6b7280; font-size: 12px; margin: 16px 0 0;">
         If the button doesn't work, paste the code above on the join screen at <a href="${APP_URL}" style="color: #6b7280;">${APP_URL.replace(/^https?:\/\//, '')}</a>.
@@ -78,18 +95,18 @@ function stageChangeEmail({ dealName, oldStage, newStage, movedBy, orgName }) {
     <div style="font-family: -apple-system, system-ui, sans-serif; max-width: 480px; margin: 0 auto; padding: 24px;">
       <div style="border-bottom: 1px solid #e5e7eb; padding-bottom: 12px; margin-bottom: 16px;">
         <strong style="font-size: 16px; color: #111827;">Tranche</strong>
-        ${orgName ? `<span style="color: #9ca3af; font-size: 12px; margin-left: 8px;">${orgName}</span>` : ''}
+        ${orgName ? `<span style="color: #9ca3af; font-size: 12px; margin-left: 8px;">${esc(orgName)}</span>` : ''}
       </div>
       <p style="color: #374151; font-size: 14px; margin: 0 0 12px;">
-        <strong>${dealName}</strong> was moved from <strong>${oldStage}</strong> to <strong>${newStage}</strong>.
+        <strong>${esc(dealName)}</strong> was moved from <strong>${esc(oldStage)}</strong> to <strong>${esc(newStage)}</strong>.
       </p>
-      ${movedBy ? `<p style="color: #6b7280; font-size: 13px; margin: 0 0 16px;">By ${movedBy}</p>` : ''}
+      ${movedBy ? `<p style="color: #6b7280; font-size: 13px; margin: 0 0 16px;">By ${esc(movedBy)}</p>` : ''}
       <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px 16px; margin-bottom: 16px;">
         <span style="font-size: 12px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em;">New Stage</span>
-        <p style="font-size: 16px; font-weight: 600; color: #111827; margin: 4px 0 0;">${newStage}</p>
+        <p style="font-size: 16px; font-weight: 600; color: #111827; margin: 4px 0 0;">${esc(newStage)}</p>
       </div>
       <p style="color: #9ca3af; font-size: 11px; margin: 16px 0 0;">
-        You received this because you are a member of ${orgName || 'this organization'} on Tranche.
+        You received this because you are a member of ${esc(orgName || 'this organization')} on Tranche.
       </p>
     </div>
   `;
@@ -114,35 +131,47 @@ module.exports = async function handler(req, res) {
     return res.status(401).json({ error: 'Invalid token' });
   }
 
-  const { type, orgId } = req.body;
-
-  if (!type || !orgId) {
+  const { type } = req.body || {};
+  if (!type) {
     return res.status(400).json({ error: 'Missing required fields' });
   }
 
   try {
-    // Look up sender profile + org name (used by all notification types)
-    const [{ data: senderProfile }, { data: org }] = await Promise.all([
-      supabaseAdmin
-        .from('profiles')
-        .select('full_name, email')
-        .eq('id', user.id)
-        .single(),
-      supabaseAdmin
-        .from('organizations')
-        .select('name')
-        .eq('id', orgId)
-        .single(),
-    ]);
+    // The sender's own org. A body orgId is ignored.
+    const { data: senderProfile } = await supabaseAdmin
+      .from('profiles')
+      .select('full_name, email, org_id')
+      .eq('id', user.id)
+      .single();
+    const orgId = senderProfile?.org_id;
+    if (!orgId) {
+      return res.status(403).json({ error: 'No organization' });
+    }
+    const { data: org } = await supabaseAdmin
+      .from('organizations')
+      .select('name')
+      .eq('id', orgId)
+      .single();
 
     const senderName = senderProfile?.full_name || senderProfile?.email || '';
     const orgName = org?.name || '';
 
     if (type === 'stage_change') {
-      const { dealName, oldStage, newStage } = req.body;
-      if (!dealName || !newStage) {
+      const { dealId, oldStage, newStage } = req.body;
+      if (!dealId || !STAGES.includes(newStage) || (oldStage && !STAGES.includes(oldStage))) {
         return res.status(400).json({ error: 'Missing required fields' });
       }
+      // The deal must be the sender's org's; its name comes from the row.
+      const { data: deal } = await supabaseAdmin
+        .from('pipeline_deals')
+        .select('name')
+        .eq('id', dealId)
+        .eq('org_id', orgId)
+        .maybeSingle();
+      if (!deal) {
+        return res.status(404).json({ error: 'Deal not found' });
+      }
+      const dealName = deal.name;
 
       const { data: members } = await supabaseAdmin
         .from('profiles')
@@ -166,13 +195,29 @@ module.exports = async function handler(req, res) {
     }
 
     if (type === 'invite') {
-      const { inviteCode, email, role } = req.body;
-      if (!inviteCode || !email) {
+      const { inviteCode } = req.body;
+      if (!inviteCode) {
+        return res.status(400).json({ error: 'Missing required fields' });
+      }
+      // Only a pending invite the sender's org created. Address and role
+      // come from the invite row; a body address is used only for an
+      // invite created without one.
+      const { data: invite } = await supabaseAdmin
+        .from('invites')
+        .select('email, role, status')
+        .eq('invite_code', inviteCode)
+        .eq('org_id', orgId)
+        .maybeSingle();
+      if (!invite || (invite.status && invite.status !== 'pending')) {
+        return res.status(404).json({ error: 'Invite not found' });
+      }
+      const email = invite.email || req.body.email;
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
         return res.status(400).json({ error: 'Missing required fields' });
       }
 
       const { subject, html } = inviteEmail({
-        inviteCode, role, orgName, inviterName: senderName,
+        inviteCode, role: invite.role, orgName, inviterName: senderName,
       });
 
       const result = await sendEmail(email, subject, html);

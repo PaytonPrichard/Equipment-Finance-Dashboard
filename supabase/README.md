@@ -36,6 +36,7 @@ To check what is actually deployed, run `helpers/supabase_check_migrations.sql`.
 | 19 | `supabase_fix_audit_org.sql` | Scopes `audit_log` INSERT to the caller's org; constrains `asset_class`. |
 | 20 | `supabase_stage_entered_at.sql` | `pipeline_deals.stage_entered_at`, `deal_attachments.source`. |
 | 21 | `supabase_extraction_quota.sql` | `extraction_usage` + `claim_extraction_quota`. Per-user document cap for `/api/parse-deal`. Safe to deploy code first: the server allows extraction until this exists. |
+| 22 | `supabase_isolation_fixes.sql` | Closes the holes `scripts/isolation-test.js` found: profile org/role self-change, cross-org document storage, saved-deal inserts into other orgs, browser-callable `redeem_signup_invite`, analyst API keys and webhooks, member removal (`remove_member`), org-scoped deletes, plan edits, cross-org parent rows. Rerun the script after applying. |
 
 Files 1 through 12 are dated 2026-03; 13 through 15 are 2026-05; 16 through 18
 are 2026-06. Order within a date group is by dependency, not by timestamp.
