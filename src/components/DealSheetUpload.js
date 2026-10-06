@@ -29,6 +29,27 @@ const MAX_FILE_BYTES = 3 * 1024 * 1024;
 // "unsupported file type" from the server.
 const ATTACHABLE_NOT_PARSEABLE = ['.doc', '.docx', '.xls', '.xlsx'];
 
+// What extraction reads, keyed by extension. The extension decides, not the
+// browser's MIME guess: Windows reports .csv as an Excel type, which the
+// server would refuse. Anything else is stopped here, before the prompt,
+// the upload and the quota. The accept attribute only filters the picker;
+// drag and drop ignores it.
+const MEDIA_TYPES = {
+  '.pdf': 'application/pdf',
+  '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.webp': 'image/webp',
+  '.gif': 'image/gif',
+  '.txt': 'text/plain',
+  '.csv': 'text/csv',
+};
+
+function extensionOf(name) {
+  const i = name.lastIndexOf('.');
+  return i >= 0 ? name.slice(i).toLowerCase() : '';
+}
+
 // Field keys to short labels, for the conflict list and the summary.
 const FIELD_LABELS = {
   companyName: 'Company',
@@ -83,6 +104,15 @@ function displayValue(v) {
   return String(v);
 }
 
+export function emptyNotice(fileNames) {
+  if (fileNames.length === 0) return null;
+  if (fileNames.length === 1) {
+    return `${fileNames[0]} has no deal figures in it, so it was not added.`;
+  }
+  const list = `${fileNames.slice(0, -1).join(', ')} and ${fileNames[fileNames.length - 1]}`;
+  return `${list} have no deal figures in them, so they were not added.`;
+}
+
 function fileToBase64(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -108,6 +138,8 @@ export default function DealSheetUpload({ activeModule, onExtracted, onDocuments
   const [error, setError] = useState(null);
   const [dragging, setDragging] = useState(false);
   const [showDetail, setShowDetail] = useState(false);
+  // Not an error: documents that read fine but held no deal figures.
+  const [notice, setNotice] = useState(null);
 
   // Staged File objects, kept so they can be attached to the deal once it
   // has an id. Parsing alone used to throw the source documents away.
@@ -134,9 +166,15 @@ export default function DealSheetUpload({ activeModule, onExtracted, onDocuments
       return `Up to ${MAX_FILES} documents per deal. You have ${documents.length}.`;
     }
     for (const f of files) {
-      const ext = f.name.slice(f.name.lastIndexOf('.')).toLowerCase();
+      const ext = extensionOf(f.name);
       if (ATTACHABLE_NOT_PARSEABLE.includes(ext)) {
         return `${f.name} cannot be read for extraction. Word and Excel files can be attached to the deal after saving, but not parsed. Export to PDF to extract from it.`;
+      }
+      if (!MEDIA_TYPES[ext]) {
+        return `${f.name} cannot be read for extraction. Use a PDF, an image, or a text file. Export slides to PDF first.`;
+      }
+      if (f.size === 0) {
+        return `${f.name} is empty.`;
       }
       if (f.size > MAX_FILE_BYTES) {
         return `${f.name} is too large. Maximum is 3MB per document.`;
@@ -175,6 +213,7 @@ export default function DealSheetUpload({ activeModule, onExtracted, onDocuments
 
     setStatus('parsing');
     setError(null);
+    setNotice(null);
 
     try {
       let newDocs;
@@ -194,7 +233,7 @@ export default function DealSheetUpload({ activeModule, onExtracted, onDocuments
         const payload = await Promise.all(
           files.map(async (f) => ({
             name: f.name,
-            media_type: f.type || 'application/pdf',
+            media_type: MEDIA_TYPES[extensionOf(f.name)],
             data: await fileToBase64(f),
           })),
         );
@@ -213,7 +252,22 @@ export default function DealSheetUpload({ activeModule, onExtracted, onDocuments
         stagedFiles.current = [...stagedFiles.current, ...files];
       }
 
-      const allDocs = demo ? newDocs : [...documents, ...newDocs];
+      // A document that read cleanly and held nothing is not part of the
+      // deal: an agenda, a slide deck, the wrong attachment. Adding it would
+      // say "0 fields" and, on a new deal, clear the form for nothing. It
+      // is left out and named. A document that failed to read stays in,
+      // with its error, since the analyst may need to re-send it.
+      const empty = newDocs.filter((d) => !d.error && (!d.found || d.found.length === 0));
+      const kept = newDocs.filter((d) => !empty.includes(d));
+      setNotice(emptyNotice(empty.map((d) => d.fileName)));
+      stagedFiles.current = stagedFiles.current.filter((f) => !empty.some((d) => d.fileName === f.name));
+
+      if (kept.length === 0) {
+        setStatus(documents.length ? 'done' : 'idle');
+        return;
+      }
+
+      const allDocs = demo ? kept : [...documents, ...kept];
 
       publish(allDocs, mergeExtractions(allDocs));
       setStatus('done');
@@ -249,6 +303,7 @@ export default function DealSheetUpload({ activeModule, onExtracted, onDocuments
     publish([], null);
     setStatus('idle');
     setError(null);
+    setNotice(null);
   }
 
   if (!activeModule) return null;
@@ -456,6 +511,18 @@ export default function DealSheetUpload({ activeModule, onExtracted, onDocuments
               )}
             </div>
           )}
+        </div>
+      )}
+
+      {notice && status !== 'parsing' && (
+        <div className="mt-2 flex items-start justify-between gap-3">
+          <div className="text-[12px] text-amber-800 leading-snug">{notice}</div>
+          <button
+            onClick={() => setNotice(null)}
+            className="flex-shrink-0 px-2.5 py-1 rounded-lg text-[11px] font-semibold text-gray-700 bg-white border border-gray-200 hover:border-gray-300 transition-all"
+          >
+            Dismiss
+          </button>
         </div>
       )}
 

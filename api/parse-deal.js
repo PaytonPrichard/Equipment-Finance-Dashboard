@@ -11,7 +11,7 @@ const { handlePreflight } = require('../server-lib/cors');
 const { checkRateLimit } = require('../server-lib/rateLimit');
 const { checkPlanStatus } = require('../server-lib/planCheck');
 const { claimExtractionQuota, quotaExceededMessage } = require('../server-lib/extractionQuota');
-const { extractDealSheetSet, SUPPORTED_MODULES } = require('../server-lib/extract');
+const { extractDealSheetSet, SUPPORTED_MODULES, SUPPORTED_MEDIA_TYPES } = require('../server-lib/extract');
 
 // A deal arrives as a set: an application, financials, a quote, a cover
 // email. Four is enough for that and keeps the fan-out bounded.
@@ -74,6 +74,15 @@ module.exports = async function handler(req, res) {
   for (const file of files) {
     if (!file || typeof file !== 'object' || typeof file.data !== 'string' || typeof file.media_type !== 'string') {
       return res.status(400).json({ error: 'Each file needs { name, media_type, data (base64) }' });
+    }
+    // Checked here, before the quota claim, so a file the model will never
+    // see costs the user nothing. The client stops these too; this is for
+    // anything that gets past it.
+    if (!SUPPORTED_MEDIA_TYPES.includes(file.media_type)) {
+      const label = typeof file.name === 'string' && file.name ? file.name : 'A file';
+      return res.status(400).json({
+        error: `${label} cannot be read for extraction. Use a PDF, an image, or a text file.`,
+      });
     }
     if (file.data.length > MAX_FILE_BASE64_CHARS) {
       const label = typeof file.name === 'string' && file.name ? `"${file.name}"` : 'A file';
