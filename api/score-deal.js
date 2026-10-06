@@ -186,7 +186,9 @@ module.exports = async function handler(req, res) {
       .eq('id', id)
       .single();
     if (fetchErr || !existing) return res.status(404).json({ error: 'Deal not found' });
-    if (existing.org_id !== orgId) return res.status(403).json({ error: 'Deal does not belong to your organization' });
+    // Same answer as a missing deal, so the response never confirms that
+    // another firm's deal id exists.
+    if (existing.org_id !== orgId) return res.status(404).json({ error: 'Deal not found' });
 
     const assetClass = existing.asset_class || 'equipment_finance';
     const validation = validateInputs(assetClass, inputs);

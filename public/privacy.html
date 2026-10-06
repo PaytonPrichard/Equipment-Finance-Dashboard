@@ -30,7 +30,7 @@
   <a class="back" href="/">&larr; Back to Tranche</a>
   <div class="card">
     <h1>Privacy Policy</h1>
-    <p class="updated">Last updated 1 September 2026</p>
+    <p class="updated">Last updated 6 October 2026</p>
 
     <p>Tranche is a deal screening tool for commercial credit teams. This page explains
     what we store, why, and what we do not do with it. It is written to be read, not to
@@ -52,6 +52,30 @@
     and the application is served by Vercel. Both encrypt data in transit and at rest at the
     infrastructure level. Each organization's rows are isolated from every other
     organization's by database row-level security policies, not only by application code.</p>
+
+    <h2>Who can see your data</h2>
+    <ul>
+      <li><strong>Your organization.</strong> Deals, documents, memos, and activity are visible
+      to members of your organization and to no one else in Tranche. Some views, such as the
+      audit log, are limited by role. We test this by attempting cross-organization access
+      with test accounts.</li>
+      <li><strong>Tranche.</strong> We operate the service and hold administrative access to the
+      database. We look at customer data only to provide support you ask for, to investigate a
+      security or operational problem, or when the law requires it.</li>
+      <li><strong>Service providers.</strong> These companies process data on our behalf and only
+      to run Tranche:
+        <ul>
+          <li>Supabase: database, document storage, and sign-in.</li>
+          <li>Vercel: hosting and server functions. Its server logs can include request details
+          and error messages.</li>
+          <li>Anthropic: the contents of documents you upload for extraction. See below.</li>
+          <li>Resend: email delivery. Invitations and pipeline notifications pass through it,
+          including the deal names in stage-change emails.</li>
+          <li>Google Fonts: serves the typefaces. Your browser requests them from Google, which
+          sees your IP address but none of your data.</li>
+        </ul>
+      </li>
+    </ul>
 
     <h2>Document processing</h2>
     <p>When you upload a deal document, its contents are sent to Anthropic's API to extract

@@ -146,8 +146,8 @@ async function main() {
   const facB = await seed('facilities', { org_id: orgB, user_id: adminB.id, borrower_name: `B facility ${RUN}`, asset_class: 'equipment_finance', underwritten_snapshot: {} });
   const covB = facB && await seed('covenants', { org_id: orgB, facility_id: facB.id, name: 'Min DSCR', kind: 'financial', direction: 'min', flag_value: 1.25 });
   if (covB) await seed('covenant_tests', { org_id: orgB, facility_id: facB.id, covenant_id: covB.id, test_date: '2026-09-30', status: 'pass', created_by: adminB.id });
-  await seed('webhooks', { org_id: orgB, url: 'https://example.com/isolation', secret: 'isolation', events: ['deal.created'] });
-  await seed('api_keys', { org_id: orgB, name: 'isolation', key_prefix: 'iso', key_hash: crypto.randomBytes(16).toString('hex'), created_by: adminB.id });
+  const hookB = await seed('webhooks', { org_id: orgB, url: 'https://example.com/isolation', secret: 'isolation', events: ['deal.created'] });
+  const keyB = await seed('api_keys', { org_id: orgB, name: 'isolation', key_prefix: 'iso', key_hash: crypto.randomBytes(16).toString('hex'), created_by: adminB.id });
   await seed('invites', { org_id: orgB, email: 'isolation-invitee@example.com', role: 'analyst', invite_code: `ISO${RUN}`.toUpperCase(), created_by: adminB.id });
   await svc.from('user_preferences').upsert({ user_id: adminB.id, draft_inputs: { inputs } });
 
@@ -360,6 +360,130 @@ async function main() {
     record('storage', "A writes into B's folder", !!ow.error, ow.error ? 'denied' : 'WRITTEN');
     const anonDl = await anonClient().storage.from(BUCKET).download(objectPath);
     record('storage', 'anonymous download of a document', !!anonDl.error);
+  }
+
+  // ---- Other doors into the same data ----
+  const API = process.env.ISOLATION_API === 'off' ? null : (process.env.ISOLATION_API || 'https://www.gettranche.app');
+  const { data: { session: sessA } } = await adminA.client.auth.getSession();
+  const tokenA = sessA.access_token;
+
+  // GraphQL serves the same tables. It must never return more than REST.
+  {
+    const gql = (query) => fetch(`${URL_}/graphql/v1`, {
+      method: 'POST',
+      headers: { apikey: ANON, Authorization: `Bearer ${tokenA}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query }),
+    }).then((r) => r.json()).catch(() => null);
+    const schema = await gql('{ __schema { queryType { fields { name } } } }');
+    const collections = (schema?.data?.__schema?.queryType?.fields || []).map((f) => f.name).filter((n) => n.endsWith('Collection'));
+    if (!collections.length) {
+      note('graphql', 'GraphQL exposes no collections', JSON.stringify(schema?.errors?.[0]?.message || 'none').slice(0, 60));
+    }
+    for (const col of collections) {
+      const table = col.replace(/Collection$/, '');
+      const g = await gql(`{ ${col}(first: 1000) { edges { node { nodeId } } } }`);
+      const viaGraphql = g?.data?.[col]?.edges?.length ?? 0;
+      const { data: viaRest } = await adminA.client.from(table).select('*').limit(1000);
+      record('graphql', `A reads ${table} via GraphQL`, viaGraphql <= (viaRest || []).length, `${viaGraphql} via GraphQL, ${(viaRest || []).length} via REST`);
+    }
+  }
+
+  // Embedded joins from A's own rows must not reach B's.
+  {
+    const { data: em, error } = await adminA.client.from('organizations').select('id, profiles(id, org_id), pipeline_deals(id, org_id)');
+    if (error) note('embed', 'organization joins', error.message.slice(0, 60));
+    const nested = (em || []).flatMap((o) => [...(o.profiles || []), ...(o.pipeline_deals || [])]);
+    record('embed', 'A joins organizations to profiles and deals', nested.every((r) => r.org_id === orgA), `${nested.length} nested rows`);
+    const { data: em2 } = await adminA.client.from('facilities').select('id, covenants(id, org_id), covenant_tests(id, org_id)');
+    const nested2 = (em2 || []).flatMap((f) => [...(f.covenants || []), ...(f.covenant_tests || [])]);
+    record('embed', 'A joins facilities to covenants and tests', nested2.every((r) => r.org_id === orgA), `${nested2.length} nested rows`);
+  }
+
+  // Live updates: A subscribes, B's rows change, A must hear nothing.
+  {
+    const events = [];
+    const status = await new Promise((resolve) => {
+      const t = setTimeout(() => resolve('TIMED_OUT'), 8000);
+      adminA.client.channel(`iso-${RUN}`)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'pipeline_deals' }, (p) => events.push(p))
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'audit_log' }, (p) => events.push(p))
+        .subscribe((st) => { if (st === 'SUBSCRIBED' || st === 'CHANNEL_ERROR') { clearTimeout(t); resolve(st); } });
+    });
+    await svc.from('pipeline_deals').insert({ org_id: orgB, user_id: adminB.id, name: `B realtime ${RUN}`, inputs });
+    await svc.from('audit_log').insert({ org_id: orgB, user_id: adminB.id, action: 'create', entity_type: 'pipeline_deal' });
+    await new Promise((r) => setTimeout(r, 4000));
+    const foreign = events.filter((e) => (e.new && e.new.org_id && e.new.org_id !== orgA) || (e.old && e.old.org_id && e.old.org_id !== orgA));
+    record('realtime', "A's subscription receives B's changes", foreign.length === 0, `subscription ${status}, ${events.length} events`);
+    await adminA.client.removeAllChannels();
+  }
+
+  // Error messages must not confirm that another firm's row exists.
+  if (dealB) {
+    const fac = (dealId) => adminA.client.from('facilities').insert({ org_id: orgA, user_id: adminA.id, borrower_name: 'probe', asset_class: 'equipment_finance', underwritten_snapshot: {}, pipeline_deal_id: dealId });
+    const realB = await fac(dealB.id);
+    const missing = await fac(2147483000);
+    await svc.from('facilities').delete().eq('org_id', orgA).eq('borrower_name', 'probe');
+    record('oracle', "facility error reveals whether B's deal exists", (realB.error?.message || 'ok') === (missing.error?.message || 'ok'), realB.error ? 'B id refused' : 'B id ACCEPTED');
+  }
+
+  if (API && dealB) {
+    // /api/score-deal: A's token, B's deal.
+    const scoreDeal = (q, method, body) => fetch(`${API}/api/score-deal${q}`, {
+      method,
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${tokenA}` },
+      body: JSON.stringify(body),
+    });
+    const sd = await scoreDeal(`?id=${dealB.id}`, 'PATCH', { inputs: { ...inputs, annualRevenue: 1 } });
+    const { data: dAfter } = await svc.from('pipeline_deals').select('inputs').eq('id', dealB.id).single();
+    record('api', "A rescores B's deal via /api/score-deal", dAfter.inputs.annualRevenue === inputs.annualRevenue, `HTTP ${sd.status}`);
+    const sdMissing = await scoreDeal('?id=2147483000', 'PATCH', { inputs });
+    record('oracle', "/api/score-deal answers the same for B's deal and a missing one", sd.status === sdMissing.status, `${sd.status} vs ${sdMissing.status}`);
+    // A complete, valid deal, so the request reaches the org check
+    // instead of stopping at input validation.
+    const validInputs = {
+      companyName: `A posts into B ${RUN}`, yearsInBusiness: 10, annualRevenue: 20000000, priorYearRevenue: 0,
+      ebitda: 3000000, priorYearEbitda: 0, totalExistingDebt: 5000000, actualAnnualDebtService: 0,
+      maintenanceCapex: 0, cashOnHand: 1000000, availableLiquidity: 0, industrySector: 'Manufacturing',
+      creditRating: 'Adequate', equipmentType: 'Heavy Machinery', equipmentCondition: 'New',
+      equipmentCost: 2000000, downPayment: 200000, financingType: 'EFA', usefulLife: 10, loanTerm: 60, essentialUse: true,
+    };
+    const sp = await scoreDeal('', 'POST', { name: `A posts into B ${RUN}`, inputs: validInputs, org_id: orgB, asset_class: 'equipment_finance' });
+    const { data: landed } = await svc.from('pipeline_deals').select('org_id').eq('name', `A posts into B ${RUN}`);
+    record('api', 'A creates a deal in B via /api/score-deal', (landed || []).every((d) => d.org_id === orgA), `HTTP ${sp.status}, ${(landed || []).length} created`);
+
+    // /api/v1 with a real API key for A.
+    const keyA = `trn_${crypto.randomBytes(24).toString('hex')}`;
+    await svc.from('api_keys').insert({ org_id: orgA, name: 'isolation', key_prefix: keyA.slice(0, 12), key_hash: crypto.createHash('sha256').update(keyA).digest('hex'), created_by: adminA.id });
+    const v1 = (q, init = {}) => fetch(`${API}/api/v1?${q}`, { ...init, headers: { 'Content-Type': 'application/json', 'X-API-Key': keyA, ...(init.headers || {}) } });
+    const g1 = await v1(`resource=deals&id=${dealB.id}`);
+    const g1Missing = await v1('resource=deals&id=2147483000');
+    record('api', "A's API key reads B's deal by id", g1.status !== 200, `HTTP ${g1.status}`);
+    record('oracle', "/api/v1 answers the same for B's deal and a missing one", g1.status === g1Missing.status, `${g1.status} vs ${g1Missing.status}`);
+    const list = await (await v1('resource=deals&limit=200')).json().catch(() => ({}));
+    record('api', "A's API key lists deals", !(list.deals || []).some((d) => d.id === dealB.id || /^B /.test(d.name || '')), `${(list.deals || []).length} listed`);
+    await v1(`resource=deals&id=${dealB.id}`, { method: 'PATCH', body: JSON.stringify({ stage: 'Declined', notes: 'tampered' }) });
+    const { data: stB } = await svc.from('pipeline_deals').select('stage, notes').eq('id', dealB.id).single();
+    record('api', "A's API key changes B's deal", stB.notes !== 'tampered' && stB.stage === dealB.stage);
+
+    // /api/v1 keys and webhooks with A's admin session.
+    const jw = (q, init = {}) => fetch(`${API}/api/v1?${q}`, { ...init, headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${tokenA}`, ...(init.headers || {}) } });
+    const keys = await (await jw('resource=keys')).json().catch(() => ({}));
+    const keyList = Array.isArray(keys) ? keys : (keys.keys || []);
+    record('api', "A's admin lists API keys", !keyList.some((k) => keyB && k.id === keyB.id), `${keyList.length} listed`);
+    if (keyB) {
+      await jw(`resource=keys&id=${keyB.id}`, { method: 'DELETE' });
+      const { data: kb } = await svc.from('api_keys').select('revoked_at').eq('id', keyB.id).single();
+      record('api', "A's admin revokes B's API key", kb && kb.revoked_at === null);
+    }
+    const hooks = await (await jw('resource=webhooks')).json().catch(() => ({}));
+    const hookList = Array.isArray(hooks) ? hooks : (hooks.webhooks || []);
+    record('api', "A's admin lists webhooks", !hookList.some((h) => hookB && h.id === hookB.id), `${hookList.length} listed`);
+    if (hookB) {
+      await jw(`resource=webhooks&id=${hookB.id}`, { method: 'PATCH', body: JSON.stringify({ url: 'https://example.com/stolen' }) });
+      await jw(`resource=webhooks&id=${hookB.id}`, { method: 'DELETE' });
+      const { data: hb } = await svc.from('webhooks').select('url').eq('id', hookB.id).maybeSingle();
+      record('api', "A's admin edits or deletes B's webhook", !!hb && hb.url === hookB.url);
+    }
   }
 
   // ---- Anonymous ----

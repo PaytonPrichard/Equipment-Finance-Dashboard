@@ -98,8 +98,14 @@ CREATE POLICY "profiles_select" ON public.profiles
 
 
 -- ---- 2. Documents: a firm sees only its own folder ----
--- Paths are {org_id}/... for deal and facility documents alike. Every
--- existing policy that mentions the bucket is dropped and replaced.
+-- Paths are {org_id}/... for deal and facility documents alike.
+--
+-- Every storage policy except the four below is dropped, whatever its
+-- name or condition. The first version dropped only policies mentioning
+-- the bucket, and three dashboard-made ones ("Authenticated users can
+-- download fm315j_0" and its upload and delete twins, condition `true`,
+-- no bucket check) survived and kept every firm's files open. Policies
+-- combine with OR, so one permissive survivor defeats the rest.
 
 DO $$
 DECLARE p RECORD;
@@ -107,11 +113,16 @@ BEGIN
   FOR p IN
     SELECT policyname FROM pg_policies
     WHERE schemaname = 'storage' AND tablename = 'objects'
-      AND (COALESCE(qual, '') || COALESCE(with_check, '')) ILIKE '%deal-documents%'
+      AND policyname NOT LIKE 'deal_documents_org_%'
   LOOP
     EXECUTE format('DROP POLICY %I ON storage.objects', p.policyname);
   END LOOP;
 END $$;
+
+DROP POLICY IF EXISTS "deal_documents_org_select" ON storage.objects;
+DROP POLICY IF EXISTS "deal_documents_org_insert" ON storage.objects;
+DROP POLICY IF EXISTS "deal_documents_org_update" ON storage.objects;
+DROP POLICY IF EXISTS "deal_documents_org_delete" ON storage.objects;
 
 UPDATE storage.buckets SET public = false WHERE id = 'deal-documents';
 

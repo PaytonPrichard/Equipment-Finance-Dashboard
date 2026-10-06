@@ -1,0 +1,67 @@
+# Data isolation between firms is the property Tranche cannot get wrong.
+# This runs scripts/isolation-test.js against production: nightly, after
+# every successful production deploy, and on demand. A leak fails the run,
+# and GitHub emails whoever owns the workflow.
+#
+# Needs three repository secrets (Settings > Secrets and variables >
+# Actions): SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY.
+# The service key bypasses all database security, so only people trusted
+# with production should have write access to this repository.
+
+name: Isolation test
+
+on:
+  schedule:
+    - cron: '17 7 * * *' # 07:17 UTC daily
+  deployment_status:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: isolation-test
+  cancel-in-progress: false
+
+jobs:
+  isolation:
+    # On deploy events, only a successful production deploy counts.
+    if: >-
+      github.event_name != 'deployment_status' ||
+      (github.event.deployment_status.state == 'success' &&
+       github.event.deployment.environment == 'Production')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check secrets are set
+        id: secrets
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+        run: |
+          if [ -z "$SUPABASE_URL" ]; then
+            echo "Isolation secrets are not set; skipping. See the header of this file."
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@v4
+        if: steps.secrets.outputs.ready == 'true'
+
+      - uses: actions/setup-node@v4
+        if: steps.secrets.outputs.ready == 'true'
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        if: steps.secrets.outputs.ready == 'true'
+        run: npm ci --ignore-scripts --no-audit --no-fund
+
+      - name: Run isolation test
+        if: steps.secrets.outputs.ready == 'true'
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          REACT_APP_SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          ISOLATION_API: https://www.gettranche.app
+        run: node scripts/isolation-test.js
