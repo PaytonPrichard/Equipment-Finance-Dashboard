@@ -11,7 +11,7 @@ export const FORM_SCHEMA = {
       title: 'Borrower Profile',
       icon: 'user',
       fields: [
-        { key: 'companyName', label: 'Company Name', type: 'company-search', tip: 'Start typing to search the company database.' },
+        { key: 'companyName', label: 'Company Name', type: 'company-search', tip: 'Search your pipeline or type a new company name. Selecting a match fills in its financials.' },
         { key: 'annualRevenue', label: 'Annual Revenue', type: 'currency', placeholder: '50,000,000', required: true, tip: 'Total annual revenue from most recent fiscal year.', half: true },
         { key: 'priorYearRevenue', label: 'Prior Year Revenue', type: 'currency', placeholder: 'Optional', tip: 'Revenue from the prior fiscal year. Used to compute year-over-year growth trend.', half: true },
         { key: 'ebitda', label: 'EBITDA', type: 'currency', placeholder: '8,000,000', required: true, tip: 'Primary measure of cash flow for debt service.', half: true },

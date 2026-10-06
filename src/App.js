@@ -257,6 +257,12 @@ function AuthenticatedApp({ profile, user }) {
   const { signOut: authSignOut } = useAuth();
   const { addToast } = useToast();
   const confirm = useConfirm();
+  // Sample data lives in the demo and nowhere else. A real account holds
+  // only the firm's own work: no example deal in the form, no fictional
+  // "portfolio history" behind comparables, benchmarks or performance.
+  // Samples there could be saved as real deals, and invented history read
+  // as evidence in a credit tool.
+  const demo = isDemoMode();
   const choose = useChoice();
   const draftSaveTimer = useRef(null);
   const { plan, maxUsers, isExpired, isExpiringSoon, daysRemaining } = useOrgPlan();
@@ -379,7 +385,8 @@ function AuthenticatedApp({ profile, user }) {
   // ?tab= opens a chosen screen directly, so a demo link can land on the
   // pipeline or the memo rather than always on an empty New Deal form.
   const [activeTab, setActiveTab] = useState(() => {
-    const ALLOWED = ['screening', 'batch', 'pipeline', 'monitoring', 'dashboard', 'compare', 'historical', 'audit'];
+    const ALLOWED = ['screening', 'batch', 'pipeline', 'monitoring', 'dashboard', 'compare', 'audit'];
+    if (isDemoMode()) ALLOWED.push('historical');
     try {
       const requested = new URLSearchParams(window.location.search).get('tab');
       return requested && ALLOWED.includes(requested) ? requested : 'screening';
@@ -1238,8 +1245,20 @@ function AuthenticatedApp({ profile, user }) {
                       </div>
                     ))}
                   </div>
-                  {/* Try Example buttons */}
-                  {isEquipment && exampleDeals.length > 1 && (
+                  {/* Try Example buttons: demo only. A real account gets a
+                      link to the demo instead, in a new tab, so its own
+                      form never holds a sample. */}
+                  {!demo && (
+                    <a
+                      href="/?demo=1"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-6 text-sm text-gray-500 hover:text-gray-800 underline underline-offset-2 transition-colors"
+                    >
+                      See it with a sample deal
+                    </a>
+                  )}
+                  {demo && isEquipment && exampleDeals.length > 1 && (
                     <div className="mt-6 flex items-center gap-3">
                       <button
                         onClick={() => loadExample(exampleDeals.find(d => d.id === 'strong') || exampleDeals[0])}
@@ -1683,12 +1702,19 @@ function AuthenticatedApp({ profile, user }) {
                         <div id="sec-whatif" className="scroll-mt-[150px]">
                           <WhatIfPanel inputs={inputs} metrics={metrics} riskScore={riskScore} sofr={sofr} />
                         </div>
-                        <div id="sec-comps" className="scroll-mt-[150px]">
-                          <ComparableDeals inputs={inputs} metrics={metrics} riskScore={riskScore} sofr={sofr} />
-                        </div>
-                        <div id="sec-benchmarks" className="scroll-mt-[150px]">
-                          <IndustryBenchmarks inputs={inputs} metrics={metrics} riskScore={riskScore} sofr={sofr} />
-                        </div>
+                        {/* Built from src/data/historicalDeals.js, which is
+                            fictional. Shown only in the demo until a firm's
+                            own outcome history exists to compare against. */}
+                        {demo && (
+                          <>
+                            <div id="sec-comps" className="scroll-mt-[150px]">
+                              <ComparableDeals inputs={inputs} metrics={metrics} riskScore={riskScore} sofr={sofr} />
+                            </div>
+                            <div id="sec-benchmarks" className="scroll-mt-[150px]">
+                              <IndustryBenchmarks inputs={inputs} metrics={metrics} riskScore={riskScore} sofr={sofr} />
+                            </div>
+                          </>
+                        )}
                         <div id="sec-sensitivity" className="scroll-mt-[150px]">
                           <SensitivityChart inputs={inputs} sofr={sofr} />
                         </div>
@@ -1763,9 +1789,9 @@ function AuthenticatedApp({ profile, user }) {
                 {[
                   { id: 'dashboard', label: 'Overview' },
                   { id: 'compare', label: 'Compare' },
-                  { id: 'historical', label: 'Performance' },
+                  { id: 'historical', label: 'Performance', demoOnly: true },
                   { id: 'audit', label: 'Audit Log' },
-                ].map((sub) => (
+                ].filter((sub) => demo || !sub.demoOnly).map((sub) => (
                   <button
                     key={sub.id}
                     onClick={() => setActiveTab(sub.id)}
@@ -1783,13 +1809,13 @@ function AuthenticatedApp({ profile, user }) {
               {activeTab === 'dashboard' && <PipelineDashboard />}
               {activeTab === 'compare' && (
                 <DealComparison
-                  exampleDeals={exampleDeals}
+                  exampleDeals={demo ? exampleDeals : []}
                   savedDeals={savedDealsList}
-                  historicalDeals={historicalDeals}
+                  historicalDeals={demo ? historicalDeals : []}
                   sofr={sofr}
                 />
               )}
-              {activeTab === 'historical' && (
+              {demo && activeTab === 'historical' && (
                 <div className="space-y-8">
                   <PortfolioAnalytics scoredDeals={allHistorical} />
                   <HistoricalDealsTable deals={historicalDeals} sofr={sofr} />
@@ -1870,7 +1896,7 @@ function TutorialWelcomeHandler({ loadExample, exampleDeals, addToast }) {
     <WelcomeTutorial
       onComplete={() => {
         tutorial.completeWelcome();
-        if (exampleDeals?.length > 0) {
+        if (isDemoMode() && exampleDeals?.length > 0) {
           loadExample(exampleDeals[0]);
           addToast('Example deal loaded. Explore the results below.', 'info');
         }

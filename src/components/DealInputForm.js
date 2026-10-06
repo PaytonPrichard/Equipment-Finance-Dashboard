@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import companyProfiles from '../data/companyProfiles';
+import { isDemoMode } from '../lib/demoMode';
 import { formatCurrencyFull } from '../utils/format';
 import TutorialBeacon from './TutorialBeacon';
 import { getMissingFields, generateRequestInfoEmail } from '../lib/incompleteFields';
@@ -118,8 +119,12 @@ function CompanySearch({ value, onSelect, onManualChange, tip, pipelineDeals }) 
             creditRating: d.inputs?.creditRating || 'Not Rated',
             source: 'Pipeline',
           }));
-        const staticMatches = companyProfiles
-          .filter(c => c.companyName.toLowerCase().includes(q));
+        // The static profiles are fictional companies with made-up
+        // financials. Demo only: in a real account, selecting one would
+        // fill a real deal with invented numbers.
+        const staticMatches = isDemoMode()
+          ? companyProfiles.filter(c => c.companyName.toLowerCase().includes(q))
+          : [];
         // Deduplicate by company name
         const seen = new Set();
         return [...pipelineMatches, ...staticMatches].filter(c => {
