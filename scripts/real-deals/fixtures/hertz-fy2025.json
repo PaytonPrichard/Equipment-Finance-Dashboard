@@ -1,0 +1,149 @@
+{
+  "case": "hertz-fy2025",
+  "assetClass": "equipment_finance",
+  "borrower": {
+    "name": "Hertz Global Holdings, Inc.",
+    "ticker": "HTZ",
+    "cik": 1657853
+  },
+  "period": {
+    "form": "10-K",
+    "fiscalYearEnd": "2025-12-31",
+    "companyFactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001657853.json",
+    "fetchedAt": "2026-10-07"
+  },
+  "context": "Car rental. Net loss of $747M in FY2025. Most debt is vehicle ABS issued by a bankruptcy-remote subsidiary, so the unit of analysis is a credit decision, not a lookup.",
+  "figures": {
+    "revenue": {
+      "tags": [
+        "us-gaap:Revenues"
+      ],
+      "sources": [
+        {
+          "tag": "us-gaap:Revenues",
+          "val": 8504000000,
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "accn": "0001657853-26-000008",
+          "form": "10-K",
+          "filed": "2026-02-26",
+          "url": "https://www.sec.gov/Archives/edgar/data/1657853/000165785326000008/"
+        }
+      ],
+      "value": 8504000000
+    },
+    "ebitda": {
+      "manual": {
+        "value": null,
+        "cite": "",
+        "readBy": ""
+      },
+      "note": "Manual, and a definition choice. Hertz reports no OperatingIncomeLoss. Option A: Adjusted Corporate EBITDA (non-GAAP, after vehicle depreciation and vehicle interest, from the 10-K MD&A). Option B: build from pre-tax loss plus non-vehicle interest and non-vehicle D&A. EBITDA before vehicle depreciation overstates capacity, because fleet depreciation is a recurring cash-like cost."
+    },
+    "totalDebt": {
+      "tags": [
+        "us-gaap:DebtAndCapitalLeaseObligations"
+      ],
+      "note": "Includes non-recourse vehicle ABS. If you use Corporate EBITDA, pair it with non-vehicle debt instead (manual) so numerator and denominator match.",
+      "sources": [
+        {
+          "tag": "us-gaap:DebtAndCapitalLeaseObligations",
+          "val": 17054000000,
+          "start": null,
+          "end": "2025-12-31",
+          "accn": "0001657853-26-000008",
+          "form": "10-K",
+          "filed": "2026-02-26",
+          "url": "https://www.sec.gov/Archives/edgar/data/1657853/000165785326000008/"
+        }
+      ],
+      "value": 17054000000
+    },
+    "interestPaid": {
+      "manual": {
+        "value": null,
+        "cite": "",
+        "readBy": ""
+      },
+      "note": "Manual. No cash-interest-paid tag for FY2025. InterestExpenseOperating ($1,077M) is expense, not cash paid. Read from the supplemental cash-flow disclosure."
+    },
+    "currentMaturities": {
+      "tags": [
+        "us-gaap:LongTermDebtMaturitiesRepaymentsOfPrincipalInNextTwelveMonths"
+      ],
+      "sources": [
+        {
+          "tag": "us-gaap:LongTermDebtMaturitiesRepaymentsOfPrincipalInNextTwelveMonths",
+          "val": 3185000000,
+          "start": null,
+          "end": "2025-12-31",
+          "accn": "0001657853-26-000008",
+          "form": "10-K",
+          "filed": "2026-02-26",
+          "url": "https://www.sec.gov/Archives/edgar/data/1657853/000165785326000008/"
+        }
+      ],
+      "value": 3185000000
+    },
+    "yearsInBusiness": {
+      "manual": {
+        "value": null,
+        "cite": "",
+        "readBy": ""
+      },
+      "note": "Years since founding or first operations, from Item 1 of the 10-K. Cite the sentence."
+    }
+  },
+  "assumptions": {
+    "industrySector": {
+      "value": null,
+      "why": ""
+    },
+    "creditRating": {
+      "value": null,
+      "why": ""
+    },
+    "equipmentType": {
+      "value": null,
+      "why": ""
+    },
+    "equipmentCondition": {
+      "value": null,
+      "why": ""
+    },
+    "equipmentCost": {
+      "value": null,
+      "why": ""
+    },
+    "downPayment": {
+      "value": null,
+      "why": ""
+    },
+    "financingType": {
+      "value": null,
+      "why": ""
+    },
+    "usefulLife": {
+      "value": null,
+      "why": ""
+    },
+    "loanTerm": {
+      "value": null,
+      "why": ""
+    },
+    "essentialUse": {
+      "value": null,
+      "why": ""
+    },
+    "maintenanceCapex": {
+      "value": null,
+      "why": ""
+    }
+  },
+  "expected": {
+    "verdict": null,
+    "reason": "",
+    "writtenOn": null
+  },
+  "discussion": ""
+}

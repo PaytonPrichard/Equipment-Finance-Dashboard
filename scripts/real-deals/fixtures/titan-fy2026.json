@@ -1,0 +1,186 @@
+{
+  "case": "titan-fy2026",
+  "assetClass": "equipment_finance",
+  "borrower": {
+    "name": "Titan Machinery Inc.",
+    "ticker": "TITN",
+    "cik": 1409171
+  },
+  "period": {
+    "form": "10-K",
+    "fiscalYearEnd": "2026-01-31",
+    "companyFactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001409171.json",
+    "fetchedAt": "2026-10-07"
+  },
+  "context": "CNH equipment dealer (agriculture, construction). Net loss in FY2026 on an inventory reduction push.",
+  "figures": {
+    "revenue": {
+      "tags": [
+        "us-gaap:Revenues"
+      ],
+      "sources": [
+        {
+          "tag": "us-gaap:Revenues",
+          "val": 2427107000,
+          "start": "2025-02-01",
+          "end": "2026-01-31",
+          "accn": "0001628280-26-022376",
+          "form": "10-K",
+          "filed": "2026-03-31",
+          "url": "https://www.sec.gov/Archives/edgar/data/1409171/000162828026022376/"
+        }
+      ],
+      "value": 2427107000
+    },
+    "operatingIncome": {
+      "tags": [
+        "us-gaap:OperatingIncomeLoss"
+      ],
+      "note": "Floorplan interest sits inside operating expenses for a dealer, so EBITDA built from this is already after floorplan interest.",
+      "sources": [
+        {
+          "tag": "us-gaap:OperatingIncomeLoss",
+          "val": -6713000,
+          "start": "2025-02-01",
+          "end": "2026-01-31",
+          "accn": "0001628280-26-022376",
+          "form": "10-K",
+          "filed": "2026-03-31",
+          "url": "https://www.sec.gov/Archives/edgar/data/1409171/000162828026022376/"
+        }
+      ],
+      "value": -6713000
+    },
+    "depreciationAmortization": {
+      "tags": [
+        "us-gaap:DepreciationDepletionAndAmortization"
+      ],
+      "sources": [
+        {
+          "tag": "us-gaap:DepreciationDepletionAndAmortization",
+          "val": 37565000,
+          "start": "2025-02-01",
+          "end": "2026-01-31",
+          "accn": "0001628280-26-022376",
+          "form": "10-K",
+          "filed": "2026-03-31",
+          "url": "https://www.sec.gov/Archives/edgar/data/1409171/000162828026022376/"
+        }
+      ],
+      "value": 37565000
+    },
+    "totalDebt": {
+      "manual": {
+        "value": null,
+        "cite": "",
+        "readBy": ""
+      },
+      "note": "Manual. XBRL LongTermDebt ($180.0M) excludes floorplan payables, which are the bulk of a dealer's debt and are not in companyfacts. Read floorplan payable (interest-bearing and non-interest-bearing) plus long-term debt from the balance sheet. Whether to count non-interest-bearing floorplan is your call."
+    },
+    "interestPaid": {
+      "tags": [
+        "us-gaap:InterestPaidNet"
+      ],
+      "note": "Cash interest paid, includes floorplan interest.",
+      "sources": [
+        {
+          "tag": "us-gaap:InterestPaidNet",
+          "val": 42880000,
+          "start": "2025-02-01",
+          "end": "2026-01-31",
+          "accn": "0001628280-26-022376",
+          "form": "10-K",
+          "filed": "2026-03-31",
+          "url": "https://www.sec.gov/Archives/edgar/data/1409171/000162828026022376/"
+        }
+      ],
+      "value": 42880000
+    },
+    "currentMaturities": {
+      "tags": [
+        "us-gaap:LongTermDebtCurrent"
+      ],
+      "sources": [
+        {
+          "tag": "us-gaap:LongTermDebtCurrent",
+          "val": 21410000,
+          "start": null,
+          "end": "2026-01-31",
+          "accn": "0001628280-26-022376",
+          "form": "10-K",
+          "filed": "2026-03-31",
+          "url": "https://www.sec.gov/Archives/edgar/data/1409171/000162828026022376/"
+        }
+      ],
+      "value": 21410000
+    },
+    "totalCapex": {
+      "manual": {
+        "value": null,
+        "cite": "",
+        "readBy": ""
+      },
+      "note": "Manual. PaymentsToAcquirePropertyPlantAndEquipment is not tagged for FY2026. Read from the cash-flow statement."
+    },
+    "yearsInBusiness": {
+      "manual": {
+        "value": null,
+        "cite": "",
+        "readBy": ""
+      },
+      "note": "Years since founding or first operations, from Item 1 of the 10-K. Cite the sentence."
+    }
+  },
+  "assumptions": {
+    "industrySector": {
+      "value": null,
+      "why": ""
+    },
+    "creditRating": {
+      "value": null,
+      "why": ""
+    },
+    "equipmentType": {
+      "value": null,
+      "why": ""
+    },
+    "equipmentCondition": {
+      "value": null,
+      "why": ""
+    },
+    "equipmentCost": {
+      "value": null,
+      "why": ""
+    },
+    "downPayment": {
+      "value": null,
+      "why": ""
+    },
+    "financingType": {
+      "value": null,
+      "why": ""
+    },
+    "usefulLife": {
+      "value": null,
+      "why": ""
+    },
+    "loanTerm": {
+      "value": null,
+      "why": ""
+    },
+    "essentialUse": {
+      "value": null,
+      "why": ""
+    },
+    "maintenanceCapex": {
+      "value": null,
+      "why": ""
+    }
+  },
+  "expected": {
+    "verdict": null,
+    "reason": "",
+    "writtenOn": null
+  },
+  "discussion": ""
+}

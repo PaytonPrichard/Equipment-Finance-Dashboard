@@ -1,0 +1,175 @@
+{
+  "case": "hee-fy2024",
+  "assetClass": "equipment_finance",
+  "borrower": {
+    "name": "H&E Equipment Services, Inc.",
+    "ticker": "HEES",
+    "cik": 1339605
+  },
+  "period": {
+    "form": "10-K",
+    "fiscalYearEnd": "2024-12-31",
+    "companyFactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001339605.json",
+    "fetchedAt": "2026-10-07"
+  },
+  "context": "Equipment rental. Acquired by Herc Holdings in 2025, so FY2024 is the last 10-K. Treat this as a screen dated February 2025.",
+  "figures": {
+    "revenue": {
+      "tags": [
+        "us-gaap:Revenues"
+      ],
+      "sources": [
+        {
+          "tag": "us-gaap:Revenues",
+          "val": 1516583000,
+          "start": "2024-01-01",
+          "end": "2024-12-31",
+          "accn": "0000950170-25-024867",
+          "form": "10-K",
+          "filed": "2025-02-21",
+          "url": "https://www.sec.gov/Archives/edgar/data/1339605/000095017025024867/"
+        }
+      ],
+      "value": 1516583000
+    },
+    "operatingIncome": {
+      "tags": [
+        "us-gaap:OperatingIncomeLoss"
+      ],
+      "sources": [
+        {
+          "tag": "us-gaap:OperatingIncomeLoss",
+          "val": 229311000,
+          "start": "2024-01-01",
+          "end": "2024-12-31",
+          "accn": "0000950170-25-024867",
+          "form": "10-K",
+          "filed": "2025-02-21",
+          "url": "https://www.sec.gov/Archives/edgar/data/1339605/000095017025024867/"
+        }
+      ],
+      "value": 229311000
+    },
+    "depreciationAmortization": {
+      "manual": {
+        "value": null,
+        "cite": "",
+        "readBy": ""
+      },
+      "note": "Manual. XBRL DepreciationDepletionAndAmortization is $48.0M, which looks like non-rental D&A only. Rental fleet depreciation is reported separately and is not in companyfacts. Read total D&A from the cash-flow statement."
+    },
+    "totalDebt": {
+      "manual": {
+        "value": null,
+        "cite": "",
+        "readBy": ""
+      },
+      "note": "Manual. XBRL SecuredDebt ($199.3M) is the ABL only. Add the senior unsecured notes and finance leases from the debt note."
+    },
+    "interestPaid": {
+      "tags": [
+        "us-gaap:InterestPaidNet"
+      ],
+      "sources": [
+        {
+          "tag": "us-gaap:InterestPaidNet",
+          "val": 70617000,
+          "start": "2024-01-01",
+          "end": "2024-12-31",
+          "accn": "0000950170-25-024867",
+          "form": "10-K",
+          "filed": "2025-02-21",
+          "url": "https://www.sec.gov/Archives/edgar/data/1339605/000095017025024867/"
+        }
+      ],
+      "value": 70617000
+    },
+    "currentMaturities": {
+      "manual": {
+        "value": null,
+        "cite": "",
+        "readBy": ""
+      },
+      "note": "Manual. Principal due within twelve months, from the debt maturity table. May be zero."
+    },
+    "totalCapex": {
+      "tags": [
+        "us-gaap:PaymentsToAcquirePropertyPlantAndEquipment"
+      ],
+      "note": "Non-rental PP&E only. Rental fleet purchases are a separate cash-flow line.",
+      "sources": [
+        {
+          "tag": "us-gaap:PaymentsToAcquirePropertyPlantAndEquipment",
+          "val": 106616000,
+          "start": "2024-01-01",
+          "end": "2024-12-31",
+          "accn": "0000950170-25-024867",
+          "form": "10-K",
+          "filed": "2025-02-21",
+          "url": "https://www.sec.gov/Archives/edgar/data/1339605/000095017025024867/"
+        }
+      ],
+      "value": 106616000
+    },
+    "yearsInBusiness": {
+      "manual": {
+        "value": null,
+        "cite": "",
+        "readBy": ""
+      },
+      "note": "Years since founding or first operations, from Item 1 of the 10-K. Cite the sentence."
+    }
+  },
+  "assumptions": {
+    "industrySector": {
+      "value": null,
+      "why": ""
+    },
+    "creditRating": {
+      "value": null,
+      "why": ""
+    },
+    "equipmentType": {
+      "value": null,
+      "why": ""
+    },
+    "equipmentCondition": {
+      "value": null,
+      "why": ""
+    },
+    "equipmentCost": {
+      "value": null,
+      "why": ""
+    },
+    "downPayment": {
+      "value": null,
+      "why": ""
+    },
+    "financingType": {
+      "value": null,
+      "why": ""
+    },
+    "usefulLife": {
+      "value": null,
+      "why": ""
+    },
+    "loanTerm": {
+      "value": null,
+      "why": ""
+    },
+    "essentialUse": {
+      "value": null,
+      "why": ""
+    },
+    "maintenanceCapex": {
+      "value": null,
+      "why": ""
+    }
+  },
+  "expected": {
+    "verdict": null,
+    "reason": "",
+    "writtenOn": null
+  },
+  "discussion": ""
+}

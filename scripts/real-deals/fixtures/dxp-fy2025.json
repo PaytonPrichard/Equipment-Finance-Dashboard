@@ -1,0 +1,229 @@
+{
+  "case": "dxp-fy2025",
+  "assetClass": "equipment_finance",
+  "borrower": {
+    "name": "DXP Enterprises, Inc.",
+    "ticker": "DXPE",
+    "cik": 1020710
+  },
+  "period": {
+    "form": "10-K",
+    "fiscalYearEnd": "2025-12-31",
+    "companyFactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001020710.json",
+    "fetchedAt": "2026-10-07"
+  },
+  "context": "Industrial distributor (MRO, pumps, safety). Term loan B refinanced in 2025.",
+  "figures": {
+    "revenue": {
+      "tags": [
+        "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax"
+      ],
+      "sources": [
+        {
+          "tag": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+          "val": 2016365000,
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "accn": "0001628280-26-012382",
+          "form": "10-K",
+          "filed": "2026-02-26",
+          "url": "https://www.sec.gov/Archives/edgar/data/1020710/000162828026012382/"
+        }
+      ],
+      "value": 2016365000
+    },
+    "operatingIncome": {
+      "tags": [
+        "us-gaap:OperatingIncomeLoss"
+      ],
+      "sources": [
+        {
+          "tag": "us-gaap:OperatingIncomeLoss",
+          "val": 176870000,
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "accn": "0001628280-26-012382",
+          "form": "10-K",
+          "filed": "2026-02-26",
+          "url": "https://www.sec.gov/Archives/edgar/data/1020710/000162828026012382/"
+        }
+      ],
+      "value": 176870000
+    },
+    "depreciationAmortization": {
+      "tags": [
+        "us-gaap:Depreciation",
+        "us-gaap:AmortizationOfIntangibleAssets"
+      ],
+      "note": "Depreciation plus intangible amortization. Excludes finance-lease ROU amortization ($6.8M in XBRL). Check the total against the D&A line on the cash-flow statement.",
+      "sources": [
+        {
+          "tag": "us-gaap:Depreciation",
+          "val": 10372000,
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "accn": "0001628280-26-012382",
+          "form": "10-K",
+          "filed": "2026-02-26",
+          "url": "https://www.sec.gov/Archives/edgar/data/1020710/000162828026012382/"
+        },
+        {
+          "tag": "us-gaap:AmortizationOfIntangibleAssets",
+          "val": 21670000,
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "accn": "0001628280-26-012382",
+          "form": "10-K",
+          "filed": "2026-02-26",
+          "url": "https://www.sec.gov/Archives/edgar/data/1020710/000162828026012382/"
+        }
+      ],
+      "value": 32042000
+    },
+    "totalDebt": {
+      "tags": [
+        "us-gaap:LongTermDebtCurrent",
+        "us-gaap:LongTermDebtNoncurrent"
+      ],
+      "note": "Funded debt only. Excludes finance and operating lease liabilities.",
+      "sources": [
+        {
+          "tag": "us-gaap:LongTermDebtCurrent",
+          "val": 8580000,
+          "start": null,
+          "end": "2025-12-31",
+          "accn": "0001628280-26-012382",
+          "form": "10-K",
+          "filed": "2026-02-26",
+          "url": "https://www.sec.gov/Archives/edgar/data/1020710/000162828026012382/"
+        },
+        {
+          "tag": "us-gaap:LongTermDebtNoncurrent",
+          "val": 818476000,
+          "start": null,
+          "end": "2025-12-31",
+          "accn": "0001628280-26-012382",
+          "form": "10-K",
+          "filed": "2026-02-26",
+          "url": "https://www.sec.gov/Archives/edgar/data/1020710/000162828026012382/"
+        }
+      ],
+      "value": 827056000
+    },
+    "interestPaid": {
+      "tags": [
+        "us-gaap:InterestPaidNet"
+      ],
+      "sources": [
+        {
+          "tag": "us-gaap:InterestPaidNet",
+          "val": 53698000,
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "accn": "0001628280-26-012382",
+          "form": "10-K",
+          "filed": "2026-02-26",
+          "url": "https://www.sec.gov/Archives/edgar/data/1020710/000162828026012382/"
+        }
+      ],
+      "value": 53698000
+    },
+    "currentMaturities": {
+      "tags": [
+        "us-gaap:LongTermDebtCurrent"
+      ],
+      "sources": [
+        {
+          "tag": "us-gaap:LongTermDebtCurrent",
+          "val": 8580000,
+          "start": null,
+          "end": "2025-12-31",
+          "accn": "0001628280-26-012382",
+          "form": "10-K",
+          "filed": "2026-02-26",
+          "url": "https://www.sec.gov/Archives/edgar/data/1020710/000162828026012382/"
+        }
+      ],
+      "value": 8580000
+    },
+    "totalCapex": {
+      "tags": [
+        "us-gaap:PaymentsToAcquirePropertyPlantAndEquipment"
+      ],
+      "note": "Total capex, informational. The filing does not split maintenance from growth.",
+      "sources": [
+        {
+          "tag": "us-gaap:PaymentsToAcquirePropertyPlantAndEquipment",
+          "val": 40286000,
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "accn": "0001628280-26-012382",
+          "form": "10-K",
+          "filed": "2026-02-26",
+          "url": "https://www.sec.gov/Archives/edgar/data/1020710/000162828026012382/"
+        }
+      ],
+      "value": 40286000
+    },
+    "yearsInBusiness": {
+      "manual": {
+        "value": null,
+        "cite": "",
+        "readBy": ""
+      },
+      "note": "Years since founding or first operations, from Item 1 of the 10-K. Cite the sentence."
+    }
+  },
+  "assumptions": {
+    "industrySector": {
+      "value": null,
+      "why": ""
+    },
+    "creditRating": {
+      "value": null,
+      "why": ""
+    },
+    "equipmentType": {
+      "value": null,
+      "why": ""
+    },
+    "equipmentCondition": {
+      "value": null,
+      "why": ""
+    },
+    "equipmentCost": {
+      "value": null,
+      "why": ""
+    },
+    "downPayment": {
+      "value": null,
+      "why": ""
+    },
+    "financingType": {
+      "value": null,
+      "why": ""
+    },
+    "usefulLife": {
+      "value": null,
+      "why": ""
+    },
+    "loanTerm": {
+      "value": null,
+      "why": ""
+    },
+    "essentialUse": {
+      "value": null,
+      "why": ""
+    },
+    "maintenanceCapex": {
+      "value": null,
+      "why": ""
+    }
+  },
+  "expected": {
+    "verdict": null,
+    "reason": "",
+    "writtenOn": null
+  },
+  "discussion": ""
+}
