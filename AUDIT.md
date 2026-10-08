@@ -269,6 +269,12 @@ The stress test shows each scenario's metrics and score, but not whether the dea
 
 The form takes EBITDA as a single number. Real filings place floorplan interest, finance-lease amortization and fleet depreciation differently by company (see `scripts/real-deals/README.md`). An analyst can enter EBITDA that doesn't pair with the debt entered. Add help text stating the pairing rules.
 
+### P2-10. The credit rating input is too coarse to tell B+ from CCC+
+
+Found 2026-10-08 entering real ratings. `CreditRating` has four values (Strong, Adequate, Weak, Not Rated). Under the mapping (IG = Strong, BB = Adequate, B or below = Weak), DXP at S&P B+ and Hertz at S&P CCC+ both become Weak and get the same +200 bps spread. CCC+ is near distress, while B+ is mid high-yield. The input loses the difference a credit analyst cares about most.
+
+**Fix.** Accept the agency letter grade (S&P or Moody's scale) and map it to a finer internal scale for spread and scoring. Credit call for Joel: the buckets and spreads.
+
 ---
 
 ## TypeScript Migration Plan
