@@ -224,6 +224,116 @@
         }
       ],
       "value": 10372000
+    },
+    "maturityY1": {
+      "tags": [
+        "us-gaap:LongTermDebtMaturitiesRepaymentsOfPrincipalInNextTwelveMonths"
+      ],
+      "note": "Debt maturities by year, excluding finance leases.",
+      "sources": [
+        {
+          "tag": "us-gaap:LongTermDebtMaturitiesRepaymentsOfPrincipalInNextTwelveMonths",
+          "val": 8580000,
+          "start": null,
+          "end": "2025-12-31",
+          "accn": "0001628280-26-012382",
+          "form": "10-K",
+          "filed": "2026-02-26",
+          "url": "https://www.sec.gov/Archives/edgar/data/1020710/000162828026012382/"
+        }
+      ],
+      "value": 8580000
+    },
+    "maturityY2": {
+      "tags": [
+        "us-gaap:LongTermDebtMaturitiesRepaymentsOfPrincipalInYearTwo"
+      ],
+      "sources": [
+        {
+          "tag": "us-gaap:LongTermDebtMaturitiesRepaymentsOfPrincipalInYearTwo",
+          "val": 8580000,
+          "start": null,
+          "end": "2025-12-31",
+          "accn": "0001628280-26-012382",
+          "form": "10-K",
+          "filed": "2026-02-26",
+          "url": "https://www.sec.gov/Archives/edgar/data/1020710/000162828026012382/"
+        }
+      ],
+      "value": 8580000
+    },
+    "maturityY3": {
+      "tags": [
+        "us-gaap:LongTermDebtMaturitiesRepaymentsOfPrincipalInYearThree"
+      ],
+      "sources": [
+        {
+          "tag": "us-gaap:LongTermDebtMaturitiesRepaymentsOfPrincipalInYearThree",
+          "val": 8580000,
+          "start": null,
+          "end": "2025-12-31",
+          "accn": "0001628280-26-012382",
+          "form": "10-K",
+          "filed": "2026-02-26",
+          "url": "https://www.sec.gov/Archives/edgar/data/1020710/000162828026012382/"
+        }
+      ],
+      "value": 8580000
+    },
+    "maturityY4": {
+      "tags": [
+        "us-gaap:LongTermDebtMaturitiesRepaymentsOfPrincipalInYearFour"
+      ],
+      "sources": [
+        {
+          "tag": "us-gaap:LongTermDebtMaturitiesRepaymentsOfPrincipalInYearFour",
+          "val": 9080000,
+          "start": null,
+          "end": "2025-12-31",
+          "accn": "0001628280-26-012382",
+          "form": "10-K",
+          "filed": "2026-02-26",
+          "url": "https://www.sec.gov/Archives/edgar/data/1020710/000162828026012382/"
+        }
+      ],
+      "value": 9080000
+    },
+    "maturityY5": {
+      "tags": [
+        "us-gaap:LongTermDebtMaturitiesRepaymentsOfPrincipalInYearFive"
+      ],
+      "sources": [
+        {
+          "tag": "us-gaap:LongTermDebtMaturitiesRepaymentsOfPrincipalInYearFive",
+          "val": 811965000,
+          "start": null,
+          "end": "2025-12-31",
+          "accn": "0001628280-26-012382",
+          "form": "10-K",
+          "filed": "2026-02-26",
+          "url": "https://www.sec.gov/Archives/edgar/data/1020710/000162828026012382/"
+        }
+      ],
+      "value": 811965000
+    },
+    "cash": {
+      "tags": [
+        "us-gaap:CashAndCashEquivalentsAtCarryingValue"
+      ],
+      "note": "Year-end cash, balance sheet.",
+      "sources": [
+        {
+          "tag": "us-gaap:CashAndCashEquivalentsAtCarryingValue",
+          "val": 303783000,
+          "start": null,
+          "end": "2025-12-31",
+          "accn": "0001628280-26-012382",
+          "form": "10-K",
+          "filed": "2026-02-26",
+          "url": "https://www.sec.gov/Archives/edgar/data/1020710/000162828026012382/"
+        }
+      ],
+      "value": 303783000
     }
   },
   "assumptions": {

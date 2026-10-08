@@ -132,6 +132,69 @@
         "readBy": "Claude 2026-10-07, Joel to verify"
       },
       "note": "Informational."
+    },
+    "maturityY1": {
+      "manual": {
+        "value": 622000,
+        "cite": "Leases note (https://www.sec.gov/Archives/edgar/data/1339605/000095017025024867/R73.htm): finance lease payments due 2025, 622.",
+        "readBy": "Claude 2026-10-07, Joel to verify"
+      },
+      "note": "H&E does not tag a maturity table. Years 2-3 finance lease amounts not split out here, under $4.4M combined."
+    },
+    "maturityY2": {
+      "manual": {
+        "value": 0,
+        "cite": "Notes (https://www.sec.gov/Archives/edgar/data/1339605/000095017025024867/R67.htm): \"No principal payments are due until maturity.\" Credit facility matures 2028 (https://www.sec.gov/Archives/edgar/data/1339605/000095017025024867/R69.htm).",
+        "readBy": "Claude 2026-10-07, Joel to verify"
+      }
+    },
+    "maturityY3": {
+      "manual": {
+        "value": 0,
+        "cite": "Same as year 2.",
+        "readBy": "Claude 2026-10-07, Joel to verify"
+      }
+    },
+    "maturityY4": {
+      "manual": {
+        "value": 1449304000,
+        "cite": "Senior notes $1,250,000 due Dec. 15, 2028 (https://www.sec.gov/Archives/edgar/data/1339605/000095017025024867/R67.htm) + credit facility $199,304 drawn, matures Feb. 2, 2028 (https://www.sec.gov/Archives/edgar/data/1339605/000095017025024867/R69.htm, R2).",
+        "readBy": "Claude 2026-10-07, Joel to verify"
+      },
+      "note": "Notes at face, not the net carrying value."
+    },
+    "maturityY5": {
+      "manual": {
+        "value": 0,
+        "cite": "No debt maturing in 2029 in the notes read.",
+        "readBy": "Claude 2026-10-07, Joel to verify"
+      }
+    },
+    "availableLiquidity": {
+      "manual": {
+        "value": 535900000,
+        "cite": "Credit facility note (https://www.sec.gov/Archives/edgar/data/1339605/000095017025024867/R69.htm): \"Available borrowings under our senior secured credit facility\" 535.9.",
+        "readBy": "Claude 2026-10-07, Joel to verify"
+      }
+    },
+    "cash": {
+      "tags": [
+        "us-gaap:CashAndCashEquivalentsAtCarryingValue"
+      ],
+      "note": "Year-end cash, balance sheet.",
+      "sources": [
+        {
+          "tag": "us-gaap:CashAndCashEquivalentsAtCarryingValue",
+          "val": 16413000,
+          "start": null,
+          "end": "2024-12-31",
+          "accn": "0000950170-25-024867",
+          "form": "10-K",
+          "filed": "2025-02-21",
+          "url": "https://www.sec.gov/Archives/edgar/data/1339605/000095017025024867/"
+        }
+      ],
+      "value": 16413000
     }
   },
   "assumptions": {

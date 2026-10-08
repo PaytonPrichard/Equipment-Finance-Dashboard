@@ -202,6 +202,14 @@ The structure suggestions state a first-priority lien without asking (`equipment
 
 **Feature (Joel, 2026-10-07).** Add a lien position input (first, second, pari passu) and the amount of senior debt on the same collateral, across all three modules. Second lien should compute combined LTV (senior plus new over collateral value), reduce the effective advance rate on AR and inventory, and change the structure text. Credit calls for Joel: haircuts and thresholds for second lien.
 
+### P1-16. A FLAG or FAIL doesn't say what would change it
+
+Joel, 2026-10-07: the verdict is the recommended next action, not a probability. PASS means advance. FLAG means advance only if named issues are resolved. FAIL means decline on this structure and say what would have to be true. Today the verdict lists reasons but never inverts them, and shows no liquidity, maturity or trend context.
+
+**Prototype:** `scripts/real-deals/lib/analystView.js` (tested). For each breached gate it gives the EBITDA, debt service, debt, down payment or term that clears it, and flags "fails before this loan" when restructuring the new loan can't help. For a PASS it shows headroom (how far EBITDA can fall before each gate). It also shows liquidity runway, a 5-year maturity wall and collateral cover. Negative EBITDA gets fixed text: not a cash-flow credit, would need a collateral-based structure or outside support (wording Joel to confirm).
+
+**App version:** after Workstream A merges, since it touches `ScreeningVerdict.tsx` and the memo in `ExportPanel.js`, which A has already edited. The maturity wall needs new inputs. That belongs in A's raw-inputs design.
+
 ---
 
 ## P2 — Smells and Polish

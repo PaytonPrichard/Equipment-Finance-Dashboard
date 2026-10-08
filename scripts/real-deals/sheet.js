@@ -15,14 +15,13 @@ const fs = require('fs');
 const path = require('path');
 const { derive, figureValue } = require('./lib/derive');
 const { fetchCompanyFacts, pickAnnualFact } = require('./lib/edgar');
+const { liquidityRunway, maturityWall, money } = require('./lib/analystView');
 
 const ROOT = __dirname;
 const PRETAX = 'us-gaap:IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest';
 // Companies tag cash differently. First match wins.
 const CASH_TAGS = ['us-gaap:CashAndCashEquivalentsAtCarryingValue', 'us-gaap:Cash'];
 
-const money = (n) =>
-  n == null ? 'n/a' : `${n < 0 ? '-' : ''}$${(Math.abs(n) / 1e6).toLocaleString('en-US', { maximumFractionDigits: 1 })}M`;
 const ratio = (num, den) => (num == null || den == null || den <= 0 ? null : num / den);
 const xx = (r, d = 2) => (r == null ? 'n/a' : `${r.toFixed(d)}x`);
 const pct = (r) => (r == null ? 'n/a' : `${(r * 100).toFixed(1)}%`);
@@ -72,6 +71,22 @@ async function sheetFor(fx) {
   out.push(`| Cash | ${money(cash?.val)} | Balance sheet, year end${cash ? `, ${cash.tag}` : ''} |`);
   out.push(`| Proposed deal | ${money(a.equipmentCost?.value)} ${a.equipmentType?.value || ''}, ${money(dealNet)} financed over ${a.loanTerm?.value} months | ${pct(ratio(a.equipmentCost?.value, rev))} of revenue${ebitda > 0 ? `, ${xx(ratio(dealNet, ebitda), 2)} EBITDA` : ''} |`);
   out.push(`| Credit rating | ${a.creditRating?.value || 'pending (Joel)'} | |`);
+
+  const availability = fig('availableLiquidity');
+  const run = liquidityRunway({ cash: cash?.val ?? null, availability, ebitda, maintenanceCapex: capex, debtService: ds });
+  out.push('', '**Liquidity runway** (before the new loan)', '');
+  if (run) {
+    out.push(`- Liquidity ${money(run.liquidity)}: cash ${money(cash.val)}${availability != null ? ` + undrawn facility ${money(availability)}` : ', undrawn availability not included'}.`);
+    if (run.monthsOfDebtService != null) out.push(`- Covers ${run.monthsOfDebtService.toFixed(1)} months of existing debt service (${money(ds)} a year).`);
+    if (run.cashAfterYear != null) out.push(`- After 12 months, if this year's cash flow repeats (EBITDA less estimated maintenance capex, before tax, ${money(run.cashFlow)}): ${money(run.cashAfterYear)}.`);
+  } else out.push('- Cash not available.');
+
+  const wall = maturityWall(fig);
+  // Fiscal years are named for the calendar year they end in (Titan: Jan 2027 = FY2027).
+  const fyYear = Number(fye.slice(0, 4));
+  out.push('', '**Maturity wall** (principal due, by fiscal year)', '', `| ${wall.map((m) => `FY${fyYear + m.year}`).join(' | ')} |`, `|${wall.map(() => '---').join('|')}|`, `| ${wall.map((m) => money(m.amount)).join(' | ')} |`);
+  const wallNote = [1, 2, 3, 4, 5].map((y) => fx.figures[`maturityY${y}`]?.note).find(Boolean);
+  if (wallNote) out.push('', wallNote);
   if (caveats.length) {
     out.push('', '**Caveats**', '');
     for (const c of caveats) out.push(`- ${c}`);

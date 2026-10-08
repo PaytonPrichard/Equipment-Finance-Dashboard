@@ -14,7 +14,8 @@
 
 const fs = require('fs');
 const path = require('path');
-const { derive } = require('./lib/derive');
+const { derive, figureValue } = require('./lib/derive');
+const { whatWouldChange, liquidityRunway, maturityWall } = require('./lib/analystView');
 
 const ROOT = __dirname;
 const BUNDLE = path.join(ROOT, '.build', 'scoring.cjs');
@@ -51,6 +52,7 @@ function runCase(fx, S) {
   const factors = ef.describeFactors(inputs, metrics, risk);
   const screening = S.evaluateScreening(S.DEFAULT_CRITERIA, metrics, risk, inputs, 'equipment_finance');
   const stress = ef.runStressTest(inputs, S.DEFAULT_SOFR);
+  const view = whatWouldChange(inputs, metrics, risk, factors, S.DEFAULT_CRITERIA);
 
   // Fallbacks the module applied on its own. Same weight as written caveats.
   const warnings = [...caveats];
@@ -66,7 +68,7 @@ function runCase(fx, S) {
 
   const actual = screening.verdict;
   const expected = String(fx.expected.verdict).toLowerCase();
-  return { fx, inputs, derivations, blockers, caveats: warnings, metrics, risk, factors, screening, stress, actual, expected, match: actual === expected };
+  return { fx, inputs, derivations, blockers, caveats: warnings, metrics, risk, factors, screening, stress, view, actual, expected, match: actual === expected };
 }
 
 function citeLine(key, fig) {
@@ -126,6 +128,31 @@ function caseSection(r) {
   out.push('', '**Verdict reasons**', '');
   if (r.screening.reasons.length) for (const re of r.screening.reasons) out.push(`- ${re.level.toUpperCase()}: ${re.text}`);
   else out.push('- None. Every gate cleared.');
+
+  out.push('', r.actual === 'pass' ? '**Headroom**' : '**What would change this**', '');
+  const items = r.actual === 'pass' ? r.view.headroom : r.view.changes;
+  if (items.length) for (const c of items) out.push(`- ${c}`);
+  else out.push('- Nothing computable. See the verdict reasons.');
+  if (r.actual !== 'pass' && r.view.headroom.length) {
+    out.push('', 'Thresholds still cleared:', '');
+    for (const h of r.view.headroom) out.push(`- ${h}`);
+  }
+
+  out.push('', '**What an analyst would want to see**', '');
+  const fv = (k) => figureValue(fx.figures[k]);
+  const ds = r.inputs.actualAnnualDebtService ?? (m.existingDebtService || null);
+  const run = liquidityRunway({ cash: fv('cash'), availability: fv('availableLiquidity'), ebitda: r.inputs.ebitda, maintenanceCapex: r.inputs.maintenanceCapex, debtService: ds });
+  if (run) {
+    out.push(`- Liquidity ${money(run.liquidity)}${fv('availableLiquidity') != null ? ' (cash plus undrawn facility)' : ' (cash only, availability not included)'}, ${run.monthsOfDebtService != null ? `${run.monthsOfDebtService.toFixed(1)} months of existing debt service` : 'no debt service to cover'}.`);
+    if (run.cashAfterYear != null) out.push(`- Liquidity after 12 months if this year's cash flow repeats, before tax and before the new loan: ${money(run.cashAfterYear)}.`);
+  }
+  const wall = maturityWall(fv);
+  if (wall.some((w) => w.amount != null)) {
+    const fyYear = Number(fx.period.fiscalYearEnd.slice(0, 4));
+    out.push(`- Maturities: ${wall.map((w) => `FY${fyYear + w.year} ${money(w.amount)}`).join(', ')}.`);
+  }
+  out.push(`- Collateral: equipment value ${money(m.equipmentValue)} against ${money(m.netFinanced)} financed (LTV ${(m.ltv * 100).toFixed(0)}%).`);
+  out.push('- Trend: see the analyst sheet for prior-year revenue and pre-tax income.');
 
   out.push('', '**EBITDA stress**', '', '| Scenario | EBITDA | DSCR | Leverage | FCCR | Score |', '|---|---|---|---|---|---|');
   for (const s of r.stress) out.push(`| ${s.label} | ${money(s.ebitda)} | ${x(s.dscr)} | ${x(s.leverage, 1)} | ${x(s.fccr)} | ${s.score} |`);

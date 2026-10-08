@@ -143,6 +143,61 @@
         }
       ],
       "value": 17054000000
+    },
+    "maturityY1": {
+      "manual": {
+        "value": 284000000,
+        "cite": "Debt maturities (https://www.sec.gov/Archives/edgar/data/1657853/000165785326000008/R71.htm): Non-Vehicle Debt, 2026, 284.",
+        "readBy": "Claude 2026-10-07, Joel to verify"
+      },
+      "note": "Non-vehicle only. Tagged XBRL maturities include vehicle debt."
+    },
+    "maturityY2": {
+      "manual": {
+        "value": 18000000,
+        "cite": "Debt maturities (https://www.sec.gov/Archives/edgar/data/1657853/000165785326000008/R71.htm): Non-Vehicle Debt, 2027, 18.",
+        "readBy": "Claude 2026-10-07, Joel to verify"
+      }
+    },
+    "maturityY3": {
+      "manual": {
+        "value": 2270000000,
+        "cite": "Debt maturities (https://www.sec.gov/Archives/edgar/data/1657853/000165785326000008/R71.htm): Non-Vehicle Debt, 2028, 2270.",
+        "readBy": "Claude 2026-10-07, Joel to verify"
+      }
+    },
+    "maturityY4": {
+      "manual": {
+        "value": 2521000000,
+        "cite": "Debt maturities (https://www.sec.gov/Archives/edgar/data/1657853/000165785326000008/R71.htm): Non-Vehicle Debt, 2029, 2521.",
+        "readBy": "Claude 2026-10-07, Joel to verify"
+      }
+    },
+    "maturityY5": {
+      "manual": {
+        "value": 425000000,
+        "cite": "Debt maturities (https://www.sec.gov/Archives/edgar/data/1657853/000165785326000008/R71.htm): Non-Vehicle Debt, 2030, 425.",
+        "readBy": "Claude 2026-10-07, Joel to verify"
+      }
+    },
+    "cash": {
+      "tags": [
+        "us-gaap:CashAndCashEquivalentsAtCarryingValue"
+      ],
+      "note": "Year-end cash, balance sheet.",
+      "sources": [
+        {
+          "tag": "us-gaap:CashAndCashEquivalentsAtCarryingValue",
+          "val": 565000000,
+          "start": null,
+          "end": "2025-12-31",
+          "accn": "0001657853-26-000008",
+          "form": "10-K",
+          "filed": "2026-02-26",
+          "url": "https://www.sec.gov/Archives/edgar/data/1657853/000165785326000008/"
+        }
+      ],
+      "value": 565000000
     }
   },
   "assumptions": {
