@@ -359,8 +359,8 @@
       "why": "Proposed by Claude, confirmed by Joel 2026-10-07. Rental fleet is revenue-generating."
     },
     "creditRating": {
-      "value": null,
-      "why": "Joel: map current agency rating. IG = Strong, BB = Adequate, B or below = Weak, unrated = Not Rated."
+      "value": "Not Rated",
+      "why": "Joel searched S&P Global Ratings 2026-10-08: no rating found for Titan Machinery Inc. Moody's not checked (site unavailable)."
     }
   },
   "expected": {
@@ -414,6 +414,7 @@
   },
   "caveats": [
     "JUDGMENT, floorplan: treated as inventory financing. Floorplan interest is deducted in EBITDA and the $553.8M floorplan payable is left out of debt. This follows auto-dealer credit convention, not verified against Titan's own credit agreement. Including floorplan instead: EBITDA $30.9M, debt $783.0M.",
-    "ESTIMATE, debt service: uses non-floorplan interest expense ($19.0M), not cash paid. Cash interest is reported only in total."
+    "ESTIMATE, debt service: uses non-floorplan interest expense ($19.0M), not cash paid. Cash interest is reported only in total.",
+    "RATING: treated as Not Rated (+100 bps) because S&P shows no rating. Moody's was not checked. If Titan is rated B or below somewhere, the input becomes Weak (+200 bps)."
   ]
 }

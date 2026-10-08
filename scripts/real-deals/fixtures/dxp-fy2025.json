@@ -397,5 +397,8 @@
   },
   "caveats": [
     "RATING TIMING: rating used is as of the 10-K (S&P B, Moody's B1 at 2025-12-31). S&P upgraded DXP to B+ on 2026-07-20 (S&P Global Ratings site, read by Joel 2026-10-08). Both map to Weak, so the input is unchanged."
+  ],
+  "hindsight": [
+    "2026-07-20: S&P upgraded DXP to B+ (S&P Global Ratings site, read by Joel 2026-10-08)."
   ]
 }

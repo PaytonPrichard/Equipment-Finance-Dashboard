@@ -17,6 +17,7 @@ Runs public-company financials through Tranche's equipment finance scoring and c
 - Every number traces to a source. If it can't be found, it stays null, and the case stays blocked.
 - Estimates and judgment calls go in `caveats`, or in a build's `estimate` text, which adds a caveat automatically. Caveats print at the top of the report. Anything uncertain that could change a verdict has to be visible there.
 - Third-party PDFs (rating agency presales) go in `sources/`. That folder is gitignored and never committed.
+- **Point in time.** Every input, ratings included, is as of the 10-K filing date. Anything that happened later goes in the fixture `hindsight` list. The report prints it after the result, and scoring never uses it. If you read hindsight before writing an expectation, say so in `hindsight`.
 
 ## Treatment rules (same for every company)
 

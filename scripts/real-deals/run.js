@@ -158,6 +158,11 @@ function caseSection(r) {
   for (const s of r.stress) out.push(`| ${s.label} | ${money(s.ebitda)} | ${x(s.dscr)} | ${x(s.leverage, 1)} | ${x(s.fccr)} | ${s.score} |`);
 
 
+  if (fx.hindsight?.length) {
+    out.push('', '### Hindsight (after the screen date, not used in scoring)', '');
+    for (const h of fx.hindsight) out.push(`- ${h}`);
+  }
+
   out.push('', '### Discussion', '', fx.discussion || (r.match ? '_Match. Note anything surprising in the factor table._' : '_Mismatch. Decide with Joel: is the model wrong, or the expectation? Record the answer in the fixture `discussion` field._'));
   return out.join('\n');
 }
