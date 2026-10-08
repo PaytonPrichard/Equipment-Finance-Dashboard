@@ -224,11 +224,13 @@ export function computeCashFlowAnalysis(
       existingFloating > 0 ? `${pct(floatingPct as number)} of existing debt` : null,
     ].filter(Boolean).join(' and ');
     scenarios.push(scenario('rate', 'rate', `Rates +${rBps} bps`, covers ? `Applied to ${covers}` : 'No floating-rate debt entered', ebitda, debtService + extra, vals.wc));
-    if (existingDebt > 0 && floatingPct == null) {
-      assumptions.push('Rate shock does not cover existing debt. Floating share of existing debt not provided.');
-    }
+    const existingUnknown = existingDebt > 0 && floatingPct == null;
     if (newFloating === 0 && existingFloating === 0) {
-      assumptions.push('Rate shock changes nothing here. The new facility is fixed rate and no existing debt is marked floating.');
+      assumptions.push(existingUnknown
+        ? 'Rate shock changes nothing here. The new facility is fixed rate and the floating share of existing debt was not provided.'
+        : 'Rate shock changes nothing here. The new facility is fixed rate and no existing debt is marked floating.');
+    } else if (existingUnknown) {
+      assumptions.push('Rate shock does not cover existing debt. Floating share of existing debt not provided.');
     }
   }
 

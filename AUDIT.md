@@ -80,7 +80,7 @@ Found during the front-end polish pass (surface 1). The pricing UI offers three 
 
 This touches Stripe dashboard config (env vars must point at real Price IDs or checkout 500s), so it needs Joel's config side too. Not a code-only fix.
 
-### P0-7. Recommendation contradicts the verdict
+### P0-8. Recommendation contradicts the verdict
 
 Found 2026-10-07 (cash-flow stress work). The verdict honours the firm's gates; the recommendation does not. `getRecommendation(score)` in each module maps the composite score alone to a category, and `DealRecommendation`, the executive summary and the memo banner print it. A deal scoring 80 that FLAGs on a gate (cash-flow coverage breaking in the severe case, LTV, DSCR) shows FLAG and, directly below, "Strong Prospect. Recommend advancing to underwriting." Same class of bug as the three verdicts consolidated in `src/lib/dealVerdict.js`.
 
@@ -174,15 +174,15 @@ webhook.site endpoints were added to the production org during integration testi
 
 **Fix.** Remove any `webhook.site` (or other non-production) URLs from the production org's webhook config after each test run. Longer term, run integration tests against a dedicated test org so production webhook config is never written to. Consider adding a guard to `scripts/test-crm-integration.js` that aborts if any registered webhook URL for a non-localhost org contains `webhook.site`.
 
-### P1-13. Screening criteria are stored per user, not per firm
+### P1-17. Screening criteria are stored per user, not per firm
 
 Found 2026-10-07. `ScreeningCriteria.js` saves thresholds to `user_preferences.screening_criteria`. Two analysts at the same firm can screen the same deal against different floors and get different verdicts. Credit policy belongs to the firm: org-level criteria with an admin role to edit, user-level overrides off by default.
 
-### P1-14. Extraction does arithmetic it should not
+### P1-18. Extraction does arithmetic it should not
 
 Found 2026-10-07 (live extraction test, Granite Ridge). The broker email said "15% cash" on a $6.275M quote. The model computed the down payment itself and got $940,750 (true $941,250). The credit application states $941,250 outright. The $500 gap is inside the merge's 1% tolerance, so no conflict was shown and the computed value won. **Fix.** Instruct extraction to copy stated values only, never derive; prefer a stated figure over a derived one in the merge precedence.
 
-### P1-15. Hardcoded fallback encryption key
+### P1-19. Hardcoded fallback encryption key
 
 `src/lib/encryption.js:29` falls back to `'tranche-pilot-key-2026'` when `REACT_APP_ENCRYPTION_SECRET` is unset, and any `REACT_APP_` value ships in the browser bundle anyway. Whatever this encrypts is not protected. Extends P1-5.
 
@@ -233,11 +233,11 @@ Tests exist for: scoring modules (equipment, AR, inventory), `screeningCriteria.
 
 **Fix.** Add `server-lib/validate.test.js` (Jest, `--testEnvironment node`) covering: required-field rejection, percent-range rejection (0-100 bounds), currency-range rejection (negative, over $1T), size-cap rejection (>32KB payload), and a fully valid input acceptance case for each of the three validators. The P1-9 aging-bucket sum check should get its own test once that fix is in place.
 
-### P2-7. Cash-flow inputs missing from Copy Summary and extraction
+### P2-10. Cash-flow inputs missing from Copy Summary and extraction
 
 Found 2026-10-07. The cash-flow fields (cash taxes, working capital, rent, floating share) and the two new metrics are in the screening view, verdict and memo, but not in each module's `generateExportSummary` text or in `server-lib/extract.js` field specs. Extraction adds a small per-call token cost.
 
-### P2-8. New Deal form does not say what it holds
+### P2-11. New Deal form does not say what it holds
 
 Found 2026-10-07. Uploading onto a non-empty form asks "The form holds X" with no indication whether X is an unsaved draft or a reopened pipeline deal (`src/App.js:705-709` says as much). Agreed fix: a status chip above the form ("Draft, not in pipeline" / "Editing X (stage)"), with the dialog using the same words.
 

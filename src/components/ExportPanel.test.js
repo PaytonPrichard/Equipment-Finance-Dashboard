@@ -13,6 +13,7 @@ import { INITIAL_INPUTS as AR_INITIAL } from '../modules/accounts-receivable/con
 import { INITIAL_INPUTS as INV_INITIAL } from '../modules/inventory-finance/constants';
 import { computeBorrowerExtras } from '../utils/borrowerMetrics';
 import { evaluateScreening, DEFAULT_CRITERIA } from '../lib/screeningCriteria';
+import { recommendationFor } from '../lib/recommendation';
 
 function buildPdfFor(moduleKey, mod, baseInputs) {
   const metrics = mod.calculateMetrics(baseInputs);
@@ -60,12 +61,22 @@ describe('generateBrandedPdfHtml — Equipment Finance', () => {
     // same category, same colour, same detail line, within about 200px on
     // page one. Derived from the module rather than hardcoded, so this
     // still holds if the fixture's verdict moves.
+    // The banner prints the verdict-led recommendation (AUDIT P0-8).
     const metrics = ef.calculateMetrics(inputs);
-    const rec = ef.getRecommendation(ef.calculateRiskScore(inputs, metrics).composite);
+    const riskScore = ef.calculateRiskScore(inputs, metrics);
+    const screening = evaluateScreening(DEFAULT_CRITERIA, metrics, riskScore, inputs, 'equipment_finance');
+    const rec = recommendationFor(ef.getRecommendation(riskScore.composite), screening);
     const count = (t) => html.split(t).length - 1;
     expect(count(rec.category)).toBe(1);
     expect(count(rec.detail)).toBe(1);
     expect(html).not.toContain('Recommended Action');
+  });
+
+  test('a gated verdict never prints the score-only recommendation', () => {
+    // This fixture scores below the pass line and breaks gates, so the
+    // memo must not tell the committee to advance it.
+    expect(html).not.toContain('Recommend advancing to underwriting');
+    expect(html).toMatch(/Fails policy|Conditions to advance/);
   });
 
   test('term coverage says what it is a percentage of', () => {

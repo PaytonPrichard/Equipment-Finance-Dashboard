@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { exportScreeningCsv } from '../utils/csvExport';
 import { DEFAULT_CRITERIA } from '../lib/screeningCriteria';
 import { computeCashFlowAnalysis, describeMissing } from '../utils/cashFlowMetrics';
+import { recommendationFor } from '../lib/recommendation';
 import { createMemoSnapshot } from '../lib/memos';
 import packageJson from '../../package.json';
 
@@ -166,6 +167,11 @@ export function generateBrandedPdfHtml({ summaryText, inputs, metrics, riskScore
   else if (verdict === 'FLAG') { verdictColor = '#ca8a04'; verdictBg = '#fefce8'; }
   else if (verdict === 'FAIL') { verdictColor = '#dc2626'; verdictBg = '#fef2f2'; }
 
+  // The recommendation follows the verdict (AUDIT P0-8). A caller that passes
+  // the score-only module recommendation still gets the gated one here.
+  const rec = recommendation?.tone ? recommendation : (recommendation ? recommendationFor(recommendation, screeningResult) : null);
+  const recColor = rec?.tone === 'flag' || rec?.tone === 'fail' ? verdictColor : scoreColor;
+
   const fmtCurrency = (v) => {
     if (!v) return '$0';
     return '$' + Math.round(v).toLocaleString();
@@ -303,12 +309,16 @@ export function generateBrandedPdfHtml({ summaryText, inputs, metrics, riskScore
     </div>`;
   };
 
-  // Verdict reasons
-  const reasonsHtml = (screeningResult?.reasons || []).map(r => {
-    const color = r.level === 'fail' ? '#dc2626' : '#ca8a04';
-    const icon = r.level === 'fail' ? '&#10005;' : '&#9888;';
-    return `<div style="display:flex;gap:6px;align-items:flex-start;margin-bottom:4px"><span style="color:${color};font-size:12.5px;flex-shrink:0">${icon}</span><span style="font-size:12.5px;color:#475569">${esc(r.text)}</span></div>`;
-  }).join('');
+  // Verdict reasons, as numbered lists a committee can work through: what
+  // fails policy, and the conditions a FLAG must clear to advance.
+  const reasonList = (title, color, items) => items.length === 0 ? '' :
+    `<div style="margin-bottom:6px"><div style="font-size:11.5px;font-weight:700;color:${color};text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px">${title}</div>` +
+    items.map((t, i) => `<div style="display:flex;gap:6px;align-items:flex-start;margin-bottom:4px"><span style="color:${color};font-size:12.5px;font-weight:700;flex-shrink:0">${i + 1}.</span><span style="font-size:12.5px;color:#475569">${esc(t)}</span></div>`).join('') +
+    `</div>`;
+  const failTexts = (screeningResult?.reasons || []).filter((r) => r.level === 'fail').map((r) => r.text);
+  const flagTexts = (screeningResult?.reasons || []).filter((r) => r.level === 'flag').map((r) => r.text);
+  const reasonsHtml = reasonList('Fails policy', '#dc2626', failTexts) +
+    reasonList(failTexts.length ? 'Also flagged' : 'Conditions to advance', '#ca8a04', flagTexts);
   const notesHtml = (screeningResult?.notes || []).map((n) =>
     `<div style="display:flex;gap:6px;align-items:flex-start;margin-bottom:4px"><span style="color:#94a3b8;font-size:12.5px;flex-shrink:0">&#9432;</span><span style="font-size:12.5px;color:#64748b">${esc(n)}</span></div>`
   ).join('');
@@ -520,8 +530,8 @@ export function generateBrandedPdfHtml({ summaryText, inputs, metrics, riskScore
         <span style="font-size:14.5px;font-weight:600;color:${scoreColor}aa">/100</span>
       </div>
       <div>
-        <div style="font-size:14.5px;font-weight:700;color:${scoreColor}">${esc(recommendation?.category || '')}</div>
-        <div style="font-size:12.5px;color:#475569">${esc(recommendation?.detail || '')}</div>
+        <div style="font-size:14.5px;font-weight:700;color:${recColor}">${esc(rec?.category || '')}</div>
+        <div style="font-size:12.5px;color:#475569">${esc(rec?.detail || '')}</div>
       </div>
     </div>
     ${verdict ? `<div style="background:${verdictBg};border:1px solid ${verdictColor}33;border-radius:6px;padding:14px 20px;display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:80px">

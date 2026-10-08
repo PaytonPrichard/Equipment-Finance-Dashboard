@@ -61,6 +61,8 @@ import {
 import { getModule, getAvailableModules, DEFAULT_MODULE } from './modules';
 import { computeBorrowerExtras, coverageStatus, liquidityCoverageStatus, revenueGrowthStatus } from './utils/borrowerMetrics';
 import { computeCashFlowAnalysis, describeMissing } from './utils/cashFlowMetrics';
+import { recommendationFor } from './lib/recommendation';
+import { recommendationStyle } from './components/recommendationStyle';
 import { FINANCING_TYPES } from './modules/equipment-finance/constants';
 import {
   calculateMetrics as eqCalculateMetrics,
@@ -557,7 +559,17 @@ function AuthenticatedApp({ profile, user }) {
   // because commentary and summaryText now read threshold values from it.
   const [screeningCriteria, setScreeningCriteria] = useState({ ...DEFAULT_CRITERIA });
 
-  const recommendation = useMemo(() => mod.getRecommendation(riskScore.composite), [riskScore.composite, mod]);
+  const screeningResult = useMemo(
+    () => valid ? evaluateScreening(screeningCriteria, metrics, riskScore, inputs, activeModule) : null,
+    [screeningCriteria, metrics, riskScore, inputs, activeModule, valid]
+  );
+
+  // Verdict first, score second (src/lib/recommendation.ts). Every surface
+  // below reads this one object, so none can recommend advancing a FLAG.
+  const recommendation = useMemo(
+    () => recommendationFor(mod.getRecommendation(riskScore.composite), screeningResult),
+    [riskScore.composite, mod, screeningResult]
+  );
   const commentary = useMemo(
     () => mod.generateCommentary(inputs, metrics, riskScore, screeningCriteria),
     [inputs, metrics, riskScore, screeningCriteria, mod]
@@ -569,10 +581,6 @@ function AuthenticatedApp({ profile, user }) {
     [inputs, metrics, riskScore, recommendation, commentary, structure, valid, sofr, screeningCriteria, mod]
   );
 
-  const screeningResult = useMemo(
-    () => valid ? evaluateScreening(screeningCriteria, metrics, riskScore, inputs, activeModule) : null,
-    [screeningCriteria, metrics, riskScore, inputs, activeModule, valid]
-  );
 
   // Cash-flow coverage and its stress scenarios. evaluateScreening runs the
   // same function, so the cards, the table and the verdict cannot disagree.
@@ -1091,6 +1099,7 @@ function AuthenticatedApp({ profile, user }) {
           <ErrorBoundary><Suspense fallback={<LazyFallback />}>
             <BatchScreening
               sofr={sofr}
+              criteria={screeningCriteria}
               activeModule={activeModule}
               onLoadDeal={loadDealIntoScreening}
             />
@@ -1347,7 +1356,7 @@ function AuthenticatedApp({ profile, user }) {
                   {/* Section Nav — sticky so the score and jump links stay visible while scrolling */}
                   <nav className="lg:sticky lg:top-[104px] z-10 flex flex-wrap gap-1.5 items-center bg-[#f8f9fa]/95 backdrop-blur-sm py-2">
                     <TutorialBeacon id="nav" title="Jump To" description="Click any label to scroll to that section." position="bottom" />
-                    <span className={`px-2.5 py-1 rounded-lg text-[10px] font-bold border ${recommendation.bgClass} ${recommendation.textClass}`}>
+                    <span className={`px-2.5 py-1 rounded-lg text-[10px] font-bold border ${recommendationStyle(recommendation).bgClass} ${recommendationStyle(recommendation).textClass}`}>
                       {riskScore.composite}/100
                     </span>
                     <span className="w-px h-4 bg-gray-200 mx-0.5" />
@@ -1427,7 +1436,7 @@ function AuthenticatedApp({ profile, user }) {
                       </div>
                     </div>
                     <div className="flex flex-col items-end gap-2">
-                      <div className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider border ${recommendation.bgClass} ${recommendation.textClass}`}>
+                      <div className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider border ${recommendationStyle(recommendation).bgClass} ${recommendationStyle(recommendation).textClass}`}>
                         Score: {riskScore.composite}/100
                       </div>
                       {/* Quick asset class switch */}
@@ -1842,6 +1851,7 @@ function AuthenticatedApp({ profile, user }) {
               {activeTab === 'dashboard' && <PipelineDashboard />}
               {activeTab === 'compare' && (
                 <DealComparison
+                  criteria={screeningCriteria}
                   exampleDeals={demo ? exampleDeals : []}
                   savedDeals={savedDealsList}
                   historicalDeals={demo ? historicalDeals : []}

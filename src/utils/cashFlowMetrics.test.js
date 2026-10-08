@@ -135,8 +135,14 @@ describe('rate shock coverage', () => {
     expect(byKey(a).rate.debtService).toBeCloseTo(3_200_000, 0);
   });
   test('says so when existing debt was not shocked', () => {
+    const a = computeCashFlowAnalysis({ ...inputs, floatingRateDebtPct: null }, { ...metrics, newFloatingPrincipal: 10_000_000 }, DEFAULT_CRITERIA);
+    expect(a.assumptions).toContain('Rate shock does not cover existing debt. Floating share of existing debt not provided.');
+  });
+  test('one caveat, not two, when nothing floats and the share is blank', () => {
     const a = computeCashFlowAnalysis({ ...inputs, floatingRateDebtPct: null }, metrics, DEFAULT_CRITERIA);
-    expect(a.assumptions.some((t) => t.startsWith('Rate shock does not cover existing debt'))).toBe(true);
+    expect(a.assumptions.filter((t) => t.startsWith('Rate shock'))).toEqual([
+      'Rate shock changes nothing here. The new facility is fixed rate and the floating share of existing debt was not provided.',
+    ]);
   });
 });
 
