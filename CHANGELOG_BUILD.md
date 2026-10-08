@@ -24,7 +24,4 @@
 - Floors 1.15x cash-flow DSCR and 1.10x FCCR, configurable, and visible to the user on the cards, the panel and the policy screen.
 - Composite score unchanged. The new metrics act through the verdict only.
 
-**Known and not done here**
-- The "Screening Result" box (Strong Prospect, recommend advancing) goes by score alone, so it can contradict a FLAG verdict. Existed before this change.
-- Copy Summary text export and LLM extraction do not include the new fields yet.
-- Screening criteria are stored per user, not per firm.
+**Known and not done here:** moved to `AUDIT.md` (P0-7, P1-13, P2-7).
