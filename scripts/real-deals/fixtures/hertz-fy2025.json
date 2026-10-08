@@ -238,8 +238,8 @@
       "why": "Proposed by Claude, confirmed by Joel 2026-10-07. "
     },
     "creditRating": {
-      "value": null,
-      "why": "Joel: map current agency rating. IG = Strong, BB = Adequate, B or below = Weak, unrated = Not Rated."
+      "value": "Weak",
+      "why": "S&P Global Ratings site (read by Joel 2026-10-08): downgraded to CCC+ on 2026-08-12. The rating in effect at the 10-K filing (2026-02-26) is not yet confirmed. Every B or CCC rating maps to Weak (Joel's rule), so Weak holds unless Hertz was BB- or higher on 2026-02-26."
     }
   },
   "expected": {
@@ -278,6 +278,7 @@
   "caveats": [
     "JUDGMENT, EBITDA definition: GAAP build used (pre-tax -830 + non-vehicle interest 469 + non-vehicle D&A 117 = -$244M). Company-reported Adjusted EBITDA in the segment note (https://www.sec.gov/Archives/edgar/data/1657853/000165785326000008/R114.htm) is -$48M for the two segments combined and -$291M for Corporate. It adds back items management treats as one-off. All three readings are negative, so the direction of the verdict does not depend on the choice.",
     "JUDGMENT, interest: statement of operations shows non-vehicle interest of $469M. The segment note shows \"non-vehicle debt interest, net\" of $498M. Different measures. $469M used.",
-    "SYNTHETIC STRUCTURE: Hertz does not fund its fleet with single-lender equipment finance. The deal terms are hypothetical and test the corporate credit read, not a realistic structure."
+    "SYNTHETIC STRUCTURE: Hertz does not fund its fleet with single-lender equipment finance. The deal terms are hypothetical and test the corporate credit read, not a realistic structure.",
+    "RATING TIMING: the S&P rating at the 10-K filing date (2026-02-26) is unconfirmed. The 2026-08-12 CCC+ downgrade post-dates the filing. Also unconfirmed: whether CCC+ is the issuer credit rating or a rating on specific notes. Weak is used either way, and would only change if Hertz was BB- or higher in February 2026."
   ]
 }
