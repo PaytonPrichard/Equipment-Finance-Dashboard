@@ -1,6 +1,6 @@
 # EBITDA, Debt and Debt Service Build (Design)
 
-Status: proposed, no code. Owner: Joel. Last updated: 2026-10-08.
+Status: proposed, no code. Decisions 1 and 3 settled; 2, 4 to 8 open. Owner: Joel. Last updated: 2026-10-08.
 
 Today an analyst types EBITDA, total debt and debt service as three single numbers. This design has Tranche build them from the line items on the borrower's financial statements. The analyst uploads the statement pages, Tranche does the arithmetic, proposes the judgment calls, and the analyst confirms them and submits.
 
@@ -235,9 +235,9 @@ Each phase merges and deploys on its own.
 
 ## 16. Decisions for Joel (recommended default in bold)
 
-1. **Which EBITDA scores when both exist?** **Built by default. The analyst can switch to Adjusted, and the label and comparison follow it into the memo.**
+1. **Which EBITDA scores when both exist?** Decided 2026-10-08: built by default. The analyst can switch to Adjusted, and the label and comparison follow it into the memo.
 2. **Unexplained-gap tolerance between built and stated EBITDA.** **5% of built EBITDA, firm-configurable.** Below that, the gap is shown but not a caveat.
-3. **Save without all judgments confirmed?** **No.** Scoring runs live with caveats, but Save to Pipeline needs every judgment confirmed.
+3. **Save without all judgments confirmed?** Decided 2026-10-08: no. Scoring runs live with caveats, but Save to Pipeline needs every judgment confirmed first.
 4. **Maintenance capex proposal.** **Borrower-stated if any, else depreciation as proxy, labeled an estimate.** Total capex as upper bound is offered, not proposed.
 5. **Undrawn availability.** **Split today's `availableLiquidity` into "undrawn committed availability" and "other liquidity".** The verdict should only lean on committed capacity. The alternative is a separate new field beside the existing one.
 6. **Page limit for statement uploads.** **15 pages per document.** Enough for the three statements and the debt and lease notes.
