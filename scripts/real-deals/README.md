@@ -7,9 +7,10 @@ Runs public-company financials through Tranche's equipment finance scoring and c
 1. **Fetch.** `npm run real-deals:fetch` fills every XBRL-tagged figure from SEC EDGAR companyfacts, with tag, accession number and filing URL. Re-running is safe. Manual figures are never touched.
 2. **Read the manual figures.** Each `manual` figure has a note that says what to read and why XBRL can't supply it. Fill in `value`, `cite` (page, statement or note) and `readBy`.
 3. **Set the deal terms.** `assumptions` holds the hypothetical deal. A 10-K describes the borrower, not the equipment loan. Every value needs a `why`.
-4. **Write the expectation.** Set `expected.verdict` (pass, flag or fail), a one-line `reason` and `writtenOn`, then commit. The commit history then shows the expectation came before the result.
-5. **Run.** `npm run real-deals` writes `reports/<date>.md`. A case missing any figure, term or expectation shows as BLOCKED and is not scored.
-6. **Discuss mismatches.** Decide whether the model or the expectation is wrong. Record the answer in the fixture's `discussion` field.
+4. **Read the analyst sheet.** `npm run real-deals:sheet` writes `sheets/<date>.md`: sourced figures and plain ratios, with no Tranche score on it.
+5. **Write the expectation.** Set `expected.verdict` (pass, flag or fail), a one-line `reason` and `writtenOn`, then commit. The commit history then shows the expectation came before the result.
+6. **Run.** `npm run real-deals` writes `reports/<date>.md`. A case missing any figure, term or expectation shows as BLOCKED and is not scored.
+7. **Discuss mismatches.** Decide whether the model or the expectation is wrong. Record the answer in the fixture's `discussion` field.
 
 ## Rules
 

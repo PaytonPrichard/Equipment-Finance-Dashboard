@@ -137,39 +137,39 @@
   "assumptions": {
     "industrySector": {
       "value": "Construction",
-      "why": "Proposed by Claude 2026-10-07, Joel to confirm. Rental customers are mostly construction."
+      "why": "Proposed by Claude, confirmed by Joel 2026-10-07. Rental customers are mostly construction."
     },
     "equipmentType": {
       "value": "Construction Equipment",
-      "why": "Proposed by Claude 2026-10-07, Joel to confirm. Rental fleet additions."
+      "why": "Proposed by Claude, confirmed by Joel 2026-10-07. Rental fleet additions."
     },
     "equipmentCondition": {
       "value": "New",
-      "why": "Proposed by Claude 2026-10-07, Joel to confirm. "
+      "why": "Proposed by Claude, confirmed by Joel 2026-10-07. "
     },
     "equipmentCost": {
       "value": 50000000,
-      "why": "Proposed by Claude 2026-10-07, Joel to confirm. About 3.3% of revenue. Sized up because fleet purchases run $300M+ a year."
+      "why": "Proposed by Claude, confirmed by Joel 2026-10-07. About 3.3% of revenue. Sized up because fleet purchases run $300M+ a year."
     },
     "downPayment": {
       "value": 7500000,
-      "why": "Proposed by Claude 2026-10-07, Joel to confirm. 15%, Tranche default."
+      "why": "Proposed by Claude, confirmed by Joel 2026-10-07. 15%, Tranche default."
     },
     "financingType": {
       "value": "EFA",
-      "why": "Proposed by Claude 2026-10-07, Joel to confirm. "
+      "why": "Proposed by Claude, confirmed by Joel 2026-10-07. "
     },
     "usefulLife": {
       "value": 10,
-      "why": "Proposed by Claude 2026-10-07, Joel to confirm. Within Tranche range of 8-15 years."
+      "why": "Proposed by Claude, confirmed by Joel 2026-10-07. Within Tranche range of 8-15 years."
     },
     "loanTerm": {
       "value": 60,
-      "why": "Proposed by Claude 2026-10-07, Joel to confirm. "
+      "why": "Proposed by Claude, confirmed by Joel 2026-10-07. "
     },
     "essentialUse": {
       "value": true,
-      "why": "Proposed by Claude 2026-10-07, Joel to confirm. "
+      "why": "Proposed by Claude, confirmed by Joel 2026-10-07. "
     },
     "creditRating": {
       "value": null,

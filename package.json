@@ -28,6 +28,7 @@
     "start": "concurrently \"npm run tailwind\" \"react-scripts start\"",
     "build:scoring": "node scripts/build-scoring.js",
     "real-deals:fetch": "node scripts/real-deals/fetch.js",
+    "real-deals:sheet": "node scripts/real-deals/sheet.js",
     "real-deals": "node scripts/real-deals/run.js",
     "test:real-deals": "jest scripts/real-deals --testEnvironment node",
     "build": "npm run tailwind:build && npm run build:scoring && react-scripts build",

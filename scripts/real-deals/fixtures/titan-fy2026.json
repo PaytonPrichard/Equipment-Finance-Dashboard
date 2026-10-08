@@ -214,39 +214,39 @@
   "assumptions": {
     "industrySector": {
       "value": "Agriculture",
-      "why": "Proposed by Claude 2026-10-07, Joel to confirm. Ag-heavy CNH dealer. Confirm the revenue mix in the segment note."
+      "why": "Proposed by Claude, confirmed by Joel 2026-10-07. Ag-heavy CNH dealer. Confirm the revenue mix in the segment note."
     },
     "equipmentType": {
       "value": "Construction Equipment",
-      "why": "Proposed by Claude 2026-10-07, Joel to confirm. Rental fleet additions."
+      "why": "Proposed by Claude, confirmed by Joel 2026-10-07. Rental fleet additions."
     },
     "equipmentCondition": {
       "value": "New",
-      "why": "Proposed by Claude 2026-10-07, Joel to confirm. "
+      "why": "Proposed by Claude, confirmed by Joel 2026-10-07. "
     },
     "equipmentCost": {
       "value": 20000000,
-      "why": "Proposed by Claude 2026-10-07, Joel to confirm. About 0.8% of revenue."
+      "why": "Proposed by Claude, confirmed by Joel 2026-10-07. About 0.8% of revenue."
     },
     "downPayment": {
       "value": 3000000,
-      "why": "Proposed by Claude 2026-10-07, Joel to confirm. 15%, Tranche default for Construction Equipment."
+      "why": "Proposed by Claude, confirmed by Joel 2026-10-07. 15%, Tranche default for Construction Equipment."
     },
     "financingType": {
       "value": "EFA",
-      "why": "Proposed by Claude 2026-10-07, Joel to confirm. Tranche suggested structure."
+      "why": "Proposed by Claude, confirmed by Joel 2026-10-07. Tranche suggested structure."
     },
     "usefulLife": {
       "value": 10,
-      "why": "Proposed by Claude 2026-10-07, Joel to confirm. Within Tranche range of 8-15 years."
+      "why": "Proposed by Claude, confirmed by Joel 2026-10-07. Within Tranche range of 8-15 years."
     },
     "loanTerm": {
       "value": 60,
-      "why": "Proposed by Claude 2026-10-07, Joel to confirm. "
+      "why": "Proposed by Claude, confirmed by Joel 2026-10-07. "
     },
     "essentialUse": {
       "value": true,
-      "why": "Proposed by Claude 2026-10-07, Joel to confirm. Rental fleet is revenue-generating."
+      "why": "Proposed by Claude, confirmed by Joel 2026-10-07. Rental fleet is revenue-generating."
     },
     "creditRating": {
       "value": null,

@@ -178,6 +178,8 @@ webhook.site endpoints were added to the production org during integration testi
 
 ### P1-13. Stress FCCR drops the new loan when actual debt service is supplied
 
+**Status: fixed on `cashflow-stress` (25d4e0f, Workstream A), not yet merged to main.**
+
 Found 2026-10-07 by the real-deals harness smoke test.
 
 `calculateMetrics` treats `actualAnnualDebtService` as existing debt service and adds the new loan on top (`equipment-finance/scoring.ts:133`). `runStressTest` treats the same field as total debt service and leaves the new loan out (`:496-499`). AR has the same pattern (`accounts-receivable/scoring.ts:557`). On the DXP smoke test, base FCCR printed 2.38x. With the new loan included it is 2.23x.
@@ -185,6 +187,8 @@ Found 2026-10-07 by the real-deals harness smoke test.
 **Fix.** One definition: `actualAnnualDebtService` is existing debt service, and every coverage metric adds the new facility. Belongs with Workstream A (cash-flow stress).
 
 ### P1-14. Silent imputations never reach the memo
+
+**Status: the 3% capex imputation is removed on `cashflow-stress` (25d4e0f, Workstream A), not yet merged. The 8% debt-service estimate and the memo disclosure still need checking after the merge.**
 
 `runStressTest` sets maintenance capex to 3% of revenue when it is missing, in all three modules (`equipment-finance/scoring.ts:495`, `accounts-receivable/scoring.ts:556`, `inventory-finance/scoring.ts:661`). `calculateMetrics` estimates existing debt service at 8% of total debt. The 3% has no source and misses in both directions on real filings: DXP's total capex is 2.0% of revenue, but H&E's rental fleet purchases alone are 22.7%.
 

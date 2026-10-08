@@ -229,39 +229,39 @@
   "assumptions": {
     "industrySector": {
       "value": "Other",
-      "why": "Proposed by Claude 2026-10-07, Joel to confirm. Industrial distributor, no clean sector fit. Energy if oil and gas customer exposure dominates."
+      "why": "Proposed by Claude, confirmed by Joel 2026-10-07. Industrial distributor, no clean sector fit. Energy if oil and gas customer exposure dominates."
     },
     "equipmentType": {
       "value": "Vehicles/Fleet",
-      "why": "Proposed by Claude 2026-10-07, Joel to confirm. Service truck fleet for service centers."
+      "why": "Proposed by Claude, confirmed by Joel 2026-10-07. Service truck fleet for service centers."
     },
     "equipmentCondition": {
       "value": "New",
-      "why": "Proposed by Claude 2026-10-07, Joel to confirm. "
+      "why": "Proposed by Claude, confirmed by Joel 2026-10-07. "
     },
     "equipmentCost": {
       "value": 15000000,
-      "why": "Proposed by Claude 2026-10-07, Joel to confirm. About 0.7% of revenue, so borrower credit drives the verdict, not deal size."
+      "why": "Proposed by Claude, confirmed by Joel 2026-10-07. About 0.7% of revenue, so borrower credit drives the verdict, not deal size."
     },
     "downPayment": {
       "value": 1500000,
-      "why": "Proposed by Claude 2026-10-07, Joel to confirm. 10%, Tranche default for Vehicles/Fleet."
+      "why": "Proposed by Claude, confirmed by Joel 2026-10-07. 10%, Tranche default for Vehicles/Fleet."
     },
     "financingType": {
       "value": "TRAC",
-      "why": "Proposed by Claude 2026-10-07, Joel to confirm. Tranche suggested structure for Vehicles/Fleet."
+      "why": "Proposed by Claude, confirmed by Joel 2026-10-07. Tranche suggested structure for Vehicles/Fleet."
     },
     "usefulLife": {
       "value": 7,
-      "why": "Proposed by Claude 2026-10-07, Joel to confirm. Within Tranche range of 5-8 years."
+      "why": "Proposed by Claude, confirmed by Joel 2026-10-07. Within Tranche range of 5-8 years."
     },
     "loanTerm": {
       "value": 60,
-      "why": "Proposed by Claude 2026-10-07, Joel to confirm. "
+      "why": "Proposed by Claude, confirmed by Joel 2026-10-07. "
     },
     "essentialUse": {
       "value": true,
-      "why": "Proposed by Claude 2026-10-07, Joel to confirm. Service fleet is core to field operations."
+      "why": "Proposed by Claude, confirmed by Joel 2026-10-07. Service fleet is core to field operations."
     },
     "creditRating": {
       "value": null,

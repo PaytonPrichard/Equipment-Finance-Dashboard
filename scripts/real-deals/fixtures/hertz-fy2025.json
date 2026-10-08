@@ -148,39 +148,39 @@
   "assumptions": {
     "industrySector": {
       "value": "Transportation/Logistics",
-      "why": "Proposed by Claude 2026-10-07, Joel to confirm. "
+      "why": "Proposed by Claude, confirmed by Joel 2026-10-07. "
     },
     "equipmentType": {
       "value": "Vehicles/Fleet",
-      "why": "Proposed by Claude 2026-10-07, Joel to confirm. "
+      "why": "Proposed by Claude, confirmed by Joel 2026-10-07. "
     },
     "equipmentCondition": {
       "value": "New",
-      "why": "Proposed by Claude 2026-10-07, Joel to confirm. "
+      "why": "Proposed by Claude, confirmed by Joel 2026-10-07. "
     },
     "equipmentCost": {
       "value": 100000000,
-      "why": "Proposed by Claude 2026-10-07, Joel to confirm. About 1.2% of revenue."
+      "why": "Proposed by Claude, confirmed by Joel 2026-10-07. About 1.2% of revenue."
     },
     "downPayment": {
       "value": 10000000,
-      "why": "Proposed by Claude 2026-10-07, Joel to confirm. 10%, Tranche default."
+      "why": "Proposed by Claude, confirmed by Joel 2026-10-07. 10%, Tranche default."
     },
     "financingType": {
       "value": "TRAC",
-      "why": "Proposed by Claude 2026-10-07, Joel to confirm. Tranche suggested structure for Vehicles/Fleet."
+      "why": "Proposed by Claude, confirmed by Joel 2026-10-07. Tranche suggested structure for Vehicles/Fleet."
     },
     "usefulLife": {
       "value": 5,
-      "why": "Proposed by Claude 2026-10-07, Joel to confirm. Bottom of Tranche range. Rental fleets cycle faster than this."
+      "why": "Proposed by Claude, confirmed by Joel 2026-10-07. Bottom of Tranche range. Rental fleets cycle faster than this."
     },
     "loanTerm": {
       "value": 36,
-      "why": "Proposed by Claude 2026-10-07, Joel to confirm. "
+      "why": "Proposed by Claude, confirmed by Joel 2026-10-07. "
     },
     "essentialUse": {
       "value": true,
-      "why": "Proposed by Claude 2026-10-07, Joel to confirm. "
+      "why": "Proposed by Claude, confirmed by Joel 2026-10-07. "
     },
     "creditRating": {
       "value": null,
