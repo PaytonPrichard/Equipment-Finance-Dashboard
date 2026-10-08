@@ -51,7 +51,7 @@ jobs:
       - uses: actions/setup-node@v4
         if: steps.secrets.outputs.ready == 'true'
         with:
-          node-version: 22
+          node-version: 24
 
       - name: Install dependencies
         if: steps.secrets.outputs.ready == 'true'
