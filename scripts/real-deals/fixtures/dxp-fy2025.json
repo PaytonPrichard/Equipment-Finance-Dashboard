@@ -374,8 +374,8 @@
       "why": "Proposed by Claude, confirmed by Joel 2026-10-07. Service fleet is core to field operations."
     },
     "creditRating": {
-      "value": null,
-      "why": "Joel: map current agency rating. IG = Strong, BB = Adequate, B or below = Weak, unrated = Not Rated."
+      "value": "Weak",
+      "why": "DXP 10-K, Credit Ratings section: corporate ratings as of 2025-12-31 are Moody's B1 and S&P B (https://www.sec.gov/Archives/edgar/data/1020710/000162828026012382/dxpe-20251231.htm). Lower of the two is S&P B. Mapped by Joel's rule: B or below = Weak. Read by Claude 2026-10-08, Joel to verify."
     }
   },
   "expected": {
