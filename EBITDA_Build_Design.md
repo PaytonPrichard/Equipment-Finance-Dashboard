@@ -1,6 +1,6 @@
 # EBITDA, Debt and Debt Service Build (Design)
 
-Status: proposed, no code. Decisions 1 and 3 settled; 2, 4 to 8 open. Owner: Joel. Last updated: 2026-10-08.
+Status: approved for build. All section 16 decisions settled 2026-10-08. Owner: Joel. Last updated: 2026-10-08.
 
 Today an analyst types EBITDA, total debt and debt service as three single numbers. This design has Tranche build them from the line items on the borrower's financial statements. The analyst uploads the statement pages, Tranche does the arithmetic, proposes the judgment calls, and the analyst confirms them and submits.
 
@@ -140,7 +140,7 @@ Company Adjusted EBITDA         $47.9M
   Unexplained                   $0.8M   ◀ caveat if over the firm's tolerance
 ```
 
-The unexplained gap becomes a caveat when it is over a firm tolerance (Q2).
+The unexplained gap becomes a caveat when it is over the firm tolerance (default 5%, section 16). The tolerance is printed beside the gap so the analyst sees the rule being applied.
 
 **Add-backs.** Each line of the bridge is listed with its amount and page. The analyst marks each one accepted or rejected. Undecided add-backs are excluded and counted in a caveat ("2 add-backs not reviewed"). This is the one place Tranche shows a number the borrower chose, so every piece of it is visible.
 
@@ -236,10 +236,10 @@ Each phase merges and deploys on its own.
 ## 16. Decisions for Joel (recommended default in bold)
 
 1. **Which EBITDA scores when both exist?** Decided 2026-10-08: built by default. The analyst can switch to Adjusted, and the label and comparison follow it into the memo.
-2. **Unexplained-gap tolerance between built and stated EBITDA.** **5% of built EBITDA, firm-configurable.** Below that, the gap is shown but not a caveat.
+2. **Unexplained-gap tolerance between built and stated EBITDA.** Decided 2026-10-08: 5% of built EBITDA, firm-configurable. Below that, the gap is shown but not a caveat. The tolerance is printed next to the gap wherever it appears (screening view, memo), e.g. "Unexplained $0.8M, 1.9% of built. Caveat above 5%, your policy." The user never has to look it up.
 3. **Save without all judgments confirmed?** Decided 2026-10-08: no. Scoring runs live with caveats, but Save to Pipeline needs every judgment confirmed first.
-4. **Maintenance capex proposal.** **Borrower-stated if any, else depreciation as proxy, labeled an estimate.** Total capex as upper bound is offered, not proposed.
-5. **Undrawn availability.** **Split today's `availableLiquidity` into "undrawn committed availability" and "other liquidity".** The verdict should only lean on committed capacity. The alternative is a separate new field beside the existing one.
-6. **Page limit for statement uploads.** **15 pages per document.** Enough for the three statements and the debt and lease notes.
-7. **Who can change firm treatment rules?** **Admins only.** Per-deal overrides by any analyst, with a reason and an audit entry.
-8. **Typed mode stays?** **Yes.** Some deals arrive with a one-page summary and no statements. Typed EBITDA is labeled "stated, not built", with a caveat.
+4. **Maintenance capex proposal.** Decided 2026-10-08: borrower-stated if any, else depreciation as proxy, labeled an estimate. Total capex as upper bound is offered, not proposed.
+5. **Undrawn availability.** Decided 2026-10-08: split today's `availableLiquidity` into "undrawn committed availability" and "other liquidity". The verdict leans only on committed capacity. Saved deals keep their old value as "other liquidity" until re-entered; it is not assumed to be committed.
+6. **Page limit for statement uploads.** Decided 2026-10-08: 15 pages per document.
+7. **Who can change firm treatment rules?** Decided 2026-10-08: admins only. Per-deal overrides by any analyst, with a reason and an audit entry.
+8. **Typed mode stays?** Decided 2026-10-08: yes. Typed EBITDA is labeled "stated, not built", with a caveat.
