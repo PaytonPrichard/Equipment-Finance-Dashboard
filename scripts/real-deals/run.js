@@ -39,11 +39,11 @@ const MONEY_FIELDS = new Set(['annualRevenue', 'ebitda', 'totalExistingDebt', 'a
 const fmtField = (k, v) => (v == null ? 'n/a' : MONEY_FIELDS.has(k) ? money(v) : String(v));
 
 function runCase(fx, S) {
-  const { inputs, derivations, blockers } = derive(fx);
+  const { inputs, derivations, blockers, caveats } = derive(fx);
   if (!fx.expected || !fx.expected.verdict) {
     blockers.unshift('No expected verdict written. Write it before running.');
   }
-  if (blockers.length) return { fx, inputs, derivations, blockers };
+  if (blockers.length) return { fx, inputs, derivations, blockers, caveats };
 
   const ef = S.equipmentFinance;
   const metrics = ef.calculateMetrics(inputs, S.DEFAULT_SOFR);
@@ -52,20 +52,21 @@ function runCase(fx, S) {
   const screening = S.evaluateScreening(S.DEFAULT_CRITERIA, metrics, risk, inputs, 'equipment_finance');
   const stress = ef.runStressTest(inputs, S.DEFAULT_SOFR);
 
-  const warnings = [];
+  // Fallbacks the module applied on its own. Same weight as written caveats.
+  const warnings = [...caveats];
   if (metrics.debtServiceEstimated) {
-    warnings.push('Existing debt service is estimated at 8% of total debt. No actual figure was supplied.');
+    warnings.push('FALLBACK: existing debt service estimated at 8% of total debt. No actual figure was supplied.');
   }
   if (inputs.maintenanceCapex == null) {
-    warnings.push('Stress-test FCCR uses 3% of revenue as maintenance capex. runStressTest imputes it silently.');
+    warnings.push('FALLBACK: stress-test FCCR uses 3% of revenue as maintenance capex. runStressTest imputes it silently.');
   }
   if (!(inputs.ebitda > 0)) {
-    warnings.push('EBITDA is zero or negative. Leverage reads 0.0x and scores as best-in-class, and the DSCR gate is skipped. Known defect, see CHANGELOG_BUILD.md backlog.');
+    warnings.push('DEFECT: EBITDA is zero or negative. Leverage reads 0.0x and scores as best-in-class, and the DSCR gate is skipped. This result is not valid until AUDIT.md P0-7 is fixed.');
   }
 
   const actual = screening.verdict;
   const expected = String(fx.expected.verdict).toLowerCase();
-  return { fx, inputs, derivations, blockers, metrics, risk, factors, screening, stress, warnings, actual, expected, match: actual === expected };
+  return { fx, inputs, derivations, blockers, caveats: warnings, metrics, risk, factors, screening, stress, actual, expected, match: actual === expected };
 }
 
 function citeLine(key, fig) {
@@ -86,6 +87,9 @@ function caseSection(r) {
   out.push('');
   out.push(`CIK ${fx.borrower.cik}. Fiscal year ending ${fx.period.fiscalYearEnd}. Figures fetched ${fx.period.fetchedAt || 'never'}.`);
   if (fx.context) out.push('', fx.context);
+  out.push('', `### Caveats (${r.caveats.length})`, '');
+  if (r.caveats.length) for (const c of r.caveats) out.push(`- ${c}`);
+  else out.push('- None.');
   out.push('', '### Sourced figures', '', '| Figure | Value | Source |', '|---|---|---|');
   for (const [k, fig] of Object.entries(fx.figures)) out.push(citeLine(k, fig));
   const notes = Object.entries(fx.figures).filter(([, f]) => f.note);
@@ -126,10 +130,6 @@ function caseSection(r) {
   out.push('', '**EBITDA stress**', '', '| Scenario | EBITDA | DSCR | Leverage | FCCR | Score |', '|---|---|---|---|---|---|');
   for (const s of r.stress) out.push(`| ${s.label} | ${money(s.ebitda)} | ${x(s.dscr)} | ${x(s.leverage, 1)} | ${x(s.fccr)} | ${s.score} |`);
 
-  if (r.warnings.length) {
-    out.push('', '**Fallbacks and caveats that fired**', '');
-    for (const w of r.warnings) out.push(`- ${w}`);
-  }
 
   out.push('', '### Discussion', '', fx.discussion || (r.match ? '_Match. Note anything surprising in the factor table._' : '_Mismatch. Decide with Joel: is the model wrong, or the expectation? Record the answer in the fixture `discussion` field._'));
   return out.join('\n');
@@ -145,17 +145,24 @@ function main() {
     .map((f) => JSON.parse(fs.readFileSync(path.join(dir, f), 'utf8')));
 
   const results = fixtures.map((fx) => runCase(fx, S));
-  const today = new Date().toISOString().slice(0, 10);
+  const today = new Date().toLocaleDateString('en-CA');
 
   const lines = [`# Real-deals run, ${today}`, ''];
   lines.push(`Module: equipment finance. SOFR ${(S.DEFAULT_SOFR * 100).toFixed(2)}% (module default, same as the server). Criteria: DEFAULT_CRITERIA.`, '');
-  lines.push('| Case | Expected | Tranche | Score | Result |', '|---|---|---|---|---|');
+  lines.push('| Case | Expected | Tranche | Score | Result | Caveats |', '|---|---|---|---|---|---|');
   for (const r of results) {
     const exp = r.fx.expected?.verdict ? String(r.fx.expected.verdict).toUpperCase() : 'n/a';
-    if (r.blockers.length) lines.push(`| ${r.fx.borrower.name} | ${exp} | n/a | n/a | BLOCKED (${r.blockers.length}) |`);
-    else lines.push(`| ${r.fx.borrower.name} | ${exp} | ${r.actual.toUpperCase()} | ${r.risk.composite} | ${r.match ? 'match' : 'MISMATCH'} |`);
+    if (r.blockers.length) lines.push(`| ${r.fx.borrower.name} | ${exp} | n/a | n/a | BLOCKED (${r.blockers.length}) | ${r.caveats.length} |`);
+    else lines.push(`| ${r.fx.borrower.name} | ${exp} | ${r.actual.toUpperCase()} | ${r.risk.composite} | ${r.match ? 'match' : 'MISMATCH'} | ${r.caveats.length} |`);
   }
-  lines.push('');
+  lines.push('', '## Read before relying on these results', '');
+  lines.push('Estimates, fallbacks and judgment calls that could change a verdict.', '');
+  for (const r of results) {
+    if (!r.caveats.length) continue;
+    lines.push(`**${r.fx.borrower.name}**`, '');
+    for (const c of r.caveats) lines.push(`- ${c}`);
+    lines.push('');
+  }
   for (const r of results) lines.push(caseSection(r), '');
 
   const reportDir = path.join(ROOT, 'reports');

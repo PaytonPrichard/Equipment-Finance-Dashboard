@@ -14,9 +14,20 @@ Runs public-company financials through Tranche's equipment finance scoring and c
 ## Rules
 
 - Every number traces to a source. If it can't be found, it stays null, and the case stays blocked.
-- EBITDA = operating income + D&A unless the fixture cites a company-defined EBITDA.
-- Debt service = cash interest paid + principal due in twelve months.
+- Estimates and judgment calls go in `caveats`, or in a build's `estimate` text, which adds a caveat automatically. Caveats print at the top of the report. Anything uncertain that could change a verdict has to be visible there.
 - Third-party PDFs (rating agency presales) go in `sources/`. That folder is gitignored and never committed.
+
+## Treatment rules (same for every company)
+
+Companies put the same items in different places. The rules don't move. Each fixture's `builds` maps its own figures onto them.
+
+- **EBITDA** = operating income + D&A by default. D&A comes from the cash-flow statement and includes fleet depreciation and finance-lease amortization.
+- **Pairing.** EBITDA and debt must agree on every item. Finance-lease amortization is in D&A, so finance-lease liabilities are in debt. Operating leases are out of both, because rent stays in EBITDA as an expense.
+- **Floorplan** (dealers) is inventory financing. Floorplan interest is deducted in EBITDA, and the floorplan payable is left out of debt and debt service. This follows auto-dealer convention. Check it against the company's own credit agreement where possible.
+- **Captive fleet debt** (car rental) is analyzed at the corporate level. EBITDA is after vehicle depreciation and vehicle interest, and debt is non-vehicle only.
+- **Debt service** = cash interest paid + principal due in twelve months, on the same debt that's counted in leverage.
+- **Maintenance capex** = depreciation, as a proxy, always flagged as an estimate. It excludes anything already deducted in EBITDA.
+- **Years in business** = fiscal-year-end year minus founding year, quoted from Item 1.
 
 ## Known limits
 

@@ -12,7 +12,7 @@
     "companyFactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001657853.json",
     "fetchedAt": "2026-10-07"
   },
-  "context": "Car rental. Net loss of $747M in FY2025. Most debt is vehicle ABS issued by a bankruptcy-remote subsidiary, so the unit of analysis is a credit decision, not a lookup.",
+  "context": "Car rental. Net loss of $747M in FY2025. Analyzed at the corporate level: vehicle debt ($11.6B) is serviced by the fleet through a separate financing structure, so EBITDA is after vehicle depreciation and vehicle interest, and debt is non-vehicle only.",
   "figures": {
     "revenue": {
       "tags": [
@@ -32,19 +32,104 @@
       ],
       "value": 8504000000
     },
-    "ebitda": {
-      "manual": {
-        "value": null,
-        "cite": "",
-        "readBy": ""
-      },
-      "note": "Manual, and a definition choice. Hertz reports no OperatingIncomeLoss. Option A: Adjusted Corporate EBITDA (non-GAAP, after vehicle depreciation and vehicle interest, from the 10-K MD&A). Option B: build from pre-tax loss plus non-vehicle interest and non-vehicle D&A. EBITDA before vehicle depreciation overstates capacity, because fleet depreciation is a recurring cash-like cost."
-    },
     "totalDebt": {
+      "manual": {
+        "value": 5425000000,
+        "cite": "Balance sheet (https://www.sec.gov/Archives/edgar/data/1657853/000165785326000008/R3.htm): Non-Vehicle Debt, Total debt 5,425.",
+        "readBy": "Claude 2026-10-07, Joel to verify"
+      },
+      "note": "Paired with corporate EBITDA. Vehicle debt is serviced by the fleet, and its cost is already in EBITDA."
+    },
+    "interestPaid": {
+      "manual": {
+        "value": 463000000,
+        "cite": "Cash-flow statement supplemental (https://www.sec.gov/Archives/edgar/data/1657853/000165785326000008/R13.htm): Interest, net of amounts capitalized, Non-vehicle, 463.",
+        "readBy": "Claude 2026-10-07, Joel to verify"
+      }
+    },
+    "currentMaturities": {
+      "manual": {
+        "value": 284000000,
+        "cite": "Debt maturities (https://www.sec.gov/Archives/edgar/data/1657853/000165785326000008/R71.htm): Non-Vehicle Debt, 2026, 284.",
+        "readBy": "Claude 2026-10-07, Joel to verify"
+      }
+    },
+    "yearsInBusiness": {
+      "manual": {
+        "value": 107,
+        "cite": "10-K Item 1: Hertz \"is a successor to corporations that have been engaged in the vehicle rental and leasing business since 1918.\" 2025 - 1918.",
+        "readBy": "Claude 2026-10-07, Joel to verify"
+      }
+    },
+    "pretaxIncome": {
+      "tags": [
+        "us-gaap:IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest"
+      ],
+      "note": "Hertz Global (HGH) consolidated pre-tax loss, https://www.sec.gov/Archives/edgar/data/1657853/000165785326000008/R7.htm. The Hertz Corporation subsidiary reports -786.",
+      "sources": [
+        {
+          "tag": "us-gaap:IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
+          "val": -830000000,
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "accn": "0001657853-26-000008",
+          "form": "10-K",
+          "filed": "2026-02-26",
+          "url": "https://www.sec.gov/Archives/edgar/data/1657853/000165785326000008/"
+        }
+      ],
+      "value": -830000000
+    },
+    "nonVehicleInterest": {
+      "manual": {
+        "value": 469000000,
+        "cite": "Statement of operations (https://www.sec.gov/Archives/edgar/data/1657853/000165785326000008/R7.htm): Interest expense, net, Non-vehicle, 469.",
+        "readBy": "Claude 2026-10-07, Joel to verify"
+      }
+    },
+    "nonVehicleDA": {
+      "tags": [
+        "us-gaap:DepreciationAndAmortization"
+      ],
+      "note": "Statement of operations line \"Non-vehicle depreciation and amortization\" 117.",
+      "sources": [
+        {
+          "tag": "us-gaap:DepreciationAndAmortization",
+          "val": 117000000,
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "accn": "0001657853-26-000008",
+          "form": "10-K",
+          "filed": "2026-02-26",
+          "url": "https://www.sec.gov/Archives/edgar/data/1657853/000165785326000008/"
+        }
+      ],
+      "value": 117000000
+    },
+    "nonVehicleDepreciation": {
+      "tags": [
+        "us-gaap:Depreciation"
+      ],
+      "note": "Non-vehicle depreciation excluding intangible amortization. Maintenance capex proxy.",
+      "sources": [
+        {
+          "tag": "us-gaap:Depreciation",
+          "val": 95000000,
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "accn": "0001657853-26-000008",
+          "form": "10-K",
+          "filed": "2026-02-26",
+          "url": "https://www.sec.gov/Archives/edgar/data/1657853/000165785326000008/"
+        }
+      ],
+      "value": 95000000
+    },
+    "consolidatedDebt": {
       "tags": [
         "us-gaap:DebtAndCapitalLeaseObligations"
       ],
-      "note": "Includes non-recourse vehicle ABS. If you use Corporate EBITDA, pair it with non-vehicle debt instead (manual) so numerator and denominator match.",
+      "note": "Informational. Includes $11,629M of vehicle debt.",
       "sources": [
         {
           "tag": "us-gaap:DebtAndCapitalLeaseObligations",
@@ -58,86 +143,48 @@
         }
       ],
       "value": 17054000000
-    },
-    "interestPaid": {
-      "manual": {
-        "value": null,
-        "cite": "",
-        "readBy": ""
-      },
-      "note": "Manual. No cash-interest-paid tag for FY2025. InterestExpenseOperating ($1,077M) is expense, not cash paid. Read from the supplemental cash-flow disclosure."
-    },
-    "currentMaturities": {
-      "tags": [
-        "us-gaap:LongTermDebtMaturitiesRepaymentsOfPrincipalInNextTwelveMonths"
-      ],
-      "sources": [
-        {
-          "tag": "us-gaap:LongTermDebtMaturitiesRepaymentsOfPrincipalInNextTwelveMonths",
-          "val": 3185000000,
-          "start": null,
-          "end": "2025-12-31",
-          "accn": "0001657853-26-000008",
-          "form": "10-K",
-          "filed": "2026-02-26",
-          "url": "https://www.sec.gov/Archives/edgar/data/1657853/000165785326000008/"
-        }
-      ],
-      "value": 3185000000
-    },
-    "yearsInBusiness": {
-      "manual": {
-        "value": null,
-        "cite": "",
-        "readBy": ""
-      },
-      "note": "Years since founding or first operations, from Item 1 of the 10-K. Cite the sentence."
     }
   },
   "assumptions": {
     "industrySector": {
-      "value": null,
-      "why": ""
+      "value": "Transportation/Logistics",
+      "why": "Proposed by Claude 2026-10-07, Joel to confirm. "
+    },
+    "equipmentType": {
+      "value": "Vehicles/Fleet",
+      "why": "Proposed by Claude 2026-10-07, Joel to confirm. "
+    },
+    "equipmentCondition": {
+      "value": "New",
+      "why": "Proposed by Claude 2026-10-07, Joel to confirm. "
+    },
+    "equipmentCost": {
+      "value": 100000000,
+      "why": "Proposed by Claude 2026-10-07, Joel to confirm. About 1.2% of revenue."
+    },
+    "downPayment": {
+      "value": 10000000,
+      "why": "Proposed by Claude 2026-10-07, Joel to confirm. 10%, Tranche default."
+    },
+    "financingType": {
+      "value": "TRAC",
+      "why": "Proposed by Claude 2026-10-07, Joel to confirm. Tranche suggested structure for Vehicles/Fleet."
+    },
+    "usefulLife": {
+      "value": 5,
+      "why": "Proposed by Claude 2026-10-07, Joel to confirm. Bottom of Tranche range. Rental fleets cycle faster than this."
+    },
+    "loanTerm": {
+      "value": 36,
+      "why": "Proposed by Claude 2026-10-07, Joel to confirm. "
+    },
+    "essentialUse": {
+      "value": true,
+      "why": "Proposed by Claude 2026-10-07, Joel to confirm. "
     },
     "creditRating": {
       "value": null,
-      "why": ""
-    },
-    "equipmentType": {
-      "value": null,
-      "why": ""
-    },
-    "equipmentCondition": {
-      "value": null,
-      "why": ""
-    },
-    "equipmentCost": {
-      "value": null,
-      "why": ""
-    },
-    "downPayment": {
-      "value": null,
-      "why": ""
-    },
-    "financingType": {
-      "value": null,
-      "why": ""
-    },
-    "usefulLife": {
-      "value": null,
-      "why": ""
-    },
-    "loanTerm": {
-      "value": null,
-      "why": ""
-    },
-    "essentialUse": {
-      "value": null,
-      "why": ""
-    },
-    "maintenanceCapex": {
-      "value": null,
-      "why": ""
+      "why": "Joel: map current agency rating. IG = Strong, BB = Adequate, B or below = Weak, unrated = Not Rated."
     }
   },
   "expected": {
@@ -145,5 +192,37 @@
     "reason": "",
     "writtenOn": null
   },
-  "discussion": ""
+  "discussion": "",
+  "builds": {
+    "ebitda": {
+      "terms": [
+        [
+          "+",
+          "pretaxIncome"
+        ],
+        [
+          "+",
+          "nonVehicleInterest"
+        ],
+        [
+          "+",
+          "nonVehicleDA"
+        ]
+      ]
+    },
+    "maintenanceCapex": {
+      "terms": [
+        [
+          "+",
+          "nonVehicleDepreciation"
+        ]
+      ],
+      "estimate": "Non-vehicle depreciation ($95M) used as maintenance capex proxy. Vehicle depreciation is already deducted in corporate EBITDA. Actual non-vehicle capex was $97M."
+    }
+  },
+  "caveats": [
+    "JUDGMENT, EBITDA definition: GAAP build used (pre-tax -830 + non-vehicle interest 469 + non-vehicle D&A 117 = -$244M). Company-reported Adjusted EBITDA in the segment note (https://www.sec.gov/Archives/edgar/data/1657853/000165785326000008/R114.htm) is -$48M for the two segments combined and -$291M for Corporate. It adds back items management treats as one-off. All three readings are negative, so the direction of the verdict does not depend on the choice.",
+    "JUDGMENT, interest: statement of operations shows non-vehicle interest of $469M. The segment note shows \"non-vehicle debt interest, net\" of $498M. Different measures. $469M used.",
+    "SYNTHETIC STRUCTURE: Hertz does not fund its fleet with single-lender equipment finance. The deal terms are hypothetical and test the corporate credit read, not a realistic structure."
+  ]
 }

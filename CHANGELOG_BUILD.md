@@ -10,12 +10,9 @@
 - Equipment finance module only for now.
 - Companies: DXP, Titan Machinery, H&E (FY2024, last 10-K before the Herc acquisition), Hertz.
 - SEC User-Agent: `Tranche joelpeter617@gmail.com`.
-
-**Open decisions for Joel.** Hertz unit of analysis (Corporate EBITDA with non-vehicle debt, or consolidated). Titan: count non-interest-bearing floorplan as debt or not. Maintenance capex: leave null (the stress test imputes 3% of revenue, flagged in the report) or use total capex as a conservative proxy.
-
-**Backlog found while building (not fixed).**
-1. EBITDA ≤ 0 makes leverage read 0.0x, which scores 100. The DSCR gate is also skipped when DSCR ≤ 0. A loss-making borrower gets full leverage points. (`calculateMetrics`, `evaluateScreening`.)
-2. Stress FCCR leaves out the new loan when `actualAnnualDebtService` is supplied. `calculateMetrics` treats that field as existing debt service and adds the new loan. `runStressTest` treats it as total. Confirmed on the DXP smoke test: FCCR printed 2.38x, but 2.23x once the new loan is included. Belongs with Workstream A.
-3. `runStressTest` silently imputes maintenance capex at 3% of revenue. This conflicts with the no-silent-imputation rule.
-4. SOFR: the spec says 4.50%, but code `DEFAULT_SOFR` is 4.25%. One of them needs updating.
-5. The stress table shows leverage crossing the 5.0x ceiling at -30% EBITDA but gives no stressed verdict. Consider showing pass/flag/fail per scenario.
+- Hertz: corporate view, GAAP-built EBITDA. Company-adjusted EBITDA must appear in the caveats (it does, with citation).
+- Manual reads with citations for figures XBRL can't supply. No statement scraping yet.
+- Maintenance capex: no flat 3%. Depreciation as a proxy, always labeled as an estimate.
+- Credit rating mapping: IG = Strong, BB = Adequate, B or below = Weak, unrated = Not Rated.
+- New rule: any estimated or uncertain input that could change an outcome must be visible to the analyst (report, screening view, memo). Added to CLAUDE.md.
+- Bugs found while building go in AUDIT.md (P0-7, P1-13 to P1-15, P2-7 to P2-9), not here.

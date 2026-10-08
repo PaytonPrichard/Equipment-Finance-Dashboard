@@ -53,9 +53,10 @@
     "depreciationAmortization": {
       "tags": [
         "us-gaap:Depreciation",
-        "us-gaap:AmortizationOfIntangibleAssets"
+        "us-gaap:AmortizationOfIntangibleAssets",
+        "us-gaap:FinanceLeaseRightOfUseAssetAmortization"
       ],
-      "note": "Depreciation plus intangible amortization. Excludes finance-lease ROU amortization ($6.8M in XBRL). Check the total against the D&A line on the cash-flow statement.",
+      "note": "Depreciation + intangible amortization + finance-lease ROU amortization. Ties to the cash-flow statement (R6): Depreciation 10,372 + Amortization of intangibles and finance lease assets 28,478 = $38.85M. https://www.sec.gov/Archives/edgar/data/1020710/000162828026012382/R6.htm",
       "sources": [
         {
           "tag": "us-gaap:Depreciation",
@@ -76,16 +77,27 @@
           "form": "10-K",
           "filed": "2026-02-26",
           "url": "https://www.sec.gov/Archives/edgar/data/1020710/000162828026012382/"
+        },
+        {
+          "tag": "us-gaap:FinanceLeaseRightOfUseAssetAmortization",
+          "val": 6808000,
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "accn": "0001628280-26-012382",
+          "form": "10-K",
+          "filed": "2026-02-26",
+          "url": "https://www.sec.gov/Archives/edgar/data/1020710/000162828026012382/"
         }
       ],
-      "value": 32042000
+      "value": 38850000
     },
     "totalDebt": {
       "tags": [
         "us-gaap:LongTermDebtCurrent",
-        "us-gaap:LongTermDebtNoncurrent"
+        "us-gaap:LongTermDebtNoncurrent",
+        "us-gaap:FinanceLeaseLiability"
       ],
-      "note": "Funded debt only. Excludes finance and operating lease liabilities.",
+      "note": "Funded debt plus finance leases. Operating leases excluded.",
       "sources": [
         {
           "tag": "us-gaap:LongTermDebtCurrent",
@@ -106,9 +118,19 @@
           "form": "10-K",
           "filed": "2026-02-26",
           "url": "https://www.sec.gov/Archives/edgar/data/1020710/000162828026012382/"
+        },
+        {
+          "tag": "us-gaap:FinanceLeaseLiability",
+          "val": 20883000,
+          "start": null,
+          "end": "2025-12-31",
+          "accn": "0001628280-26-012382",
+          "form": "10-K",
+          "filed": "2026-02-26",
+          "url": "https://www.sec.gov/Archives/edgar/data/1020710/000162828026012382/"
         }
       ],
-      "value": 827056000
+      "value": 847939000
     },
     "interestPaid": {
       "tags": [
@@ -130,7 +152,8 @@
     },
     "currentMaturities": {
       "tags": [
-        "us-gaap:LongTermDebtCurrent"
+        "us-gaap:LongTermDebtCurrent",
+        "us-gaap:FinanceLeaseLiabilityCurrent"
       ],
       "sources": [
         {
@@ -142,9 +165,19 @@
           "form": "10-K",
           "filed": "2026-02-26",
           "url": "https://www.sec.gov/Archives/edgar/data/1020710/000162828026012382/"
+        },
+        {
+          "tag": "us-gaap:FinanceLeaseLiabilityCurrent",
+          "val": 7660000,
+          "start": null,
+          "end": "2025-12-31",
+          "accn": "0001628280-26-012382",
+          "form": "10-K",
+          "filed": "2026-02-26",
+          "url": "https://www.sec.gov/Archives/edgar/data/1020710/000162828026012382/"
         }
       ],
-      "value": 8580000
+      "value": 16240000
     },
     "totalCapex": {
       "tags": [
@@ -167,57 +200,72 @@
     },
     "yearsInBusiness": {
       "manual": {
-        "value": null,
-        "cite": "",
-        "readBy": ""
+        "value": 117,
+        "cite": "10-K Item 1: \"Founded in 1908, DXP Enterprises, Inc.\" 2025 - 1908.",
+        "readBy": "Claude 2026-10-07, Joel to verify"
       },
-      "note": "Years since founding or first operations, from Item 1 of the 10-K. Cite the sentence."
+      "note": "Fiscal-year-end year minus founding year. The factor saturates at 30 years."
+    },
+    "depreciation": {
+      "tags": [
+        "us-gaap:Depreciation"
+      ],
+      "note": "PP&E depreciation only. Used as the maintenance capex proxy.",
+      "sources": [
+        {
+          "tag": "us-gaap:Depreciation",
+          "val": 10372000,
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "accn": "0001628280-26-012382",
+          "form": "10-K",
+          "filed": "2026-02-26",
+          "url": "https://www.sec.gov/Archives/edgar/data/1020710/000162828026012382/"
+        }
+      ],
+      "value": 10372000
     }
   },
   "assumptions": {
     "industrySector": {
-      "value": null,
-      "why": ""
+      "value": "Other",
+      "why": "Proposed by Claude 2026-10-07, Joel to confirm. Industrial distributor, no clean sector fit. Energy if oil and gas customer exposure dominates."
+    },
+    "equipmentType": {
+      "value": "Vehicles/Fleet",
+      "why": "Proposed by Claude 2026-10-07, Joel to confirm. Service truck fleet for service centers."
+    },
+    "equipmentCondition": {
+      "value": "New",
+      "why": "Proposed by Claude 2026-10-07, Joel to confirm. "
+    },
+    "equipmentCost": {
+      "value": 15000000,
+      "why": "Proposed by Claude 2026-10-07, Joel to confirm. About 0.7% of revenue, so borrower credit drives the verdict, not deal size."
+    },
+    "downPayment": {
+      "value": 1500000,
+      "why": "Proposed by Claude 2026-10-07, Joel to confirm. 10%, Tranche default for Vehicles/Fleet."
+    },
+    "financingType": {
+      "value": "TRAC",
+      "why": "Proposed by Claude 2026-10-07, Joel to confirm. Tranche suggested structure for Vehicles/Fleet."
+    },
+    "usefulLife": {
+      "value": 7,
+      "why": "Proposed by Claude 2026-10-07, Joel to confirm. Within Tranche range of 5-8 years."
+    },
+    "loanTerm": {
+      "value": 60,
+      "why": "Proposed by Claude 2026-10-07, Joel to confirm. "
+    },
+    "essentialUse": {
+      "value": true,
+      "why": "Proposed by Claude 2026-10-07, Joel to confirm. Service fleet is core to field operations."
     },
     "creditRating": {
       "value": null,
-      "why": ""
-    },
-    "equipmentType": {
-      "value": null,
-      "why": ""
-    },
-    "equipmentCondition": {
-      "value": null,
-      "why": ""
-    },
-    "equipmentCost": {
-      "value": null,
-      "why": ""
-    },
-    "downPayment": {
-      "value": null,
-      "why": ""
-    },
-    "financingType": {
-      "value": null,
-      "why": ""
-    },
-    "usefulLife": {
-      "value": null,
-      "why": ""
-    },
-    "loanTerm": {
-      "value": null,
-      "why": ""
-    },
-    "essentialUse": {
-      "value": null,
-      "why": ""
-    },
-    "maintenanceCapex": {
-      "value": null,
-      "why": ""
+      "why": "Joel: map current agency rating. IG = Strong, BB = Adequate, B or below = Weak, unrated = Not Rated."
     }
   },
   "expected": {
@@ -225,5 +273,16 @@
     "reason": "",
     "writtenOn": null
   },
-  "discussion": ""
+  "discussion": "",
+  "builds": {
+    "maintenanceCapex": {
+      "terms": [
+        [
+          "+",
+          "depreciation"
+        ]
+      ],
+      "estimate": "PP&E depreciation ($10.4M) used as maintenance capex proxy. Total capex was $40.3M, so if most capex is maintenance this understates it about 4x."
+    }
+  }
 }

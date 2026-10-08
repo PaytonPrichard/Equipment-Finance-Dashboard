@@ -80,6 +80,14 @@ Found during the front-end polish pass (surface 1). The pricing UI offers three 
 
 This touches Stripe dashboard config (env vars must point at real Price IDs or checkout 500s), so it needs Joel's config side too. Not a code-only fix.
 
+### P0-7. Zero or negative EBITDA scores as best-in-class leverage
+
+Found 2026-10-07 by the real-deals harness (Hertz FY2025: corporate EBITDA is negative under every definition).
+
+All three modules set `leverage = 0` when `ebitda <= 0` (`equipment-finance/scoring.ts:144`, `accounts-receivable/scoring.ts:139`, `inventory-finance/scoring.ts:228`). Leverage 0 interpolates to a factor score of 100, the best possible, on a 20% weight. Separately, `evaluateScreening` only applies the DSCR gate when `metrics.dscr > 0` (`screeningCriteria.ts:93`), so a negative DSCR skips the gate entirely. A loss-making borrower gets full leverage points and no DSCR reason.
+
+**Fix.** Treat non-positive EBITDA as unmeasurable leverage, not zero leverage: score the factor at its floor and add a fail reason ("EBITDA is negative, leverage cannot be measured"). Apply the DSCR gate to any DSCR below the floor, including negatives. Add tests with negative EBITDA for all three modules. Credit call for Joel: is negative EBITDA an automatic FAIL, or a FLAG with the score doing the rest?
+
 ---
 
 ## P1 — Architecture and Consistency
@@ -168,6 +176,28 @@ webhook.site endpoints were added to the production org during integration testi
 
 **Fix.** Remove any `webhook.site` (or other non-production) URLs from the production org's webhook config after each test run. Longer term, run integration tests against a dedicated test org so production webhook config is never written to. Consider adding a guard to `scripts/test-crm-integration.js` that aborts if any registered webhook URL for a non-localhost org contains `webhook.site`.
 
+### P1-13. Stress FCCR drops the new loan when actual debt service is supplied
+
+Found 2026-10-07 by the real-deals harness smoke test.
+
+`calculateMetrics` treats `actualAnnualDebtService` as existing debt service and adds the new loan on top (`equipment-finance/scoring.ts:133`). `runStressTest` treats the same field as total debt service and leaves the new loan out (`:496-499`). AR has the same pattern (`accounts-receivable/scoring.ts:557`). On the DXP smoke test, base FCCR printed 2.38x. With the new loan included it is 2.23x.
+
+**Fix.** One definition: `actualAnnualDebtService` is existing debt service, and every coverage metric adds the new facility. Belongs with Workstream A (cash-flow stress).
+
+### P1-14. Silent imputations never reach the memo
+
+`runStressTest` sets maintenance capex to 3% of revenue when it is missing, in all three modules (`equipment-finance/scoring.ts:495`, `accounts-receivable/scoring.ts:556`, `inventory-finance/scoring.ts:661`). `calculateMetrics` estimates existing debt service at 8% of total debt. The 3% has no source and misses in both directions on real filings: DXP's total capex is 2.0% of revenue, but H&E's rental fleet purchases alone are 22.7%.
+
+Rule (Joel, 2026-10-07): any estimated or uncertain input that could change an outcome must be visible to the analyst in the screening view and the committee memo.
+
+**Fix.** (1) Every imputation returns a flag that the verdict rationale and memo print, as `debtServiceEstimated` already does for the 8%. (2) Replace the flat 3% with a sector benchmark from a cited public source (for example a published sector capex-to-sales dataset), labeled as an estimate. Verify the source before using it.
+
+### P1-15. Every structure assumes a first-priority lien
+
+The structure suggestions state a first-priority lien without asking (`equipment-finance/scoring.ts:438,441`, `inventory-finance/scoring.ts:547`). No module has an input for lien position or for senior debt ahead of the new facility. A second-lien equipment loan, or an inventory facility behind an ABL, screens exactly like a first lien.
+
+**Feature (Joel, 2026-10-07).** Add a lien position input (first, second, pari passu) and the amount of senior debt on the same collateral, across all three modules. Second lien should compute combined LTV (senior plus new over collateral value), reduce the effective advance rate on AR and inventory, and change the structure text. Credit calls for Joel: haircuts and thresholds for second lien.
+
 ---
 
 ## P2 — Smells and Polish
@@ -214,6 +244,18 @@ Tests exist for: scoring modules (equipment, AR, inventory), `screeningCriteria.
 `server-lib/validate.js` now exports three validators (`validateDealInputs`, `validateARInputs`, `validateInventoryInputs`) plus shared helpers (`checkSize`, `checkPercent`, `checkCurrency`, `checkBorrowerCore`). None have tests. A bad merge or threshold change could silently regress validation for any asset class with no automated signal.
 
 **Fix.** Add `server-lib/validate.test.js` (Jest, `--testEnvironment node`) covering: required-field rejection, percent-range rejection (0-100 bounds), currency-range rejection (negative, over $1T), size-cap rejection (>32KB payload), and a fully valid input acceptance case for each of the three validators. The P1-9 aging-bucket sum check should get its own test once that fix is in place.
+
+### P2-7. SOFR default disagrees with the spec
+
+`Deal_Screening_Model_Assumptions.md:18` says 4.50%. `equipment-finance/constants.ts:18` has `DEFAULT_SOFR = 0.0425`. The server scores at the code value. Per CLAUDE.md the spec is the source of truth, so update one to match the other.
+
+### P2-8. Stress table has no stressed verdict
+
+The stress test shows each scenario's metrics and score, but not whether the deal still passes. On the DXP smoke test, leverage crossed the 5.0x ceiling at -30% EBITDA with no flag shown. Run `evaluateScreening` per scenario and show pass/flag/fail.
+
+### P2-9. The EBITDA input has no definition guidance
+
+The form takes EBITDA as a single number. Real filings place floorplan interest, finance-lease amortization and fleet depreciation differently by company (see `scripts/real-deals/README.md`). An analyst can enter EBITDA that doesn't pair with the debt entered. Add help text stating the pairing rules.
 
 ---
 

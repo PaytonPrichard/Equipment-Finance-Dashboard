@@ -51,3 +51,19 @@ test('an unset deal term blocks the case', () => {
   fx.assumptions = { ...assumptions, loanTerm: { value: null, why: '' } };
   expect(derive(fx).blockers).toContain('assumption loanTerm is not set');
 });
+
+test('a custom build applies signed terms, e.g. EBITDA after floorplan interest', () => {
+  const fx = fixture({ ...full, floorplanInterest: { value: 1.5e6 } });
+  fx.builds = { ebitda: { terms: [['+', 'operatingIncome'], ['+', 'depreciationAmortization'], ['-', 'floorplanInterest']] } };
+  const { inputs, derivations } = derive(fx);
+  expect(inputs.ebitda).toBe(8.5e6);
+  expect(derivations.find((d) => d.field === 'ebitda').formula).toBe('operatingIncome + depreciationAmortization - floorplanInterest');
+});
+
+test('an estimated build always produces a caveat', () => {
+  const fx = fixture({ ...full, depreciation: { value: 1.8e6 } });
+  fx.builds = { maintenanceCapex: { terms: [['+', 'depreciation']], estimate: 'depreciation used as proxy' } };
+  const { inputs, caveats } = derive(fx);
+  expect(inputs.maintenanceCapex).toBe(1.8e6);
+  expect(caveats).toEqual(['ESTIMATE, maintenanceCapex: depreciation used as proxy']);
+});

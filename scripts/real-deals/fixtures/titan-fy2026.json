@@ -36,7 +36,6 @@
       "tags": [
         "us-gaap:OperatingIncomeLoss"
       ],
-      "note": "Floorplan interest sits inside operating expenses for a dealer, so EBITDA built from this is already after floorplan interest.",
       "sources": [
         {
           "tag": "us-gaap:OperatingIncomeLoss",
@@ -70,23 +69,37 @@
       "value": 37565000
     },
     "totalDebt": {
-      "manual": {
-        "value": null,
-        "cite": "",
-        "readBy": ""
-      },
-      "note": "Manual. XBRL LongTermDebt ($180.0M) excludes floorplan payables, which are the bulk of a dealer's debt and are not in companyfacts. Read floorplan payable (interest-bearing and non-interest-bearing) plus long-term debt from the balance sheet. Whether to count non-interest-bearing floorplan is your call."
-    },
-    "interestPaid": {
       "tags": [
-        "us-gaap:InterestPaidNet"
+        "us-gaap:LongTermDebtCurrent",
+        "us-gaap:LongTermDebtNoncurrent",
+        "us-gaap:FinanceLeaseLiability"
       ],
-      "note": "Cash interest paid, includes floorplan interest.",
+      "note": "Long-term debt plus finance leases. Floorplan excluded (treated as inventory financing, see caveats).",
       "sources": [
         {
-          "tag": "us-gaap:InterestPaidNet",
-          "val": 42880000,
-          "start": "2025-02-01",
+          "tag": "us-gaap:LongTermDebtCurrent",
+          "val": 21410000,
+          "start": null,
+          "end": "2026-01-31",
+          "accn": "0001628280-26-022376",
+          "form": "10-K",
+          "filed": "2026-03-31",
+          "url": "https://www.sec.gov/Archives/edgar/data/1409171/000162828026022376/"
+        },
+        {
+          "tag": "us-gaap:LongTermDebtNoncurrent",
+          "val": 158565000,
+          "start": null,
+          "end": "2026-01-31",
+          "accn": "0001628280-26-022376",
+          "form": "10-K",
+          "filed": "2026-03-31",
+          "url": "https://www.sec.gov/Archives/edgar/data/1409171/000162828026022376/"
+        },
+        {
+          "tag": "us-gaap:FinanceLeaseLiability",
+          "val": 49306000,
+          "start": null,
           "end": "2026-01-31",
           "accn": "0001628280-26-022376",
           "form": "10-K",
@@ -94,11 +107,12 @@
           "url": "https://www.sec.gov/Archives/edgar/data/1409171/000162828026022376/"
         }
       ],
-      "value": 42880000
+      "value": 229281000
     },
     "currentMaturities": {
       "tags": [
-        "us-gaap:LongTermDebtCurrent"
+        "us-gaap:LongTermDebtCurrent",
+        "us-gaap:FinanceLeaseLiabilityCurrent"
       ],
       "sources": [
         {
@@ -110,71 +124,133 @@
           "form": "10-K",
           "filed": "2026-03-31",
           "url": "https://www.sec.gov/Archives/edgar/data/1409171/000162828026022376/"
+        },
+        {
+          "tag": "us-gaap:FinanceLeaseLiabilityCurrent",
+          "val": 7166000,
+          "start": null,
+          "end": "2026-01-31",
+          "accn": "0001628280-26-022376",
+          "form": "10-K",
+          "filed": "2026-03-31",
+          "url": "https://www.sec.gov/Archives/edgar/data/1409171/000162828026022376/"
         }
       ],
-      "value": 21410000
-    },
-    "totalCapex": {
-      "manual": {
-        "value": null,
-        "cite": "",
-        "readBy": ""
-      },
-      "note": "Manual. PaymentsToAcquirePropertyPlantAndEquipment is not tagged for FY2026. Read from the cash-flow statement."
+      "value": 28576000
     },
     "yearsInBusiness": {
       "manual": {
-        "value": null,
-        "cite": "",
-        "readBy": ""
+        "value": 46,
+        "cite": "10-K Corporate Information: \"incorporated as a North Dakota corporation in 1980\". 2026 - 1980.",
+        "readBy": "Claude 2026-10-07, Joel to verify"
       },
-      "note": "Years since founding or first operations, from Item 1 of the 10-K. Cite the sentence."
+      "note": "Fiscal-year-end year minus incorporation year."
+    },
+    "floorplanInterest": {
+      "tags": [
+        "us-gaap:FinancingInterestExpense"
+      ],
+      "note": "Company label \"Floorplan interest expense\" (statement of operations, https://www.sec.gov/Archives/edgar/data/1409171/000162828026022376/R4.htm). Sits below operating income. Tie-out: OI -6.7 + other income 4.4 - other interest 19.0 - floorplan interest 24.1 = pre-tax -45.4.",
+      "sources": [
+        {
+          "tag": "us-gaap:FinancingInterestExpense",
+          "val": 24109000,
+          "start": "2025-02-01",
+          "end": "2026-01-31",
+          "accn": "0001628280-26-022376",
+          "form": "10-K",
+          "filed": "2026-03-31",
+          "url": "https://www.sec.gov/Archives/edgar/data/1409171/000162828026022376/"
+        }
+      ],
+      "value": 24109000
+    },
+    "otherInterest": {
+      "tags": [
+        "us-gaap:InterestExpenseOther"
+      ],
+      "note": "Non-floorplan interest expense. Expense, not cash paid: the cash figure (InterestPaidNet $42.9M) is not split between floorplan and other.",
+      "sources": [
+        {
+          "tag": "us-gaap:InterestExpenseOther",
+          "val": 18974000,
+          "start": "2025-02-01",
+          "end": "2026-01-31",
+          "accn": "0001628280-26-022376",
+          "form": "10-K",
+          "filed": "2026-03-31",
+          "url": "https://www.sec.gov/Archives/edgar/data/1409171/000162828026022376/"
+        }
+      ],
+      "value": 18974000
+    },
+    "floorplanPayable": {
+      "manual": {
+        "value": 553754000,
+        "cite": "Balance sheet, \"Floorplan payable\" 553,754 (https://www.sec.gov/Archives/edgar/data/1409171/000162828026022376/R3.htm).",
+        "readBy": "Claude 2026-10-07, Joel to verify"
+      },
+      "note": "Informational. Excluded from totalDebt under the floorplan convention."
+    },
+    "amortizationOfIntangibles": {
+      "tags": [
+        "us-gaap:AmortizationOfIntangibleAssets"
+      ],
+      "sources": [
+        {
+          "tag": "us-gaap:AmortizationOfIntangibleAssets",
+          "val": 1800000,
+          "start": "2025-02-01",
+          "end": "2026-01-31",
+          "accn": "0001628280-26-022376",
+          "form": "10-K",
+          "filed": "2026-03-31",
+          "url": "https://www.sec.gov/Archives/edgar/data/1409171/000162828026022376/"
+        }
+      ],
+      "value": 1800000
     }
   },
   "assumptions": {
     "industrySector": {
-      "value": null,
-      "why": ""
+      "value": "Agriculture",
+      "why": "Proposed by Claude 2026-10-07, Joel to confirm. Ag-heavy CNH dealer. Confirm the revenue mix in the segment note."
+    },
+    "equipmentType": {
+      "value": "Construction Equipment",
+      "why": "Proposed by Claude 2026-10-07, Joel to confirm. Rental fleet additions."
+    },
+    "equipmentCondition": {
+      "value": "New",
+      "why": "Proposed by Claude 2026-10-07, Joel to confirm. "
+    },
+    "equipmentCost": {
+      "value": 20000000,
+      "why": "Proposed by Claude 2026-10-07, Joel to confirm. About 0.8% of revenue."
+    },
+    "downPayment": {
+      "value": 3000000,
+      "why": "Proposed by Claude 2026-10-07, Joel to confirm. 15%, Tranche default for Construction Equipment."
+    },
+    "financingType": {
+      "value": "EFA",
+      "why": "Proposed by Claude 2026-10-07, Joel to confirm. Tranche suggested structure."
+    },
+    "usefulLife": {
+      "value": 10,
+      "why": "Proposed by Claude 2026-10-07, Joel to confirm. Within Tranche range of 8-15 years."
+    },
+    "loanTerm": {
+      "value": 60,
+      "why": "Proposed by Claude 2026-10-07, Joel to confirm. "
+    },
+    "essentialUse": {
+      "value": true,
+      "why": "Proposed by Claude 2026-10-07, Joel to confirm. Rental fleet is revenue-generating."
     },
     "creditRating": {
       "value": null,
-      "why": ""
-    },
-    "equipmentType": {
-      "value": null,
-      "why": ""
-    },
-    "equipmentCondition": {
-      "value": null,
-      "why": ""
-    },
-    "equipmentCost": {
-      "value": null,
-      "why": ""
-    },
-    "downPayment": {
-      "value": null,
-      "why": ""
-    },
-    "financingType": {
-      "value": null,
-      "why": ""
-    },
-    "usefulLife": {
-      "value": null,
-      "why": ""
-    },
-    "loanTerm": {
-      "value": null,
-      "why": ""
-    },
-    "essentialUse": {
-      "value": null,
-      "why": ""
-    },
-    "maintenanceCapex": {
-      "value": null,
-      "why": ""
+      "why": "Joel: map current agency rating. IG = Strong, BB = Adequate, B or below = Weak, unrated = Not Rated."
     }
   },
   "expected": {
@@ -182,5 +258,52 @@
     "reason": "",
     "writtenOn": null
   },
-  "discussion": ""
+  "discussion": "",
+  "builds": {
+    "ebitda": {
+      "terms": [
+        [
+          "+",
+          "operatingIncome"
+        ],
+        [
+          "+",
+          "depreciationAmortization"
+        ],
+        [
+          "-",
+          "floorplanInterest"
+        ]
+      ]
+    },
+    "debtService": {
+      "terms": [
+        [
+          "+",
+          "otherInterest"
+        ],
+        [
+          "+",
+          "currentMaturities"
+        ]
+      ]
+    },
+    "maintenanceCapex": {
+      "terms": [
+        [
+          "+",
+          "depreciationAmortization"
+        ],
+        [
+          "-",
+          "amortizationOfIntangibles"
+        ]
+      ],
+      "estimate": "Depreciation (D&A $37.6M less intangible amortization $1.8M) used as maintenance capex proxy."
+    }
+  },
+  "caveats": [
+    "JUDGMENT, floorplan: treated as inventory financing. Floorplan interest is deducted in EBITDA and the $553.8M floorplan payable is left out of debt. This follows auto-dealer credit convention, not verified against Titan's own credit agreement. Including floorplan instead: EBITDA $30.9M, debt $783.0M.",
+    "ESTIMATE, debt service: uses non-floorplan interest expense ($19.0M), not cash paid. Cash interest is reported only in total."
+  ]
 }

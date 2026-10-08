@@ -52,19 +52,19 @@
     },
     "depreciationAmortization": {
       "manual": {
-        "value": null,
-        "cite": "",
-        "readBy": ""
+        "value": 434022000,
+        "cite": "Cash-flow statement (https://www.sec.gov/Archives/edgar/data/1339605/000095017025024867/R7.htm): Depreciation and amortization of property and equipment 47,982 + Depreciation of rental equipment 375,330 + Amortization of intangible assets 10,265 + Amortization of finance lease ROU assets 445.",
+        "readBy": "Claude 2026-10-07, Joel to verify"
       },
-      "note": "Manual. XBRL DepreciationDepletionAndAmortization is $48.0M, which looks like non-rental D&A only. Rental fleet depreciation is reported separately and is not in companyfacts. Read total D&A from the cash-flow statement."
+      "note": "Excludes amortization of deferred financing costs (1,400), which is interest. XBRL companyfacts carries only the $48.0M line."
     },
     "totalDebt": {
       "manual": {
-        "value": null,
-        "cite": "",
-        "readBy": ""
+        "value": 1447606000,
+        "cite": "Balance sheet (https://www.sec.gov/Archives/edgar/data/1339605/000095017025024867/R2.htm): Senior secured credit facility 199,304 + Senior unsecured notes 1,244,295 + Finance lease liabilities 4,007.",
+        "readBy": "Claude 2026-10-07, Joel to verify"
       },
-      "note": "Manual. XBRL SecuredDebt ($199.3M) is the ABL only. Add the senior unsecured notes and finance leases from the debt note."
+      "note": "Senior notes are shown net of discount and deferred financing costs."
     },
     "interestPaid": {
       "tags": [
@@ -86,11 +86,10 @@
     },
     "currentMaturities": {
       "manual": {
-        "value": null,
-        "cite": "",
-        "readBy": ""
-      },
-      "note": "Manual. Principal due within twelve months, from the debt maturity table. May be zero."
+        "value": 622000,
+        "cite": "Leases note (https://www.sec.gov/Archives/edgar/data/1339605/000095017025024867/R73.htm): finance lease payments due 2025, 622 (undiscounted). Balance sheet (R2) shows no current portion of the credit facility or notes.",
+        "readBy": "Claude 2026-10-07, Joel to verify"
+      }
     },
     "totalCapex": {
       "tags": [
@@ -113,57 +112,68 @@
     },
     "yearsInBusiness": {
       "manual": {
-        "value": null,
-        "cite": "",
-        "readBy": ""
+        "value": 63,
+        "cite": "10-K Item 1: \"Founded in 1961 through our predecessor companies, we have been in the equipment services business for approximately 63 years.\"",
+        "readBy": "Claude 2026-10-07, Joel to verify"
+      }
+    },
+    "depreciation": {
+      "manual": {
+        "value": 423312000,
+        "cite": "Cash-flow statement (https://www.sec.gov/Archives/edgar/data/1339605/000095017025024867/R7.htm): 47,982 + 375,330.",
+        "readBy": "Claude 2026-10-07, Joel to verify"
       },
-      "note": "Years since founding or first operations, from Item 1 of the 10-K. Cite the sentence."
+      "note": "PP&E plus rental fleet depreciation. Maintenance capex proxy."
+    },
+    "rentalCapex": {
+      "manual": {
+        "value": 344642000,
+        "cite": "Cash-flow statement (https://www.sec.gov/Archives/edgar/data/1339605/000095017025024867/R7.htm): Purchases of rental equipment (344,642).",
+        "readBy": "Claude 2026-10-07, Joel to verify"
+      },
+      "note": "Informational."
     }
   },
   "assumptions": {
     "industrySector": {
-      "value": null,
-      "why": ""
+      "value": "Construction",
+      "why": "Proposed by Claude 2026-10-07, Joel to confirm. Rental customers are mostly construction."
+    },
+    "equipmentType": {
+      "value": "Construction Equipment",
+      "why": "Proposed by Claude 2026-10-07, Joel to confirm. Rental fleet additions."
+    },
+    "equipmentCondition": {
+      "value": "New",
+      "why": "Proposed by Claude 2026-10-07, Joel to confirm. "
+    },
+    "equipmentCost": {
+      "value": 50000000,
+      "why": "Proposed by Claude 2026-10-07, Joel to confirm. About 3.3% of revenue. Sized up because fleet purchases run $300M+ a year."
+    },
+    "downPayment": {
+      "value": 7500000,
+      "why": "Proposed by Claude 2026-10-07, Joel to confirm. 15%, Tranche default."
+    },
+    "financingType": {
+      "value": "EFA",
+      "why": "Proposed by Claude 2026-10-07, Joel to confirm. "
+    },
+    "usefulLife": {
+      "value": 10,
+      "why": "Proposed by Claude 2026-10-07, Joel to confirm. Within Tranche range of 8-15 years."
+    },
+    "loanTerm": {
+      "value": 60,
+      "why": "Proposed by Claude 2026-10-07, Joel to confirm. "
+    },
+    "essentialUse": {
+      "value": true,
+      "why": "Proposed by Claude 2026-10-07, Joel to confirm. "
     },
     "creditRating": {
       "value": null,
-      "why": ""
-    },
-    "equipmentType": {
-      "value": null,
-      "why": ""
-    },
-    "equipmentCondition": {
-      "value": null,
-      "why": ""
-    },
-    "equipmentCost": {
-      "value": null,
-      "why": ""
-    },
-    "downPayment": {
-      "value": null,
-      "why": ""
-    },
-    "financingType": {
-      "value": null,
-      "why": ""
-    },
-    "usefulLife": {
-      "value": null,
-      "why": ""
-    },
-    "loanTerm": {
-      "value": null,
-      "why": ""
-    },
-    "essentialUse": {
-      "value": null,
-      "why": ""
-    },
-    "maintenanceCapex": {
-      "value": null,
-      "why": ""
+      "why": "Joel: map current agency rating. IG = Strong, BB = Adequate, B or below = Weak, unrated = Not Rated. Use the rating as of February 2025."
     }
   },
   "expected": {
@@ -171,5 +181,19 @@
     "reason": "",
     "writtenOn": null
   },
-  "discussion": ""
+  "discussion": "",
+  "builds": {
+    "maintenanceCapex": {
+      "terms": [
+        [
+          "+",
+          "depreciation"
+        ]
+      ],
+      "estimate": "Depreciation ($423.3M, mostly rental fleet) used as maintenance capex proxy. Actual 2024 purchases were $344.6M rental plus $106.6M other."
+    }
+  },
+  "caveats": [
+    "TIMING: last 10-K before the 2025 Herc acquisition. Screen is as of February 2025."
+  ]
 }

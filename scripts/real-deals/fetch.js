@@ -51,7 +51,7 @@ async function fillFixture(file) {
   }
 
   fx.period.companyFactsUrl = companyFactsUrl(cik);
-  fx.period.fetchedAt = new Date().toISOString().slice(0, 10);
+  fx.period.fetchedAt = new Date().toLocaleDateString('en-CA');
   fs.writeFileSync(file, JSON.stringify(fx, null, 2) + '\n');
   console.log(`${path.basename(file)} (${fx.borrower.name}, FYE ${fye})\n${log.join('\n')}`);
 }
