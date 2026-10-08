@@ -6,6 +6,9 @@ import { generateXlsxTemplate } from '../utils/templateGenerator';
 import { useAuth } from '../contexts/AuthContext';
 import { useToast } from '../contexts/ToastContext';
 import { createPipelineDeal } from '../lib/pipeline';
+import { evaluateScreening, DEFAULT_CRITERIA } from '../lib/screeningCriteria';
+import { recommendationFor } from '../lib/recommendation';
+import { recommendationStyle } from './recommendationStyle';
 
 // ── Module-specific table columns ────────────────────────────
 function getColumns(moduleKey) {
@@ -97,7 +100,7 @@ function findMissingFields(inputs, schema) {
   return missing;
 }
 
-export default function BatchScreening({ sofr = DEFAULT_SOFR, onLoadDeal, activeModule: initialModule = 'equipment_finance' }) {
+export default function BatchScreening({ sofr = DEFAULT_SOFR, onLoadDeal, activeModule: initialModule = 'equipment_finance', criteria = DEFAULT_CRITERIA }) {
   const fileRef = useRef(null);
   const { user, profile } = useAuth();
   const { addToast } = useToast();
@@ -171,7 +174,9 @@ export default function BatchScreening({ sofr = DEFAULT_SOFR, onLoadDeal, active
     const scored = validDeals.map((deal) => {
       const metrics = mod.calculateMetrics(deal.inputs, sofr);
       const riskScore = mod.calculateRiskScore(deal.inputs, metrics);
-      const rec = mod.getRecommendation(riskScore.composite);
+      // Verdict first: a row that breaks the firm's policy cannot read "Strong Prospect".
+      const screening = evaluateScreening(criteria, metrics, riskScore, deal.inputs, batchModule);
+      const rec = recommendationFor(mod.getRecommendation(riskScore.composite), screening);
       return { ...deal, metrics, riskScore, rec };
     });
 
@@ -188,7 +193,7 @@ export default function BatchScreening({ sofr = DEFAULT_SOFR, onLoadDeal, active
       setStatus({ type: 'success', message: `Screened ${scored.length} ${moduleLabel} deal${scored.length === 1 ? '' : 's'}` });
       setTimeout(() => setStatus(null), 4000);
     }
-  }, [sofr, mod, batchModule]);
+  }, [sofr, mod, batchModule, criteria]);
 
   const handleFile = useCallback(async (e) => {
     const file = e.target.files?.[0];
@@ -634,7 +639,7 @@ export default function BatchScreening({ sofr = DEFAULT_SOFR, onLoadDeal, active
                         // Recommendation with color
                         if (col.recStyle) {
                           return (
-                            <td key={col.key} className={`px-5 py-3 text-[11px] font-semibold ${deal.rec.textClass}`}>
+                            <td key={col.key} className={`px-5 py-3 text-[11px] font-semibold ${recommendationStyle(deal.rec).textClass}`}>
                               {raw}
                             </td>
                           );

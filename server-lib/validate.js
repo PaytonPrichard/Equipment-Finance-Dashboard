@@ -76,6 +76,17 @@ function checkCurrency(value, field, errors, { required = false, allowNegative =
   else if (required && num <= 0) errors.push({ field, message: `${field} must be greater than 0` });
 }
 
+// Cash-flow coverage inputs, shared by all three asset classes
+// (src/utils/cashFlowMetrics.ts). All optional. Blank means not provided.
+// Working capital can be negative: a decrease releases cash.
+function checkCashFlowInputs(inputs, errors) {
+  checkCurrency(inputs.maintenanceCapex, 'maintenanceCapex', errors);
+  checkCurrency(inputs.cashTaxes, 'cashTaxes', errors);
+  checkCurrency(inputs.workingCapitalIncrease, 'workingCapitalIncrease', errors, { allowNegative: true });
+  checkCurrency(inputs.leasePayments, 'leasePayments', errors);
+  checkPercent(inputs.floatingRateDebtPct, 'floatingRateDebtPct', errors);
+}
+
 // Shared borrower-profile validation for AR + Inventory.
 // Mirrors the borrower fields in validateDealInputs without sharing code,
 // so equipment-finance behavior stays byte-for-byte unchanged.
@@ -295,6 +306,8 @@ function validateDealInputs(inputs) {
     }
   }
 
+  checkCashFlowInputs(inputs, errors);
+
   return errors.length === 0
     ? { valid: true }
     : { valid: false, errors };
@@ -330,6 +343,8 @@ function validateARInputs(inputs) {
       errors.push({ field: 'existingABLFacility', message: 'existingABLFacility must be a boolean' });
     }
   }
+
+  checkCashFlowInputs(inputs, errors);
 
   return errors.length === 0 ? { valid: true } : { valid: false, errors };
 }
@@ -373,6 +388,8 @@ function validateInventoryInputs(inputs) {
       errors.push({ field: 'perishable', message: 'perishable must be a boolean' });
     }
   }
+
+  checkCashFlowInputs(inputs, errors);
 
   return errors.length === 0 ? { valid: true } : { valid: false, errors };
 }

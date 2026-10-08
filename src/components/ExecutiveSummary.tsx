@@ -1,6 +1,8 @@
 import React from 'react';
 import { formatCurrency, formatPercent } from '../utils/format';
 import type { BaseDealInputs, BaseMetrics, RiskScore, Recommendation, USD } from '../types';
+import type { GatedRecommendation } from '../lib/recommendation';
+import { recommendationStyle } from './recommendationStyle';
 
 interface ESInputs extends BaseDealInputs {
   financingType?: string;
@@ -29,7 +31,22 @@ function generateTakeaways(
   const items: TakeawayItem[] = [];
   const ft = inputs.financingType || 'EFA';
 
-  if (riskScore.composite >= 75) {
+  // The verdict leads. A strong score on a deal that breaks a gate must not
+  // read as "move forward" (AUDIT P0-8).
+  const gated = recommendation as Partial<GatedRecommendation>;
+  const failCount = gated.failures?.length || 0;
+  const conditionCount = gated.conditions?.length || 0;
+  if (gated.tone === 'fail') {
+    items.push({
+      type: 'negative',
+      text: `This deal scores ${riskScore.composite}/100 but does not meet your policy on ${failCount} ${failCount === 1 ? 'criterion' : 'criteria'}. Restructure or decline.`,
+    });
+  } else if (gated.tone === 'flag') {
+    items.push({
+      type: 'caution',
+      text: `This deal scores ${riskScore.composite}/100 and can advance only with ${conditionCount} ${conditionCount === 1 ? 'condition' : 'conditions'}, listed under Screening Result.`,
+    });
+  } else if (riskScore.composite >= 75) {
     items.push({
       type: 'positive',
       text: `This deal scores ${riskScore.composite}/100, which is a strong screening result. It is a good candidate to move forward into underwriting.`,
@@ -201,7 +218,7 @@ export default function ExecutiveSummary({ inputs, metrics, riskScore, recommend
   const takeaways = generateTakeaways(inputs, metrics, riskScore, recommendation);
 
   return (
-    <div className={`rounded-2xl p-5 border ${recommendation.bgClass}`}>
+    <div className={`rounded-2xl p-5 border ${recommendationStyle(recommendation).bgClass}`}>
       <div className="flex items-center gap-2 mb-3">
         <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
           Executive Summary

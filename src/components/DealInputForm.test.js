@@ -51,3 +51,62 @@ test('the demo keeps the sample companies', () => {
   renderForm();
   expect(screen.getByText(/Midwest Precision Machining/)).toBeInTheDocument();
 });
+
+// Cash-flow inputs must tell "not provided" from 0. Every other number on
+// the form stores a blank as 0, which is why these use their own field type.
+describe('cash-flow inputs keep blank as blank', () => {
+  function setup(inputs = mod.INITIAL_INPUTS) {
+    const onChange = jest.fn();
+    render(
+      <TutorialProvider userId={null}>
+      <DealInputForm
+        inputs={inputs}
+        onChange={onChange}
+        schema={mod.FORM_SCHEMA}
+        modules={getAvailableModules()}
+        activeModule="equipment_finance"
+        onModuleChange={() => {}}
+        pipelineDeals={[]}
+        sofr={0.0389}
+      />
+      </TutorialProvider>,
+    );
+    const inputFor = (label) => {
+      let el = screen.getByText(label);
+      while (el && !el.querySelector('input')) el = el.parentElement;
+      return el.querySelector('input');
+    };
+    return { onChange, inputFor };
+  }
+
+  test('new deals start with every cash-flow input blank, not 0', () => {
+    expect(mod.INITIAL_INPUTS.cashTaxes).toBeNull();
+    expect(mod.INITIAL_INPUTS.leasePayments).toBeNull();
+    const { inputFor } = setup();
+    expect(inputFor('Cash Taxes').value).toBe('');
+  });
+
+  test('an entered 0 is stored as 0', () => {
+    const { onChange, inputFor } = setup();
+    fireEvent.change(inputFor('Rent & Lease Payments'), { target: { value: '0' } });
+    expect(onChange).toHaveBeenLastCalledWith(expect.objectContaining({ leasePayments: 0 }));
+  });
+
+  test('clearing a field stores null', () => {
+    const { onChange, inputFor } = setup({ ...mod.INITIAL_INPUTS, cashTaxes: 400000 });
+    fireEvent.change(inputFor('Cash Taxes'), { target: { value: '' } });
+    expect(onChange).toHaveBeenLastCalledWith(expect.objectContaining({ cashTaxes: null }));
+  });
+
+  test('working capital accepts a negative (cash released)', () => {
+    const { onChange, inputFor } = setup();
+    fireEvent.change(inputFor('Increase in Working Capital'), { target: { value: '-250,000' } });
+    expect(onChange).toHaveBeenLastCalledWith(expect.objectContaining({ workingCapitalIncrease: -250000 }));
+  });
+
+  test('taxes do not accept a negative', () => {
+    const { onChange, inputFor } = setup();
+    fireEvent.change(inputFor('Cash Taxes'), { target: { value: '-5' } });
+    expect(onChange).toHaveBeenLastCalledWith(expect.objectContaining({ cashTaxes: 5 }));
+  });
+});

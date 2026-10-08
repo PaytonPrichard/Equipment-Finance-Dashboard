@@ -4,6 +4,7 @@
 // ============================================================
 
 import { INDUSTRY_OPTIONS, EQUIPMENT_OPTIONS, CREDIT_OPTIONS, FINANCING_TYPES, TRAC_ELIGIBLE_TYPES, EQUIPMENT_DEFAULTS } from './constants';
+import { MAINTENANCE_CAPEX_FIELD, CASH_FLOW_FIELDS } from '../cashFlowFields';
 
 export const FORM_SCHEMA = {
   sections: [
@@ -20,7 +21,8 @@ export const FORM_SCHEMA = {
         { key: 'yearsInBusiness', label: 'Years in Business', type: 'number', placeholder: 'e.g. 10', tip: 'How long the borrower has been operating. Longer track records reduce risk.', half: true },
         { key: 'totalExistingDebt', label: 'Existing Debt', type: 'currency', placeholder: '20,000,000', tip: 'All outstanding debt (loans, leases, lines). Used for leverage and existing debt service estimates.', half: true },
         { key: 'actualAnnualDebtService', label: 'Actual Annual DS', type: 'currency', placeholder: 'Optional', tip: 'If known, enter actual annual debt service. Otherwise we estimate at 8% of total existing debt.', half: true },
-        { key: 'maintenanceCapex', label: 'Maintenance Capex', type: 'currency', placeholder: 'Optional', tip: 'Annual maintenance capex used in FCCR. Defaults to 3% of revenue if blank. Note: our FCCR excludes taxes and dividends from fixed charges.', half: true },
+        MAINTENANCE_CAPEX_FIELD,
+        ...CASH_FLOW_FIELDS,
         { key: 'cashOnHand', label: 'Cash on Hand', type: 'currency', placeholder: 'Optional', tip: 'Unrestricted cash and equivalents from the most recent balance sheet.', half: true },
         { key: 'availableLiquidity', label: 'Other Available Liquidity', type: 'currency', placeholder: 'Optional', tip: 'Undrawn revolver capacity and other immediately accessible liquidity. Combined with cash on hand to compute months of debt service coverage.', half: true },
         { key: 'industrySector', label: 'Industry', type: 'select', options: INDUSTRY_OPTIONS, tip: 'Affects risk tier and rate. Healthcare & Infrastructure = low risk. Construction, Mining & Aviation = higher risk.', half: true },
