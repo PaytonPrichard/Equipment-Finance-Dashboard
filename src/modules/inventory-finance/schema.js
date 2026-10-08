@@ -3,6 +3,7 @@
 // ============================================================
 
 import { INDUSTRY_OPTIONS, CREDIT_OPTIONS } from './constants';
+import { MAINTENANCE_CAPEX_FIELD, CASH_FLOW_FIELDS } from '../cashFlowFields';
 
 export const FORM_SCHEMA = {
   sections: [
@@ -19,7 +20,8 @@ export const FORM_SCHEMA = {
         { key: 'yearsInBusiness', label: 'Years in Business', type: 'number', placeholder: 'e.g. 10', tip: 'Operating history. Longer track records reduce risk.', half: true },
         { key: 'totalExistingDebt', label: 'Existing Debt', type: 'currency', placeholder: '20,000,000', tip: 'All outstanding debt. Used for leverage calculation.', half: true },
         { key: 'actualAnnualDebtService', label: 'Actual Annual DS', type: 'currency', placeholder: 'Optional', tip: 'If known, enter actual annual debt service.', half: true },
-        { key: 'maintenanceCapex', label: 'Maintenance Capex', type: 'currency', placeholder: 'Optional', tip: 'Annual maintenance capex used in FCCR. Defaults to 3% of revenue if blank. Note: our FCCR excludes taxes and dividends from fixed charges.', half: true },
+        MAINTENANCE_CAPEX_FIELD,
+        ...CASH_FLOW_FIELDS,
         { key: 'cashOnHand', label: 'Cash on Hand', type: 'currency', placeholder: 'Optional', tip: 'Unrestricted cash and equivalents from the most recent balance sheet.', half: true },
         { key: 'availableLiquidity', label: 'Other Available Liquidity', type: 'currency', placeholder: 'Optional', tip: 'Undrawn revolver capacity and other immediately accessible liquidity.', half: true },
         { key: 'industrySector', label: 'Industry', type: 'select', options: INDUSTRY_OPTIONS, half: true },

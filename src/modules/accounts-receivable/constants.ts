@@ -2,6 +2,7 @@
 // Accounts Receivable Module — Constants & Configuration
 // ============================================================
 
+import { CASH_FLOW_INITIAL_INPUTS } from '../cashFlowFields';
 import type {
   CreditRating,
   IndustrySector,
@@ -74,6 +75,7 @@ export const INITIAL_INPUTS: AccountsReceivableInputs = {
   totalExistingDebt: 0,
   actualAnnualDebtService: 0,
   maintenanceCapex: 0,
+  ...CASH_FLOW_INITIAL_INPUTS,
   cashOnHand: 0,
   availableLiquidity: 0,
   industrySector: 'Manufacturing',

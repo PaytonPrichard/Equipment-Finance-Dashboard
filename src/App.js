@@ -42,6 +42,7 @@ import { DEFAULT_CRITERIA, dscrFloorFor, evaluateScreening, validateCriteria } f
 import { validateWeights } from './lib/scoringWeights';
 import { computeDealMetrics } from './utils/dealMetrics';
 import StressTestPanel from './components/StressTestPanel';
+import CashFlowStressPanel from './components/CashFlowStressPanel';
 import ExportPanel from './components/ExportPanel';
 import MemoHistory from './components/MemoHistory';
 import { fetchMemosForDeal, describeMemoDrift } from './lib/memos';
@@ -58,7 +59,8 @@ import {
   formatCurrency,
 } from './utils/format';
 import { getModule, getAvailableModules, DEFAULT_MODULE } from './modules';
-import { computeBorrowerExtras, fccrStatus, liquidityCoverageStatus, revenueGrowthStatus } from './utils/borrowerMetrics';
+import { computeBorrowerExtras, coverageStatus, liquidityCoverageStatus, revenueGrowthStatus } from './utils/borrowerMetrics';
+import { computeCashFlowAnalysis, describeMissing } from './utils/cashFlowMetrics';
 import { FINANCING_TYPES } from './modules/equipment-finance/constants';
 import {
   calculateMetrics as eqCalculateMetrics,
@@ -572,6 +574,13 @@ function AuthenticatedApp({ profile, user }) {
     [screeningCriteria, metrics, riskScore, inputs, activeModule, valid]
   );
 
+  // Cash-flow coverage and its stress scenarios. evaluateScreening runs the
+  // same function, so the cards, the table and the verdict cannot disagree.
+  const cashFlow = useMemo(
+    () => valid ? computeCashFlowAnalysis(inputs, metrics, { ...DEFAULT_CRITERIA, ...screeningCriteria }) : null,
+    [inputs, metrics, screeningCriteria, valid]
+  );
+
   // What each metric card prints under its value, and when it raises a flag.
   //
   // Both used to be string and number literals inline on the card. That put a
@@ -598,6 +607,11 @@ function AuthenticatedApp({ profile, user }) {
       termCoverageMax: c.maxTermCoverage,
       revenueConcentration: `Target ≤ ${c.maxRevenueConcentration}%`,
       revenueConcentrationMax: c.maxRevenueConcentration,
+      // Firm floors, editable in Screening Policy. 0 means off.
+      cashFlowDscrFloor: c.minCashFlowDscr,
+      fccrFloor: c.minFccr,
+      cashFlowDscr: c.minCashFlowDscr > 0 ? `Min ${c.minCashFlowDscr.toFixed(2)}x · your policy` : 'No floor set',
+      fccr: c.minFccr > 0 ? `Min ${c.minFccr.toFixed(2)}x · your policy` : 'No floor set',
     };
   }, [mod, screeningCriteria, activeModule]);
 
@@ -1440,7 +1454,7 @@ function AuthenticatedApp({ profile, user }) {
 
                   {/* Screening Verdict */}
                   {screeningResult && (
-                    <ScreeningVerdict verdict={screeningResult.verdict} reasons={screeningResult.reasons} />
+                    <ScreeningVerdict verdict={screeningResult.verdict} reasons={screeningResult.reasons} notes={screeningResult.notes} />
                   )}
 
                   {/* Executive Summary — equipment only (uses equipment-specific metrics) */}
@@ -1483,20 +1497,36 @@ function AuthenticatedApp({ profile, user }) {
                       />
                     </div>
 
-                    {/* Coverage & Liquidity & Trend (universal across modules) */}
-                    <div className="grid grid-cols-3 gap-3">
+                    {/* Cash-flow coverage (universal across modules) */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <MetricCard
+                        title="Cash-Flow DSCR"
+                        value={cashFlow?.base.cashFlowDscr != null ? formatRatio(cashFlow.base.cashFlowDscr) : 'Not provided'}
+                        subtitle={
+                          cashFlow?.base.cashFlowDscr != null
+                            ? `${formatCurrency(cashFlow.base.freeCashFlow)} free cash flow / DS`
+                            : cashFlow?.missing.cashFlowDscr.length ? `Missing ${describeMissing(cashFlow.missing.cashFlowDscr)}` : 'Needs debt service'
+                        }
+                        status={coverageStatus(cashFlow?.base.cashFlowDscr, cardLimits.cashFlowDscrFloor)}
+                        threshold={cardLimits.cashFlowDscr}
+                        flag={cashFlow?.base.cashFlowDscr != null && cashFlow.base.cashFlowDscr < cardLimits.cashFlowDscrFloor ? 'Below threshold' : null}
+                      />
                       <MetricCard
                         title="FCCR"
-                        value={borrowerExtras.fccr != null ? formatRatio(borrowerExtras.fccr) : '—'}
+                        value={cashFlow?.base.fccr != null ? formatRatio(cashFlow.base.fccr) : 'Not provided'}
                         subtitle={
-                          borrowerExtras.fccr != null
-                            ? `(EBITDA − ${formatCurrency(borrowerExtras.maintenanceCapex)}) / DS${borrowerExtras.maintCapexUserProvided ? '' : ' · capex est. 3% of rev'}`
-                            : 'Needs EBITDA + debt service'
+                          cashFlow?.base.fccr != null
+                            ? '(EBITDA + rent − capex − taxes) / (DS + rent)'
+                            : cashFlow?.missing.fccr.length ? `Missing ${describeMissing(cashFlow.missing.fccr)}` : 'Needs debt service'
                         }
-                        status={fccrStatus(borrowerExtras.fccr)}
-                        threshold="Min 1.0x · Target 1.25x+"
-                        flag={borrowerExtras.fccr != null && borrowerExtras.fccr < 1.0 ? 'Below 1.0x' : null}
+                        status={coverageStatus(cashFlow?.base.fccr, cardLimits.fccrFloor)}
+                        threshold={cardLimits.fccr}
+                        flag={cashFlow?.base.fccr != null && cashFlow.base.fccr < cardLimits.fccrFloor ? 'Below threshold' : null}
                       />
+                    </div>
+
+                    {/* Liquidity & Trend (universal across modules) */}
+                    <div className="grid grid-cols-2 gap-3">
                       <MetricCard
                         title="Liquidity"
                         value={borrowerExtras.totalLiquidity > 0 ? formatCurrency(borrowerExtras.totalLiquidity) : '—'}
@@ -1686,6 +1716,9 @@ function AuthenticatedApp({ profile, user }) {
                   {/* Stress Test */}
                   <div id="sec-stress" className="scroll-mt-[150px]">
                     <StressTestPanel stressResults={stressResults} beaconSlot={<TutorialBeacon id="stress" title="Stress Test" description="See how the deal holds up under revenue declines." position="bottom" />} />
+                    <div className="mt-4">
+                      <CashFlowStressPanel analysis={cashFlow} criteria={{ ...DEFAULT_CRITERIA, ...screeningCriteria }} />
+                    </div>
                   </div>
 
                   <div id="sec-recommendation" className="scroll-mt-[150px]">

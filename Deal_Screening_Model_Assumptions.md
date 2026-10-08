@@ -169,6 +169,27 @@ The model produces a composite risk score (0-100), financial metrics, commentary
 
 **Assumption:** A single equipment purchase exceeding 25% of revenue represents a concentrated bet. If the equipment underperforms or the business contracts, the payment burden becomes disproportionate.
 
+### Cash-Flow Coverage (all asset classes)
+
+DSCR divides EBITDA by debt service, but EBITDA is not cash. These two metrics take out what the borrower pays before the lender sees a dollar. Code: `src/utils/cashFlowMetrics.ts`.
+
+- **Free cash flow for debt service** = EBITDA - cash taxes - maintenance capex - increase in working capital
+- **Cash-flow DSCR** = free cash flow for debt service / (existing + new annual debt service)
+- **FCCR** = (EBITDA + rent - maintenance capex - cash taxes) / (existing + new annual debt service + rent)
+
+Rent is added back to EBITDA because EBITDA is already after rent. Counting rent as a fixed charge without the add-back would charge it twice. This is the standard EBITDAR form.
+
+Debt service is always existing plus new, the same denominator as DSCR. When actual debt service is entered it replaces the 8% estimate for existing debt only. The new facility's payments are always included.
+
+**Missing inputs are never filled in.** If any input to a metric is blank, the metric reads "not provided" and names what is missing, in the screening view, the verdict and the memo. A partial number would always overstate coverage, since every omitted item is a cost. An entered 0 counts as an answer for taxes, working capital and rent. Maintenance capex of 0 reads as not provided, because saved deals stored a blank capex field as 0. (Before this change, a blank capex was silently set to 3% of revenue.)
+
+| Floor | Default | Rationale |
+|-------|---------|-----------|
+| Min cash-flow DSCR | 1.15x | No market standard for this measure. Set under the 1.20-1.25x term lenders use on plain DSCR, because it is stricter. |
+| Min FCCR | 1.10x | Common springing FCCR covenant level in ABL. |
+
+Below the floor flags the deal. Below 1.0x fails it. A floor of 0 turns it off. Both are firm settings in Screening Policy. A metric that is not provided adds a note to the verdict and does not change it. Neither metric feeds the composite score.
+
 ### Additional Metrics (Informational)
 - **EBITDA Margin** = EBITDA / Revenue (measures profitability)
 - **Debt Yield** = EBITDA / Net Financed Amount (measures cash flow relative to new debt)
@@ -256,6 +277,8 @@ The composite score (0-100) is a **weighted average** of seven factor scores. Ea
 
 ## 7. Stress Testing Methodology
 
+### EBITDA and collateral stress (per module)
+
 The model applies EBITDA decline scenarios to simulate borrower cash flow deterioration:
 
 | Scenario | EBITDA Decline | Purpose |
@@ -265,9 +288,25 @@ The model applies EBITDA decline scenarios to simulate borrower cash flow deteri
 | Moderate Stress | -20% | Recessionary conditions |
 | Severe Stress | -30% | Significant downturn / industry shock |
 
-For each scenario, the model recalculates DSCR, leverage, and the composite risk score. This shows how much cushion exists before the deal "breaks" (e.g., DSCR falls below 1.0x).
+For each scenario, the model recalculates DSCR, leverage, and the composite risk score. AR and inventory also stress collateral (aging, dilution, obsolescence, turnover). This shows how much cushion exists before the deal "breaks" (e.g., DSCR falls below 1.0x).
 
-**Assumption:** Only EBITDA is stressed. Revenue, debt levels, and deal terms remain constant. In reality, distressed borrowers may also face rising costs, lost customers, or covenant triggers.
+### Cash-flow stress (all asset classes)
+
+Recomputes DSCR, cash-flow DSCR and FCCR under each scenario. Every setting is a firm setting in Screening Policy. A value of 0 turns that scenario off.
+
+| Scenario | Default | Mechanics |
+|----------|---------|-----------|
+| Revenue decline | -10%, -20%, -30% | EBITDA falls by the same percentage. Margin held. |
+| Margin compression | -200 bps | Same revenue, EBITDA lower by revenue x 2.00%. |
+| Rate shock | +200 bps | Added interest on floating-rate debt: the new AR or inventory revolver at full draw, plus the floating share of existing debt if entered. Equipment term deals are fixed at screening and are not shocked. If the floating share is blank, existing debt is not shocked and the table says so. |
+| Slower collections | 20 days | Working capital increase grows by revenue x 20 / 365. Moves cash-flow DSCR only; FCCR has no working-capital term. |
+| Combined severe | Revenue -20% and margin -200 bps | EBITDA = revenue x 0.80 x (margin - 2.00%). |
+
+Cash taxes, maintenance capex and rent are held at base-case levels in every scenario. Lower earnings would lower taxes, so holding them is conservative. Slower collections is kept out of the combined case because a falling top line usually releases working capital, and stacking both would double-count.
+
+**Verdict effect:** if cash-flow DSCR or FCCR falls below 1.0x in the combined severe case, the deal is flagged ("breaks under stress"), unless the base case already failed on that metric.
+
+**Assumption:** revenue declines hold the margin constant, which understates operating leverage for businesses with high fixed costs. The margin and combined scenarios exist to cover that.
 
 ---
 
@@ -404,7 +443,7 @@ a memo is the platform's, not the caller's.
 
 - **Does not predict default.** The score reflects screening-level risk assessment, not a statistically validated probability of default.
 - **Does not consider management quality,** contract backlog, customer relationships, or qualitative business factors beyond industry and years in operation.
-- **Does not model interest rate changes** over the life of the deal (rates are fixed at screening).
+- **Does not model interest rate paths** over the life of the deal (rates are fixed at screening). The cash-flow stress applies a one-time rate shock to floating-rate debt only.
 - **Does not account for cross-collateralization,** guarantees, or other structural mitigants already in place.
 - **Does not replace appraisals.** Equipment values are estimated, not appraised.
 - **Does not consider tax implications** of different financing structures (e.g., Section 179, MACRS depreciation, true lease vs. finance lease classification).
@@ -421,13 +460,14 @@ a memo is the platform's, not the caller's.
 6. Credit ratings are qualitative self-assessments, not formal agency ratings
 7. Residual value percentages are conservative screening estimates
 8. DSCR is the single most important factor (25% weight)
-9. Stress testing only adjusts EBITDA, holding all else constant
+9. EBITDA stress holds all else constant. Cash-flow stress also moves margin, floating rates and working capital, and holds taxes, capex and rent at base-case levels
 10. The 0-100 scoring scale uses linear interpolation between expert-set breakpoints, not statistically calibrated curves
 11. Historical comparable matching is proximity-based, not predictive
 12. All rates shown are screening-level indicative rates, not commitments
+13. Cash-flow DSCR and FCCR are judged only when their inputs are provided; missing inputs are reported, never estimated
 
 ---
 
 *This document describes the model as built. All assumptions should be reviewed and validated against your institution's credit policy, current market conditions, and regulatory requirements before relying on any output for credit decisions.*
 
-*Last updated: March 17, 2026*
+*Last updated: October 7, 2026*

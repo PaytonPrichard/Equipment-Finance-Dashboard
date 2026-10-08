@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { exportScreeningCsv } from '../utils/csvExport';
 import { DEFAULT_CRITERIA } from '../lib/screeningCriteria';
+import { computeCashFlowAnalysis, describeMissing } from '../utils/cashFlowMetrics';
 import { createMemoSnapshot } from '../lib/memos';
 import packageJson from '../../package.json';
 
@@ -183,7 +184,21 @@ export function generateBrandedPdfHtml({ summaryText, inputs, metrics, riskScore
   const dscrFloor = moduleKey === 'accounts_receivable' ? c.minDscrAR : c.minDscr;
   const metricRows = [];
   if (metrics?.dscr !== undefined) metricRows.push(['DSCR', fmtRatio(metrics.dscr), metrics.dscr >= dscrFloor ? '#16a34a' : metrics.dscr >= 1.0 ? '#ca8a04' : '#dc2626']);
-  if (borrowerExtras?.fccr != null) metricRows.push(['FCCR', fmtRatio(borrowerExtras.fccr), borrowerExtras.fccr >= dscrFloor ? '#16a34a' : borrowerExtras.fccr >= 1.0 ? '#ca8a04' : '#dc2626']);
+  // Cash-flow coverage, computed here from the stored inputs so a memo
+  // regenerated from a snapshot shows the same numbers the verdict used.
+  // A metric with missing inputs prints as not provided, never as a guess.
+  const cashFlow = metrics ? computeCashFlowAnalysis(inputs, metrics, c) : null;
+  const coverageColor = (v, floor) => v >= floor ? '#16a34a' : v >= 1.0 ? '#ca8a04' : '#dc2626';
+  if (cashFlow) {
+    const cf = cashFlow.base.cashFlowDscr;
+    const fc = cashFlow.base.fccr;
+    metricRows.push(cf != null
+      ? ['Cash-Flow DSCR', fmtRatio(cf), coverageColor(cf, c.minCashFlowDscr)]
+      : ['Cash-Flow DSCR', 'Not provided', '#94a3b8']);
+    metricRows.push(fc != null
+      ? ['FCCR', fmtRatio(fc), coverageColor(fc, c.minFccr)]
+      : ['FCCR', 'Not provided', '#94a3b8']);
+  }
   if (metrics?.leverage !== undefined) metricRows.push(['Leverage', fmtRatio(metrics.leverage), metrics.leverage <= c.maxLeverage ? '#16a34a' : metrics.leverage <= c.maxLeverage * 1.5 ? '#ca8a04' : '#dc2626']);
   if (metrics?.ltv !== undefined) metricRows.push(['LTV', fmtPct(metrics.ltv), metrics.ltv * 100 <= c.maxLtv ? '#16a34a' : metrics.ltv <= 1.2 ? '#ca8a04' : '#dc2626']);
   if (metrics?.termCoverage !== undefined) {
@@ -294,6 +309,9 @@ export function generateBrandedPdfHtml({ summaryText, inputs, metrics, riskScore
     const icon = r.level === 'fail' ? '&#10005;' : '&#9888;';
     return `<div style="display:flex;gap:6px;align-items:flex-start;margin-bottom:4px"><span style="color:${color};font-size:12.5px;flex-shrink:0">${icon}</span><span style="font-size:12.5px;color:#475569">${esc(r.text)}</span></div>`;
   }).join('');
+  const notesHtml = (screeningResult?.notes || []).map((n) =>
+    `<div style="display:flex;gap:6px;align-items:flex-start;margin-bottom:4px"><span style="color:#94a3b8;font-size:12.5px;flex-shrink:0">&#9432;</span><span style="font-size:12.5px;color:#64748b">${esc(n)}</span></div>`
+  ).join('');
 
   // Red flags — bottom sub-scores under 50, paired with their underlying metric.
   // Don't pad: show 0-3 items, sorted worst first.
@@ -325,8 +343,9 @@ export function generateBrandedPdfHtml({ summaryText, inputs, metrics, riskScore
       <div style="font-size:11.5px;color:#475569;margin-top:2px">${esc(f.caption)} <span style="color:#94a3b8">· target ${esc(f.target)}</span></div>
     </div>`;
   };
-  // Sensitivity table — 4 stress scenarios with module-aware columns.
-  // EF: Score | DSCR | FCCR. AR & Inventory: + Borrowing Base.
+  // Sensitivity table: 4 stress scenarios with module-aware columns.
+  // EF: Score | DSCR. AR & Inventory: + Borrowing Base. FCCR moved to the
+  // cash-flow stress table below, which owns it.
   const showBorrowingBase = moduleKey === 'accounts_receivable' || moduleKey === 'inventory_finance';
   const fmtMillions = (v) => (v == null || !Number.isFinite(v)) ? '—' : `$${(v / 1_000_000).toFixed(1)}M`;
   const fmtRatioCell = (v) => (v == null || !Number.isFinite(v)) ? '—' : `${v.toFixed(2)}x`;
@@ -338,7 +357,6 @@ export function generateBrandedPdfHtml({ summaryText, inputs, metrics, riskScore
           <th style="text-align:left;padding:6px 8px 6px 0;color:#64748b;font-weight:600">Scenario</th>
           <th style="text-align:right;padding:6px 8px;color:#64748b;font-weight:600">Score</th>
           <th style="text-align:right;padding:6px 8px;color:#64748b;font-weight:600">DSCR</th>
-          <th style="text-align:right;padding:6px 8px;color:#64748b;font-weight:600">FCCR</th>
           ${showBorrowingBase ? '<th style="text-align:right;padding:6px 0 6px 8px;color:#64748b;font-weight:600">Borrowing Base</th>' : ''}
         </tr>
       </thead>
@@ -347,18 +365,53 @@ export function generateBrandedPdfHtml({ summaryText, inputs, metrics, riskScore
           const isBase = i === 0;
           const rowStyle = isBase ? 'background:#f8fafc;font-weight:600' : '';
           const dscrColor = s.dscr < 1.0 ? '#dc2626' : s.dscr < 1.25 ? '#ea580c' : '#1f2937';
-          const fccrColor = (s.fccr != null && s.fccr < 1.0) ? '#dc2626' : (s.fccr != null && s.fccr < 1.25) ? '#ea580c' : '#1f2937';
           return `<tr style="border-bottom:1px solid #f1f5f9;${rowStyle}">
             <td style="padding:6px 8px 6px 0;color:#1f2937">${esc(s.label)}</td>
             <td style="text-align:right;padding:6px 8px;color:#1f2937;font-family:'IBM Plex Mono',ui-monospace,monospace">${Math.round(s.score)}</td>
             <td style="text-align:right;padding:6px 8px;color:${dscrColor};font-family:'IBM Plex Mono',ui-monospace,monospace">${fmtRatioCell(s.dscr)}</td>
-            <td style="text-align:right;padding:6px 8px;color:${fccrColor};font-family:'IBM Plex Mono',ui-monospace,monospace">${fmtRatioCell(s.fccr)}</td>
             ${showBorrowingBase ? `<td style="text-align:right;padding:6px 0 6px 8px;color:#1f2937;font-family:'IBM Plex Mono',ui-monospace,monospace">${fmtMillions(s.borrowingBase)}</td>` : ''}
           </tr>`;
         }).join('')}
       </tbody>
     </table>
   </div>` : '';
+
+  // Cash-flow stress: same scenarios and floors as the screening view.
+  const cashFlowStressHtml = (() => {
+    if (!cashFlow) return '';
+    const showCf = cashFlow.base.cashFlowDscr != null;
+    const showFccr = cashFlow.base.fccr != null;
+    const missingLines = [
+      !showCf && cashFlow.missing.cashFlowDscr.length ? `Cash-flow DSCR not provided: missing ${describeMissing(cashFlow.missing.cashFlowDscr)}.` : null,
+      !showFccr && cashFlow.missing.fccr.length ? `FCCR not provided: missing ${describeMissing(cashFlow.missing.fccr)}.` : null,
+    ].filter(Boolean);
+    const mono = "font-family:'IBM Plex Mono',ui-monospace,monospace";
+    const cell = (v, floor) => {
+      const color = v == null ? '#94a3b8' : v < 1.0 ? '#dc2626' : floor > 0 && v < floor ? '#ea580c' : '#1f2937';
+      return `<td style="text-align:right;padding:6px 8px;color:${color};${mono}">${fmtRatioCell(v)}</td>`;
+    };
+    const th = (t, left) => `<th style="text-align:${left ? 'left' : 'right'};padding:6px 8px${left ? ' 6px 0' : ''};color:#64748b;font-weight:600">${t}</th>`;
+    return `<div class="section">
+    <div class="section-title">Cash-Flow Stress</div>
+    <table style="width:100%;border-collapse:collapse;font-size:12.5px">
+      <thead><tr style="border-bottom:2px solid #e2e8f0">
+        ${th('Scenario', true)}${th('EBITDA')}${th('DSCR')}${showCf ? th('Cash-Flow DSCR') : ''}${showFccr ? th('FCCR') : ''}
+      </tr></thead>
+      <tbody>
+        ${cashFlow.scenarios.map((sc, i) => `<tr style="border-bottom:1px solid #f1f5f9;${i === 0 ? 'background:#f8fafc;font-weight:600' : ''}">
+          <td style="padding:6px 8px 6px 0;color:#1f2937">${esc(sc.label)}<div style="font-size:11px;color:#94a3b8;font-weight:400">${esc(sc.detail)}</div></td>
+          <td style="text-align:right;padding:6px 8px;color:#1f2937;${mono}">${fmtMillions(sc.ebitda)}</td>
+          ${cell(sc.dscr, 0)}${showCf ? cell(sc.cashFlowDscr, c.minCashFlowDscr) : ''}${showFccr ? cell(sc.fccr, c.minFccr) : ''}
+        </tr>`).join('')}
+      </tbody>
+    </table>
+    <div style="font-size:11px;color:#64748b;margin-top:6px">
+      ${missingLines.map((l) => `<div>${esc(l)}</div>`).join('')}
+      ${cashFlow.assumptions.map((a) => `<div>${esc(a)}</div>`).join('')}
+      <div>Firm floors: cash-flow DSCR ${c.minCashFlowDscr > 0 ? c.minCashFlowDscr.toFixed(2) + 'x' : 'off'}, FCCR ${c.minFccr > 0 ? c.minFccr.toFixed(2) + 'x' : 'off'}. The combined severe case below 1.0x flags the deal.</div>
+    </div>
+  </div>`;
+  })();
 
   // No forced break before this section. It used to carry
   // page-break-before:always, which threw away whatever was left of the
@@ -486,7 +539,7 @@ export function generateBrandedPdfHtml({ summaryText, inputs, metrics, riskScore
     </div>`;
   })()}
 
-  ${reasonsHtml ? `<div style="margin-bottom:20px;padding:10px 14px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px">${reasonsHtml}</div>` : ''}
+  ${reasonsHtml || notesHtml ? `<div style="margin-bottom:20px;padding:10px 14px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px">${reasonsHtml}${notesHtml}</div>` : ''}
 
   ${redFlagsHtml}
 
@@ -534,6 +587,8 @@ export function generateBrandedPdfHtml({ summaryText, inputs, metrics, riskScore
   ${strengthsConcernsHtml}
 
   ${sensitivityHtml}
+
+  ${cashFlowStressHtml}
 
   <!-- Suggested Structure (module-aware, structured) -->
   ${renderStructureSection()}

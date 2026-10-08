@@ -4,6 +4,8 @@ import type { Verdict, ScreeningReason } from '../types';
 export interface ScreeningVerdictProps {
   verdict: Verdict | null | undefined;
   reasons: ScreeningReason[];
+  /** Context that does not move the verdict, such as a metric not provided. */
+  notes?: string[];
 }
 
 interface VerdictConfig {
@@ -56,7 +58,7 @@ const VERDICT_CONFIG: Record<Verdict, VerdictConfig> = {
   },
 };
 
-export default function ScreeningVerdict({ verdict, reasons }: ScreeningVerdictProps): React.ReactElement | null {
+export default function ScreeningVerdict({ verdict, reasons, notes = [] }: ScreeningVerdictProps): React.ReactElement | null {
   if (!verdict) return null;
 
   const config = VERDICT_CONFIG[verdict] || VERDICT_CONFIG.flag;
@@ -102,6 +104,16 @@ export default function ScreeningVerdict({ verdict, reasons }: ScreeningVerdictP
         {reasons.length === 0 && verdict === 'pass' && (
           <p className="text-[11px] text-emerald-600">All screening criteria met</p>
         )}
+        {notes.map((n, i) => (
+          <div key={`n-${i}`} className="flex items-start gap-2">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="text-gray-400 mt-0.5 flex-shrink-0" strokeWidth="2">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="16" x2="12" y2="12" />
+              <line x1="12" y1="8" x2="12.01" y2="8" />
+            </svg>
+            <span className="text-[11px] text-gray-500 leading-relaxed">{n}</span>
+          </div>
+        ))}
       </div>
     </div>
   );

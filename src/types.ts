@@ -114,6 +114,14 @@ export interface BaseDealInputs {
   totalExistingDebt: USD;
   actualAnnualDebtService?: USD;
   maintenanceCapex?: USD;
+  /** Cash-flow coverage inputs (src/utils/cashFlowMetrics.ts). Null = not provided; 0 is an answer. */
+  cashTaxes?: USD | null;
+  /** Increase in working capital over the year. Negative = cash released. */
+  workingCapitalIncrease?: USD | null;
+  /** Annual rent and operating lease payments. */
+  leasePayments?: USD | null;
+  /** Share of existing debt that floats, percent 0-100. */
+  floatingRateDebtPct?: number | null;
   cashOnHand?: USD;
   availableLiquidity?: USD;
   industrySector: IndustrySector;
@@ -184,6 +192,8 @@ export interface BaseMetrics {
   newAnnualDebtService: USD;
   existingDebtService: USD;
   debtServiceEstimated: boolean;
+  /** Principal of the new facility that floats with SOFR. 0 for fixed-rate term deals. */
+  newFloatingPrincipal?: USD;
 }
 
 export interface EquipmentMetrics extends BaseMetrics {
@@ -296,6 +306,8 @@ export interface ScreeningReason {
 export interface ScreeningResult {
   verdict: Verdict;
   reasons: ScreeningReason[];
+  /** Things a reader must know that do not move the verdict, e.g. a metric not provided. */
+  notes: string[];
 }
 
 export interface ScreeningCriteria {
@@ -313,6 +325,18 @@ export interface ScreeningCriteria {
   maxDilution: number;
   minTurnover: number;
   maxObsolescence: number;
+  // Cash-flow coverage floors (0 = disabled)
+  minCashFlowDscr: number;
+  minFccr: number;
+  // Cash-flow stress scenarios (0 = scenario off)
+  stressRevenueDeclineMild: number;      // percent
+  stressRevenueDeclineModerate: number;  // percent
+  stressRevenueDeclineSevere: number;    // percent
+  stressMarginCompressionBps: number;
+  stressRateShockBps: number;
+  stressWcDelayDays: number;
+  stressCombinedRevenueDecline: number;  // percent
+  stressCombinedMarginBps: number;
 }
 
 export type AuditAction =

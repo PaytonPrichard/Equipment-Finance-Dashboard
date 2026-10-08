@@ -1,10 +1,12 @@
 // Universal borrower-profile metrics that apply across every module.
-// Display-only for v1: not yet integrated into the composite risk score.
+// Display-only: not part of the composite risk score.
+//
+// FCCR moved to src/utils/cashFlowMetrics.ts, which owns the formula and the
+// rule that a metric with missing inputs reads "not provided". It used to
+// live here with a 3%-of-revenue capex default, which put an invented number
+// on the card behind a small note.
 
-// FCCR (Fixed Charge Coverage Ratio):
-//   FCCR = (EBITDA − Maintenance Capex) / Annual Debt Service
-// We deliberately exclude taxes and dividends from fixed charges for v1.
-// Maintenance capex defaults to 3% of revenue when the user leaves it blank.
+import { fccrFor, providedValue } from './cashFlowMetrics';
 
 export function computeBorrowerExtras(inputs, metrics) {
   const revenue = Number(inputs?.annualRevenue) || 0;
@@ -13,14 +15,14 @@ export function computeBorrowerExtras(inputs, metrics) {
   const available = Number(inputs?.availableLiquidity) || 0;
   const totalLiquidity = cash + available;
 
-  const computedDebtService =
+  // Existing plus new. existingDebtService already holds the actual figure
+  // when one was entered. Using the actual figure alone, as this once did,
+  // left the new facility's payments out of both FCCR and liquidity months.
+  const debtService =
     (metrics?.existingDebtService || 0) + (metrics?.newAnnualDebtService || 0);
-  const debtService = Number(inputs?.actualAnnualDebtService) || computedDebtService;
 
-  const userMaintCapex = Number(inputs?.maintenanceCapex);
-  const maintCapex = userMaintCapex > 0 ? userMaintCapex : revenue * 0.03;
-  const maintCapexUserProvided = userMaintCapex > 0;
-  const fccr = computeFccr(ebitda, maintCapex, debtService);
+  const maintCapex = providedValue(inputs, 'maintenanceCapex');
+  const fccr = fccrFor(inputs, ebitda, debtService);
 
   const monthsOfDebtServiceCoverage =
     debtService > 0 ? totalLiquidity / (debtService / 12) : null;
@@ -38,7 +40,6 @@ export function computeBorrowerExtras(inputs, metrics) {
   return {
     fccr,
     maintenanceCapex: maintCapex,
-    maintCapexUserProvided,
     totalLiquidity,
     cashOnHand: cash,
     availableLiquidity: available,
@@ -51,13 +52,14 @@ export function computeBorrowerExtras(inputs, metrics) {
   };
 }
 
-// Shared FCCR formula. Used by both the base-case borrower metrics and the
-// per-scenario stress tests in each scoring module.
-//   FCCR = (EBITDA − Maintenance Capex) / Annual Debt Service
-// Returns null when debt service is missing.
-export function computeFccr(ebitda, maintCapex, debtService) {
-  if (!debtService || debtService <= 0) return null;
-  return ((ebitda || 0) - (maintCapex || 0)) / debtService;
+// Status band for a coverage ratio against the firm's floor. Presentation
+// only: the floor itself, not these bands, decides flag or fail.
+export function coverageStatus(value, floor) {
+  if (value == null) return undefined;
+  if (value < 1.0) return 'weak';
+  if (floor > 0 && value < floor) return 'adequate';
+  if (value < Math.max(floor, 1.0) * 1.25) return 'good';
+  return 'excellent';
 }
 
 export function fccrStatus(fccr) {
