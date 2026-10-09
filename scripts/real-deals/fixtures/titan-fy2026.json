@@ -364,9 +364,9 @@
     }
   },
   "expected": {
-    "verdict": null,
-    "reason": "",
-    "writtenOn": null
+    "verdict": "fail",
+    "reason": "EBITDA is barely positive after floorplan interest, coverage is 0.14x, and revenue fell 10%. Not enough redeeming qualities to consider.",
+    "writtenOn": "2026-10-09"
   },
   "discussion": "",
   "builds": {

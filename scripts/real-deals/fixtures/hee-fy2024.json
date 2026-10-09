@@ -240,9 +240,9 @@
     }
   },
   "expected": {
-    "verdict": null,
-    "reason": "",
-    "writtenOn": null
+    "verdict": "flag",
+    "reason": "Coverage is strong, but pre-tax income fell 27%, all $1.45B of debt matures in 2028 inside the loan term, and a change of control was pending. The change of control is a flag on its own.",
+    "writtenOn": "2026-10-09"
   },
   "discussion": "",
   "builds": {

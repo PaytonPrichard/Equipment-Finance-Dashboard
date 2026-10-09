@@ -379,9 +379,12 @@
     }
   },
   "expected": {
-    "verdict": null,
-    "reason": "",
-    "writtenOn": null
+    "verdict": "pass",
+    "alsoAcceptable": [
+      "flag"
+    ],
+    "reason": "Leverage 3.9x with 3x coverage, $304M of cash, and a loan that is 0.06x EBITDA. Could be a flag on the single-B rating if being conservative.",
+    "writtenOn": "2026-10-09"
   },
   "discussion": "",
   "builds": {

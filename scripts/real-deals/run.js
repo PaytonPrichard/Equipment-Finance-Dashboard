@@ -42,6 +42,14 @@ const fccrText = (n) => (n == null ? 'not provided' : x(n));
 const MONEY_FIELDS = new Set(['annualRevenue', 'ebitda', 'totalExistingDebt', 'actualAnnualDebtService', 'equipmentCost', 'downPayment', 'maintenanceCapex']);
 const fmtField = (k, v) => (v == null ? 'n/a' : MONEY_FIELDS.has(k) ? money(v) : String(v));
 
+// An expectation can name a primary verdict and, honestly, others the analyst
+// would also accept. "acceptable" is reported separately from a clean match.
+function outcomeOf(actual, expected) {
+  if (actual === String(expected.verdict).toLowerCase()) return 'match';
+  const alt = (expected.alsoAcceptable || []).map((v) => String(v).toLowerCase());
+  return alt.includes(actual) ? 'acceptable' : 'mismatch';
+}
+
 function runCase(fx, S) {
   const { inputs, derivations, blockers, caveats } = derive(fx);
   if (!fx.expected || !fx.expected.verdict) {
@@ -70,7 +78,7 @@ function runCase(fx, S) {
 
   const actual = screening.verdict;
   const expected = String(fx.expected.verdict).toLowerCase();
-  return { fx, inputs, derivations, blockers, caveats: warnings, metrics, risk, factors, screening, stress, view, actual, expected, match: actual === expected };
+  return { fx, inputs, derivations, blockers, caveats: warnings, metrics, risk, factors, screening, stress, view, actual, expected, match: actual === expected, outcome: outcomeOf(actual, fx.expected) };
 }
 
 function citeLine(key, fig) {
@@ -111,7 +119,7 @@ function caseSection(r) {
   for (const d of r.derivations) out.push(`| ${d.field} | ${fmtField(d.field, d.value)} | ${d.formula} |`);
 
   out.push('', `### Joel's expectation (written ${fx.expected?.writtenOn || 'n/a'})`, '');
-  out.push(fx.expected?.verdict ? `**${String(fx.expected.verdict).toUpperCase()}**. ${fx.expected.reason || ''}` : 'Not written yet.');
+  out.push(fx.expected?.verdict ? `**${String(fx.expected.verdict).toUpperCase()}**${fx.expected.alsoAcceptable?.length ? ` (would also accept ${fx.expected.alsoAcceptable.map((v) => String(v).toUpperCase()).join(', ')})` : ''}. ${fx.expected.reason || ''}` : 'Not written yet.');
 
   if (r.blockers.length) {
     out.push('', '### BLOCKED, not scored', '');
@@ -121,7 +129,7 @@ function caseSection(r) {
 
   const m = r.metrics;
   out.push('', '### Tranche output', '');
-  out.push(`**${r.actual.toUpperCase()}**, composite score ${r.risk.composite}. ${r.match ? 'Matches' : '**Does not match**'} the expectation.`);
+  out.push(`**${r.actual.toUpperCase()}**, composite score ${r.risk.composite}. ${r.outcome === 'match' ? 'Matches' : r.outcome === 'acceptable' ? 'Does not match the primary call, but is one Joel marked acceptable in' : '**Does not match**'} the expectation.`);
   out.push('', `Rate ${(m.rate * 100).toFixed(2)}% all-in. DSCR ${x(m.dscr)}. Leverage ${lev(m.leverage)}. LTV ${(m.ltv * 100).toFixed(0)}%. Term coverage ${m.termCoverage.toFixed(0)}%. Revenue concentration ${m.revenueConcentration.toFixed(1)}%. EBITDA margin ${m.ebitdaMargin.toFixed(1)}%.`);
   out.push('', '| Factor | Weight | Score | Reading | Target | Met |', '|---|---|---|---|---|---|');
   for (const f of r.factors) {
@@ -165,7 +173,7 @@ function caseSection(r) {
     for (const h of fx.hindsight) out.push(`- ${h}`);
   }
 
-  out.push('', '### Discussion', '', fx.discussion || (r.match ? '_Match. Note anything surprising in the factor table._' : '_Mismatch. Decide with Joel: is the model wrong, or the expectation? Record the answer in the fixture `discussion` field._'));
+  out.push('', '### Discussion', '', fx.discussion || (r.outcome !== 'mismatch' ? '_Match. Note anything surprising in the factor table._' : '_Mismatch. Decide with Joel: is the model wrong, or the expectation? Record the answer in the fixture `discussion` field._'));
   return out.join('\n');
 }
 
@@ -187,7 +195,7 @@ function main() {
   for (const r of results) {
     const exp = r.fx.expected?.verdict ? String(r.fx.expected.verdict).toUpperCase() : 'n/a';
     if (r.blockers.length) lines.push(`| ${r.fx.borrower.name} | ${exp} | n/a | n/a | BLOCKED (${r.blockers.length}) | ${r.caveats.length} |`);
-    else lines.push(`| ${r.fx.borrower.name} | ${exp} | ${r.actual.toUpperCase()} | ${r.risk.composite} | ${r.match ? 'match' : 'MISMATCH'} | ${r.caveats.length} |`);
+    else lines.push(`| ${r.fx.borrower.name} | ${exp} | ${r.actual.toUpperCase()} | ${r.risk.composite} | ${r.outcome === 'mismatch' ? 'MISMATCH' : r.outcome} | ${r.caveats.length} |`);
   }
   lines.push('', '## Read before relying on these results', '');
   lines.push('Estimates, fallbacks and judgment calls that could change a verdict.', '');
@@ -206,7 +214,7 @@ function main() {
 
   const scored = results.filter((r) => !r.blockers.length);
   console.log(`Wrote ${path.relative(process.cwd(), outFile)}`);
-  console.log(`${scored.length} scored, ${scored.filter((r) => r.match).length} matched, ${results.length - scored.length} blocked.`);
+  console.log(`${scored.length} scored, ${scored.filter((r) => r.outcome === 'match').length} matched, ${scored.filter((r) => r.outcome === 'acceptable').length} acceptable, ${results.length - scored.length} blocked.`);
 }
 
 main();
