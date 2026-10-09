@@ -431,7 +431,7 @@
     "reason": "Leverage 3.9x with 3x coverage, $304M of cash, and a loan that is 0.06x EBITDA. Could be a flag on the single-B rating if being conservative.",
     "writtenOn": "2026-10-09"
   },
-  "discussion": "Claude's read, confirmed by Joel 2026-10-09. Match. PASS at 80 with no gate reasons. Pro forma leverage of 4.0x misses the 3.5x scoring target but clears the 5.0x ceiling. Tranche cannot see that DXP's $812M term loan is due in FY2030, before this 60-month loan matures (AUDIT P1-21). With that check, DXP would likely FLAG, which Joel marked acceptable. | Update 2026-10-09, Claude's read, Joel to confirm: With cash-flow inputs, Tranche now FLAGs, which Joel marked acceptable. Combined severe stress takes cash-flow DSCR to 0.91x. The 2030 term loan maturity is still unseen (P1-21).",
+  "discussion": "Claude's read, confirmed by Joel 2026-10-09. Match. PASS at 80 with no gate reasons. Pro forma leverage of 4.0x misses the 3.5x scoring target but clears the 5.0x ceiling. Tranche cannot see that DXP's $812M term loan is due in FY2030, before this 60-month loan matures (AUDIT P1-21). With that check, DXP would likely FLAG, which Joel marked acceptable. | Update 2026-10-09, Claude's read, Joel to confirm: With cash-flow inputs, Tranche now FLAGs, which Joel marked acceptable. Combined severe stress takes cash-flow DSCR to 0.91x. The 2030 term loan maturity is still unseen (P1-21). | Update 2026-10-09 (after maintenance capex scales with revenue in stress, Joel's call), Claude's read, Joel to confirm: Still FLAG (acceptable). Combined severe cash-flow DSCR 0.94x, against 0.91x with capex held flat. The flag comes from the stress test, not the rating Joel mentioned.",
   "builds": {
     "maintenanceCapex": {
       "terms": [
