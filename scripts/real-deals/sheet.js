@@ -18,7 +18,12 @@ const { fetchCompanyFacts, pickAnnualFact } = require('./lib/edgar');
 const { liquidityRunway, maturityWall, money } = require('./lib/analystView');
 
 const ROOT = __dirname;
-const PRETAX = 'us-gaap:IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest';
+// Companies tag the same line differently. First tag with a value wins.
+const PRETAX_TAGS = [
+  'us-gaap:IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest',
+  'us-gaap:IncomeLossFromContinuingOperationsBeforeIncomeTaxesMinorityInterestAndIncomeLossFromEquityMethodInvestments',
+];
+const REVENUE_TAGS = ['us-gaap:Revenues', 'us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax', 'us-gaap:SalesRevenueNet'];
 // Companies tag cash differently. First match wins.
 const CASH_TAGS = ['us-gaap:CashAndCashEquivalentsAtCarryingValue', 'us-gaap:Cash'];
 
@@ -37,11 +42,11 @@ async function sheetFor(fx) {
   const fye = fx.period.fiscalYearEnd;
   const pfye = priorYearEnd(fye);
   const cik = fx.borrower.cik;
-  const revTag = fx.figures.revenue.tags[0];
   const pick = (tag, end) => pickAnnualFact(facts, tag, end, cik);
-  const revPrior = pick(revTag, pfye);
-  const pretax = pick(PRETAX, fye);
-  const pretaxPrior = pick(PRETAX, pfye);
+  const first = (tags, end) => tags.map((t) => pick(t, end)).find(Boolean) || null;
+  const revPrior = first([...(fx.figures.revenue.tags || []), ...REVENUE_TAGS], pfye);
+  const pretax = first(PRETAX_TAGS, fye);
+  const pretaxPrior = first(PRETAX_TAGS, pfye);
   const cash = CASH_TAGS.map((t) => pick(t, fye)).find(Boolean);
 
   const { inputs, caveats } = derive(fx);

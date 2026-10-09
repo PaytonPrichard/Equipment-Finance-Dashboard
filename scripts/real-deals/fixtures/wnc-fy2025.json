@@ -134,11 +134,11 @@
     },
     "workingCapitalIncrease": {
       "manual": {
-        "value": null,
+        "value": -88183000,
         "cite": "https://www.sec.gov/Archives/edgar/data/879526/000087952626000036/R8.htm ($000): receivables 24,072; inventories 77,672; prepaid (7,348); payables and accrued (6,213); other, net (465,647).",
         "readBy": "Research agent 2026-10-09, Joel to verify"
       },
-      "note": "Depends on Joel's EBITDA decision. With the litigation reversal excluded from EBITDA, 'Other, net' (its cash-flow offset) is excluded too: trade lines release 88,183. With it included, all lines: increase 377,464."
+      "note": "Trade lines only: 24,072 + 77,672 - 7,348 - 6,213 = 88,183 released. 'Other, net' (465,647) is excluded because it is the cash-flow offset of the litigation reversal, which is excluded from EBITDA (Joel 2026-10-09)."
     },
     "depreciation": {
       "manual": {
@@ -172,48 +172,64 @@
         ]
       ],
       "estimate": "Depreciation ($47.6M) used as maintenance capex proxy, scaled with revenue in stress."
+    },
+    "ebitda": {
+      "terms": [
+        [
+          "+",
+          "operatingIncome"
+        ],
+        [
+          "+",
+          "depreciationAmortization"
+        ],
+        [
+          "-",
+          "litigationReversal"
+        ]
+      ]
     }
   },
   "caveats": [
-    "JUDGMENT PENDING, EBITDA: reported operating income includes a $418.6M non-cash litigation reversal. Reported EBITDA is $366.2M. Excluding the reversal, EBITDA is -$52.4M. Joel decides.",
+    "JUDGMENT, EBITDA: excludes the $418.6M non-cash litigation reversal (Joel 2026-10-09), so EBITDA is -$52.4M. Reported EBITDA including it is $366.2M. The matching 'Other, net' cash-flow line is excluded from working capital too.",
     "NOTE, a $13.6M impairment (Little Falls plant, being idled) is in operating income and not added back."
   ],
   "assumptions": {
     "industrySector": {
       "value": "Manufacturing",
-      "why": "Proposed by Claude 2026-10-09, Joel to confirm. Trailer manufacturer. Its customers are trucking fleets (Transportation/Logistics, moderate risk) if you prefer to classify by end market."
+      "why": "Proposed by Claude, accepted by Joel 2026-10-09. Trailer manufacturer. Its customers are trucking fleets (Transportation/Logistics, moderate risk) if you prefer to classify by end market."
     },
     "equipmentType": {
       "value": "Heavy Machinery",
-      "why": "Proposed by Claude 2026-10-09, Joel to confirm. Production equipment."
+      "why": "Proposed by Claude, accepted by Joel 2026-10-09. Production equipment."
     },
     "equipmentCondition": {
       "value": "New",
-      "why": "Proposed by Claude 2026-10-09, Joel to confirm. "
+      "why": "Proposed by Claude, accepted by Joel 2026-10-09. "
     },
     "equipmentCost": {
       "value": 15000000,
-      "why": "Proposed by Claude 2026-10-09, Joel to confirm. About 1.0% of revenue."
+      "why": "Proposed by Claude, accepted by Joel 2026-10-09. About 1.0% of revenue."
     },
     "downPayment": {
       "value": 2250000,
-      "why": "Proposed by Claude 2026-10-09, Joel to confirm. 15%, Tranche default."
+      "why": "Proposed by Claude, accepted by Joel 2026-10-09. 15%, Tranche default."
     },
     "financingType": {
       "value": "EFA",
-      "why": "Proposed by Claude 2026-10-09, Joel to confirm. "
+      "why": "Proposed by Claude, accepted by Joel 2026-10-09. "
     },
     "usefulLife": {
       "value": 12,
-      "why": "Proposed by Claude 2026-10-09, Joel to confirm. Within Tranche range of 10-20 years."
+      "why": "Proposed by Claude, accepted by Joel 2026-10-09. Within Tranche range of 10-20 years."
     },
     "loanTerm": {
       "value": 60,
-      "why": "Proposed by Claude 2026-10-09, Joel to confirm. "
+      "why": "Proposed by Claude, accepted by Joel 2026-10-09. "
     },
     "essentialUse": {
       "value": true,
-      "why": "Proposed by Claude 2026-10-09, Joel to confirm. "
+      "why": "Proposed by Claude, accepted by Joel 2026-10-09. "
     },
     "creditRating": {
       "value": null,

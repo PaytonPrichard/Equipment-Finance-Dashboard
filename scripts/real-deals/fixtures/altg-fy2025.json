@@ -221,39 +221,39 @@
   "assumptions": {
     "industrySector": {
       "value": "Other",
-      "why": "Proposed by Claude 2026-10-09, Joel to confirm. Mixed end markets: material handling (warehousing, manufacturing) and construction. Construction (high risk) is the alternative."
+      "why": "Proposed by Claude, accepted by Joel 2026-10-09. Mixed end markets: material handling (warehousing, manufacturing) and construction. Construction (high risk) is the alternative."
     },
     "equipmentType": {
       "value": "Construction Equipment",
-      "why": "Proposed by Claude 2026-10-09, Joel to confirm. Rental fleet additions."
+      "why": "Proposed by Claude, accepted by Joel 2026-10-09. Rental fleet additions."
     },
     "equipmentCondition": {
       "value": "New",
-      "why": "Proposed by Claude 2026-10-09, Joel to confirm. "
+      "why": "Proposed by Claude, accepted by Joel 2026-10-09. "
     },
     "equipmentCost": {
       "value": 20000000,
-      "why": "Proposed by Claude 2026-10-09, Joel to confirm. About 1.1% of revenue."
+      "why": "Proposed by Claude, accepted by Joel 2026-10-09. About 1.1% of revenue."
     },
     "downPayment": {
       "value": 3000000,
-      "why": "Proposed by Claude 2026-10-09, Joel to confirm. 15%, Tranche default."
+      "why": "Proposed by Claude, accepted by Joel 2026-10-09. 15%, Tranche default."
     },
     "financingType": {
       "value": "EFA",
-      "why": "Proposed by Claude 2026-10-09, Joel to confirm. "
+      "why": "Proposed by Claude, accepted by Joel 2026-10-09. "
     },
     "usefulLife": {
       "value": 10,
-      "why": "Proposed by Claude 2026-10-09, Joel to confirm. Within Tranche range of 8-15 years."
+      "why": "Proposed by Claude, accepted by Joel 2026-10-09. Within Tranche range of 8-15 years."
     },
     "loanTerm": {
       "value": 60,
-      "why": "Proposed by Claude 2026-10-09, Joel to confirm. "
+      "why": "Proposed by Claude, accepted by Joel 2026-10-09. "
     },
     "essentialUse": {
       "value": true,
-      "why": "Proposed by Claude 2026-10-09, Joel to confirm. "
+      "why": "Proposed by Claude, accepted by Joel 2026-10-09. "
     },
     "creditRating": {
       "value": null,

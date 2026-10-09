@@ -307,39 +307,39 @@
   "assumptions": {
     "industrySector": {
       "value": "Transportation/Logistics",
-      "why": "Proposed by Claude 2026-10-09, Joel to confirm. Truck dealer serving trucking and fleet operators."
+      "why": "Proposed by Claude, accepted by Joel 2026-10-09. Truck dealer serving trucking and fleet operators."
     },
     "equipmentType": {
       "value": "Vehicles/Fleet",
-      "why": "Proposed by Claude 2026-10-09, Joel to confirm. Lease and rental truck fleet."
+      "why": "Proposed by Claude, accepted by Joel 2026-10-09. Lease and rental truck fleet."
     },
     "equipmentCondition": {
       "value": "New",
-      "why": "Proposed by Claude 2026-10-09, Joel to confirm. "
+      "why": "Proposed by Claude, accepted by Joel 2026-10-09. "
     },
     "equipmentCost": {
       "value": 75000000,
-      "why": "Proposed by Claude 2026-10-09, Joel to confirm. About 1.0% of revenue."
+      "why": "Proposed by Claude, accepted by Joel 2026-10-09. About 1.0% of revenue."
     },
     "downPayment": {
       "value": 7500000,
-      "why": "Proposed by Claude 2026-10-09, Joel to confirm. 10%, Tranche default for Vehicles/Fleet."
+      "why": "Proposed by Claude, accepted by Joel 2026-10-09. 10%, Tranche default for Vehicles/Fleet."
     },
     "financingType": {
       "value": "TRAC",
-      "why": "Proposed by Claude 2026-10-09, Joel to confirm. Tranche suggested structure for Vehicles/Fleet."
+      "why": "Proposed by Claude, accepted by Joel 2026-10-09. Tranche suggested structure for Vehicles/Fleet."
     },
     "usefulLife": {
       "value": 7,
-      "why": "Proposed by Claude 2026-10-09, Joel to confirm. Within Tranche range of 5-8 years."
+      "why": "Proposed by Claude, accepted by Joel 2026-10-09. Within Tranche range of 5-8 years."
     },
     "loanTerm": {
       "value": 60,
-      "why": "Proposed by Claude 2026-10-09, Joel to confirm. "
+      "why": "Proposed by Claude, accepted by Joel 2026-10-09. "
     },
     "essentialUse": {
       "value": true,
-      "why": "Proposed by Claude 2026-10-09, Joel to confirm. "
+      "why": "Proposed by Claude, accepted by Joel 2026-10-09. "
     },
     "creditRating": {
       "value": null,

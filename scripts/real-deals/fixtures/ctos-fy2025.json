@@ -164,11 +164,11 @@
     },
     "yearsInBusiness": {
       "manual": {
-        "value": null,
-        "cite": "Not stated. 10-K Item 1 dates only the April 1, 2021 Nesco / Custom Truck LP merger.",
+        "value": 4,
+        "cite": "10-K Item 1: Nesco Holdings acquired Custom Truck One Source, L.P. on April 1, 2021 and took its name. 2025 - 2021. No earlier founding year is stated.",
         "readBy": "Research agent 2026-10-09, Joel to verify"
       },
-      "note": "Joel to decide: 4 years from the merger, or a predecessor founding year from a cited source."
+      "note": "Joel 2026-10-09: use the merger date. Conservative: predecessor history is not counted."
     }
   },
   "builds": {
@@ -213,44 +213,45 @@
   "caveats": [
     "JUDGMENT, floorplan: $657.4M of floorplan is left out of debt under the dealer convention. $366.2M of it is a non-trade PNC bank facility at SOFR+3.00%, which behaves closer to funded debt. Including it raises debt to $2,027M.",
     "ESTIMATE, debt service: uses non-floorplan interest expense ($104.9M), not cash. Cash interest is reported only in total.",
-    "NOTE, D&A: cash-flow D&A exceeds income-statement D&A by $8.0M, not itemized by the company."
+    "NOTE, D&A: cash-flow D&A exceeds income-statement D&A by $8.0M, not itemized by the company.",
+    "ASSUMPTION, years in business: 4, from the 2021 merger, because the filing states no earlier founding year. Predecessor businesses are older, so this understates the operating history."
   ],
   "assumptions": {
     "industrySector": {
       "value": "Infrastructure",
-      "why": "Proposed by Claude 2026-10-09, Joel to confirm. Customers are mainly electric utility transmission and distribution, telecom and rail. Construction (high risk) is the alternative."
+      "why": "Proposed by Claude, accepted by Joel 2026-10-09. Customers are mainly electric utility transmission and distribution, telecom and rail. Construction (high risk) is the alternative."
     },
     "equipmentType": {
       "value": "Vehicles/Fleet",
-      "why": "Proposed by Claude 2026-10-09, Joel to confirm. Specialty truck rental fleet."
+      "why": "Proposed by Claude, accepted by Joel 2026-10-09. Specialty truck rental fleet."
     },
     "equipmentCondition": {
       "value": "New",
-      "why": "Proposed by Claude 2026-10-09, Joel to confirm. "
+      "why": "Proposed by Claude, accepted by Joel 2026-10-09. "
     },
     "equipmentCost": {
       "value": 20000000,
-      "why": "Proposed by Claude 2026-10-09, Joel to confirm. About 1.0% of revenue."
+      "why": "Proposed by Claude, accepted by Joel 2026-10-09. About 1.0% of revenue."
     },
     "downPayment": {
       "value": 2000000,
-      "why": "Proposed by Claude 2026-10-09, Joel to confirm. 10%, Tranche default for Vehicles/Fleet."
+      "why": "Proposed by Claude, accepted by Joel 2026-10-09. 10%, Tranche default for Vehicles/Fleet."
     },
     "financingType": {
       "value": "TRAC",
-      "why": "Proposed by Claude 2026-10-09, Joel to confirm. Tranche suggested structure for Vehicles/Fleet."
+      "why": "Proposed by Claude, accepted by Joel 2026-10-09. Tranche suggested structure for Vehicles/Fleet."
     },
     "usefulLife": {
       "value": 7,
-      "why": "Proposed by Claude 2026-10-09, Joel to confirm. Within Tranche range of 5-8 years."
+      "why": "Proposed by Claude, accepted by Joel 2026-10-09. Within Tranche range of 5-8 years."
     },
     "loanTerm": {
       "value": 60,
-      "why": "Proposed by Claude 2026-10-09, Joel to confirm. "
+      "why": "Proposed by Claude, accepted by Joel 2026-10-09. "
     },
     "essentialUse": {
       "value": true,
-      "why": "Proposed by Claude 2026-10-09, Joel to confirm. "
+      "why": "Proposed by Claude, accepted by Joel 2026-10-09. "
     },
     "creditRating": {
       "value": null,
