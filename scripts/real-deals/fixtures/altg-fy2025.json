@@ -1,0 +1,272 @@
+{
+  "case": "altg-fy2025",
+  "assetClass": "equipment_finance",
+  "borrower": {
+    "name": "Alta Equipment Group Inc.",
+    "ticker": "ALTG",
+    "cik": 1759824
+  },
+  "period": {
+    "form": "10-K",
+    "fiscalYearEnd": "2025-12-31",
+    "accession": "0001193125-26-076932",
+    "companyFactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001759824.json",
+    "fetchedAt": "2026-10-09"
+  },
+  "context": "Dealership network that sells, rents and services material handling, construction and environmental processing equipment.",
+  "figures": {
+    "revenue": {
+      "manual": {
+        "value": 1835900000,
+        "cite": "https://www.sec.gov/Archives/edgar/data/1759824/000119312526076932/R4.htm 'Total revenues' 1,835.9 ($M).",
+        "readBy": "Research agent 2026-10-09, Joel to verify"
+      }
+    },
+    "operatingIncome": {
+      "manual": {
+        "value": 23200000,
+        "cite": "https://www.sec.gov/Archives/edgar/data/1759824/000119312526076932/R4.htm 'Income from operations' 23.2 ($M).",
+        "readBy": "Research agent 2026-10-09, Joel to verify"
+      }
+    },
+    "depreciationAmortization": {
+      "manual": {
+        "value": 133600000,
+        "cite": "https://www.sec.gov/Archives/edgar/data/1759824/000119312526076932/R9.htm 'Depreciation and amortization' 133.6 ($M).",
+        "readBy": "Research agent 2026-10-09, Joel to verify"
+      },
+      "note": "Ties to R4 non-rental D&A 28.7 + rental depreciation 104.9. Excludes debt discount and issuance amortization 5.4."
+    },
+    "floorplanInterest": {
+      "manual": {
+        "value": 10900000,
+        "cite": "https://www.sec.gov/Archives/edgar/data/1759824/000119312526076932/R4.htm 'Interest expense, floor plan payable – new equipment' (10.9) ($M).",
+        "readBy": "Research agent 2026-10-09, Joel to verify"
+      },
+      "note": "Below operating income. New-equipment floorplan only; interest on used and rental floorplan is not disclosed separately."
+    },
+    "otherInterest": {
+      "manual": {
+        "value": 77500000,
+        "cite": "https://www.sec.gov/Archives/edgar/data/1759824/000119312526076932/R4.htm 'Interest expense – other' (77.5) ($M).",
+        "readBy": "Research agent 2026-10-09, Joel to verify"
+      },
+      "note": "Expense, not cash. Includes 5.4 of non-cash amortization and undisclosed used/rental floorplan interest. Cash interest (83.4) is reported only in total."
+    },
+    "totalDebt": {
+      "manual": {
+        "value": 752800000,
+        "cite": "https://www.sec.gov/Archives/edgar/data/1759824/000119312526076932/R63.htm ($M): lines of credit 213.6; senior secured second lien notes 500.0; finance leases 39.2.",
+        "readBy": "Research agent 2026-10-09, Joel to verify"
+      },
+      "note": "Principal (carrying 735.0). Floorplan ($313.3M) excluded. Acquisition consideration notes ($5.3M) excluded."
+    },
+    "floorplanPayable": {
+      "manual": {
+        "value": 313300000,
+        "cite": "https://www.sec.gov/Archives/edgar/data/1759824/000119312526076932/R2.htm 'Floor plan payable' new 241.0 + used and rental 72.3 ($M).",
+        "readBy": "Research agent 2026-10-09, Joel to verify"
+      },
+      "note": "Informational. Excluded from debt under the floorplan convention."
+    },
+    "currentMaturities": {
+      "manual": {
+        "value": 11000000,
+        "cite": "https://www.sec.gov/Archives/edgar/data/1759824/000119312526076932/R2.htm 'Current portion of long-term debt' 11.0 ($M), all finance leases.",
+        "readBy": "Research agent 2026-10-09, Joel to verify"
+      }
+    },
+    "maturityY1": {
+      "manual": {
+        "value": 11000000,
+        "cite": "https://www.sec.gov/Archives/edgar/data/1759824/000119312526076932/R64.htm 2026 debt 0; finance lease current 11.0 ($M).",
+        "readBy": "Research agent 2026-10-09, Joel to verify"
+      }
+    },
+    "maturityY2": {
+      "manual": {
+        "value": 12400000,
+        "cite": "https://www.sec.gov/Archives/edgar/data/1759824/000119312526076932/R71.htm finance lease 2027 payment 12.4 ($M).",
+        "readBy": "Research agent 2026-10-09, Joel to verify"
+      },
+      "note": "Undiscounted finance-lease payments; principal by year is not disclosed."
+    },
+    "maturityY3": {
+      "manual": {
+        "value": 10500000,
+        "cite": "https://www.sec.gov/Archives/edgar/data/1759824/000119312526076932/R71.htm finance lease 2028 payment 10.5 ($M).",
+        "readBy": "Research agent 2026-10-09, Joel to verify"
+      }
+    },
+    "maturityY4": {
+      "manual": {
+        "value": 720500000,
+        "cite": "https://www.sec.gov/Archives/edgar/data/1759824/000119312526076932/R64.htm 2029: ABL 213.6 + notes 500.0; R71 finance lease 6.9 ($M).",
+        "readBy": "Research agent 2026-10-09, Joel to verify"
+      }
+    },
+    "maturityY5": {
+      "manual": {
+        "value": 1900000,
+        "cite": "https://www.sec.gov/Archives/edgar/data/1759824/000119312526076932/R71.htm finance lease 2030 payment 1.9 ($M).",
+        "readBy": "Research agent 2026-10-09, Joel to verify"
+      }
+    },
+    "cash": {
+      "manual": {
+        "value": 18600000,
+        "cite": "https://www.sec.gov/Archives/edgar/data/1759824/000119312526076932/R2.htm 'Cash' 18.6 ($M).",
+        "readBy": "Research agent 2026-10-09, Joel to verify"
+      }
+    },
+    "availableLiquidity": {
+      "manual": {
+        "value": 424400000,
+        "cite": "Main 10-K, Liquidity: '$424.4 million of available borrowings under the revolving line of credit and floor plans'.",
+        "readBy": "Research agent 2026-10-09, Joel to verify"
+      },
+      "note": "Combined ABL and floorplan availability. ABL-only is not disclosed, and floorplan capacity can only fund inventory."
+    },
+    "cashTaxes": {
+      "manual": {
+        "value": 4300000,
+        "cite": "https://www.sec.gov/Archives/edgar/data/1759824/000119312526076932/R81.htm 'Total Net Payments' 4.3 ($M).",
+        "readBy": "Research agent 2026-10-09, Joel to verify"
+      }
+    },
+    "leasePayments": {
+      "manual": {
+        "value": 26200000,
+        "cite": "https://www.sec.gov/Archives/edgar/data/1759824/000119312526076932/R70.htm 'Operating cash flows for operating leases' 26.2 ($M).",
+        "readBy": "Research agent 2026-10-09, Joel to verify"
+      }
+    },
+    "workingCapitalIncrease": {
+      "manual": {
+        "value": 31300000,
+        "cite": "https://www.sec.gov/Archives/edgar/data/1759824/000119312526076932/R9.htm ($M): receivables 11.2; inventories (48.9); rent-to-sell proceeds 98.2; prepaid (11.0); manufacturer floor plans (55.4); payables and other (18.4); financing: non-manufacturer floor plan 99.7 and (106.7). Sum (31.3).",
+        "readBy": "Research agent 2026-10-09, Joel to verify"
+      },
+      "note": "Includes the rent-to-sell proceeds line, which the company places in working capital. Excluding it, the increase would be 129.5."
+    },
+    "depreciation": {
+      "manual": {
+        "value": 123300000,
+        "cite": "https://www.sec.gov/Archives/edgar/data/1759824/000119312526076932/R9.htm D&A 133.6 less intangible amortization 10.3 ($M).",
+        "readBy": "Research agent 2026-10-09, Joel to verify"
+      },
+      "note": "Includes 13.6 of depreciation on inventory rented under purchase-option leases."
+    },
+    "rentalCapex": {
+      "manual": {
+        "value": 41800000,
+        "cite": "https://www.sec.gov/Archives/edgar/data/1759824/000119312526076932/R9.htm 'Expenditures for rental equipment' (41.8) ($M).",
+        "readBy": "Research agent 2026-10-09, Joel to verify"
+      },
+      "note": "Informational. Understates fleet reinvestment: 100.0 moved from inventory to rental fleet as a non-cash transfer."
+    },
+    "yearsInBusiness": {
+      "manual": {
+        "value": 41,
+        "cite": "10-K Item 1: 'We have operated as an equipment dealership for 41 years'.",
+        "readBy": "Research agent 2026-10-09, Joel to verify"
+      }
+    }
+  },
+  "builds": {
+    "ebitda": {
+      "terms": [
+        [
+          "+",
+          "operatingIncome"
+        ],
+        [
+          "+",
+          "depreciationAmortization"
+        ],
+        [
+          "-",
+          "floorplanInterest"
+        ]
+      ]
+    },
+    "debtService": {
+      "terms": [
+        [
+          "+",
+          "otherInterest"
+        ],
+        [
+          "+",
+          "currentMaturities"
+        ]
+      ]
+    },
+    "maintenanceCapex": {
+      "terms": [
+        [
+          "+",
+          "depreciation"
+        ]
+      ],
+      "estimate": "Depreciation ($123.3M rental and non-rental) used as maintenance capex proxy, scaled with revenue in stress."
+    }
+  },
+  "caveats": [
+    "JUDGMENT, floorplan: $313.3M of floorplan is left out of debt. $47.7M of it is a JPMorgan first-lien facility that shares collateral with the ABL and could be treated as funded debt.",
+    "ESTIMATE, debt service: uses non-floorplan interest expense ($77.5M), not cash. It includes $5.4M of non-cash amortization and undisclosed used and rental floorplan interest.",
+    "JUDGMENT, liquidity: the $424.4M available is combined ABL and floorplan capacity. Floorplan capacity can only fund inventory, so this overstates general liquidity.",
+    "NOTE, stockholders equity is negative ($8.8M) at year end."
+  ],
+  "assumptions": {
+    "industrySector": {
+      "value": "Other",
+      "why": "Proposed by Claude, accepted by Joel 2026-10-09. Mixed end markets: material handling (warehousing, manufacturing) and construction. Construction (high risk) is the alternative."
+    },
+    "equipmentType": {
+      "value": "Construction Equipment",
+      "why": "Proposed by Claude, accepted by Joel 2026-10-09. Rental fleet additions."
+    },
+    "equipmentCondition": {
+      "value": "New",
+      "why": "Proposed by Claude, accepted by Joel 2026-10-09. "
+    },
+    "equipmentCost": {
+      "value": 20000000,
+      "why": "Proposed by Claude, accepted by Joel 2026-10-09. About 1.1% of revenue."
+    },
+    "downPayment": {
+      "value": 3000000,
+      "why": "Proposed by Claude, accepted by Joel 2026-10-09. 15%, Tranche default."
+    },
+    "financingType": {
+      "value": "EFA",
+      "why": "Proposed by Claude, accepted by Joel 2026-10-09. "
+    },
+    "usefulLife": {
+      "value": 10,
+      "why": "Proposed by Claude, accepted by Joel 2026-10-09. Within Tranche range of 8-15 years."
+    },
+    "loanTerm": {
+      "value": 60,
+      "why": "Proposed by Claude, accepted by Joel 2026-10-09. "
+    },
+    "essentialUse": {
+      "value": true,
+      "why": "Proposed by Claude, accepted by Joel 2026-10-09. "
+    },
+    "creditRating": {
+      "value": "Weak",
+      "why": "S&P B (read by Joel 2026-10-09). B maps to Weak (Joel's rule)."
+    }
+  },
+  "expected": {
+    "verdict": "flag",
+    "alsoAcceptable": [
+      "fail"
+    ],
+    "reason": "A 60-month loan runs into 2029, when the ABL and second lien notes mature. That is the concern.",
+    "writtenOn": "2026-10-09"
+  },
+  "discussion": "Claude's read, Joel to confirm. Acceptable (FAIL vs Joel's FLAG). Tranche fails on cash flow: after fleet capex and working capital, free cash flow is negative (cash-flow DSCR -0.14x), and leverage is 5.3x. Joel's concern, $714M of ABL and notes maturing in 2029 inside the loan term, is not something Tranche sees (P1-21). Same verdict family, different reasons."
+}

@@ -43,3 +43,21 @@ test('maturity wall keeps missing years as null', () => {
   const v = { maturityY1: 5, maturityY3: 7 };
   expect(maturityWall((k) => v[k] ?? null).map((m) => m.amount)).toEqual([5, null, 7, null, null]);
 });
+
+test('cash-flow DSCR, FCCR and severe-case breaches invert to the cash flow that clears them', () => {
+  const crit = { ...criteria, minCashFlowDscr: 1.15, minFccr: 1.1 };
+  const inputs = { ebitda: 20e6, totalExistingDebt: 10e6, leasePayments: 2e6, equipmentCost: 1e6, usefulLife: 10 };
+  const metrics = { dscr: 2, leverage: 1, existingDebtService: 8e6, newAnnualDebtService: 2e6, netFinanced: 1e6, ltv: 0.8, equipmentValue: 1.25e6, termCoverage: 50 };
+  // Base: debt service 10, FCF 8 -> 0.80x. FCCR 0.90x on (10 + 2 rent) = 12.
+  const cf = { base: { debtService: 10e6, freeCashFlow: 8e6, cashFlowDscr: 0.8, fccr: 0.9 }, scenarios: [] };
+  const { changes } = whatWouldChange(inputs, metrics, { composite: 80 }, factors, crit, cf);
+  expect(changes).toContain('Cash-flow DSCR 0.80x vs 1.15x floor: free cash flow for debt service would need to reach $11.5M from $8M, or debt service fall to $7M from $10M.');
+  expect(changes).toContain('FCCR 0.90x vs 1.1x floor: EBITDA plus rent, less maintenance capex and cash taxes, would need to reach $13.2M from $10.8M.');
+
+  // Base fine, severe case below 1.0x: 9 / 10.
+  const cf2 = { base: { debtService: 10e6, freeCashFlow: 15e6, cashFlowDscr: 1.5, fccr: 1.6 },
+    scenarios: [{ kind: 'combined', detail: 'Revenue -20% and margin -200 bps', debtService: 10e6, freeCashFlow: 9e6, cashFlowDscr: 0.9 }] };
+  const r2 = whatWouldChange(inputs, metrics, { composite: 80 }, factors, crit, cf2);
+  expect(r2.changes).toContain('Combined severe case (revenue -20% and margin -200 bps): cash-flow DSCR 0.90x. Free cash flow in that case would need to reach $10M from $9M to cover debt service.');
+  expect(r2.headroom).toContain('Free cash flow can fall 23% before cash-flow DSCR reaches the 1.15x floor.'); // 1 - 11.5/15
+});

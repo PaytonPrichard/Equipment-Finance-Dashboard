@@ -37,7 +37,36 @@ function liquidityRunway({ cash, availability, ebitda, maintenanceCapex, debtSer
  * If cleared, how much room there is. Uses the same metrics and criteria
  * as the verdict.
  */
-function whatWouldChange(inputs, metrics, risk, factors, criteria) {
+/**
+ * Cash-flow coverage (main's cash-flow DSCR and FCCR), inverted the same way.
+ * cf is computeCashFlowAnalysis output. Only runs when EBITDA is positive;
+ * the negative-EBITDA line already covers that case.
+ */
+function cashFlowChanges(inputs, cf, criteria, changes, headroom) {
+  const b = cf.base;
+  const floor = criteria.minCashFlowDscr;
+  if (b.cashFlowDscr != null && floor > 0) {
+    if (b.cashFlowDscr < floor) {
+      const need = floor * b.debtService;
+      const tail = b.freeCashFlow > 0 ? `, or debt service fall to ${money(b.freeCashFlow / floor)} from ${money(b.debtService)}` : '';
+      changes.push(`Cash-flow DSCR ${b.cashFlowDscr.toFixed(2)}x vs ${floor}x floor: free cash flow for debt service would need to reach ${money(need)} from ${money(b.freeCashFlow)}${tail}.`);
+    } else {
+      headroom.push(`Free cash flow can fall ${pct(1 - (floor * b.debtService) / b.freeCashFlow)} before cash-flow DSCR reaches the ${floor}x floor.`);
+    }
+  }
+  const fFloor = criteria.minFccr;
+  const rent = inputs.leasePayments;
+  if (b.fccr != null && fFloor > 0 && rent != null && b.fccr < fFloor) {
+    const denom = b.debtService + rent;
+    changes.push(`FCCR ${b.fccr.toFixed(2)}x vs ${fFloor}x floor: EBITDA plus rent, less maintenance capex and cash taxes, would need to reach ${money(fFloor * denom)} from ${money(b.fccr * denom)}.`);
+  }
+  const severe = (cf.scenarios || []).find((s) => s.kind === 'combined');
+  if (severe && severe.cashFlowDscr != null && severe.cashFlowDscr < 1.0 && !(b.cashFlowDscr != null && b.cashFlowDscr < 1.0)) {
+    changes.push(`Combined severe case (${severe.detail.toLowerCase()}): cash-flow DSCR ${severe.cashFlowDscr.toFixed(2)}x. Free cash flow in that case would need to reach ${money(severe.debtService)} from ${money(severe.freeCashFlow)} to cover debt service.`);
+  }
+}
+
+function whatWouldChange(inputs, metrics, risk, factors, criteria, cf = null) {
   const changes = [];
   const headroom = [];
   const ebitda = inputs.ebitda;
@@ -70,6 +99,8 @@ function whatWouldChange(inputs, metrics, risk, factors, criteria) {
     }
   }
 
+  if (cf && inputs.ebitda > 0) cashFlowChanges(inputs, cf, criteria, changes, headroom);
+
   // LTV (percent in criteria, ratio in metrics)
   if (criteria.maxLtv > 0 && metrics.ltv * 100 > criteria.maxLtv) {
     const maxFinanced = (criteria.maxLtv / 100) * metrics.equipmentValue;
@@ -89,7 +120,7 @@ function whatWouldChange(inputs, metrics, risk, factors, criteria) {
       .sort((a, b) => b.lost - a.lost)
       .slice(0, 3)
       .map((d) => `${d.label} (-${d.lost.toFixed(1)})`);
-    changes.push(`Score ${risk.composite} vs ${criteria.passScore} to pass: ${criteria.passScore - risk.composite} points short. Most points lost on ${drags.join(', ')}.`);
+    changes.push(`Score ${risk.composite} vs ${criteria.passScore} to pass: ${criteria.passScore - risk.composite} ${criteria.passScore - risk.composite === 1 ? 'point' : 'points'} short. Most points lost on ${drags.join(', ')}.`);
   }
 
   return { changes, headroom };

@@ -1,0 +1,270 @@
+{
+  "case": "ctos-fy2025",
+  "assetClass": "equipment_finance",
+  "borrower": {
+    "name": "Custom Truck One Source, Inc.",
+    "ticker": "CTOS",
+    "cik": 1709682
+  },
+  "period": {
+    "form": "10-K",
+    "fiscalYearEnd": "2025-12-31",
+    "accession": "0001709682-26-000008",
+    "companyFactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001709682.json",
+    "fetchedAt": "2026-10-09"
+  },
+  "context": "Rents and sells specialty trucks and equipment, plus parts and service, mainly to electric utility, telecom and rail customers.",
+  "figures": {
+    "revenue": {
+      "manual": {
+        "value": 1943957000,
+        "cite": "https://www.sec.gov/Archives/edgar/data/1709682/000170968226000008/R3.htm 'Total revenue' 1,943,957 ($000).",
+        "readBy": "Research agent 2026-10-09, Joel to verify"
+      }
+    },
+    "operatingIncome": {
+      "manual": {
+        "value": 124943000,
+        "cite": "https://www.sec.gov/Archives/edgar/data/1709682/000170968226000008/R3.htm 'Operating Income (Loss)' 124,943 ($000).",
+        "readBy": "Research agent 2026-10-09, Joel to verify"
+      }
+    },
+    "depreciationAmortization": {
+      "manual": {
+        "value": 263880000,
+        "cite": "https://www.sec.gov/Archives/edgar/data/1709682/000170968226000008/R6.htm 'Depreciation and amortization' 263,880 ($000).",
+        "readBy": "Research agent 2026-10-09, Joel to verify"
+      },
+      "note": "Exceeds income-statement D&A (255,863) by 8,017, not itemized. Excludes debt issuance amortization 4,376."
+    },
+    "floorplanInterest": {
+      "manual": {
+        "value": 52700000,
+        "cite": "https://www.sec.gov/Archives/edgar/data/1709682/000170968226000008/R62.htm floor plan 'Interest expense' 52,700,000; Note 7: 'Floor plan interest expense was $ 52.7 million'.",
+        "readBy": "Research agent 2026-10-09, Joel to verify"
+      },
+      "note": "Below operating income. Disclosed only rounded."
+    },
+    "otherInterest": {
+      "manual": {
+        "value": 104919000,
+        "cite": "https://www.sec.gov/Archives/edgar/data/1709682/000170968226000008/R3.htm 'Interest expense, net' 157,619 ($000) less floor plan interest 52.7M.",
+        "readBy": "Research agent 2026-10-09, Joel to verify"
+      },
+      "note": "Expense, not cash. Cash interest (155,429) is reported only in total. Includes ~4.4M of non-cash amortization."
+    },
+    "totalDebt": {
+      "manual": {
+        "value": 1660759000,
+        "cite": "https://www.sec.gov/Archives/edgar/data/1709682/000170968226000008/R65.htm 'Total debt outstanding' 1,660,759 ($000): ABL 697,975; 2029 secured notes 920,000; 2023 credit facility 17,297; notes payable 25,487.",
+        "readBy": "Research agent 2026-10-09, Joel to verify"
+      },
+      "note": "Principal. No finance leases disclosed. Floorplan excluded."
+    },
+    "floorplanPayable": {
+      "manual": {
+        "value": 657423000,
+        "cite": "https://www.sec.gov/Archives/edgar/data/1709682/000170968226000008/R4.htm 'Floor plan payables - trade' 291,215 + 'non-trade' 366,208 ($000).",
+        "readBy": "Research agent 2026-10-09, Joel to verify"
+      },
+      "note": "Informational. Excluded from debt under the floorplan convention."
+    },
+    "currentMaturities": {
+      "manual": {
+        "value": 25858000,
+        "cite": "https://www.sec.gov/Archives/edgar/data/1709682/000170968226000008/R4.htm 'Current maturities of long-term debt' 25,858 ($000).",
+        "readBy": "Research agent 2026-10-09, Joel to verify"
+      }
+    },
+    "maturityY1": {
+      "manual": {
+        "value": 25858000,
+        "cite": "https://www.sec.gov/Archives/edgar/data/1709682/000170968226000008/R67.htm 2026: notes payable 25,487 + long-term debt 371 ($000).",
+        "readBy": "Research agent 2026-10-09, Joel to verify"
+      }
+    },
+    "maturityY2": {
+      "manual": {
+        "value": 393000,
+        "cite": "https://www.sec.gov/Archives/edgar/data/1709682/000170968226000008/R67.htm 2027: 393 ($000).",
+        "readBy": "Research agent 2026-10-09, Joel to verify"
+      }
+    },
+    "maturityY3": {
+      "manual": {
+        "value": 16533000,
+        "cite": "https://www.sec.gov/Archives/edgar/data/1709682/000170968226000008/R67.htm 2028: 16,533 ($000).",
+        "readBy": "Research agent 2026-10-09, Joel to verify"
+      }
+    },
+    "maturityY4": {
+      "manual": {
+        "value": 1617975000,
+        "cite": "https://www.sec.gov/Archives/edgar/data/1709682/000170968226000008/R67.htm 2029: 1,617,975 ($000), ABL and 2029 secured notes.",
+        "readBy": "Research agent 2026-10-09, Joel to verify"
+      }
+    },
+    "maturityY5": {
+      "manual": {
+        "value": 0,
+        "cite": "https://www.sec.gov/Archives/edgar/data/1709682/000170968226000008/R67.htm 2030: 0.",
+        "readBy": "Research agent 2026-10-09, Joel to verify"
+      }
+    },
+    "cash": {
+      "manual": {
+        "value": 6273000,
+        "cite": "https://www.sec.gov/Archives/edgar/data/1709682/000170968226000008/R4.htm 'Cash and cash equivalents' 6,273 ($000).",
+        "readBy": "Research agent 2026-10-09, Joel to verify"
+      }
+    },
+    "availableLiquidity": {
+      "manual": {
+        "value": 248100000,
+        "cite": "https://www.sec.gov/Archives/edgar/data/1709682/000170968226000008/R66.htm ABL 'Remaining borrowing capacity' 248,100,000; MD&A 'Availability under the ABL Facility was $248.1 million'.",
+        "readBy": "Research agent 2026-10-09, Joel to verify"
+      }
+    },
+    "cashTaxes": {
+      "manual": {
+        "value": 713000,
+        "cite": "https://www.sec.gov/Archives/edgar/data/1709682/000170968226000008/R6.htm 'Income taxes paid by jurisdiction, net of refunds' 713 ($000).",
+        "readBy": "Research agent 2026-10-09, Joel to verify"
+      }
+    },
+    "leasePayments": {
+      "manual": {
+        "value": 23169000,
+        "cite": "https://www.sec.gov/Archives/edgar/data/1709682/000170968226000008/R69.htm 'Operating cash outflows - payments on operating leases' 23,169 ($000).",
+        "readBy": "Research agent 2026-10-09, Joel to verify"
+      }
+    },
+    "workingCapitalIncrease": {
+      "manual": {
+        "value": 1736000,
+        "cite": "https://www.sec.gov/Archives/edgar/data/1709682/000170968226000008/R6.htm ($000): receivables 15,637; inventories 121,119; prepaids, operating leases and other 9,001; payables (660); accrued (137); floor plan trade (39,283); deposits (2,791); financing: non-trade floor plan 482,336 and (586,958). Sum (1,736).",
+        "readBy": "Research agent 2026-10-09, Joel to verify"
+      },
+      "note": "The prepaid line mixes operating-lease items and cannot be split."
+    },
+    "depreciation": {
+      "manual": {
+        "value": 228907000,
+        "cite": "https://www.sec.gov/Archives/edgar/data/1709682/000170968226000008/R3.htm 'Depreciation of rental equipment' 215,635 + 'Non-rental depreciation' 13,272 ($000).",
+        "readBy": "Research agent 2026-10-09, Joel to verify"
+      }
+    },
+    "rentalCapex": {
+      "manual": {
+        "value": 456984000,
+        "cite": "https://www.sec.gov/Archives/edgar/data/1709682/000170968226000008/R6.htm 'Purchases of rental equipment' (456,984) ($000).",
+        "readBy": "Research agent 2026-10-09, Joel to verify"
+      },
+      "note": "Informational. Disposal proceeds 206,081."
+    },
+    "yearsInBusiness": {
+      "manual": {
+        "value": 4,
+        "cite": "10-K Item 1: Nesco Holdings acquired Custom Truck One Source, L.P. on April 1, 2021 and took its name. 2025 - 2021. No earlier founding year is stated.",
+        "readBy": "Research agent 2026-10-09, Joel to verify"
+      },
+      "note": "Joel 2026-10-09: use the merger date. Conservative: predecessor history is not counted."
+    }
+  },
+  "builds": {
+    "ebitda": {
+      "terms": [
+        [
+          "+",
+          "operatingIncome"
+        ],
+        [
+          "+",
+          "depreciationAmortization"
+        ],
+        [
+          "-",
+          "floorplanInterest"
+        ]
+      ]
+    },
+    "debtService": {
+      "terms": [
+        [
+          "+",
+          "otherInterest"
+        ],
+        [
+          "+",
+          "currentMaturities"
+        ]
+      ]
+    },
+    "maintenanceCapex": {
+      "terms": [
+        [
+          "+",
+          "depreciation"
+        ]
+      ],
+      "estimate": "Depreciation ($228.9M rental and non-rental) used as maintenance capex proxy, scaled with revenue in stress. Gross rental capex was $457.0M."
+    }
+  },
+  "caveats": [
+    "JUDGMENT, floorplan: $657.4M of floorplan is left out of debt under the dealer convention. $366.2M of it is a non-trade PNC bank facility at SOFR+3.00%, which behaves closer to funded debt. Including it raises debt to $2,027M.",
+    "ESTIMATE, debt service: uses non-floorplan interest expense ($104.9M), not cash. Cash interest is reported only in total.",
+    "NOTE, D&A: cash-flow D&A exceeds income-statement D&A by $8.0M, not itemized by the company.",
+    "ASSUMPTION, years in business: 4, from the 2021 merger, because the filing states no earlier founding year. Predecessor businesses are older, so this understates the operating history."
+  ],
+  "assumptions": {
+    "industrySector": {
+      "value": "Infrastructure",
+      "why": "Proposed by Claude, accepted by Joel 2026-10-09. Customers are mainly electric utility transmission and distribution, telecom and rail. Construction (high risk) is the alternative."
+    },
+    "equipmentType": {
+      "value": "Vehicles/Fleet",
+      "why": "Proposed by Claude, accepted by Joel 2026-10-09. Specialty truck rental fleet."
+    },
+    "equipmentCondition": {
+      "value": "New",
+      "why": "Proposed by Claude, accepted by Joel 2026-10-09. "
+    },
+    "equipmentCost": {
+      "value": 20000000,
+      "why": "Proposed by Claude, accepted by Joel 2026-10-09. About 1.0% of revenue."
+    },
+    "downPayment": {
+      "value": 2000000,
+      "why": "Proposed by Claude, accepted by Joel 2026-10-09. 10%, Tranche default for Vehicles/Fleet."
+    },
+    "financingType": {
+      "value": "TRAC",
+      "why": "Proposed by Claude, accepted by Joel 2026-10-09. Tranche suggested structure for Vehicles/Fleet."
+    },
+    "usefulLife": {
+      "value": 7,
+      "why": "Proposed by Claude, accepted by Joel 2026-10-09. Within Tranche range of 5-8 years."
+    },
+    "loanTerm": {
+      "value": 60,
+      "why": "Proposed by Claude, accepted by Joel 2026-10-09. "
+    },
+    "essentialUse": {
+      "value": true,
+      "why": "Proposed by Claude, accepted by Joel 2026-10-09. "
+    },
+    "creditRating": {
+      "value": "Weak",
+      "why": "S&P B (annual review, read by Joel 2026-10-09). Rating date relative to the 2026-03-10 filing not confirmed. B maps to Weak (Joel's rule)."
+    }
+  },
+  "expected": {
+    "verdict": "pass",
+    "alsoAcceptable": [
+      "flag"
+    ],
+    "reason": "Looks like a pass. Could be a flag for the pre-tax losses.",
+    "writtenOn": "2026-10-09"
+  },
+  "discussion": "Confirmed by Joel 2026-10-09: the model is right, the expectation missed something. EBITDA coverage looks fine (2.57x), but after fleet replacement (depreciation $229M; actual 2025 net fleet spend $251M) free cash flow is $105M against $134M of debt service: cash-flow DSCR 0.78x, FCCR 0.82x. Add pre-tax losses and leverage at the 5.0x ceiling. Lesson: for rental businesses, EBITDA overstates debt capacity because fleet replacement is a recurring cost."
+}
