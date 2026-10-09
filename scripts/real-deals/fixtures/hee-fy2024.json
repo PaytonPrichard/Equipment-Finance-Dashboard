@@ -244,7 +244,7 @@
     "reason": "Coverage is strong, but pre-tax income fell 27%, all $1.45B of debt matures in 2028 inside the loan term, and a change of control was pending. The change of control is a flag on its own.",
     "writtenOn": "2026-10-09"
   },
-  "discussion": "",
+  "discussion": "Claude's read 2026-10-09, Joel to confirm. Mismatch. The model is wrong, not the expectation. Tranche PASSes at 84 because it cannot see the two things that drive Joel's FLAG: all $1.45B of debt maturing in FY2028, inside the loan term (AUDIT P1-21), and the pending change of control (AUDIT P1-22). The earnings point is weaker than it looked: pre-tax income fell 27%, but EBITDA was flat ($665M in 2023, $663M in 2024, from the prior-year columns of R4 and R7). The drop came from depreciation and interest.",
   "builds": {
     "maintenanceCapex": {
       "terms": [

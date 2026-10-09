@@ -386,7 +386,7 @@
     "reason": "Leverage 3.9x with 3x coverage, $304M of cash, and a loan that is 0.06x EBITDA. Could be a flag on the single-B rating if being conservative.",
     "writtenOn": "2026-10-09"
   },
-  "discussion": "",
+  "discussion": "Claude's read 2026-10-09, Joel to confirm. Match. PASS at 80 with no gate reasons. Pro forma leverage of 4.0x misses the 3.5x scoring target but clears the 5.0x ceiling. Tranche cannot see that DXP's $812M term loan is due in FY2030, before this 60-month loan matures (AUDIT P1-21). With that check, DXP would likely FLAG, which Joel marked acceptable.",
   "builds": {
     "maintenanceCapex": {
       "terms": [
