@@ -1,5 +1,27 @@
 # Tranche — where things stand
 
+## Current state, 2026-10-09 (read this first)
+
+**Production:** `main` @ `eed02c1`, deployed 2026-10-08 to gettranche.app. 416 client tests, 49 server tests, build clean. The isolation workflow passes in CI on every production deploy and nightly (first real runs ever: its secrets were set 2026-10-07, Node 24 since 2026-10-08).
+
+**Shipped 2026-10-07/08 (Workstream A, see `CHANGELOG_BUILD.md`):**
+- Cash-flow DSCR, FCCR (EBITDAR form) and a cash-flow stress table across all three asset classes. `src/utils/cashFlowMetrics.ts`. Floors 1.15x / 1.10x, scenarios configurable in Screening Policy. Missing inputs read "not provided", never estimated.
+- Recommendation follows the verdict (`src/lib/recommendation.ts`, AUDIT P0-8). FLAG = "Advance with Conditions" with numbered conditions.
+- Fixed: 3%-of-revenue capex imputation removed; FCCR and liquidity months now include the new loan's debt service when actual debt service is entered.
+
+**Security, done 2026-10-07/08:** Anthropic, FRED and Supabase keys rotated after the offboarding. Supabase moved to publishable/secret keys, legacy JWT keys disabled, legacy JWT secret revoked. `PaytonPrichard` is Joel's own GitHub account.
+
+**Next: EBITDA build, Phase 1.** Design approved: `EBITDA_Build_Design.md` on branch `ebitda-build-design` (all section 16 decisions settled, exact formulas in section 8 confirmed by Joel 2026-10-09). Phase 1, in order:
+1. `buildBorrowerInputs` (shared pre-scoring layer) + treatment rules + hand-checked unit tests. No UI.
+2. Treatment rules in firm Settings (`organizations.org_settings.treatmentRules`), admin-only, per-deal override with reason + audit entry.
+3. "Build from statements" mode on the form: line items, treatment, EBITDA source + add-backs, judgment calls; Save blocked until every judgment is confirmed.
+4. Memo "How the numbers were built" + server reruns the build (`api/score-deal.js`, `_scoring.cjs`).
+Then Phase 2 (extraction of line items, statement pages only, token limit 4096, measure cost) and Phase 3 (AUDIT P1-16 "what would change this" panel, on `real-deals`).
+
+**Waiting on Workstream B** (session `tranche-real-deals`, branch `real-deals`, worktree `../tranche-real-deals`), sent 2026-10-09: merge `main` into `real-deals` (only AUDIT.md and CHANGELOG_BUILD.md conflict; renumber A's P2-10/P2-11 after B's P2s), fix B's P0-7 (negative EBITDA, touches `calculateMetrics` leverage and `evaluateScreening`), then Joel merges `real-deals` into `main`. B also owes A: per-fixture figure keys, builds and treatment rules; whether debt is cited as a total or as components; and frozen `derive()` snapshots under `scripts/real-deals/expected/` for the step 1 regression test. **A does not touch `evaluateScreening`, `calculateMetrics` or `scripts/real-deals` until B has merged.**
+
+**Open AUDIT items from this cycle:** P0-8 done. P1-17 criteria are per user, not per firm. P1-18 extraction does arithmetic (fixed by Phase 2's copy-never-compute). P1-19 hardcoded fallback encryption key. P2-10/P2-11 (renumbered on merge) Copy Summary and extraction lack cash-flow fields; New Deal form status chip. Pipeline/monitoring/dashboard/audit-log overhaul requirements are in Claude memory (`lifecycle_overhaul_requirements`).
+
 Last updated 2026-09-23. Production is `main` @ `6a8862c`, deployed to
 gettranche.app. `FRED_API_KEY` is set and `/api/sofr` is live.
 
