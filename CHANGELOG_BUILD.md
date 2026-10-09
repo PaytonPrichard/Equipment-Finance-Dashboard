@@ -69,6 +69,10 @@
 - Expected verdicts: DXP pass (would also accept flag), H&E flag (maturity wall, change of control), Titan fail, Hertz fail with a path (not blind).
 - First run: DXP and Titan match. H&E mismatches (Tranche PASS) because Tranche can't see debt maturing inside the loan term or a pending change of control (AUDIT P1-21, P1-22).
 - Verdicts are a recommended next action, not a probability.
+- Cash-flow inputs (cash taxes, rent, working capital) added to all four cases from the filings. DXP now FLAGs (acceptable). H&E now FLAGs (match), but through capex held flat under stress, not through Joel's reasons.
+- Joel's call: in cash-flow stress, maintenance capex scales with revenue instead of staying flat. Handed to Workstream A, which owns `src/utils/cashFlowMetrics.ts`. After it lands, H&E may go back to PASS until P1-21 and P1-22 exist.
+- Push: today's harness work ships with Workstream A's next change, not on its own.
+
 
 ## 2026-10-09: EBITDA build Phase 1, step 1 (Workstream A)
 

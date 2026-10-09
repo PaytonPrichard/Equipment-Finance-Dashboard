@@ -29,7 +29,10 @@
     "loanTerm": 60,
     "essentialUse": true,
     "actualAnnualDebtService": 71239000,
-    "maintenanceCapex": 423312000
+    "maintenanceCapex": 423312000,
+    "cashTaxes": 11352000,
+    "workingCapitalIncrease": 36870000,
+    "leasePayments": 21272000
   },
   "derivations": [
     {
@@ -61,12 +64,28 @@
       "field": "maintenanceCapex",
       "value": 423312000,
       "formula": "depreciation"
+    },
+    {
+      "field": "cashTaxes",
+      "value": 11352000,
+      "formula": "cashTaxes"
+    },
+    {
+      "field": "workingCapitalIncrease",
+      "value": 36870000,
+      "formula": "workingCapitalIncrease"
+    },
+    {
+      "field": "leasePayments",
+      "value": 21272000,
+      "formula": "leasePayments"
     }
   ],
   "caveats": [
     "ESTIMATE, maintenanceCapex: Depreciation ($423.3M, mostly rental fleet) used as maintenance capex proxy. Actual 2024 purchases were $344.6M rental plus $106.6M other.",
     "TIMING: last 10-K before the 2025 Herc acquisition. Screen is as of February 2025.",
-    "ASSUMPTION, rating: H&E's February 2025 rating could not be verified. Weak is a conservative assumption. Adequate would lower the spread by 200 bps, from +200 to 0."
+    "ASSUMPTION, rating: H&E's February 2025 rating could not be verified. Weak is a conservative assumption. Adequate would lower the spread by 200 bps, from +200 to 0.",
+    "JUDGMENT, working capital: the $42.3M fall in accounts payable likely includes rental fleet purchase timing. Working capital absorbed $36.9M; without the payables line it released $5.5M."
   ],
   "blockers": []
 }

@@ -67,3 +67,10 @@ test('an estimated build always produces a caveat', () => {
   expect(inputs.maintenanceCapex).toBe(1.8e6);
   expect(caveats).toEqual(['ESTIMATE, maintenanceCapex: depreciation used as proxy']);
 });
+
+test('cash-flow inputs pass through when cited and stay absent when missing', () => {
+  const { inputs } = derive(fixture({ ...full, cashTaxes: { value: 1e6 }, leasePayments: { manual: { value: 0, cite: 'none' } } }));
+  expect(inputs.cashTaxes).toBe(1e6);
+  expect(inputs.leasePayments).toBe(0); // an entered 0 is an answer, not missing
+  expect('workingCapitalIncrease' in inputs).toBe(false);
+});

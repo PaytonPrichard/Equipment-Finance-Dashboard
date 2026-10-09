@@ -10,7 +10,7 @@
     "form": "10-K",
     "fiscalYearEnd": "2025-12-31",
     "companyFactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001020710.json",
-    "fetchedAt": "2026-10-07"
+    "fetchedAt": "2026-10-09"
   },
   "context": "Industrial distributor (MRO, pumps, safety). Term loan B refinanced in 2025.",
   "figures": {
@@ -334,6 +334,51 @@
         }
       ],
       "value": 303783000
+    },
+    "cashTaxes": {
+      "tags": [
+        "us-gaap:IncomeTaxesPaidNet"
+      ],
+      "sources": [
+        {
+          "tag": "us-gaap:IncomeTaxesPaidNet",
+          "val": 36399000,
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "accn": "0001628280-26-012382",
+          "form": "10-K",
+          "filed": "2026-02-26",
+          "url": "https://www.sec.gov/Archives/edgar/data/1020710/000162828026012382/"
+        }
+      ],
+      "value": 36399000
+    },
+    "leasePayments": {
+      "tags": [
+        "us-gaap:OperatingLeasePayments"
+      ],
+      "note": "Cash paid on operating leases.",
+      "sources": [
+        {
+          "tag": "us-gaap:OperatingLeasePayments",
+          "val": 22658000,
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "accn": "0001628280-26-012382",
+          "form": "10-K",
+          "filed": "2026-02-26",
+          "url": "https://www.sec.gov/Archives/edgar/data/1020710/000162828026012382/"
+        }
+      ],
+      "value": 22658000
+    },
+    "workingCapitalIncrease": {
+      "manual": {
+        "value": 27790000,
+        "cite": "Cash-flow statement (https://www.sec.gov/Archives/edgar/data/1020710/000162828026012382/R6.htm), changes in operating assets and liabilities: accounts receivable (41,502), inventories 1,037, prepaid (5,732), trade payables 532, accrued expenses 17,875. Sum (27,790), so working capital absorbed $27.8M.",
+        "readBy": "Claude 2026-10-09, Joel to verify"
+      },
+      "note": "Excludes the income taxes change (30,984), because cash taxes paid is its own input."
     }
   },
   "assumptions": {
@@ -386,7 +431,7 @@
     "reason": "Leverage 3.9x with 3x coverage, $304M of cash, and a loan that is 0.06x EBITDA. Could be a flag on the single-B rating if being conservative.",
     "writtenOn": "2026-10-09"
   },
-  "discussion": "Claude's read, confirmed by Joel 2026-10-09. Match. PASS at 80 with no gate reasons. Pro forma leverage of 4.0x misses the 3.5x scoring target but clears the 5.0x ceiling. Tranche cannot see that DXP's $812M term loan is due in FY2030, before this 60-month loan matures (AUDIT P1-21). With that check, DXP would likely FLAG, which Joel marked acceptable.",
+  "discussion": "Claude's read, confirmed by Joel 2026-10-09. Match. PASS at 80 with no gate reasons. Pro forma leverage of 4.0x misses the 3.5x scoring target but clears the 5.0x ceiling. Tranche cannot see that DXP's $812M term loan is due in FY2030, before this 60-month loan matures (AUDIT P1-21). With that check, DXP would likely FLAG, which Joel marked acceptable. | Update 2026-10-09, Claude's read, Joel to confirm: With cash-flow inputs, Tranche now FLAGs, which Joel marked acceptable. Combined severe stress takes cash-flow DSCR to 0.91x. The 2030 term loan maturity is still unseen (P1-21).",
   "builds": {
     "maintenanceCapex": {
       "terms": [
