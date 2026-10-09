@@ -302,7 +302,8 @@
   "caveats": [
     "JUDGMENT, floorplan: Rush does not disclose floorplan interest in dollars, so the dealer convention (deduct floorplan interest from EBITDA, leave floorplan out of debt) cannot be applied. Applied the other consistent pairing instead: floorplan ($918.0M) is in debt and its interest stays in debt service. Leverage reads higher than under the convention.",
     "NOTE, all non-floorplan funded debt ($274.9M) finances the lease and rental fleet.",
-    "NOTE, debt maturities in the tagged table exclude finance leases and floorplan."
+    "NOTE, debt maturities in the tagged table exclude finance leases and floorplan.",
+    "RATING: treated as Not Rated (+100 bps). S&P search found only an unrelated issuer. If Rush is rated B or below, the input becomes Weak (+200 bps)."
   ],
   "assumptions": {
     "industrySector": {
@@ -342,13 +343,13 @@
       "why": "Proposed by Claude, accepted by Joel 2026-10-09. "
     },
     "creditRating": {
-      "value": null,
-      "why": "Joel: S&P issuer credit rating in effect on the 10-K filing date. IG = Strong, BB = Adequate, B or below = Weak, unrated = Not Rated."
+      "value": "Not Rated",
+      "why": "Joel searched S&P 2026-10-09: the only match was Rush County Building Corp (Indiana), an unrelated issuer. The 10-K states no rating."
     }
   },
   "expected": {
-    "verdict": null,
-    "reason": "",
-    "writtenOn": null
+    "verdict": "pass",
+    "reason": "Also has a 2029 maturity, but a pass.",
+    "writtenOn": "2026-10-09"
   }
 }

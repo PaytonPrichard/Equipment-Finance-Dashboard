@@ -256,13 +256,16 @@
       "why": "Proposed by Claude, accepted by Joel 2026-10-09. "
     },
     "creditRating": {
-      "value": null,
-      "why": "Joel: S&P issuer credit rating in effect on the 10-K filing date. IG = Strong, BB = Adequate, B or below = Weak, unrated = Not Rated."
+      "value": "Weak",
+      "why": "S&P B (read by Joel 2026-10-09). B maps to Weak (Joel's rule)."
     }
   },
   "expected": {
-    "verdict": null,
-    "reason": "",
-    "writtenOn": null
+    "verdict": "flag",
+    "alsoAcceptable": [
+      "fail"
+    ],
+    "reason": "A 60-month loan runs into 2029, when the ABL and second lien notes mature. That is the concern.",
+    "writtenOn": "2026-10-09"
   }
 }

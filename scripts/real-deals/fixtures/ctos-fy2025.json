@@ -254,13 +254,16 @@
       "why": "Proposed by Claude, accepted by Joel 2026-10-09. "
     },
     "creditRating": {
-      "value": null,
-      "why": "Joel: S&P issuer credit rating in effect on the 10-K filing date. IG = Strong, BB = Adequate, B or below = Weak, unrated = Not Rated."
+      "value": "Weak",
+      "why": "S&P B (annual review, read by Joel 2026-10-09). Rating date relative to the 2026-03-10 filing not confirmed. B maps to Weak (Joel's rule)."
     }
   },
   "expected": {
-    "verdict": null,
-    "reason": "",
-    "writtenOn": null
+    "verdict": "pass",
+    "alsoAcceptable": [
+      "flag"
+    ],
+    "reason": "Looks like a pass. Could be a flag for the pre-tax losses.",
+    "writtenOn": "2026-10-09"
   }
 }

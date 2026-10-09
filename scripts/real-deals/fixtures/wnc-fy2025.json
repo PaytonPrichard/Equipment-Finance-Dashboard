@@ -232,13 +232,17 @@
       "why": "Proposed by Claude, accepted by Joel 2026-10-09. "
     },
     "creditRating": {
-      "value": null,
-      "why": "Joel: S&P issuer credit rating in effect on the 10-K filing date. IG = Strong, BB = Adequate, B or below = Weak, unrated = Not Rated."
+      "value": "Weak",
+      "why": "S&P B at the time of filing, later B- (read by Joel 2026-10-09). Both map to Weak (Joel's rule). Date of the downgrade not recorded."
     }
   },
   "expected": {
-    "verdict": null,
-    "reason": "",
-    "writtenOn": null
-  }
+    "verdict": "fail",
+    "reason": "Revenue, income and EBITDA margin.",
+    "writtenOn": "2026-10-09"
+  },
+  "hindsight": [
+    "S&P downgraded Wabash to B- from B with a negative outlook (read by Joel 2026-10-09; date not recorded).",
+    "Joel looked up current ratings while writing this expectation."
+  ]
 }

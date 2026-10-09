@@ -345,8 +345,12 @@
     }
   },
   "expected": {
-    "verdict": null,
-    "reason": "",
-    "writtenOn": null
-  }
+    "verdict": "pass",
+    "reason": "(Joel gave the verdict without a stated reason.)",
+    "writtenOn": "2026-10-09"
+  },
+  "hindsight": [
+    "S&P upgraded United Rentals to BBB- from BB+ (read by Joel 2026-10-09, reported as that day), after a positive outlook around April to July 2026. All after the 10-K filing.",
+    "Joel looked up current ratings while writing this expectation."
+  ]
 }
