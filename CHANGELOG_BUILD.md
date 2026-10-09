@@ -135,3 +135,17 @@
 **What Joel decided:** one form, no mode toggle. Statements fill the typed fields, and analysts add to them. Override-with-reason guards built fields. Source citation is optional. Prior-year figures stay typed.
 
 **Next (piece 2):** treatment overrides and judgment confirmation on the form, Save to Pipeline gated on confirmations, firm rules snapshot at save.
+
+## 2026-10-09: EBITDA build step 3, piece 2: judgments, treatment overrides, save gating (Workstream A)
+
+**What changed**
+- The statements panel lists every judgment the build needs, grouped: statements, what the borrower has, treatment, where items sit, company EBITDA, maintenance capex. Tranche's proposal is pre-selected in amber. One click confirms it, or picking another option confirms that one. Each confirmation records who and when.
+- Treatment rows show the firm rule and what it does. "Override for this deal" shows the alternative and needs a reason. "Use firm rule" undoes it.
+- Save to Pipeline and Update Pipeline Deal are disabled while any judgment is pending, with the count shown next to the buttons.
+- At first save the deal keeps a copy of the firm's treatment rules (`financials.firmRules`). Later builds of that deal use the copy. If the firm's rules have changed since, the panel says so.
+- Fewer needless questions: no revolver-maturity question without a revolver balance, no "starts from" question without pretax lines, no "which EBITDA" question when only one exists.
+- Treatment wording shared between Settings and the form (`TREATMENT_COPY`).
+
+**What Joel decided:** no "confirm all" button. One click per judgment, revisit if it feels heavy.
+
+**Not checked in the browser:** the disabled Save button itself (the demo deal needs every required field before Save shows). The panel, judgments and override flow were checked.

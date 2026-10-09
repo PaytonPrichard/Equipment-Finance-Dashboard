@@ -13,8 +13,8 @@
 // Design: EBITDA_Build_Design.md, "Step 3 form design".
 // ============================================================
 
-import { buildBorrowerInputs, validateTreatmentRules } from './borrowerBuild';
-import type { BorrowerFinancials, BuildResult, BuiltField, TreatmentRules } from './borrowerBuild';
+import { buildBorrowerInputs, validateTreatmentRules, setTreatmentOverride, allJudgmentsConfirmed } from './borrowerBuild';
+import type { BorrowerFinancials, BuildResult, BuiltField, TreatmentRules, TreatmentRow } from './borrowerBuild';
 
 export interface FieldOverride {
   reason: string;
@@ -28,6 +28,11 @@ export type StatementSection = 'noOperatingIncome' | 'floorplan' | 'captiveFleet
 export interface StatementFinancials extends BorrowerFinancials {
   fieldOverrides?: Partial<Record<BuiltField, FieldOverride>>;
   show?: Partial<Record<StatementSection, boolean>>;
+  /**
+   * The firm's treatment rules when the deal was first saved. A saved deal
+   * keeps the rules it was built with, even after the firm changes them.
+   */
+  firmRules?: TreatmentRules;
 }
 
 export const BUILT_FIELDS: BuiltField[] = [
@@ -54,7 +59,7 @@ export function hasStatements(financials: StatementFinancials | null | undefined
 export function statementState(inputs: Inputs | null | undefined, rules: unknown): StatementState {
   const financials = inputs?.financials;
   if (!financials || !hasStatements(financials)) return { build: null, built: {}, pairingCaveats: [] };
-  const treatment: TreatmentRules = validateTreatmentRules(rules);
+  const treatment: TreatmentRules = firmRulesFor(inputs, rules);
   const build = buildBorrowerInputs(financials, treatment);
   const overrides = financials.fieldOverrides || {};
   const built: Partial<Record<BuiltField, number>> = {};
@@ -82,6 +87,40 @@ function pairingCaveats(build: BuildResult, built: Partial<Record<BuiltField, nu
   if (!items.length) return [];
   const which = typed.map((f) => (f === 'totalExistingDebt' ? 'debt' : 'debt service')).join(' and ');
   return [`EBITDA is built from statements, ${which} typed. Confirm the typed figure ${items.join(', ')}, to match EBITDA.`];
+}
+
+/** The firm rules this deal builds under: its saved copy, else the firm's current rules. */
+export function firmRulesFor(inputs: Inputs | null | undefined, rules: unknown): TreatmentRules {
+  return validateTreatmentRules(inputs?.financials?.firmRules ?? rules);
+}
+
+/** Judgments still waiting for the analyst. Save to Pipeline needs zero. */
+export function pendingJudgments(state: StatementState): number {
+  if (!state.build) return 0;
+  return allJudgmentsConfirmed(state.build) ? 0 : state.build.judgments.filter((j) => !j.confirmed).length;
+}
+
+/** Confirm a proposal, or pick another option, for one judgment. */
+export function confirmJudgment<T extends Inputs>(inputs: T, id: string, value: unknown, proposed: unknown, by?: string, at: string = new Date().toISOString()): T {
+  const f = inputs.financials || { lineItems: {} };
+  if (id === 'ebitdaSource') return { ...inputs, financials: { ...f, ebitdaSource: value as StatementFinancials['ebitdaSource'] } };
+  const judgments = { ...(f.judgments || {}), [id]: { proposed, confirmed: value, by, at } };
+  return { ...inputs, financials: { ...f, judgments } };
+}
+
+/** Override one treatment row for this deal, or return it to the firm rule. */
+export function setDealTreatment<T extends Inputs>(inputs: T, row: TreatmentRow, rule: string, reason: string, rules: unknown, by?: string): { inputs: T; error: string | null } {
+  const f = inputs.financials || { lineItems: {} };
+  const r = setTreatmentOverride(f, row, rule as never, reason, firmRulesFor(inputs, rules), by);
+  if (r.error) return { inputs, error: r.error };
+  return { inputs: { ...inputs, financials: r.financials as StatementFinancials }, error: null };
+}
+
+/** Keep a copy of the firm rules on the deal at save, unless it has one. */
+export function withRulesSnapshot<T extends Inputs>(inputs: T, rules: unknown): T {
+  const f = inputs.financials;
+  if (!f || f.firmRules) return inputs;
+  return { ...inputs, financials: { ...f, firmRules: validateTreatmentRules(rules) } };
 }
 
 /**

@@ -3,7 +3,7 @@
 // numbers, so they are offered only in the demo. The firm's own pipeline is
 // searchable in both.
 
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, within } from '@testing-library/react';
 import DealInputForm from './DealInputForm';
 import { TutorialProvider } from '../contexts/TutorialContext';
 import { getModule, getAvailableModules } from '../modules';
@@ -149,14 +149,14 @@ describe('fields built from statements', () => {
 
   test('no statements: an Add statements prompt, every field typed', () => {
     const { onChange } = setup(mod.INITIAL_INPUTS);
-    expect(screen.queryByText('Built')).toBeNull();
+    expect(screen.queryByTestId('built-badge')).toBeNull();
     fireEvent.click(screen.getByText('Add statements'));
     expect(onChange.mock.calls[0][0].financials).toEqual({ fiscalYearEnd: '', lineItems: {} });
   });
 
   test('built fields show the value, a Built badge and the formula with its source', () => {
     setup(withStatements);
-    expect(screen.getAllByText('Built').length).toBe(3);   // revenue, EBITDA, maintenance capex
+    expect(screen.getAllByTestId('built-badge').length).toBe(3);   // revenue, EBITDA, maintenance capex
     expect(screen.getByText('$15,000,000')).toBeInTheDocument();
     expect(screen.getAllByText(/Operating income \$10\.0M \(10-K, p\. 54\) \+ Depreciation and amortization \$5\.0M/).length).toBeGreaterThan(0);
   });
@@ -177,5 +177,59 @@ describe('fields built from statements', () => {
     const { onChange } = setup(withStatements);
     fireEvent.change(screen.getByLabelText('Cash interest paid'), { target: { value: '2000000' } });
     expect(onChange.mock.calls[0][0].financials.lineItems.interestPaid).toEqual({ value: 2 * M, origin: 'typed' });
+  });
+});
+
+describe('judgments on the statement build', () => {
+  const M = 1_000_000;
+  const dealer = {
+    ...mod.INITIAL_INPUTS,
+    financials: {
+      fiscalYearEnd: '2025-12-31',
+      lineItems: {
+        revenue: { value: 100 * M },
+        operatingIncome: { value: 10 * M },
+        depreciationAmortization: { value: 5 * M },
+        floorplanInterest: { value: 2 * M },
+        floorplanPayable: { value: 30 * M },
+      },
+    },
+  };
+  function setup(inputs) {
+    const onChange = jest.fn();
+    render(
+      <TutorialProvider userId={null}>
+      <DealInputForm inputs={inputs} onChange={onChange} schema={mod.FORM_SCHEMA} modules={getAvailableModules()}
+        activeModule="equipment_finance" onModuleChange={() => {}} pipelineDeals={[]} sofr={0.0389} analystName="J. Peter" />
+      </TutorialProvider>,
+    );
+    return { onChange };
+  }
+  const row = (id) => within(screen.getByTestId(`judgment-${id}`));
+
+  test('lists proposals, none confirmed yet', () => {
+    setup(dealer);
+    expect(screen.getByText(/^0 of \d+ confirmed$/)).toBeInTheDocument();
+    expect(screen.getByTestId('judgment-floorplanPresent')).toHaveTextContent('Floorplan financing present');
+  });
+
+  test('Confirm accepts the proposal, with who', () => {
+    const { onChange } = setup(dealer);
+    fireEvent.click(row('fiscalYear').getByRole('button', { name: 'Confirm' }));
+    expect(onChange.mock.calls[0][0].financials.judgments.fiscalYear).toMatchObject({ confirmed: '2025-12-31', by: 'J. Peter' });
+  });
+
+  test('picking another option confirms that one', () => {
+    const { onChange } = setup(dealer);
+    fireEvent.click(row('floorplanInterestPlacement').getByRole('button', { name: 'Inside operating expenses' }));
+    expect(onChange.mock.calls[0][0].financials.judgments.floorplanInterestPlacement.confirmed).toBe('operatingExpenses');
+  });
+
+  test('a treatment override needs a reason and is recorded', () => {
+    const { onChange } = setup(dealer);
+    fireEvent.click(screen.getByText('Override for this deal'));
+    fireEvent.change(screen.getByLabelText('Reason to override Floorplan (dealers)'), { target: { value: 'Credit agreement counts it as debt' } });
+    fireEvent.click(row('treatment.floorplan').getByRole('button', { name: 'Override' }));
+    expect(onChange.mock.calls[0][0].financials.treatmentOverrides.floorplan).toMatchObject({ rule: 'in', reason: 'Credit agreement counts it as debt', by: 'J. Peter' });
   });
 });

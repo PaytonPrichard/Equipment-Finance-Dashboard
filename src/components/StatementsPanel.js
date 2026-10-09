@@ -2,6 +2,7 @@ import React from 'react';
 import NullableNumberInput from './NullableNumberInput';
 import { LINE_ITEM_LABELS } from '../lib/borrowerBuild';
 import { BUILT_FIELDS } from '../lib/statementBuild';
+import StatementJudgments from './StatementJudgments';
 
 // Statement line items on the New Deal form. Whatever they are enough to
 // build fills the Borrower Profile fields above (src/lib/statementBuild.ts).
@@ -138,7 +139,7 @@ function LineRow({ line, item, onChange }) {
   );
 }
 
-export default function StatementsPanel({ financials, state, inputs, onChange, onClear }) {
+export default function StatementsPanel({ financials, state, inputs, onChange, onClear, firmRules, rulesChanged, onConfirm, onTreatment }) {
   if (!financials) {
     return (
       <div className="rounded-xl border border-dashed border-gray-300 p-4 flex items-center justify-between gap-4">
@@ -169,7 +170,6 @@ export default function StatementsPanel({ financials, state, inputs, onChange, o
   const toggle = (key) => onChange({ ...financials, show: { ...show, [key]: !show[key] } });
 
   const overrides = financials.fieldOverrides || {};
-  const pending = build ? build.judgments.filter((j) => !j.confirmed).length : 0;
   const notes = build
     ? [...build.caveats.filter((c) => !c.startsWith('Proposed, not confirmed')), ...(state.pairingCaveats || [])]
     : [];
@@ -270,12 +270,23 @@ export default function StatementsPanel({ financials, state, inputs, onChange, o
               </ul>
             </div>
           )}
-          {pending > 0 && (
-            <p className="mt-3 text-[11px] text-amber-700">
-              {pending} proposal{pending === 1 ? '' : 's'} awaiting confirmation.
-            </p>
-          )}
         </div>
+      )}
+
+      {build && (
+        <StatementJudgments
+          build={build}
+          firmRules={firmRules}
+          overrides={financials.treatmentOverrides}
+          onConfirm={onConfirm}
+          onTreatment={onTreatment}
+        />
+      )}
+
+      {rulesChanged && (
+        <p className="text-[11px] text-gray-500">
+          This deal keeps the treatment rules it was saved with. Your firm's rules have changed since.
+        </p>
       )}
     </div>
   );

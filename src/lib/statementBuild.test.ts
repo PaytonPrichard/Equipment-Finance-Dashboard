@@ -106,3 +106,51 @@ test('clearing statements keeps every value, now typed', () => {
   expect(cleared.financials).toBeUndefined();
   expect(cleared.ebitda).toBe(15 * M);
 });
+
+describe('judgments, treatment and the rules snapshot', () => {
+  const { confirmJudgment, pendingJudgments, setDealTreatment, withRulesSnapshot, firmRulesFor } = require('./statementBuild');
+  const dealer = {
+    ...incomeOnly,
+    financials: { ...incomeOnly.financials, lineItems: { ...incomeOnly.financials.lineItems, floorplanInterest: li(2 * M), floorplanPayable: li(30 * M) } },
+  };
+
+  test('confirming records the value, who and when; pending count falls', () => {
+    const before = pendingJudgments(statementState(dealer, undefined));
+    const next = confirmJudgment(dealer, 'floorplanPresent', true, true, 'J. Peter', '2026-10-09T00:00:00Z');
+    expect(next.financials.judgments.floorplanPresent).toEqual({ proposed: true, confirmed: true, by: 'J. Peter', at: '2026-10-09T00:00:00Z' });
+    expect(pendingJudgments(statementState(next, undefined))).toBe(before - 1);
+  });
+
+  test('picking another option confirms that option', () => {
+    const next = confirmJudgment(dealer, 'floorplanInterestPlacement', 'operatingExpenses', 'belowOperatingIncome');
+    expect(statementState(next, undefined).build!.inputs.ebitda).toBe(15 * M);   // already inside op income, no deduction
+    expect(statementState(dealer, undefined).build!.inputs.ebitda).toBe(13 * M); // proposal: 10 + 5 - 2
+  });
+
+  test('which EBITDA scores is stored as the source', () => {
+    expect(confirmJudgment(dealer, 'ebitdaSource', 'built', 'built').financials.ebitdaSource).toBe('built');
+  });
+
+  test('a treatment override needs a reason; choosing the firm rule clears it', () => {
+    expect(setDealTreatment(dealer, 'floorplan', 'in', '', undefined).error).toBe('An override needs a reason.');
+    const over = setDealTreatment(dealer, 'floorplan', 'in', 'Credit agreement', undefined, 'J. Peter').inputs;
+    expect(statementState(over, undefined).build!.treatment.floorplan).toBe('in');
+    const back = setDealTreatment(over, 'floorplan', 'out', '', undefined).inputs;
+    expect(back.financials.treatmentOverrides.floorplan).toBeUndefined();
+  });
+
+  test('a saved deal keeps the rules it was built with', () => {
+    const saved = withRulesSnapshot(dealer, { floorplan: 'out' });
+    expect(saved.financials.firmRules.floorplan).toBe('out');
+    // The firm later switches floorplan to "in". This deal does not move.
+    expect(firmRulesFor(saved, { floorplan: 'in' }).floorplan).toBe('out');
+    expect(statementState(saved, { floorplan: 'in' }).build!.treatment.floorplan).toBe('out');
+    // Saving again does not replace the copy.
+    expect(withRulesSnapshot(saved, { floorplan: 'in' })).toBe(saved);
+  });
+
+  test('no statements: no snapshot, nothing pending', () => {
+    expect(withRulesSnapshot(typed, undefined)).toBe(typed);
+    expect(pendingJudgments(statementState(typed, undefined))).toBe(0);
+  });
+});

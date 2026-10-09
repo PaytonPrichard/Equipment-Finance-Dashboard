@@ -7,7 +7,8 @@ import { getMissingFields, generateRequestInfoEmail } from '../lib/incompleteFie
 import NullableNumberInput from './NullableNumberInput';
 import StatementsPanel, { formulaWithValues } from './StatementsPanel';
 import { useConfirm } from '../contexts/ConfirmContext';
-import { statementState, overrideField, clearFieldOverride, clearStatements } from '../lib/statementBuild';
+import { statementState, overrideField, clearFieldOverride, clearStatements, confirmJudgment, setDealTreatment, firmRulesFor } from '../lib/statementBuild';
+import { validateTreatmentRules } from '../lib/borrowerBuild';
 
 const DS_ESTIMATE_RATE = 0.08;
 
@@ -566,7 +567,7 @@ function BuiltFieldBox({ field, value, derivation, onOverride }) {
       <Label tip={field.tip}>{field.label}</Label>
       <div className="form-input flex items-center justify-between bg-gray-50" title={formulaWithValues(derivation)}>
         <span className="text-gray-900">${Number(value).toLocaleString('en-US', { maximumFractionDigits: 0 })}</span>
-        <span className="text-[9px] font-semibold uppercase tracking-wider text-white bg-gray-900 px-1.5 py-0.5 rounded">Built</span>
+        <span data-testid="built-badge" className="text-[9px] font-semibold uppercase tracking-wider text-white bg-gray-900 px-1.5 py-0.5 rounded">Built</span>
       </div>
       <p className="text-[10px] text-gray-500 mt-1 pl-1 leading-snug">
         {derivation?.estimate ? 'Estimate. ' : ''}{formulaWithValues(derivation)}
@@ -697,6 +698,9 @@ export default function DealInputForm({ inputs, onChange, schema, modules, activ
     },
     onClearOverride: (key) => onChange(clearFieldOverride(inputs, key)),
   };
+  const firmRules = firmRulesFor(inputs, treatmentRules);
+  const rulesChanged = !!inputs.financials?.firmRules
+    && JSON.stringify(inputs.financials.firmRules) !== JSON.stringify(validateTreatmentRules(treatmentRules));
   const clearAllStatements = async () => {
     const ok = await confirm({
       title: 'Clear the statements?',
@@ -817,6 +821,14 @@ export default function DealInputForm({ inputs, onChange, schema, modules, activ
                 inputs={inputs}
                 onChange={(financials) => onChange({ ...inputs, financials })}
                 onClear={clearAllStatements}
+                firmRules={firmRules}
+                rulesChanged={rulesChanged}
+                onConfirm={(id, value, proposed) => onChange(confirmJudgment(inputs, id, value, proposed, analystName || undefined))}
+                onTreatment={(row, rule, reason) => {
+                  const r = setDealTreatment(inputs, row, rule, reason, treatmentRules, analystName || undefined);
+                  if (!r.error) onChange(r.inputs);
+                  return r.error;
+                }}
               />
             )}
           </div>

@@ -3,7 +3,7 @@ import { DEFAULT_TREATMENT_RULES, TREATMENT_ROWS, treatmentOptions, validateTrea
 
 // What each treatment does to EBITDA, debt and debt service. Presentation
 // copy lives here, the rules themselves in src/lib/borrowerBuild.ts.
-const ROWS = {
+export const TREATMENT_COPY = {
   financeLeases: {
     label: 'Finance leases',
     options: {
@@ -73,7 +73,7 @@ export default function TreatmentRulesCard({ rules: savedRaw, editable, onSave }
       </p>
       <div className="space-y-3">
         {TREATMENT_ROWS.map((row) => {
-          const meta = ROWS[row];
+          const meta = TREATMENT_COPY[row];
           const current = draft[row];
           return (
             <fieldset key={row} className="border border-gray-200 rounded-xl p-3">

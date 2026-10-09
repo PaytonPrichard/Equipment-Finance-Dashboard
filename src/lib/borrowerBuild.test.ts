@@ -574,3 +574,17 @@ describe('setTreatmentOverride', () => {
     expect(setTreatmentOverride(fin(), 'floorplan', 'corporate' as any, 'Reason', firm).error).toBe('"corporate" is not a floorplan treatment.');
   });
 });
+
+test('no revolver balance, no revolver-maturity question', () => {
+  const r = buildBorrowerInputs(fin({ revolver: 0 }));
+  expect(r.judgments.find((j) => j.id === 'revolverMaturing')).toBeUndefined();
+  expect(r.caveats.some((c) => c.includes('revolver'))).toBe(false);
+});
+
+test('no choice, no question: operating income only and one EBITDA source', () => {
+  const ids = buildBorrowerInputs(fin()).judgments.map((j) => j.id);
+  expect(ids).not.toContain('ebitdaStart');
+  expect(ids).not.toContain('ebitdaSource');
+  // A company figure makes the source a real choice.
+  expect(buildBorrowerInputs(fin({}, { statedEbitda: { value: 16 * M } })).judgments.map((j) => j.id)).toContain('ebitdaSource');
+});

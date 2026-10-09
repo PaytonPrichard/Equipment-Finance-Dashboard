@@ -330,9 +330,11 @@ export function buildBorrowerInputs(
   // companies report none), pretax income + interest expense gets there.
   const canOperating = has('operatingIncome');
   const canPretax = has('pretaxIncome') && has('interestExpense');
-  const start = (canOperating || canPretax)
+  // Only a question when pretax lines are entered. Starting from operating
+  // income with nothing else to start from is not a judgment.
+  const start = canPretax
     ? judge<'operatingIncome' | 'pretaxIncome'>('ebitdaStart', 'Built EBITDA starts from',
-      canOperating ? 'operatingIncome' : 'pretaxIncome', ['operatingIncome', 'pretaxIncome'],
+      canOperating ? 'operatingIncome' : 'pretaxIncome', canOperating ? ['operatingIncome', 'pretaxIncome'] : ['pretaxIncome'],
       (v) => (v === 'operatingIncome' ? 'built EBITDA starts from operating income'
         : 'built EBITDA starts from pretax income + interest expense (no operating income line)'))
     : 'operatingIncome';
@@ -448,9 +450,11 @@ export function buildBorrowerInputs(
   if (storedSource && sourceOptions.includes(storedSource)) {
     ebitdaSource = storedSource;
     judgments.push({ id: 'ebitdaSource', label: 'Which EBITDA scores', proposed: proposedSource, value: storedSource, options: sourceOptions, confirmed: true });
+  } else if (sourceOptions.length > 1) {
+    ebitdaSource = judge('ebitdaSource', 'Which EBITDA scores', proposedSource, sourceOptions, (v) => `${v} EBITDA scores`);
   } else {
-    ebitdaSource = judge('ebitdaSource', 'Which EBITDA scores', proposedSource,
-      sourceOptions.length ? sourceOptions : ['built'], (v) => `${v} EBITDA scores`);
+    // One EBITDA available, nothing to choose.
+    ebitdaSource = proposedSource;
   }
 
   // A company figure follows the company's definition. For each treatment
@@ -667,10 +671,13 @@ export function buildBorrowerInputs(
     dsTerms.push(term('+', 'rentExpense'));
   }
 
-  const revolverMaturing = judge('revolverMaturing', 'Revolver matures within 12 months', false, [false, true],
-    (v) => (v ? 'revolver balance matures within 12 months' : 'revolver does not mature within 12 months'));
-  if (revolverMaturing && has('revolver')) dsTerms.push(term('+', 'revolver'));
-  else dsNotes.push('Revolver balance counts for interest, not as principal due.');
+  // Only worth asking when there is a revolver balance to mature.
+  if (positive('revolver')) {
+    const revolverMaturing = judge('revolverMaturing', 'Revolver matures within 12 months', false, [false, true],
+      (v) => (v ? 'revolver balance matures within 12 months' : 'revolver does not mature within 12 months'));
+    if (revolverMaturing) dsTerms.push(term('+', 'revolver'));
+    else dsNotes.push('Revolver balance counts for interest, not as principal due.');
+  }
 
   const dsDerivation: Derivation = {
     value: dsComplete ? sum(dsTerms) : null, label: 'Annual debt service', formula: formulaOf(dsTerms), terms: dsTerms, notes: dsNotes,
