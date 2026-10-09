@@ -179,6 +179,13 @@ describe('Equipment Finance Scoring', () => {
       expect(withCashFlow[1].fccr).toBeGreaterThan(withCashFlow[2].fccr);
       expect(withCashFlow[2].fccr).toBeGreaterThan(withCashFlow[3].fccr);
     });
+
+    test('maintenance capex falls with the decline: -20% uses 400K x 0.80 = 320K', () => {
+      const s = withCashFlow[2];
+      const debtService = s.ebitda / s.dscr;   // existing + new, the DSCR denominator
+      // (EBITDA + rent 0 - capex 320K - taxes 500K) / (debt service + rent 0)
+      expect(s.fccr).toBeCloseTo((s.ebitda - 320000 - 500000) / debtService, 6);
+    });
   });
 
   // ---- P0-3 fix: PDF thresholds and commentary read from criteria ----

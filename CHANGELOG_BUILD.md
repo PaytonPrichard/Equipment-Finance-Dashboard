@@ -116,3 +116,9 @@
 **What Joel decided** (relayed through Workstream B): capex scales with revenue in every revenue scenario, all sectors.
 
 **Open:** the module stress tables (EBITDA -10/-20/-30% per module) still hold capex in their FCCR column. Whether those declines are revenue or margin declines decides if capex should scale there too.
+
+## 2026-10-09: Module stress tables scale capex too (Workstream A)
+
+**What changed:** the per-module EBITDA stress tables (-10/-20/-30%) now cut maintenance capex by the same percentage in their FCCR column, via `fccrFor(..., revenueFactor)`. Both stress tables now give the same FCCR for the same downturn. Spec section 7 updated. Real-deals: no verdict moves, FCCR columns only.
+
+**What Joel decided:** the module declines are downturns at a held margin, so capex scales, same as the cash-flow stress.

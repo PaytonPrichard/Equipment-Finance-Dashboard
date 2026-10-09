@@ -562,7 +562,8 @@ export function runStressTest(
     // Existing plus new debt service, the same denominator as DSCR. This used
     // to drop the new facility whenever actual debt service was entered.
     const debtService = (m.existingDebtService || 0) + (m.newAnnualDebtService || 0);
-    const fccr = fccrFor(stressed as unknown as Record<string, unknown>, stressed.ebitda, debtService);
+    // The decline is a downturn at a held margin, so maintenance capex falls with it.
+    const fccr = fccrFor(stressed as unknown as Record<string, unknown>, stressed.ebitda, debtService, 1 - scenario.ebitdaDecline);
 
     return {
       label: scenario.label,

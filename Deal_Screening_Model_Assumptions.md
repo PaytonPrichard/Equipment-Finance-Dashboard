@@ -290,7 +290,7 @@ The model applies EBITDA decline scenarios to simulate borrower cash flow deteri
 | Moderate Stress | -20% | Recessionary conditions |
 | Severe Stress | -30% | Significant downturn / industry shock |
 
-For each scenario, the model recalculates DSCR, leverage, and the composite risk score. AR and inventory also stress collateral (aging, dilution, obsolescence, turnover). This shows how much cushion exists before the deal "breaks" (e.g., DSCR falls below 1.0x).
+For each scenario, the model recalculates DSCR, leverage, FCCR and the composite risk score. Each decline is read as a downturn at a held margin, so maintenance capex in the FCCR falls by the same percentage, matching the cash-flow stress below. AR and inventory also stress collateral (aging, dilution, obsolescence, turnover). This shows how much cushion exists before the deal "breaks" (e.g., DSCR falls below 1.0x).
 
 **Known limitation (AUDIT P2-13).** The decline is applied as a multiplier, so a negative EBITDA shrinks under stress and the severe case reads better than the base case. Until that is fixed, ignore the stress tables for a borrower with negative EBITDA. The verdict already fails such a deal.
 
