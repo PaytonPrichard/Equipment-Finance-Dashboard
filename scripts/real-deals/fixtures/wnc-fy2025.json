@@ -244,5 +244,6 @@
   "hindsight": [
     "S&P downgraded Wabash to B- from B with a negative outlook (read by Joel 2026-10-09; date not recorded).",
     "Joel looked up current ratings while writing this expectation."
-  ]
+  ],
+  "discussion": "Claude's read, Joel to confirm. Match, but only because of Joel's EBITDA call. Excluding the $418.6M non-cash litigation reversal leaves EBITDA at -$52.4M, which fails on the P0-7 gate. Taking reported EBITDA (+$366.2M) would have made Wabash look like a 1.2x-levered credit. The judgment drove the result, not the model."
 }

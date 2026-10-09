@@ -267,5 +267,6 @@
     ],
     "reason": "A 60-month loan runs into 2029, when the ABL and second lien notes mature. That is the concern.",
     "writtenOn": "2026-10-09"
-  }
+  },
+  "discussion": "Claude's read, Joel to confirm. Acceptable (FAIL vs Joel's FLAG). Tranche fails on cash flow: after fleet capex and working capital, free cash flow is negative (cash-flow DSCR -0.14x), and leverage is 5.3x. Joel's concern, $714M of ABL and notes maturing in 2029 inside the loan term, is not something Tranche sees (P1-21). Same verdict family, different reasons."
 }

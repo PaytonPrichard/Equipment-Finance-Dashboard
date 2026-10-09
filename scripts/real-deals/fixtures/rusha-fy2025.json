@@ -351,5 +351,6 @@
     "verdict": "pass",
     "reason": "Also has a 2029 maturity, but a pass.",
     "writtenOn": "2026-10-09"
-  }
+  },
+  "discussion": "Claude's read, Joel to confirm. Match. PASS at 85 with no gate reasons and 6.4x DSCR, even with $918M of floorplan counted as debt. The 2029 maturity Joel noted is $220M of fleet debt with a minimum-balance requirement, small next to EBITDA of $647M."
 }

@@ -72,6 +72,10 @@
 - Cash-flow inputs (cash taxes, rent, working capital) added to all four cases from the filings. DXP now FLAGs (acceptable). H&E now FLAGs (match), but through capex held flat under stress, not through Joel's reasons.
 - Joel's call: in cash-flow stress, maintenance capex scales with revenue instead of staying flat. Handed to Workstream A, which owns `src/utils/cashFlowMetrics.ts`. After it lands, H&E may go back to PASS until P1-21 and P1-22 exist.
 - Push: today's harness work ships with Workstream A's next change, not on its own.
+- Five more cases (URI, CTOS, ALTG, RUSHA, WNC), researched by parallel agents with cited R-page figures, tags checked by the fetcher, key figures spot-checked.
+- Joel's calls: Wabash EBITDA excludes a $418.6M non-cash litigation reversal (same logic as releases counting 0). Custom Truck years in business = 4, from the 2021 merger. Rush floorplan included in debt, because its interest is not disclosed. Ratings as of filing date, later actions in hindsight.
+- Debt service rule (Joel): scheduled principal only. Renewing facilities (revolvers, AR securitizations) go to the maturity wall as refinancing risk.
+- Custom Truck mismatch: Joel agrees the model is right. EBITDA coverage hides fleet reinvestment for rental businesses.
 
 
 ## 2026-10-09: EBITDA build Phase 1, step 1 (Workstream A)

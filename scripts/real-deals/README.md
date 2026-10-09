@@ -27,7 +27,7 @@ Companies put the same items in different places. The rules don't move. Each fix
 - **Pairing.** EBITDA and debt must agree on every item. Finance-lease amortization is in D&A, so finance-lease liabilities are in debt. Operating leases are out of both, because rent stays in EBITDA as an expense.
 - **Floorplan** (dealers) is inventory financing. Floorplan interest is deducted in EBITDA, and the floorplan payable is left out of debt and debt service. This follows auto-dealer convention. Check it against the company's own credit agreement where possible.
 - **Captive fleet debt** (car rental) is analyzed at the corporate level. EBITDA is after vehicle depreciation and vehicle interest, and debt is non-vehicle only.
-- **Debt service** = cash interest paid + principal due in twelve months, on the same debt that's counted in leverage.
+- **Debt service** = cash interest paid + scheduled principal due in twelve months, on the same debt that's counted in leverage. Facilities that renew (revolvers, AR securitizations, 364-day lines) are not scheduled principal: leave them out of debt service and show them in the maturity wall as refinancing risk.
 - **Maintenance capex** = depreciation, as a proxy, always flagged as an estimate. It excludes anything already deducted in EBITDA.
 - **Years in business** = fiscal-year-end year minus founding year, quoted from Item 1.
 

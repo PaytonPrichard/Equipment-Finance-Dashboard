@@ -265,5 +265,6 @@
     ],
     "reason": "Looks like a pass. Could be a flag for the pre-tax losses.",
     "writtenOn": "2026-10-09"
-  }
+  },
+  "discussion": "Confirmed by Joel 2026-10-09: the model is right, the expectation missed something. EBITDA coverage looks fine (2.57x), but after fleet replacement (depreciation $229M; actual 2025 net fleet spend $251M) free cash flow is $105M against $134M of debt service: cash-flow DSCR 0.78x, FCCR 0.82x. Add pre-tax losses and leverage at the 5.0x ceiling. Lesson: for rental businesses, EBITDA overstates debt capacity because fleet replacement is a recurring cost."
 }

@@ -86,23 +86,12 @@
       "value": 703000000
     },
     "currentMaturities": {
-      "tags": [
-        "us-gaap:DebtCurrent"
-      ],
-      "note": "Dominated by the $1,459M AR securitization facility, which renews on a 364-day basis.",
-      "sources": [
-        {
-          "tag": "us-gaap:DebtCurrent",
-          "val": 1577000000,
-          "start": null,
-          "end": "2025-12-31",
-          "accn": "0001067701-26-000007",
-          "form": "10-K",
-          "filed": "2026-01-28",
-          "url": "https://www.sec.gov/Archives/edgar/data/1067701/000106770126000007/"
-        }
-      ],
-      "value": 1577000000
+      "manual": {
+        "value": 118000000,
+        "cite": "https://www.sec.gov/Archives/edgar/data/1067701/000106770126000007/R64.htm and R69.htm: debt current 1,577 ($M) less the AR securitization facility 1,459, leaving finance-lease current 108 + term loan amortization 10.",
+        "readBy": "Research agent 2026-10-09, Joel to verify"
+      },
+      "note": "Scheduled principal only. The AR securitization renews on a 364-day basis and is shown in the maturity wall instead (Joel 2026-10-09)."
     },
     "maturityY1": {
       "tags": [
@@ -299,7 +288,7 @@
     }
   },
   "caveats": [
-    "JUDGMENT, debt service: current maturities are mostly a $1,459M AR securitization facility that renews every 364 days. Treating it as principal due overstates debt service.",
+    "RULE, debt service: the $1,459M AR securitization facility renews on a 364-day basis, so it is left out of principal due in 12 months and treated as refinancing risk (Joel 2026-10-09). It still appears in the FY2026 maturity wall ($1,577M).",
     "NOTE, operating income excludes $81M of other income tied to the terminated H&E acquisition. EBITDA is $7,081M here, against $7,162M company-reported."
   ],
   "assumptions": {
@@ -352,5 +341,6 @@
   "hindsight": [
     "S&P upgraded United Rentals to BBB- from BB+ (read by Joel 2026-10-09, reported as that day), after a positive outlook around April to July 2026. All after the 10-K filing.",
     "Joel looked up current ratings while writing this expectation."
-  ]
+  ],
+  "discussion": "Confirmed by Joel 2026-10-09. Match after a method fix. Tranche first FLAGged on the combined severe case (cash-flow DSCR 0.97x) because the $1,459M AR securitization, which renews every 364 days, was counted as principal due. Joel ruled that renewing facilities are refinancing risk, not scheduled debt service. With that rule, severe-case cash-flow DSCR is 2.62x and Tranche PASSes. Not blind on the rating: Joel saw the October 2026 upgrade to BBB- while writing."
 }
