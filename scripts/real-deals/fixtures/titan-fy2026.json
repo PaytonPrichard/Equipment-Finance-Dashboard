@@ -368,7 +368,7 @@
     "reason": "EBITDA is barely positive after floorplan interest, coverage is 0.14x, and revenue fell 10%. Not enough redeeming qualities to consider.",
     "writtenOn": "2026-10-09"
   },
-  "discussion": "Claude's read 2026-10-09, Joel to confirm. Match. FAIL on DSCR (0.13x) and leverage (36.5x pro forma). 'What would change this' shows it fails before this loan: existing debt service alone needs $59.4M of EBITDA against $6.7M. The floorplan treatment does not change the answer (see caveats).",
+  "discussion": "Claude's read, confirmed by Joel 2026-10-09. Match. FAIL on DSCR (0.13x) and leverage (36.5x pro forma). 'What would change this' shows it fails before this loan: existing debt service alone needs $59.4M of EBITDA against $6.7M. The floorplan treatment does not change the answer (see caveats).",
   "builds": {
     "ebitda": {
       "terms": [

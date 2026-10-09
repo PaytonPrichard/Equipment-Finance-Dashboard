@@ -247,7 +247,7 @@
     "reason": "Corporate EBITDA is negative, so earnings cannot cover debt service. Should FAIL with a path: not a cash-flow credit at these numbers, would need a collateral-based structure or outside support. Not blind: written after reading the Aug 2026 S&P downgrade.",
     "writtenOn": "2026-10-09"
   },
-  "discussion": "Claude's read 2026-10-09, Joel to confirm. Match, but not blind (Joel read the Aug 2026 S&P downgrade first). FAIL on one reason naming EBITDA, with the path: not a cash-flow credit, would need a collateral-based structure or outside support. The score of 47 sits above Titan's 44 because of the industry tier (moderate vs high), not leverage. Both fail, so the order does not matter here. S&P's later downgrade cites the same 2028-29 maturities and liquidity the analyst view shows.",
+  "discussion": "Claude's read, confirmed by Joel 2026-10-09. Match, but not blind (Joel read the Aug 2026 S&P downgrade first). FAIL on one reason naming EBITDA, with the path: not a cash-flow credit, would need a collateral-based structure or outside support. The score of 47 sits above Titan's 44 because of the industry tier (moderate vs high), not leverage. Both fail, so the order does not matter here. S&P's later downgrade cites the same 2028-29 maturities and liquidity the analyst view shows.",
   "builds": {
     "ebitda": {
       "terms": [
