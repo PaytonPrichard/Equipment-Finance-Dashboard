@@ -235,8 +235,8 @@
       "why": "Proposed by Claude, confirmed by Joel 2026-10-07. "
     },
     "creditRating": {
-      "value": null,
-      "why": "Joel: map current agency rating. IG = Strong, BB = Adequate, B or below = Weak, unrated = Not Rated. Use the rating as of February 2025."
+      "value": "Weak",
+      "why": "JOEL'S ASSUMPTION 2026-10-09: no free source for the S&P or Moody's rating in effect on 2025-02-21 (S&P history is paywalled, Moody's unavailable). Conservative choice: Weak (B range) rather than Adequate (BB range)."
     }
   },
   "expected": {
@@ -257,6 +257,7 @@
     }
   },
   "caveats": [
-    "TIMING: last 10-K before the 2025 Herc acquisition. Screen is as of February 2025."
+    "TIMING: last 10-K before the 2025 Herc acquisition. Screen is as of February 2025.",
+    "ASSUMPTION, rating: H&E's February 2025 rating could not be verified. Weak is a conservative assumption. Adequate would lower the spread by 200 bps, from +200 to 0."
   ]
 }
