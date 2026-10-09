@@ -243,9 +243,9 @@
     }
   },
   "expected": {
-    "verdict": null,
-    "reason": "",
-    "writtenOn": null
+    "verdict": "fail",
+    "reason": "Corporate EBITDA is negative, so earnings cannot cover debt service. Should FAIL with a path: not a cash-flow credit at these numbers, would need a collateral-based structure or outside support. Not blind: written after reading the Aug 2026 S&P downgrade.",
+    "writtenOn": "2026-10-09"
   },
   "discussion": "",
   "builds": {
