@@ -32,6 +32,8 @@ const DEFAULT_BUILDS = {
   debtService: { terms: [['+', 'interestPaid'], ['+', 'currentMaturities']] },
 };
 
+const money = (n) => `$${(Math.abs(n) / 1e6).toLocaleString('en-US', { maximumFractionDigits: 1 })}M`;
+
 function figureValue(fig) {
   if (!fig) return null;
   if (fig.manual) return fig.manual.value ?? null;
@@ -121,8 +123,21 @@ function derive(fx) {
   // Cash-flow inputs for main's cash-flow DSCR and FCCR. Optional: when one
   // is missing, the screening says so in a note and the metric reads
   // "not provided". It is never filled in.
+  // A working-capital release or a net tax refund counts as 0: neither is
+  // repeatable cash for debt service. Same rule as the app's borrower build
+  // (src/lib/borrowerBuild.ts), and always shown as a caveat.
+  const RELEASE_NOTE = {
+    workingCapitalIncrease: (v) => `RULE, working capital: released ${money(-v)}. Counted as 0, a release is not repeatable.`,
+    cashTaxes: (v) => `RULE, cash taxes: net refund of ${money(-v)}. Counted as 0, a refund is not repeatable.`,
+  };
   for (const key of ['cashTaxes', 'workingCapitalIncrease', 'leasePayments']) {
     const v = fig(key);
+    if (v != null && v < 0 && RELEASE_NOTE[key]) {
+      caveats.push(RELEASE_NOTE[key](v));
+      derivations.push({ field: key, value: 0, formula: `max(0, ${key}) (filed ${money(v)})` });
+      inputs[key] = 0;
+      continue;
+    }
     derivations.push({ field: key, value: v, formula: key });
     if (v != null) inputs[key] = v;
   }
