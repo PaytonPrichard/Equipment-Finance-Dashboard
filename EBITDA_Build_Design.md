@@ -159,6 +159,19 @@ The rules from `scripts/real-deals/README.md` become the firm defaults. The prin
 
 Each rule has its alternative. For example, floorplan "In" treats the floorplan as debt: its interest is added back and its payable counts. A per-deal override switches the whole row at once, so the pairing cannot break.
 
+### Exact formulas at default treatments (confirmed by Joel, 2026-10-09)
+
+**EBITDA (built)** = operating income + D&A, then:
+- Floorplan out: subtract floorplan interest, only if it is reported below operating income. If it sits inside operating expenses it is already deducted.
+- Captive fleet at corporate level: subtract vehicle depreciation (it sits inside D&A). Subtract vehicle interest if it is reported below operating income.
+- Finance leases in: no adjustment. Lease amortization stays in D&A.
+
+**Debt** = revolver + term loans and notes (including current portion) + finance-lease liabilities. Floorplan payable and vehicle debt are excluded.
+
+**Debt service** = cash interest paid on the debt above + principal due within 12 months on the debt above. Floorplan and vehicle interest are subtracted from interest paid when the company reports them inside it. Revolver balances are not principal due.
+
+Where each item sits (above or below operating income, inside or outside interest paid) is a judgment call: Tranche proposes it from the statement, the analyst confirms. An override flips the whole row (EBITDA, debt, debt service) together. The `credit-reviewer` agent reviews these once coded.
+
 **Debt service** = cash interest paid + current maturities, on the same debt that counts in leverage. Revolver balances are not amortizing principal, so they count for interest, not in current maturities, unless the analyst marks a revolver maturing within twelve months (a judgment call).
 
 ## 9. Arithmetic versus judgment
