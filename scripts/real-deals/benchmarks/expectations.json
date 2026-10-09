@@ -1,0 +1,21 @@
+{
+  "question": "Rank expected loss rates on equipment loans by asset type, worst first.",
+  "joel": {
+    "ranking": [
+      "trucks",
+      "construction",
+      "agriculture"
+    ],
+    "writtenOn": "2026-10-09",
+    "note": "Written before any ABS loss data was shown."
+  },
+  "tranche": {
+    "source": "src/modules/equipment-finance/constants.ts INDUSTRY_RISK_TIER",
+    "ranking": "Agriculture = high, Construction = high, Transportation/Logistics = moderate (agriculture and construction tied, trucks better)"
+  },
+  "data": "See abs-2026-10.md. Trucks lose 4-6x more than ag/construction pools at the same vintage and age (2023 vintage: DTRT 4.11% vs JDOT 0.68% and CNH 0.76% CNL at ~36 months). Agriculture vs construction not separable: neither JDOT nor CNH splits losses by equipment type.",
+  "result": {
+    "joel": "Trucks worst: supported. Construction worse than agriculture: not testable.",
+    "tranche": "Trucking (Transportation/Logistics, moderate) scored better than agriculture (high): contradicted."
+  }
+}

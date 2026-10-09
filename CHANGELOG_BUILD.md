@@ -157,7 +157,7 @@
 ## 2026-10-09: Demo shows statement-built deals (Workstream A)
 
 **What changed**
-- New Deal (demo only): a third example, "Try a deal built from statements". Prairie Equipment Dealers, a fictional dealer with floorplan. Revenue, EBITDA, debt, debt service and the cash-flow inputs build from cited line items. The 11 judgments are left for the visitor, so Save shows the "judgments to confirm" note. It screens FLAG 82: a 6.4% margin breaks in the combined severe case.
+- New Deal (demo only): a third example, "Try a deal built from statements". Prairie Equipment Dealers, a fictional dealer with floorplan. Revenue, EBITDA, debt, debt service and the cash-flow inputs build from cited line items. The 11 judgments are left for the visitor, so Save shows the "judgments to confirm" note. It screens FLAG (82, then 87 after the Agriculture tier moved to moderate): a 6.4% margin breaks in the combined severe case.
 - Demo pipeline: Heartland Foods (Funded) is now built from statements. The line items build its existing revenue, EBITDA and debt exactly. Every judgment is confirmed by the demo analyst, and firm rules are kept. PASS 94, same score as before.
 - `src/data/demoStatements.js`, tested in `demoStatements.test.js` so the demo numbers cannot drift from their builds.
 - Untouched: the Granite Ridge documents the product video uses, the tutorial example (still the strong deal), and the demo firm's Settings (Tranche default treatment rules).
@@ -188,3 +188,12 @@
 - Demo: Prairie Equipment Dealers carries the dealer's Adjusted EBITDA of $13.4M with a three-line bridge, one a pro forma acquisition, left for the visitor to review. The bridge explains the gap to built ($11.6M) within $100K.
 
 Step 3 is complete. Step 4 next: memo section "How the numbers were built", server rerun of the build, audit entries for overrides at save, and rescore with current firm rules.
+
+## 2026-10-09: Public equipment ABS benchmarks and industry tiers (Workstream B)
+
+**What changed.** Pulled pool and loss data from the three equipment ABS programs with public prospectuses (John Deere Owner Trust 2026-B, CNH Equipment Trust 2026-B, Daimler Trucks Retail Trust 2024-1 plus 10-D reports). Results in `scripts/real-deals/benchmarks/abs-2026-10.md`. New Trucking sector (high risk), split out of Transportation/Logistics. Agriculture moved from high to moderate. Applied in all three modules, server validation, extraction, form tip and spec doc, with tests.
+
+**What Joel decided.**
+- Recorded his loss ranking before the data: trucks, construction, agriculture (worst first). Data supports trucks worst (4-6x the losses of ag/construction pools at the same vintage). Construction vs agriculture is not separable from public data.
+- Tiers: option 2 (Trucking split out at high) plus option 3 (Agriculture to moderate).
+- Rush reclassified to Trucking under the end-market rule. Rerun: no verdict changes (Rush 85 to 81, still PASS; Titan 44 to 49, still FAIL).

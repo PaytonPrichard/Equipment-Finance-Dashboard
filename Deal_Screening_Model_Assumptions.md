@@ -35,8 +35,10 @@ The model produces a composite risk score (0-100), financial metrics, commentary
 | Tier | Industries | Spread Adjustment |
 |------|-----------|-------------------|
 | **Low Risk** | Healthcare, Infrastructure, Manufacturing | -25 bps |
-| **Moderate Risk** | Transportation/Logistics, Energy, Rail, Other | +0 bps |
-| **High Risk** | Construction, Marine, Mining, Aviation, Agriculture | +75 bps |
+| **Moderate Risk** | Transportation/Logistics, Energy, Rail, Agriculture, Other | +0 bps |
+| **High Risk** | Construction, Trucking, Marine, Mining, Aviation | +75 bps |
+
+**Evidence (2026-10-09).** Public equipment ABS data (John Deere Owner Trust, CNH Equipment Trust, Daimler Trucks Retail Trust) showed truck loan pools losing 4-6x more than agriculture and construction pools at the same vintage and age. So Trucking was split out of Transportation/Logistics at high risk, and Agriculture moved from high to moderate. Agriculture vs construction could not be separated from public data, so Construction stays high. See `scripts/real-deals/benchmarks/abs-2026-10.md`.
 
 **Assumption:** Industry tiers reflect cyclicality and historical default rates in equipment finance. Low-risk industries have stable demand; high-risk industries are subject to commodity prices, regulatory shifts, or seasonal volatility.
 
