@@ -63,9 +63,9 @@ function runCase(fx, S) {
   const factors = ef.describeFactors(inputs, metrics, risk);
   const screening = S.evaluateScreening(S.DEFAULT_CRITERIA, metrics, risk, inputs, 'equipment_finance');
   const stress = ef.runStressTest(inputs, S.DEFAULT_SOFR);
-  const view = whatWouldChange(inputs, metrics, risk, factors, S.DEFAULT_CRITERIA);
   // Same analysis the screening's cash-flow floors use (main, Workstream A).
   const cf = S.computeCashFlowAnalysis(inputs, metrics, S.DEFAULT_CRITERIA);
+  const view = whatWouldChange(inputs, metrics, risk, factors, S.DEFAULT_CRITERIA, cf);
 
   // Fallbacks the module applied on its own. Same weight as written caveats.
   const warnings = [...caveats];
