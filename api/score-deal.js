@@ -11,7 +11,7 @@ const { handlePreflight } = require('../server-lib/cors');
 const { checkRateLimit } = require('../server-lib/rateLimit');
 const { checkPlanStatus } = require('../server-lib/planCheck');
 const { dispatchWebhooks } = require('../server-lib/webhookDispatch');
-const { recomputeScore, VALID_ASSET_CLASSES } = require('./_scoring.cjs');
+const { recomputeScore, prepareStatementInputs, VALID_ASSET_CLASSES } = require('./_scoring.cjs');
 const { validateDealInputs, validateARInputs, validateInventoryInputs } = require('../server-lib/validate');
 
 function validateInputs(assetClass, inputs) {
@@ -36,6 +36,36 @@ async function getProfile(userId) {
     .eq('id', userId)
     .single();
   return data || null;
+}
+
+// A deal built from statement line items is rebuilt here before it is
+// validated or scored: built figures the client sent are replaced, the deal
+// keeps the firm rules it was first saved with, and a deal with unconfirmed
+// judgments is refused. Returns { inputs, overrides } or { status, body }.
+async function prepareDealInputs(orgId, inputs, previous) {
+  if (!inputs.financials && !previous?.financials) return { inputs, overrides: [] };
+  let orgRules;
+  if (inputs.financials) {
+    const { data: org } = await supabaseAdmin.from('organizations').select('org_settings').eq('id', orgId).single();
+    orgRules = org?.org_settings?.treatmentRules;
+  }
+  const prep = await prepareStatementInputs(inputs, orgRules, previous);
+  if (prep.error) return { status: 500, body: { error: prep.error } };
+  if (prep.pending > 0) {
+    return {
+      status: 400,
+      body: { error: `${prep.pending} judgment${prep.pending === 1 ? '' : 's'} on the statement build not confirmed. Confirm them before saving.` },
+    };
+  }
+  return { inputs: prep.inputs, overrides: prep.overrides };
+}
+
+// One audit row per override, so a reviewer sees each one with its reason
+// rather than finding it inside a whole-inputs diff.
+async function auditOverrides({ userId, orgId, dealId, overrides }) {
+  for (const o of overrides) {
+    await writeAuditLog({ userId, orgId, action: 'override', dealId, newValues: o });
+  }
 }
 
 async function writeAuditLog({ userId, orgId, action, dealId, oldValues, newValues }) {
@@ -95,7 +125,8 @@ module.exports = async function handler(req, res) {
     // Client-supplied `score` is intentionally ignored: the server is the
     // authoritative scorer. `asset_class` defaults to equipment_finance to
     // match the DB column default.
-    const { name, inputs, notes = '', asset_class = 'equipment_finance', extraction_provenance = null } = req.body || {};
+    const { name, notes = '', asset_class = 'equipment_finance', extraction_provenance = null } = req.body || {};
+    let { inputs } = req.body || {};
 
     if (!name || typeof name !== 'string' || name.length > 200) {
       return res.status(400).json({ error: 'name is required (string, max 200 chars)' });
@@ -111,6 +142,10 @@ module.exports = async function handler(req, res) {
         error: `Invalid asset_class. Valid: ${VALID_ASSET_CLASSES.join(', ')}`,
       });
     }
+
+    const prepared = await prepareDealInputs(orgId, inputs, null);
+    if (prepared.status) return res.status(prepared.status).json(prepared.body);
+    inputs = prepared.inputs;
 
     const validation = validateInputs(asset_class, inputs);
     if (!validation.valid) {
@@ -153,6 +188,7 @@ module.exports = async function handler(req, res) {
       dealId: data.id,
       newValues: { name, stage: 'Screening', inputs, score, asset_class },
     });
+    await auditOverrides({ userId: user.id, orgId, dealId: data.id, overrides: prepared.overrides });
 
     // Every created deal now has a server-computed score, so deal.scored
     // always fires alongside deal.created. Payload shape unchanged.
@@ -175,7 +211,7 @@ module.exports = async function handler(req, res) {
 
     // Client-supplied `score` is ignored. To re-score, send inputs;
     // the server recomputes against the deal's stored asset_class.
-    const { inputs } = req.body || {};
+    let { inputs } = req.body || {};
     if (!inputs || typeof inputs !== 'object') {
       return res.status(400).json({ error: 'inputs is required (score is server-computed)' });
     }
@@ -189,6 +225,10 @@ module.exports = async function handler(req, res) {
     // Same answer as a missing deal, so the response never confirms that
     // another firm's deal id exists.
     if (existing.org_id !== orgId) return res.status(404).json({ error: 'Deal not found' });
+
+    const prepared = await prepareDealInputs(orgId, inputs, existing.inputs);
+    if (prepared.status) return res.status(prepared.status).json(prepared.body);
+    inputs = prepared.inputs;
 
     const assetClass = existing.asset_class || 'equipment_finance';
     const validation = validateInputs(assetClass, inputs);
@@ -226,6 +266,7 @@ module.exports = async function handler(req, res) {
       oldValues: { inputs: existing.inputs, score: existing.score },
       newValues: { inputs: data.inputs, score: data.score },
     });
+    await auditOverrides({ userId: user.id, orgId, dealId: data.id, overrides: prepared.overrides });
 
     if (data.score !== existing.score) {
       await dispatchWebhooks(orgId, 'deal.scored', {

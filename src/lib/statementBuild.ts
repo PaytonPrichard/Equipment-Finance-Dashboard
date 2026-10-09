@@ -165,3 +165,56 @@ export function clearStatements<T extends Inputs>(inputs: T): T {
   delete next.financials;
   return next;
 }
+
+export interface OverrideChange {
+  kind: 'treatment' | 'field';
+  /** Treatment row (floorplan, ...) or built field (ebitda, ...). */
+  key: string;
+  /** The rule chosen, for a treatment override. */
+  rule?: string;
+  reason?: string;
+  by?: string;
+  at?: string;
+  /** True when an override that was on the deal has been taken off. */
+  removed?: boolean;
+}
+
+function overrideChanges(prev: StatementFinancials | null | undefined, next: StatementFinancials | null | undefined): OverrideChange[] {
+  const out: OverrideChange[] = [];
+  const diff = (kind: OverrideChange['kind'], a: Record<string, any> = {}, b: Record<string, any> = {}) => {
+    Object.entries(b).forEach(([key, o]) => {
+      if (!o) return;
+      const before = a[key];
+      if (!before || before.reason !== o.reason || before.rule !== o.rule) {
+        out.push({ kind, key, rule: o.rule, reason: o.reason, by: o.by, at: o.at });
+      }
+    });
+    Object.keys(a).forEach((key) => {
+      if (a[key] && !b[key]) out.push({ kind, key, removed: true });
+    });
+  };
+  diff('treatment', prev?.treatmentOverrides, next?.treatmentOverrides);
+  diff('field', prev?.fieldOverrides, next?.fieldOverrides);
+  return out;
+}
+
+/**
+ * What the server does with a deal before it stores it. Built fields are
+ * rebuilt here, so a figure the client sent for a built field never counts
+ * (AUDIT P0-1). The deal keeps the firm rules it was first saved with.
+ * Every judgment has to be confirmed, and each override that is new since
+ * the last save is returned for its own audit entry.
+ */
+export function prepareForSave<T extends Inputs>(
+  inputs: T,
+  orgRules: unknown,
+  previous?: Inputs | null,
+): { inputs: T; pending: number; overrides: OverrideChange[] } {
+  if (!inputs?.financials) {
+    return { inputs, pending: 0, overrides: overrideChanges(previous?.financials, null) };
+  }
+  const withRules = withRulesSnapshot(inputs, orgRules);
+  const built = applyStatementBuild(withRules, orgRules);
+  const pending = pendingJudgments(statementState(built, orgRules));
+  return { inputs: built, pending, overrides: overrideChanges(previous?.financials, built.financials) };
+}

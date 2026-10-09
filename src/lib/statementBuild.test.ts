@@ -174,3 +174,46 @@ describe('company EBITDA on the form', () => {
     expect(s.build!.judgments.filter((j) => j.id.startsWith('addBack.')).length).toBe(1);
   });
 });
+
+describe('prepareForSave (the server rerun)', () => {
+  const { prepareForSave, confirmJudgment, setDealTreatment } = require('./statementBuild');
+  const allConfirmed = (inputs: any) => {
+    let next = inputs;
+    statementState(next, undefined).build!.judgments.forEach((j) => { next = confirmJudgment(next, j.id, j.value, j.proposed); });
+    return next;
+  };
+
+  test('a deal with no statements passes through untouched', () => {
+    const r = prepareForSave(typed, undefined, null);
+    expect(r.inputs).toBe(typed);
+    expect(r.pending).toBe(0);
+  });
+
+  test('a built field the client tampered with is rebuilt', () => {
+    const r = prepareForSave({ ...allConfirmed(incomeOnly), ebitda: 99 * M }, undefined, null);
+    expect(r.inputs.ebitda).toBe(15 * M);
+    expect(r.pending).toBe(0);
+  });
+
+  test('unconfirmed judgments are counted, so the server can refuse the save', () => {
+    expect(prepareForSave(incomeOnly, undefined, null).pending).toBeGreaterThan(0);
+  });
+
+  test('stores the firm rules on first save', () => {
+    const r = prepareForSave(allConfirmed(incomeOnly), { floorplan: 'in' }, null);
+    expect(r.inputs.financials.firmRules.floorplan).toBe('in');
+  });
+
+  test('reports overrides new since the last save, and removed ones', () => {
+    const dealer = { ...incomeOnly, financials: { ...incomeOnly.financials, lineItems: { ...incomeOnly.financials.lineItems, floorplanInterest: li(2 * M), floorplanPayable: li(30 * M) } } };
+    const over = setDealTreatment(dealer, 'floorplan', 'in', 'Credit agreement', undefined, 'J. Peter').inputs;
+    const withField = overrideField(over, 'ebitda', 'Run-rate', 'J. Peter').inputs;
+    const first = prepareForSave(withField, undefined, null);
+    expect(first.overrides.map((o: any) => `${o.kind}:${o.key}:${o.reason}`)).toEqual(['treatment:floorplan:Credit agreement', 'field:ebitda:Run-rate']);
+    // Saved again unchanged: nothing new to log.
+    expect(prepareForSave(withField, undefined, first.inputs).overrides).toEqual([]);
+    // Override taken off.
+    const cleared = clearFieldOverride(withField, 'ebitda');
+    expect(prepareForSave(cleared, undefined, first.inputs).overrides).toEqual([{ kind: 'field', key: 'ebitda', removed: true }]);
+  });
+});

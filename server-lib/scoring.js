@@ -26,6 +26,26 @@ const MODULE_LOADERS = {
 
 const VALID_ASSET_CLASSES = Object.keys(MODULE_LOADERS);
 
+// Statement-built deals: the build reruns here, so the client never decides
+// a built figure. Static specifier for the same file-tracing reason as above.
+const loadStatements = () => import('../src/lib/statementBuild.ts');
+
+/**
+ * Rebuild the statement-built fields, keep the firm rules the deal was first
+ * saved with, count unconfirmed judgments, and list overrides that are new
+ * since `previous`. A deal without statements passes through.
+ */
+async function prepareStatementInputs(inputs, orgRules, previous) {
+  try {
+    const { prepareForSave } = await loadStatements();
+    const r = prepareForSave(inputs, orgRules, previous || null);
+    return { ...r, error: null };
+  } catch (err) {
+    console.error('[scoring] prepareStatementInputs error:', err);
+    return { inputs, pending: 0, overrides: [], error: 'Statement build failed' };
+  }
+}
+
 async function recomputeScore(assetClass, inputs) {
   console.log('[scoring] recomputeScore called', {
     assetClass,
@@ -61,4 +81,4 @@ async function recomputeScore(assetClass, inputs) {
   }
 }
 
-module.exports = { recomputeScore, VALID_ASSET_CLASSES };
+module.exports = { recomputeScore, prepareStatementInputs, VALID_ASSET_CLASSES };
