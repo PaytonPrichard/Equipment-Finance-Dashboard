@@ -110,3 +110,72 @@ describe('cash-flow inputs keep blank as blank', () => {
     expect(onChange).toHaveBeenLastCalledWith(expect.objectContaining({ cashTaxes: 5 }));
   });
 });
+
+// Statement line items build some Borrower Profile fields. A built field is
+// read-only: fix the line, or override it with a reason.
+describe('fields built from statements', () => {
+  const M = 1_000_000;
+  const withStatements = {
+    ...mod.INITIAL_INPUTS,
+    financials: {
+      fiscalYearEnd: '2025-12-31',
+      lineItems: {
+        revenue: { value: 100 * M },
+        operatingIncome: { value: 10 * M, source: { document: '10-K', page: 54 } },
+        depreciationAmortization: { value: 5 * M },
+      },
+    },
+  };
+
+  function setup(inputs) {
+    const onChange = jest.fn();
+    render(
+      <TutorialProvider userId={null}>
+      <DealInputForm
+        inputs={inputs}
+        onChange={onChange}
+        schema={mod.FORM_SCHEMA}
+        modules={getAvailableModules()}
+        activeModule="equipment_finance"
+        onModuleChange={() => {}}
+        pipelineDeals={[]}
+        sofr={0.0389}
+        analystName="J. Peter"
+      />
+      </TutorialProvider>,
+    );
+    return { onChange };
+  }
+
+  test('no statements: an Add statements prompt, every field typed', () => {
+    const { onChange } = setup(mod.INITIAL_INPUTS);
+    expect(screen.queryByText('Built')).toBeNull();
+    fireEvent.click(screen.getByText('Add statements'));
+    expect(onChange.mock.calls[0][0].financials).toEqual({ fiscalYearEnd: '', lineItems: {} });
+  });
+
+  test('built fields show the value, a Built badge and the formula with its source', () => {
+    setup(withStatements);
+    expect(screen.getAllByText('Built').length).toBe(3);   // revenue, EBITDA, maintenance capex
+    expect(screen.getByText('$15,000,000')).toBeInTheDocument();
+    expect(screen.getAllByText(/Operating income \$10\.0M \(10-K, p\. 54\) \+ Depreciation and amortization \$5\.0M/).length).toBeGreaterThan(0);
+  });
+
+  test('override needs a reason and records it', () => {
+    const { onChange } = setup(withStatements);
+    // Fields in schema order: revenue, EBITDA, maintenance capex.
+    fireEvent.click(screen.getAllByText('Override')[1]);
+    const confirmBtn = screen.getAllByRole('button', { name: 'Override' }).find((b) => b.disabled);
+    expect(confirmBtn).toBeDisabled();
+    fireEvent.change(screen.getByLabelText(/Reason to override/), { target: { value: 'Run-rate after closure' } });
+    fireEvent.click(screen.getAllByRole('button', { name: 'Override' }).find((b) => !b.disabled && b.className.includes('bg-gray-900')));
+    const next = onChange.mock.calls[0][0];
+    expect(next.financials.fieldOverrides.ebitda).toMatchObject({ reason: 'Run-rate after closure', by: 'J. Peter' });
+  });
+
+  test('typing a line item updates the statements', () => {
+    const { onChange } = setup(withStatements);
+    fireEvent.change(screen.getByLabelText('Cash interest paid'), { target: { value: '2000000' } });
+    expect(onChange.mock.calls[0][0].financials.lineItems.interestPaid).toEqual({ value: 2 * M, origin: 'typed' });
+  });
+});

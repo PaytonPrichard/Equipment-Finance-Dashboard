@@ -63,6 +63,8 @@ export default function DealProvenance({
     const kept = provenance?.keptFromForm || [];
     const out = [];
     for (const [field, value] of Object.entries(inputs || {})) {
+      // Statement line items have their own panel, with sources per line.
+      if (field === 'financials') continue;
       const isDefault = valuesAgree(value, moduleInitialInputs[field]);
       const source = sources[field];
       // A field left at its default that no document mentioned carries no

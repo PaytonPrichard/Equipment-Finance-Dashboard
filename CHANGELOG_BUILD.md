@@ -122,3 +122,16 @@
 **What changed:** the per-module EBITDA stress tables (-10/-20/-30%) now cut maintenance capex by the same percentage in their FCCR column, via `fccrFor(..., revenueFactor)`. Both stress tables now give the same FCCR for the same downturn. Spec section 7 updated. Real-deals: no verdict moves, FCCR columns only.
 
 **What Joel decided:** the module declines are downturns at a held margin, so capex scales, same as the cash-flow stress.
+
+## 2026-10-09: EBITDA build step 3, piece 1: statements on the New Deal form (Workstream A)
+
+**What changed**
+- Borrower Profile has a "Financial statements" panel (`StatementsPanel.js`) for line items, each with an optional document and page. It covers the income statement, cash flow statement, balance sheet and debt note. Floorplan, captive fleet, finance lease and no-operating-income lines open when the analyst says the borrower has them.
+- Whatever the line items are enough to build fills the matching Borrower Profile field: revenue, EBITDA, debt, debt service, maintenance capex, cash taxes, working capital and rent. Each built field shows a "Built" badge and its formula with page citations. Other fields stay typed, and a partial build is fine.
+- A built field is read-only. Override asks for a reason and hands the field back to typing. "Use built value" undoes it. App writes built values over whatever set the inputs (form, document merge, module switch, draft), so a built field is never silently typed over. `src/lib/statementBuild.ts`.
+- The panel lists what each field is built from, what is still needed, and the notes.
+- Statements survive an asset-class switch. The provenance panel skips them. `NullableNumberInput` moved to its own file.
+
+**What Joel decided:** one form, no mode toggle. Statements fill the typed fields, and analysts add to them. Override-with-reason guards built fields. Source citation is optional. Prior-year figures stay typed.
+
+**Next (piece 2):** treatment overrides and judgment confirmation on the form, Save to Pipeline gated on confirmations, firm rules snapshot at save.

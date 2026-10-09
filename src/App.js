@@ -41,6 +41,7 @@ import ScreeningCriteria from './components/ScreeningCriteria';
 import { DEFAULT_CRITERIA, dscrFloorFor, evaluateScreening, validateCriteria } from './lib/screeningCriteria';
 import { validateWeights } from './lib/scoringWeights';
 import { computeDealMetrics } from './utils/dealMetrics';
+import { applyStatementBuild } from './lib/statementBuild';
 import StressTestPanel from './components/StressTestPanel';
 import CashFlowStressPanel from './components/CashFlowStressPanel';
 import ExportPanel from './components/ExportPanel';
@@ -311,7 +312,7 @@ function AuthenticatedApp({ profile, user }) {
     const newMod = getModule(newModuleKey);
     // Preserve shared borrower fields across asset class switches
     const sharedFields = ['companyName', 'yearsInBusiness', 'annualRevenue', 'ebitda',
-      'totalExistingDebt', 'actualAnnualDebtService', 'industrySector', 'creditRating'];
+      'totalExistingDebt', 'actualAnnualDebtService', 'industrySector', 'creditRating', 'financials'];
     const preserved = {};
     sharedFields.forEach(f => { if (inputs[f] !== undefined && inputs[f] !== 0 && inputs[f] !== '') preserved[f] = inputs[f]; });
     setInputs({ ...newMod.INITIAL_INPUTS, ...preserved });
@@ -529,6 +530,14 @@ function AuthenticatedApp({ profile, user }) {
 
   // Org credit policy overrides
   const orgSettings = useMemo(() => profile?.organizations?.org_settings || {}, [profile?.organizations?.org_settings]);
+
+  // Statement line items build some of the flat fields. Whatever set the
+  // inputs (the form, a document merge, a module switch, a loaded draft),
+  // the built values win, so a built field is never silently typed over.
+  useEffect(() => {
+    const next = applyStatementBuild(inputs, orgSettings.treatmentRules);
+    if (next !== inputs) setInputs(next);
+  }, [inputs, orgSettings]);
 
   // Dynamic module calculations, at the live rate and under the firm's
   // spreads. Shared with the pipeline drawer through utils/dealMetrics, which
@@ -1204,6 +1213,7 @@ function AuthenticatedApp({ profile, user }) {
                     analystName={profile?.full_name || user?.user_metadata?.full_name || ''}
                     analystEmail={user?.email || ''}
                     draftStatus={draftStatus}
+                    treatmentRules={orgSettings.treatmentRules}
                   />
                 </div>
               </div>

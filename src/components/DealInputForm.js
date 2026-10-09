@@ -4,50 +4,12 @@ import { isDemoMode } from '../lib/demoMode';
 import { formatCurrencyFull } from '../utils/format';
 import TutorialBeacon from './TutorialBeacon';
 import { getMissingFields, generateRequestInfoEmail } from '../lib/incompleteFields';
+import NullableNumberInput from './NullableNumberInput';
+import StatementsPanel, { formulaWithValues } from './StatementsPanel';
+import { useConfirm } from '../contexts/ConfirmContext';
+import { statementState, overrideField, clearFieldOverride, clearStatements } from '../lib/statementBuild';
 
 const DS_ESTIMATE_RATE = 0.08;
-
-// A number field where blank stays blank. Used by the cash-flow inputs,
-// which must tell "not provided" from 0 (src/modules/cashFlowFields.js).
-// Holds its own text so a lone "-" or a trailing "." survives typing.
-function NullableNumberInput({ value, onChange, prefix, suffix, allowNegative, max, placeholder }) {
-  const format = (v) => (v === null || v === undefined || v === '' ? '' : Number(v).toLocaleString('en-US', { maximumFractionDigits: 2 }));
-  const [text, setText] = useState(() => format(value));
-  const editing = useRef(false);
-  useEffect(() => {
-    if (!editing.current) setText(format(value));
-  }, [value]);
-
-  const handle = (raw) => {
-    const pattern = allowNegative ? /[^0-9.-]/g : /[^0-9.]/g;
-    let cleaned = raw.replace(pattern, '');
-    if (allowNegative) cleaned = (cleaned.startsWith('-') ? '-' : '') + cleaned.replace(/-/g, '');
-    setText(cleaned);
-    if (cleaned === '' || cleaned === '-' || cleaned === '.') { onChange(null); return; }
-    let n = parseFloat(cleaned);
-    if (!Number.isFinite(n)) { onChange(null); return; }
-    if (max != null && n > max) n = max;
-    onChange(n);
-  };
-
-  return (
-    <div className="relative">
-      {prefix && <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-medium">{prefix}</span>}
-      <input
-        type="text"
-        inputMode="decimal"
-        value={text}
-        onFocus={() => { editing.current = true; }}
-        onBlur={() => { editing.current = false; setText(format(value)); }}
-        onChange={(e) => handle(e.target.value)}
-        placeholder={placeholder}
-        className="form-input"
-        style={{ ...(prefix ? { paddingLeft: '2rem' } : {}), ...(suffix ? { paddingRight: '2rem' } : {}) }}
-      />
-      {suffix && <span className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-medium">{suffix}</span>}
-    </div>
-  );
-}
 
 // ---- Section / Module Icons ----
 const ICONS = {
@@ -592,9 +554,87 @@ function renderField(field, inputs, onChange, schema, pipelineDeals, missingKeys
   }
 }
 
+// ============ BUILT FROM STATEMENTS ============
+
+// A field the statements build. Read-only: the analyst fixes the line item,
+// or overrides with a reason, which hands the field back to typing.
+function BuiltFieldBox({ field, value, derivation, onOverride }) {
+  const [open, setOpen] = useState(false);
+  const [reason, setReason] = useState('');
+  return (
+    <div>
+      <Label tip={field.tip}>{field.label}</Label>
+      <div className="form-input flex items-center justify-between bg-gray-50" title={formulaWithValues(derivation)}>
+        <span className="text-gray-900">${Number(value).toLocaleString('en-US', { maximumFractionDigits: 0 })}</span>
+        <span className="text-[9px] font-semibold uppercase tracking-wider text-white bg-gray-900 px-1.5 py-0.5 rounded">Built</span>
+      </div>
+      <p className="text-[10px] text-gray-500 mt-1 pl-1 leading-snug">
+        {derivation?.estimate ? 'Estimate. ' : ''}{formulaWithValues(derivation)}
+      </p>
+      {!open ? (
+        <button type="button" onClick={() => setOpen(true)} className="text-[10px] text-gray-400 hover:text-gray-700 mt-0.5 pl-1">
+          Override
+        </button>
+      ) : (
+        <div className="mt-1.5 space-y-1.5">
+          <input
+            type="text"
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            placeholder="Reason for typing over the build"
+            aria-label={`Reason to override ${field.label}`}
+            className="form-input text-[12px]"
+          />
+          <div className="flex gap-2">
+            <button
+              type="button"
+              disabled={!reason.trim()}
+              onClick={() => onOverride(field.key, reason)}
+              className="px-2.5 py-1 rounded-lg bg-gray-900 text-white text-[11px] font-semibold disabled:opacity-40"
+            >
+              Override
+            </button>
+            <button type="button" onClick={() => { setOpen(false); setReason(''); }} className="text-[11px] text-gray-400 hover:text-gray-700">
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function renderFieldWithStatements(field, inputs, onChange, schema, pipelineDeals, missingKeys, stmt) {
+  const built = stmt?.state?.built || {};
+  if (built[field.key] !== undefined) {
+    return (
+      <BuiltFieldBox
+        field={field}
+        value={built[field.key]}
+        derivation={stmt.state.build.derivations[field.key]}
+        onOverride={stmt.onOverride}
+      />
+    );
+  }
+  const override = inputs.financials?.fieldOverrides?.[field.key];
+  const el = renderField(field, inputs, onChange, schema, pipelineDeals, missingKeys);
+  if (!override) return el;
+  return (
+    <div>
+      {el}
+      <p className="text-[10px] text-gray-500 mt-1 pl-1 leading-snug">
+        Typed, overriding the build: {override.reason}.{' '}
+        <button type="button" onClick={() => stmt.onClearOverride(field.key)} className="underline hover:text-gray-800">
+          Use built value
+        </button>
+      </p>
+    </div>
+  );
+}
+
 // ============ LAYOUT HELPER ============
 
-function renderFieldsLayout(fields, inputs, onChange, schema, pipelineDeals, missingKeys) {
+function renderFieldsLayout(fields, inputs, onChange, schema, pipelineDeals, missingKeys, stmt) {
   const groups = [];
   let currentHalfGroup = [];
 
@@ -625,7 +665,7 @@ function renderFieldsLayout(fields, inputs, onChange, schema, pipelineDeals, mis
           {group.fields.map((f) => (
             <React.Fragment key={f.key}>
               <MissingFieldWrapper isMissing={missingKeys?.has(f.key)} label={f.label}>
-                {renderField(f, inputs, onChange, schema, pipelineDeals, missingKeys)}
+                {renderFieldWithStatements(f, inputs, onChange, schema, pipelineDeals, missingKeys, stmt)}
               </MissingFieldWrapper>
             </React.Fragment>
           ))}
@@ -635,7 +675,7 @@ function renderFieldsLayout(fields, inputs, onChange, schema, pipelineDeals, mis
     return (
       <React.Fragment key={group.field.key}>
         <MissingFieldWrapper isMissing={missingKeys?.has(group.field.key)} label={group.field.label}>
-          {renderField(group.field, inputs, onChange, schema, pipelineDeals, missingKeys)}
+          {renderFieldWithStatements(group.field, inputs, onChange, schema, pipelineDeals, missingKeys, stmt)}
         </MissingFieldWrapper>
       </React.Fragment>
     );
@@ -644,7 +684,28 @@ function renderFieldsLayout(fields, inputs, onChange, schema, pipelineDeals, mis
 
 // ============ MAIN FORM ============
 
-export default function DealInputForm({ inputs, onChange, schema, modules, activeModule, onModuleChange, pipelineDeals, sofr, sofrSource, analystName, analystEmail, draftStatus }) {
+export default function DealInputForm({ inputs, onChange, schema, modules, activeModule, onModuleChange, pipelineDeals, sofr, sofrSource, analystName, analystEmail, draftStatus, treatmentRules }) {
+  const confirm = useConfirm();
+  // What the statements build. App writes the built values into the flat
+  // fields (applyStatementBuild); this only decides how each field shows.
+  const statements = statementState(inputs, treatmentRules);
+  const stmt = {
+    state: statements,
+    onOverride: (key, reason) => {
+      const r = overrideField(inputs, key, reason, analystName || undefined);
+      if (!r.error) onChange(r.inputs);
+    },
+    onClearOverride: (key) => onChange(clearFieldOverride(inputs, key)),
+  };
+  const clearAllStatements = async () => {
+    const ok = await confirm({
+      title: 'Clear the statements?',
+      body: 'Built fields keep their current values and become typed.',
+      confirmLabel: 'Clear',
+    });
+    if (ok) onChange(clearStatements(inputs));
+  };
+
   // Guard: if equipment module has TRAC selected but equipment type doesn't support it
   if (schema.equipmentDefaults && inputs.financingType === 'TRAC') {
     const ftField = schema.sections.flatMap(s => s.fields).find(f => f.key === 'financingType');
@@ -748,7 +809,16 @@ export default function DealInputForm({ inputs, onChange, schema, modules, activ
           </div>
 
           <div className="space-y-4">
-            {renderFieldsLayout(section.fields, inputs, onChange, schema, pipelineDeals, missingKeys)}
+            {renderFieldsLayout(section.fields, inputs, onChange, schema, pipelineDeals, missingKeys, stmt)}
+            {section.key === 'borrower' && (
+              <StatementsPanel
+                financials={inputs.financials || null}
+                state={statements}
+                inputs={inputs}
+                onChange={(financials) => onChange({ ...inputs, financials })}
+                onClear={clearAllStatements}
+              />
+            )}
           </div>
         </div>
       ))}
