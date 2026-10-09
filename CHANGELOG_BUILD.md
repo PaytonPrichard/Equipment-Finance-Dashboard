@@ -87,3 +87,17 @@
 - Adjusted or stated EBITDA: the analyst says per treatment row whether the company figure is before or after the item, and Tranche moves it onto the deal's treatment basis.
 - Current maturities: a judgment per item (finance leases, vehicle debt, floorplan) on whether the line already includes it, proposed "no".
 - Gap comparison counts treatment differences as explained, not unexplained.
+
+## 2026-10-09: EBITDA build Phase 1, step 2: firm treatment rules (Workstream A)
+
+**What changed**
+- Settings, Screening Policy: a Treatment Rules card. Four rows (finance leases, operating leases, floorplan, captive fleet) with what each choice does to EBITDA, debt and debt service, plus the EBITDA gap tolerance. Admins edit. Everyone else sees it read-only.
+- Saved to `organizations.org_settings.treatmentRules`. The save re-reads the stored settings and changes only that key, so it never writes over other unsaved edits or another admin's save. Every change writes an `audit_log` row (entity `org`, old and new rules).
+- `validateTreatmentRules` merges stored rules over the defaults and drops anything invalid. It runs on save and on every read, so a malformed value cannot reach scoring.
+- `setTreatmentOverride` for per-deal overrides: needs a reason, records who and when, and choosing the firm rule clears the override. The form uses it in step 3.
+- Tests: card read-only vs admin, save and notice, validator, override helper.
+
+**What Joel decided**
+- Analysts see firm rules read-only in Settings, and meet them on the New Deal screen in step 3.
+- Saved deals keep the rules they were built with. After a save, Settings says so. A "rescore every deal with current rules" action comes with the server rerun in step 4, for occasional use.
+- Per-deal overrides are audited when the deal is saved.

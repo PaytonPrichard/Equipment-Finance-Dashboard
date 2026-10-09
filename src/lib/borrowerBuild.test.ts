@@ -4,6 +4,8 @@
 import {
   buildBorrowerInputs,
   allJudgmentsConfirmed,
+  validateTreatmentRules,
+  setTreatmentOverride,
   DEFAULT_TREATMENT_RULES,
 } from './borrowerBuild';
 import type { BorrowerFinancials, LineItemKey, BuildResult } from './borrowerBuild';
@@ -524,5 +526,51 @@ describe('negative EBITDA', () => {
 test('defaults match the design', () => {
   expect(DEFAULT_TREATMENT_RULES).toEqual({
     financeLeases: 'in', operatingLeases: 'out', floorplan: 'out', captiveFleet: 'corporate', ebitdaGapTolerance: 0.05,
+  });
+});
+
+describe('validateTreatmentRules', () => {
+
+  test('missing or malformed settings give the defaults', () => {
+    expect(validateTreatmentRules(undefined)).toEqual(DEFAULT_TREATMENT_RULES);
+    expect(validateTreatmentRules('in')).toEqual(DEFAULT_TREATMENT_RULES);
+  });
+
+  test('valid values kept, invalid ones fall back row by row', () => {
+    expect(validateTreatmentRules({ floorplan: 'in', captiveFleet: 'everything', financeLeases: 'out', ebitdaGapTolerance: 0.1 }))
+      .toEqual({ ...DEFAULT_TREATMENT_RULES, floorplan: 'in', financeLeases: 'out', ebitdaGapTolerance: 0.1 });
+  });
+
+  test('tolerance outside 0 to 1 is ignored', () => {
+    expect(validateTreatmentRules({ ebitdaGapTolerance: 5 }).ebitdaGapTolerance).toBe(0.05);
+    expect(validateTreatmentRules({ ebitdaGapTolerance: -0.1 }).ebitdaGapTolerance).toBe(0.05);
+    expect(validateTreatmentRules({ ebitdaGapTolerance: '0.08' }).ebitdaGapTolerance).toBe(0.08);
+  });
+});
+
+describe('setTreatmentOverride', () => {
+  const firm = DEFAULT_TREATMENT_RULES;
+
+  test('needs a reason', () => {
+    const r = setTreatmentOverride(fin(), 'floorplan', 'in', '  ', firm, 'u1');
+    expect(r.error).toBe('An override needs a reason.');
+    expect(r.financials.treatmentOverrides).toBeUndefined();
+  });
+
+  test('records rule, trimmed reason, who and when, and the build applies it', () => {
+    const r = setTreatmentOverride(fin({ floorplanPayable: 30 * M, floorplanInterest: 2.5 * M }), 'floorplan', 'in', ' Credit agreement ', firm, 'u1', '2026-10-09T00:00:00Z');
+    expect(r.error).toBeNull();
+    expect(r.financials.treatmentOverrides!.floorplan).toEqual({ rule: 'in', reason: 'Credit agreement', by: 'u1', at: '2026-10-09T00:00:00Z' });
+    expect(buildBorrowerInputs(r.financials).treatment.floorplan).toBe('in');
+  });
+
+  test('setting the firm rule clears the override', () => {
+    const withOverride = setTreatmentOverride(fin(), 'floorplan', 'in', 'Reason', firm).financials;
+    const cleared = setTreatmentOverride(withOverride, 'floorplan', 'out', '', firm).financials;
+    expect(cleared.treatmentOverrides!.floorplan).toBeUndefined();
+  });
+
+  test('refuses a rule that is not an option for the row', () => {
+    expect(setTreatmentOverride(fin(), 'floorplan', 'corporate' as any, 'Reason', firm).error).toBe('"corporate" is not a floorplan treatment.');
   });
 });

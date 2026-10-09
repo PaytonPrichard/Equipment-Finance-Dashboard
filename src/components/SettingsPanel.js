@@ -11,6 +11,9 @@ import { ROLE_LABELS } from '../lib/permissions';
 import { fetchPreferences, upsertPreferences } from '../lib/preferences';
 import { DEFAULT_CRITERIA, validateCriteria } from '../lib/screeningCriteria';
 import { sendInviteEmail } from '../lib/notifications';
+import { logAudit } from '../lib/audit';
+import { validateTreatmentRules } from '../lib/borrowerBuild';
+import TreatmentRulesCard from './TreatmentRulesCard';
 
 const NAV_ITEMS = [
   { id: 'account', label: 'Account', icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg> },
@@ -126,15 +129,36 @@ export default function SettingsPanel({ isOpen, onClose, onCriteriaChange, activ
   }, [isOpen]);
 
   const saveToOrg = useCallback(async (data) => {
-    if (!supabase || !orgId) return;
+    if (!supabase || !orgId) return false;
     const { error } = await supabase.from('organizations').update({ ...data, updated_at: new Date().toISOString() }).eq('id', orgId);
-    if (error) addToast('Failed to save: ' + error.message, 'error');
-    else {
-      addToast('Settings saved', 'success');
-      try { localStorage.removeItem('efd_profile_cache'); } catch (e) { /* */ }
-      refreshProfile();
+    if (error) {
+      addToast('Failed to save: ' + error.message, 'error');
+      return false;
     }
+    addToast('Settings saved', 'success');
+    try { localStorage.removeItem('efd_profile_cache'); } catch (e) { /* */ }
+    refreshProfile();
+    return true;
   }, [orgId, addToast, refreshProfile]);
+
+  // Treatment rules: re-read the stored settings and change only this key,
+  // so unsaved edits elsewhere on the screen, or another admin's save, are
+  // not written over. Every change goes to the audit log.
+  const saveTreatmentRules = useCallback(async (nextRules) => {
+    if (!supabase || !orgId) return false;
+    const { data: current, error } = await supabase.from('organizations').select('org_settings').eq('id', orgId).single();
+    if (error) {
+      addToast('Failed to save: could not read current settings', 'error');
+      return false;
+    }
+    const stored = current?.org_settings || {};
+    const before = validateTreatmentRules(stored.treatmentRules);
+    const ok = await saveToOrg({ org_settings: { ...stored, treatmentRules: nextRules } });
+    if (!ok) return false;
+    setOrgSettings((s) => ({ ...s, treatmentRules: nextRules }));
+    logAudit(userId, orgId, 'update', 'org', orgId, { treatmentRules: before }, { treatmentRules: nextRules }, { setting: 'treatmentRules' });
+    return true;
+  }, [orgId, userId, saveToOrg, addToast]);
 
   const saveCriteria = useCallback(async (newCriteria) => {
     setCriteria(newCriteria);
@@ -360,6 +384,11 @@ export default function SettingsPanel({ isOpen, onClose, onCriteriaChange, activ
                       <SettingsInput label="Min Years" value={criteria.minYearsInBusiness} onChange={(v) => updateCriteriaField('minYearsInBusiness', v)} type="number" suffix="yrs" />
                     </div>
                   </div>
+                  <TreatmentRulesCard
+                    rules={(isAdmin ? orgSettings : profile?.organizations?.org_settings)?.treatmentRules}
+                    editable={isAdmin}
+                    onSave={saveTreatmentRules}
+                  />
                   {isAdmin && (
                     <div>
                       <h4 className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-3">Firm Credit Assumptions</h4>

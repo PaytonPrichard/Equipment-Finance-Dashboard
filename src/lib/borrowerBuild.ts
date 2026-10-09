@@ -802,3 +802,61 @@ function dedupe(list: string[]): string[] {
 export function allJudgmentsConfirmed(result: BuildResult): boolean {
   return result.judgments.every((j) => j.confirmed);
 }
+
+const TREATMENT_OPTIONS: { [K in TreatmentRow]: TreatmentRules[K][] } = {
+  financeLeases: ['in', 'out'],
+  operatingLeases: ['out', 'in'],
+  floorplan: ['out', 'in'],
+  captiveFleet: ['corporate', 'consolidated'],
+};
+
+export const TREATMENT_ROWS = Object.keys(TREATMENT_OPTIONS) as TreatmentRow[];
+
+export function treatmentOptions<R extends TreatmentRow>(row: R): TreatmentRules[R][] {
+  return TREATMENT_OPTIONS[row];
+}
+
+/**
+ * The firm's treatment rules as stored in org_settings.treatmentRules,
+ * merged over the defaults. Anything unrecognized falls back to the default,
+ * so a malformed saved value can never reach scoring. Used on save and on
+ * every read, client and server.
+ */
+export function validateTreatmentRules(raw: unknown): TreatmentRules {
+  const out: TreatmentRules = { ...DEFAULT_TREATMENT_RULES };
+  if (!raw || typeof raw !== 'object') return out;
+  const r = raw as Record<string, unknown>;
+  TREATMENT_ROWS.forEach((row) => {
+    if ((TREATMENT_OPTIONS[row] as unknown[]).includes(r[row])) (out as any)[row] = r[row];
+  });
+  const tol = num(r.ebitdaGapTolerance);
+  if (tol !== null && tol >= 0 && tol <= 1) out.ebitdaGapTolerance = tol;
+  return out;
+}
+
+/**
+ * Set or clear a per-deal treatment override. An override needs a reason;
+ * the deal save writes it to the audit log. Passing the firm rule clears
+ * the override, since there is nothing left to explain.
+ */
+export function setTreatmentOverride<R extends TreatmentRow>(
+  financials: BorrowerFinancials,
+  row: R,
+  rule: TreatmentRules[R],
+  reason: string,
+  firmRules: TreatmentRules,
+  by?: string,
+  at: string = new Date().toISOString(),
+): { financials: BorrowerFinancials; error: string | null } {
+  if (!(TREATMENT_OPTIONS[row] as unknown[]).includes(rule)) {
+    return { financials, error: `"${String(rule)}" is not a ${row} treatment.` };
+  }
+  const overrides = { ...(financials.treatmentOverrides || {}) };
+  if (rule === firmRules[row]) {
+    delete overrides[row];
+    return { financials: { ...financials, treatmentOverrides: overrides }, error: null };
+  }
+  if (!reason || !reason.trim()) return { financials, error: 'An override needs a reason.' };
+  (overrides as any)[row] = { rule, reason: reason.trim(), by, at };
+  return { financials: { ...financials, treatmentOverrides: overrides }, error: null };
+}
