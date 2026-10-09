@@ -51,8 +51,11 @@ export interface StatementState {
 }
 
 export function hasStatements(financials: StatementFinancials | null | undefined): boolean {
+  const given = (v: unknown) => v !== null && v !== undefined && v !== '';
   const items = financials?.lineItems || {};
-  return Object.values(items).some((li) => li && li.value !== null && li.value !== undefined && (li.value as unknown) !== '');
+  // A company EBITDA figure alone is enough to start: it can score as stated.
+  return Object.values(items).some((li) => li && given(li.value))
+    || given(financials?.statedEbitda?.value) || given(financials?.adjustedEbitda?.value);
 }
 
 /** What the statements build right now, and which fields that covers. */

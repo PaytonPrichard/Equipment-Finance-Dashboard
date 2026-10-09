@@ -3,6 +3,7 @@ import NullableNumberInput from './NullableNumberInput';
 import { LINE_ITEM_LABELS } from '../lib/borrowerBuild';
 import { BUILT_FIELDS } from '../lib/statementBuild';
 import StatementJudgments from './StatementJudgments';
+import EbitdaSourceSection from './EbitdaSourceSection';
 
 // Statement line items on the New Deal form. Whatever they are enough to
 // build fills the Borrower Profile fields above (src/lib/statementBuild.ts).
@@ -228,6 +229,8 @@ export default function StatementsPanel({ financials, state, inputs, onChange, o
           </div>
         </div>
       ))}
+
+      <EbitdaSourceSection financials={financials} build={build} onChange={onChange} />
 
       {build && (
         <div className="border-t border-gray-200 pt-4">

@@ -530,7 +530,8 @@ export function buildBorrowerInputs(
 
   function adjustedDerivation(): Derivation {
     const total = num(adjusted?.value) as number;
-    const addBacks = adjusted?.addBacks || [];
+    // A bridge line with no amount yet is still being typed. It does not count.
+    const addBacks = (adjusted?.addBacks || []).filter((a) => num(a.amount) !== null);
     const accepted = addBacks.filter((a) => a.decision === 'accepted');
     const rejected = addBacks.filter((a) => a.decision === 'rejected');
     const undecided = addBacks.filter((a) => a.decision !== 'accepted' && a.decision !== 'rejected');

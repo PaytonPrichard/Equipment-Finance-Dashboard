@@ -154,3 +154,23 @@ describe('judgments, treatment and the rules snapshot', () => {
     expect(pendingJudgments(statementState(typed, undefined))).toBe(0);
   });
 });
+
+describe('company EBITDA on the form', () => {
+  test('a stated figure alone starts the build and scores as stated', () => {
+    const inputs = { ...typed, financials: { fiscalYearEnd: '2025-12-31', lineItems: {}, statedEbitda: { value: 14 * M, label: 'EBITDA' } } };
+    const s = statementState(inputs, undefined);
+    expect(s.build!.ebitdaSource).toBe('stated');
+    expect(s.built.ebitda).toBe(14 * M);
+  });
+
+  test('a bridge line with no amount yet does not count', () => {
+    const inputs = {
+      ...incomeOnly,
+      financials: { ...incomeOnly.financials, ebitdaSource: 'adjusted' as const,
+        adjustedEbitda: { value: 18 * M, addBacks: [{ label: 'Stock comp', amount: 1 * M, decision: 'accepted' as const }, { label: '', amount: null as unknown as number, decision: null }] } },
+    };
+    const s = statementState(inputs, undefined);
+    expect(s.build!.inputs.ebitda).toBe(18 * M);
+    expect(s.build!.judgments.filter((j) => j.id.startsWith('addBack.')).length).toBe(1);
+  });
+});

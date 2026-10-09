@@ -233,3 +233,54 @@ describe('judgments on the statement build', () => {
     expect(onChange.mock.calls[0][0].financials.treatmentOverrides.floorplan).toMatchObject({ rule: 'in', reason: 'Credit agreement counts it as debt', by: 'J. Peter' });
   });
 });
+
+describe('company EBITDA and the add-back bridge', () => {
+  const M = 1_000_000;
+  const base = {
+    ...mod.INITIAL_INPUTS,
+    financials: {
+      fiscalYearEnd: '2025-12-31',
+      lineItems: { revenue: { value: 100 * M }, operatingIncome: { value: 10 * M }, depreciationAmortization: { value: 5 * M } },
+      adjustedEbitda: {
+        value: 19 * M,
+        label: 'Adjusted EBITDA',
+        addBacks: [
+          { label: 'Stock comp', amount: 1.5 * M, decision: 'accepted' },
+          { label: 'Restructuring', amount: 1.5 * M, decision: null },
+        ],
+      },
+    },
+  };
+  function setup(inputs) {
+    const onChange = jest.fn();
+    render(
+      <TutorialProvider userId={null}>
+      <DealInputForm inputs={inputs} onChange={onChange} schema={mod.FORM_SCHEMA} modules={getAvailableModules()}
+        activeModule="equipment_finance" onModuleChange={() => {}} pipelineDeals={[]} sofr={0.0389} />
+      </TutorialProvider>,
+    );
+    return { onChange };
+  }
+
+  test('the comparison splits the gap and prints the policy', () => {
+    setup(base);
+    const c = within(screen.getByTestId('comparison-adjusted'));
+    expect(c.getByText('Built EBITDA')).toBeInTheDocument();
+    expect(c.getByText('$4.0M')).toBeInTheDocument();                 // gap 19 - 15
+    expect(c.getByText('$1.0M, 6.7% of built')).toBeInTheDocument();  // unexplained 4 - 3 listed
+    expect(c.getByText('Caveat above 5%, your policy. Over it.')).toBeInTheDocument();
+    expect(screen.getByText('1 of 2 reviewed')).toBeInTheDocument();
+  });
+
+  test('accepting an add-back records the decision', () => {
+    const { onChange } = setup(base);
+    fireEvent.click(within(screen.getByTestId('addback-1')).getByRole('button', { name: 'Accept' }));
+    expect(onChange.mock.calls[0][0].financials.adjustedEbitda.addBacks[1].decision).toBe('accepted');
+  });
+
+  test('adding a bridge line starts it blank and undecided', () => {
+    const { onChange } = setup(base);
+    fireEvent.click(screen.getByText('Add a line'));
+    expect(onChange.mock.calls[0][0].financials.adjustedEbitda.addBacks[2]).toEqual({ label: '', amount: null, decision: null });
+  });
+});

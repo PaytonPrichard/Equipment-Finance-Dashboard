@@ -36,6 +36,18 @@ export const PRAIRIE_FINANCIALS = {
     currentMaturities: li(2400000, PRAIRIE_DOC, 3),
     floorplanPayable: li(48000000, PRAIRIE_DOC, 3),
   },
+  // The dealer's own figure, from its lender presentation. The bridge is
+  // left for the visitor to review: one line is the borrower's projection.
+  adjustedEbitda: {
+    value: 13400000,
+    label: 'Adjusted EBITDA',
+    source: { document: 'Lender presentation', page: 9 },
+    addBacks: [
+      { label: 'Stock-based compensation', amount: 600000, source: { document: 'Lender presentation', page: 9 }, decision: null },
+      { label: 'Dealer management system conversion', amount: 800000, source: { document: 'Lender presentation', page: 9 }, decision: null },
+      { label: 'Pro forma EBITDA of store acquired in November', amount: 500000, source: { document: 'Lender presentation', page: 9 }, decision: null },
+    ],
+  },
 };
 
 const HEARTLAND_DOC = 'FY2025 audited financials';

@@ -178,3 +178,13 @@
 - Real-deals report regenerated: module stress FCCR columns now reflect capex scaling on the new cases. No verdict moves: 5 match, 2 acceptable, 2 mismatch (CTOS, where Joel agrees the model is right, and H&E, the P1-21/P1-22 blind spot).
 
 **Backlog:** the build cannot say "floorplan counts as debt, interest amount not disclosed" (Rush). Marking floorplan present asks for the interest line. Rush maps with floorplan inside the cited debt total.
+
+## 2026-10-09: EBITDA build step 3, piece 3: company EBITDA and the add-back bridge (Workstream A)
+
+**What changed**
+- The statements panel has a "Company EBITDA" section. It takes a stated EBITDA and an Adjusted EBITDA, each with the company's own name for it and its source, plus the add-back bridge line by line. Each add-back is accepted or rejected. One left undecided is excluded and blocks Save until reviewed.
+- The comparison splits the gap to built EBITDA into listed add-backs, the firm's treatment rules, and unexplained, with the firm tolerance printed ("Caveat above 5%, your policy."). Which EBITDA scores is a judgment in the list.
+- A company figure alone is enough to start the build. It scores as stated. A bridge line with no amount yet is ignored.
+- Demo: Prairie Equipment Dealers carries the dealer's Adjusted EBITDA of $13.4M with a three-line bridge, one a pro forma acquisition, left for the visitor to review. The bridge explains the gap to built ($11.6M) within $100K.
+
+Step 3 is complete. Step 4 next: memo section "How the numbers were built", server rerun of the build, audit entries for overrides at save, and rescore with current firm rules.
