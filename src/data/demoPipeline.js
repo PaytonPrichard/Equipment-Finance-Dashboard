@@ -3,10 +3,27 @@
 // what shows on the kanban card matches what you see if you open the deal.
 
 import { calculateMetrics, calculateRiskScore } from '../modules/equipment-finance/scoring';
+import { applyStatementBuild } from '../lib/statementBuild';
+import { heartlandFinancials } from './demoStatements';
 
 const DEMO_ORG_ID = 'demo-org';
 const DEMO_USER_ID = 'demo-user';
 const SOFR_FALLBACK = 0.0425;
+
+// The analyst and firm behind the demo.
+//
+// These are not decoration. `full_name` sits in the app header on every
+// screen, and both names are printed on the committee memo: the firm in the
+// memo's masthead, and "Prepared by" plus the firm in its footer. "Demo
+// Analyst" of "Demo Capital Partners" on a credit memo reads as a toy, and
+// it is the first and last thing on screen in the product video.
+//
+// A fictional lender is the right match for an already fictional borrower,
+// and these are the same two names scripts/preview-memo.js uses, so the
+// memo looks the same however it was produced. Nothing is hidden by this:
+// the demo banner still says DEMO to anyone driving the live demo.
+export const DEMO_ANALYST_NAME = 'J. Peter';
+export const DEMO_ORG_NAME = 'Keystone Credit Partners';
 
 const DEAL_DEFS = [
   {
@@ -168,6 +185,8 @@ const DEAL_DEFS = [
     stage: 'Funded',
     daysAgo: 35,
     notes: 'Funded 3/24. First payment received on time. Performing as expected.',
+    // Built from the FY2025 statements, every judgment confirmed.
+    statements: true,
     inputs: {
       companyName: 'Heartland Foods Manufacturing Co.',
       yearsInBusiness: 31, annualRevenue: 72000000, ebitda: 11500000,
@@ -222,16 +241,21 @@ const DEAL_DEFS = [
 ];
 
 function buildDeal(def, index) {
-  const metrics = calculateMetrics(def.inputs, SOFR_FALLBACK);
-  const rs = calculateRiskScore(def.inputs, metrics);
   const updatedAt = new Date(Date.now() - def.daysAgo * 86400000).toISOString();
+  // A deal built from statements carries the built figures, so the card
+  // score matches what the form shows when the deal is opened.
+  const inputs = def.statements
+    ? applyStatementBuild({ ...def.inputs, financials: heartlandFinancials(DEMO_ANALYST_NAME, updatedAt) }, undefined)
+    : def.inputs;
+  const metrics = calculateMetrics(inputs, SOFR_FALLBACK);
+  const rs = calculateRiskScore(inputs, metrics);
   return {
     id: `demo-${index + 1}`,
     org_id: DEMO_ORG_ID,
     user_id: DEMO_USER_ID,
     name: def.name,
     stage: def.stage,
-    inputs: def.inputs,
+    inputs,
     score: rs.composite,
     notes: def.notes || '',
     created_at: updatedAt,
@@ -250,20 +274,6 @@ export function getInitialDemoPipeline() {
   return DEMO_DEALS.map((d) => ({ ...d }));
 }
 
-// The analyst and firm behind the demo.
-//
-// These are not decoration. `full_name` sits in the app header on every
-// screen, and both names are printed on the committee memo: the firm in the
-// memo's masthead, and "Prepared by" plus the firm in its footer. "Demo
-// Analyst" of "Demo Capital Partners" on a credit memo reads as a toy, and
-// it is the first and last thing on screen in the product video.
-//
-// A fictional lender is the right match for an already fictional borrower,
-// and these are the same two names scripts/preview-memo.js uses, so the
-// memo looks the same however it was produced. Nothing is hidden by this:
-// the demo banner still says DEMO to anyone driving the live demo.
-export const DEMO_ANALYST_NAME = 'J. Peter';
-export const DEMO_ORG_NAME = 'Keystone Credit Partners';
 
 export const DEMO_PROFILE = {
   id: DEMO_USER_ID,

@@ -1325,6 +1325,12 @@ function AuthenticatedApp({ profile, user }) {
                       >
                         Try a borderline deal (~50)
                       </button>
+                      <button
+                        onClick={() => loadExample(exampleDeals.find(d => d.id === 'statements'))}
+                        className="px-4 py-2.5 rounded-xl border border-gray-300 text-sm text-gray-700 font-medium hover:border-gray-400 transition-all"
+                      >
+                        Try a deal built from statements
+                      </button>
                     </div>
                   )}
                   {/* Recently Screened Deals */}

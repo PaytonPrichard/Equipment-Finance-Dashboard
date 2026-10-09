@@ -149,3 +149,13 @@
 **What Joel decided:** no "confirm all" button. One click per judgment, revisit if it feels heavy.
 
 **Not checked in the browser:** the disabled Save button itself (the demo deal needs every required field before Save shows). The panel, judgments and override flow were checked.
+
+## 2026-10-09: Demo shows statement-built deals (Workstream A)
+
+**What changed**
+- New Deal (demo only): a third example, "Try a deal built from statements". Prairie Equipment Dealers, a fictional dealer with floorplan. Revenue, EBITDA, debt, debt service and the cash-flow inputs build from cited line items. The 11 judgments are left for the visitor, so Save shows the "judgments to confirm" note. It screens FLAG 82: a 6.4% margin breaks in the combined severe case.
+- Demo pipeline: Heartland Foods (Funded) is now built from statements. The line items build its existing revenue, EBITDA and debt exactly. Every judgment is confirmed by the demo analyst, and firm rules are kept. PASS 94, same score as before.
+- `src/data/demoStatements.js`, tested in `demoStatements.test.js` so the demo numbers cannot drift from their builds.
+- Untouched: the Granite Ridge documents the product video uses, the tutorial example (still the strong deal), and the demo firm's Settings (Tranche default treatment rules).
+
+**What Joel asked:** keep the demo current with the changes as they land.
