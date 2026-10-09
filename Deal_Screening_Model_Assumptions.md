@@ -300,13 +300,13 @@ Recomputes DSCR, cash-flow DSCR and FCCR under each scenario. Every setting is a
 
 | Scenario | Default | Mechanics |
 |----------|---------|-----------|
-| Revenue decline | -10%, -20%, -30% | EBITDA falls by the same percentage. Margin held. |
+| Revenue decline | -10%, -20%, -30% | EBITDA and maintenance capex fall by the same percentage. Margin held. |
 | Margin compression | -200 bps | Same revenue, EBITDA lower by revenue x 2.00%. |
 | Rate shock | +200 bps | Added interest on floating-rate debt: the new AR or inventory revolver at full draw, plus the floating share of existing debt if entered. Equipment term deals are fixed at screening and are not shocked. If the floating share is blank, existing debt is not shocked and the table says so. |
 | Slower collections | 20 days | Working capital increase grows by revenue x 20 / 365. Moves cash-flow DSCR only; FCCR has no working-capital term. |
-| Combined severe | Revenue -20% and margin -200 bps | EBITDA = revenue x 0.80 x (margin - 2.00%). |
+| Combined severe | Revenue -20% and margin -200 bps | EBITDA = revenue x 0.80 x (margin - 2.00%). Maintenance capex x 0.80. |
 
-Cash taxes, maintenance capex and rent are held at base-case levels in every scenario. Lower earnings would lower taxes, so holding them is conservative. Slower collections is kept out of the combined case because a falling top line usually releases working capital, and stacking both would double-count.
+Maintenance capex moves with revenue: revenue -20% means capex -20%. The margin, rate and slower-collections scenarios keep revenue, so capex is unchanged. Cash taxes and rent are held at base-case levels in every scenario. Lower earnings would lower taxes, so holding them is conservative. Slower collections is kept out of the combined case because a falling top line usually releases working capital, and stacking both would double-count.
 
 **Verdict effect:** if cash-flow DSCR or FCCR falls below 1.0x in the combined severe case, the deal is flagged ("breaks under stress"), unless the base case already failed on that metric.
 

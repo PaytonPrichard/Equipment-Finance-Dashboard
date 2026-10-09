@@ -149,7 +149,8 @@ const pct = (n: number): string => `${Number.isInteger(n) ? n : n.toFixed(1)}%`;
 /**
  * Base-case cash-flow coverage plus the stress scenarios.
  *
- * Every scenario holds cash taxes, maintenance capex and rent constant.
+ * Maintenance capex moves with revenue: a borrower selling less runs its
+ * assets less and replaces fewer of them. Cash taxes and rent are held.
  * Taxes would fall with lower earnings, so holding them is conservative.
  */
 export function computeCashFlowAnalysis(
@@ -184,9 +185,10 @@ export function computeCashFlowAnalysis(
     e: number,
     ds: number,
     wc: number | null,
+    revenueFactor = 1,
   ): CashFlowScenario => ({
     key, kind, label, detail, ebitda: e, debtService: ds, workingCapitalIncrease: wc,
-    ...coverage(e, ds, { ...vals, wc }, cfComplete && wc != null, fccrComplete),
+    ...coverage(e, ds, { ...vals, capex: vals.capex != null ? vals.capex * revenueFactor : null, wc }, cfComplete && wc != null, fccrComplete),
   });
 
   const base = scenario('base', 'base', 'Base case', 'As entered', ebitda, debtService, vals.wc);
@@ -201,7 +203,7 @@ export function computeCashFlowAnalysis(
   ] as const;
   for (const [key, d] of declines) {
     if (!(d > 0)) continue;
-    scenarios.push(scenario(key, 'revenue', `Revenue -${pct(d)}`, 'EBITDA falls in line, margin held', ebitda * (1 - d / 100), debtService, vals.wc));
+    scenarios.push(scenario(key, 'revenue', `Revenue -${pct(d)}`, 'EBITDA and maintenance capex fall in line, margin held', ebitda * (1 - d / 100), debtService, vals.wc, 1 - d / 100));
   }
 
   // Margin compression on the same revenue.
@@ -247,10 +249,10 @@ export function computeCashFlowAnalysis(
   if ((cD > 0 || cBps > 0) && revenue > 0) {
     const stressedRevenue = revenue * (1 - cD / 100);
     const e = ebitda * (1 - cD / 100) - stressedRevenue * (cBps / 10000);
-    scenarios.push(scenario('combined', 'combined', 'Combined severe', `Revenue -${pct(cD)} and margin -${cBps} bps`, e, debtService, vals.wc));
+    scenarios.push(scenario('combined', 'combined', 'Combined severe', `Revenue -${pct(cD)} and margin -${cBps} bps`, e, debtService, vals.wc, 1 - cD / 100));
   }
 
-  assumptions.push('Cash taxes, maintenance capex and rent are held at base-case levels in every scenario.');
+  assumptions.push('Maintenance capex falls with revenue. Cash taxes and rent are held at base-case levels in every scenario.');
   if (metrics?.debtServiceEstimated) {
     assumptions.push('Existing debt service is estimated at 8% of existing debt, not reported.');
   }

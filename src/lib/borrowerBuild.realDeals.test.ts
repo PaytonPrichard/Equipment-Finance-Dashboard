@@ -21,8 +21,20 @@ function fig(fx: any, k: string): number {
   return v;
 }
 
+// Cash taxes, rent and working capital, the same for every case. The fixture
+// cites the working capital increase as a positive build. The app line keeps
+// the cash-flow statement's sign, so it goes in negated.
+function cashFlowLines(fx: any): Partial<Record<LineItemKey, number>> {
+  return {
+    incomeTaxesPaid: fig(fx, 'cashTaxes'),
+    rentExpense: fig(fx, 'leasePayments'),
+    workingCapitalChange: -fig(fx, 'workingCapitalIncrease'),
+  };
+}
+
 function financials(fx: any, values: Partial<Record<LineItemKey, number>>, judgments: Record<string, unknown> = {}): BorrowerFinancials {
-  const lineItems = Object.fromEntries(Object.entries(values).map(([k, v]) => [k, { value: v, origin: 'typed' }]));
+  const all = { ...cashFlowLines(fx), ...values };
+  const lineItems = Object.fromEntries(Object.entries(all).map(([k, v]) => [k, { value: v, origin: 'typed' }]));
   const f: BorrowerFinancials = { fiscalYearEnd: fx.fiscalYearEnd || 'fixture', lineItems, ebitdaSource: 'built' };
   // Confirm every proposal, then apply the case's own calls on top.
   const proposed = buildBorrowerInputs(f).judgments;
@@ -94,7 +106,18 @@ const CASES: Record<string, (fx: any) => BorrowerFinancials> = {
   }, { floorplanInterestInInterestPaid: false }),
 };
 
-const FIELDS = ['annualRevenue', 'ebitda', 'totalExistingDebt', 'actualAnnualDebtService', 'maintenanceCapex'] as const;
+const FIELDS = [
+  'annualRevenue', 'ebitda', 'totalExistingDebt', 'actualAnnualDebtService', 'maintenanceCapex',
+  'cashTaxes', 'leasePayments', 'workingCapitalIncrease',
+] as const;
+
+// Where the app differs from derive() on purpose (Joel, 2026-10-09): a
+// working capital release and a net tax refund count as 0, because neither
+// is repeatable cash for debt service. derive() keeps the negative figure.
+const FLOORED: Record<string, Partial<Record<(typeof FIELDS)[number], true>>> = {
+  'hertz-fy2025': { workingCapitalIncrease: true },        // -52M release
+  'titan-fy2026': { workingCapitalIncrease: true, cashTaxes: true }, // -18.4M release, -1.8M refund
+};
 
 describe.each(Object.keys(CASES))('%s builds the same inputs as derive()', (c) => {
   const fx = fixture(c);
@@ -106,7 +129,12 @@ describe.each(Object.keys(CASES))('%s builds the same inputs as derive()', (c) =
   });
 
   test.each(FIELDS)('%s', (field) => {
-    expect(r.inputs[field]).toBeCloseTo(want[field], 0);
+    if (FLOORED[c]?.[field]) {
+      expect(want[field]).toBeLessThan(0);
+      expect(r.inputs[field]).toBe(0);
+    } else {
+      expect(r.inputs[field]).toBeCloseTo(want[field], 0);
+    }
   });
 });
 

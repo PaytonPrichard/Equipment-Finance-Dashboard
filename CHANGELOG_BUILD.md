@@ -105,3 +105,14 @@
 - Analysts see firm rules read-only in Settings, and meet them on the New Deal screen in step 3.
 - Saved deals keep the rules they were built with. After a save, Settings says so. A "rescore every deal with current rules" action comes with the server rerun in step 4, for occasional use.
 - Per-deal overrides are audited when the deal is saved.
+
+## 2026-10-09: Maintenance capex scales with revenue in cash-flow stress (Workstream A)
+
+**What changed**
+- In the revenue-decline and combined severe scenarios, maintenance capex now falls by the same percentage as revenue. Margin, rate and slower-collections scenarios keep revenue, so capex is unchanged. Cash taxes and rent are still held. `src/utils/cashFlowMetrics.ts`, assumption line, and `Deal_Screening_Model_Assumptions.md` section 7 updated.
+- Real-deals run: H&E moves FLAG to PASS (combined severe cash-flow DSCR 0.43x to 1.46x). It flagged only because capex was held at $423M while revenue fell. DXP still FLAGs (0.91x to 0.94x). Hertz and Titan do not move. H&E is now a mismatch against Joel's FLAG expectation.
+- EBITDA build regression extended to cash taxes, rent and working capital on all four fixtures. Matches derive() except where the build floors a working-capital release (Hertz, Titan) or a net tax refund (Titan) at 0, by Joel's rule.
+
+**What Joel decided** (relayed through Workstream B): capex scales with revenue in every revenue scenario, all sectors.
+
+**Open:** the module stress tables (EBITDA -10/-20/-30% per module) still hold capex in their FCCR column. Whether those declines are revenue or margin declines decides if capex should scale there too.

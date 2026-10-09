@@ -58,14 +58,15 @@ describe('stress scenarios at default settings', () => {
       'base', 'revenue_mild', 'revenue_moderate', 'revenue_severe', 'margin', 'rate', 'working_capital', 'combined',
     ]);
   });
-  test('revenue -20% at constant margin: EBITDA 6.4M, FCF 3.4M', () => {
+  // Maintenance capex falls with revenue: 1.5M x 0.80 = 1.2M.
+  test('revenue -20% at constant margin: EBITDA 6.4M, capex 1.2M, FCF 3.7M', () => {
     expect(s.revenue_moderate.ebitda).toBeCloseTo(6_400_000, 0);
-    expect(s.revenue_moderate.cashFlowDscr).toBeCloseTo(3.4 / 3, 4);
-    expect(s.revenue_moderate.fccr).toBeCloseTo(4.3 / 3.4, 4);
+    expect(s.revenue_moderate.cashFlowDscr).toBeCloseTo(3.7 / 3, 4);   // 6.4 - 1.0 - 1.2 - 0.5
+    expect(s.revenue_moderate.fccr).toBeCloseTo(4.6 / 3.4, 4);         // (6.4 + 0.4 - 1.2 - 1.0) / 3.4
   });
-  test('margin -200 bps takes 1.0M off EBITDA on 50M of revenue', () => {
+  test('margin -200 bps takes 1.0M off EBITDA on 50M of revenue, capex unchanged', () => {
     expect(s.margin.ebitda).toBeCloseTo(7_000_000, 0);
-    expect(s.margin.cashFlowDscr).toBeCloseTo(4 / 3, 4);
+    expect(s.margin.cashFlowDscr).toBeCloseTo(4 / 3, 4);              // 7.0 - 1.0 - 1.5 - 0.5
   });
   test('rate +200 bps on 50% of 20M existing debt adds 0.2M of interest', () => {
     expect(s.rate.debtService).toBeCloseTo(3_200_000, 0);
@@ -79,10 +80,10 @@ describe('stress scenarios at default settings', () => {
     // FCCR has no working-capital term, so this scenario does not move it.
     expect(s.working_capital.fccr).toBeCloseTo(s.base.fccr, 10);
   });
-  test('combined severe: 40M revenue at 14% margin = 5.6M EBITDA', () => {
+  test('combined severe: 40M revenue at 14% margin = 5.6M EBITDA, capex 1.2M', () => {
     expect(s.combined.ebitda).toBeCloseTo(5_600_000, 0);
-    expect(s.combined.cashFlowDscr).toBeCloseTo(2.6 / 3, 4);
-    expect(s.combined.fccr).toBeCloseTo(3.5 / 3.4, 4);
+    expect(s.combined.cashFlowDscr).toBeCloseTo(2.9 / 3, 4);           // 5.6 - 1.0 - 1.2 - 0.5
+    expect(s.combined.fccr).toBeCloseTo(3.8 / 3.4, 4);                 // (5.6 + 0.4 - 1.2 - 1.0) / 3.4
   });
 });
 
@@ -154,11 +155,11 @@ describe('verdict', () => {
     const r = run(inputs);
     expect(r.verdict).toBe('flag');
     expect(r.reasons.map((x) => x.text)).toEqual([
-      'Breaks under stress: cash-flow DSCR 0.87x in the combined severe case (revenue -20% and margin -200 bps)',
+      'Breaks under stress: cash-flow DSCR 0.97x in the combined severe case (revenue -20% and margin -200 bps)',
     ]);
   });
   test('passes when the severe case holds', () => {
-    // Working capital released instead of consumed: FCF 6.0M, severe 3.6M / 3.0M = 1.20x
+    // Working capital released instead of consumed: severe 5.6 - 1.0 - 1.2 + 0.5 = 3.9M / 3.0M = 1.30x
     const r = run({ ...inputs, workingCapitalIncrease: -500_000 });
     expect(r.verdict).toBe('pass');
   });
