@@ -88,7 +88,8 @@ export default function TreatmentRulesCard({ rules: savedRaw, editable, onSave }
                       checked={current === opt}
                       disabled={!editable}
                       onChange={() => update({ [row]: opt })}
-                      className="mt-0.5"
+                      className="mt-1"
+                      style={{ accentColor: '#111827' }}
                     />
                     <span>
                       <span className="text-[12px] text-gray-900 font-medium">{meta.options[opt].label}</span>
