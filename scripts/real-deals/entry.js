@@ -3,3 +3,4 @@
 export * as equipmentFinance from '../../src/modules/equipment-finance/scoring.ts';
 export { DEFAULT_SOFR } from '../../src/modules/equipment-finance/constants.ts';
 export { evaluateScreening, DEFAULT_CRITERIA } from '../../src/lib/screeningCriteria.ts';
+export { computeCashFlowAnalysis } from '../../src/utils/cashFlowMetrics.ts';

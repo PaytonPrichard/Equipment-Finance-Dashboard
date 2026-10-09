@@ -39,7 +39,7 @@ const x = (n, d = 2) => (n == null || !Number.isFinite(n) ? 'n/a' : `${n.toFixed
 // Leverage is null when EBITDA is not positive (NM). FCCR is null when its inputs are missing.
 const lev = (n) => (n == null ? 'NM' : x(n, 1));
 const fccrText = (n) => (n == null ? 'not provided' : x(n));
-const MONEY_FIELDS = new Set(['annualRevenue', 'ebitda', 'totalExistingDebt', 'actualAnnualDebtService', 'equipmentCost', 'downPayment', 'maintenanceCapex']);
+const MONEY_FIELDS = new Set(['annualRevenue', 'ebitda', 'totalExistingDebt', 'actualAnnualDebtService', 'equipmentCost', 'downPayment', 'maintenanceCapex', 'cashTaxes', 'workingCapitalIncrease', 'leasePayments']);
 const fmtField = (k, v) => (v == null ? 'n/a' : MONEY_FIELDS.has(k) ? money(v) : String(v));
 
 // An expectation can name a primary verdict and, honestly, others the analyst
@@ -64,6 +64,8 @@ function runCase(fx, S) {
   const screening = S.evaluateScreening(S.DEFAULT_CRITERIA, metrics, risk, inputs, 'equipment_finance');
   const stress = ef.runStressTest(inputs, S.DEFAULT_SOFR);
   const view = whatWouldChange(inputs, metrics, risk, factors, S.DEFAULT_CRITERIA);
+  // Same analysis the screening's cash-flow floors use (main, Workstream A).
+  const cf = S.computeCashFlowAnalysis(inputs, metrics, S.DEFAULT_CRITERIA);
 
   // Fallbacks the module applied on its own. Same weight as written caveats.
   const warnings = [...caveats];
@@ -78,7 +80,7 @@ function runCase(fx, S) {
 
   const actual = screening.verdict;
   const expected = String(fx.expected.verdict).toLowerCase();
-  return { fx, inputs, derivations, blockers, caveats: warnings, metrics, risk, factors, screening, stress, view, actual, expected, match: actual === expected, outcome: outcomeOf(actual, fx.expected) };
+  return { fx, inputs, derivations, blockers, caveats: warnings, metrics, risk, factors, screening, stress, view, cf, criteria: S.DEFAULT_CRITERIA, actual, expected, match: actual === expected, outcome: outcomeOf(actual, fx.expected) };
 }
 
 function citeLine(key, fig) {
@@ -163,6 +165,12 @@ function caseSection(r) {
   }
   out.push(`- Collateral: equipment value ${money(m.equipmentValue)} against ${money(m.netFinanced)} financed (LTV ${(m.ltv * 100).toFixed(0)}%).`);
   out.push('- Trend: see the analyst sheet for prior-year revenue and pre-tax income.');
+
+  out.push('', '**Cash-flow coverage**', '');
+  out.push(`Base: free cash flow for debt service ${money(r.cf.base.freeCashFlow)}, cash-flow DSCR ${fccrText(r.cf.base.cashFlowDscr)} (floor ${r.criteria.minCashFlowDscr}x), FCCR ${fccrText(r.cf.base.fccr)} (floor ${r.criteria.minFccr}x).`);
+  out.push('', '| Scenario | What moved | EBITDA | Cash-flow DSCR | FCCR |', '|---|---|---|---|---|');
+  for (const s of r.cf.scenarios) out.push(`| ${s.label} | ${s.detail} | ${money(s.ebitda)} | ${fccrText(s.cashFlowDscr)} | ${fccrText(s.fccr)} |`);
+  for (const a of r.cf.assumptions || []) out.push(`- ${a}`);
 
   out.push('', '**EBITDA stress**', '', '| Scenario | EBITDA | DSCR | Leverage | FCCR | Score |', '|---|---|---|---|---|---|');
   for (const s of r.stress) out.push(`| ${s.label} | ${money(s.ebitda)} | ${x(s.dscr)} | ${lev(s.leverage)} | ${fccrText(s.fccr)} | ${s.score} |`);

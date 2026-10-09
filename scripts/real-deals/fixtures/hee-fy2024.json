@@ -10,7 +10,7 @@
     "form": "10-K",
     "fiscalYearEnd": "2024-12-31",
     "companyFactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001339605.json",
-    "fetchedAt": "2026-10-07"
+    "fetchedAt": "2026-10-09"
   },
   "context": "Equipment rental. Acquired by Herc Holdings in 2025, so FY2024 is the last 10-K. Treat this as a screen dated February 2025.",
   "figures": {
@@ -195,6 +195,51 @@
         }
       ],
       "value": 16413000
+    },
+    "cashTaxes": {
+      "tags": [
+        "us-gaap:IncomeTaxesPaidNet"
+      ],
+      "sources": [
+        {
+          "tag": "us-gaap:IncomeTaxesPaidNet",
+          "val": 11352000,
+          "start": "2024-01-01",
+          "end": "2024-12-31",
+          "accn": "0000950170-25-024867",
+          "form": "10-K",
+          "filed": "2025-02-21",
+          "url": "https://www.sec.gov/Archives/edgar/data/1339605/000095017025024867/"
+        }
+      ],
+      "value": 11352000
+    },
+    "leasePayments": {
+      "tags": [
+        "us-gaap:OperatingLeasePayments"
+      ],
+      "note": "Cash paid on operating leases.",
+      "sources": [
+        {
+          "tag": "us-gaap:OperatingLeasePayments",
+          "val": 21272000,
+          "start": "2024-01-01",
+          "end": "2024-12-31",
+          "accn": "0000950170-25-024867",
+          "form": "10-K",
+          "filed": "2025-02-21",
+          "url": "https://www.sec.gov/Archives/edgar/data/1339605/000095017025024867/"
+        }
+      ],
+      "value": 21272000
+    },
+    "workingCapitalIncrease": {
+      "manual": {
+        "value": 36870000,
+        "cite": "Cash-flow statement (https://www.sec.gov/Archives/edgar/data/1339605/000095017025024867/R7.htm), changes in operating assets and liabilities: receivables (1,459), inventories 11,910, prepaid (2,460), accounts payable (42,331), manufacturer flooring plans (2,708), accrued and other 178. Sum (36,870), so working capital absorbed $36.9M.",
+        "readBy": "Claude 2026-10-09, Joel to verify"
+      },
+      "note": "Accounts payable likely includes rental fleet purchases in transit, so part of this is fleet timing, not trade working capital."
     }
   },
   "assumptions": {
@@ -244,7 +289,7 @@
     "reason": "Coverage is strong, but pre-tax income fell 27%, all $1.45B of debt matures in 2028 inside the loan term, and a change of control was pending. The change of control is a flag on its own.",
     "writtenOn": "2026-10-09"
   },
-  "discussion": "Claude's read, confirmed by Joel 2026-10-09. Mismatch. The model is wrong, not the expectation. Tranche PASSes at 84 because it cannot see the two things that drive Joel's FLAG: all $1.45B of debt maturing in FY2028, inside the loan term (AUDIT P1-21), and the pending change of control (AUDIT P1-22). The earnings point is weaker than it looked: pre-tax income fell 27%, but EBITDA was flat ($665M in 2023, $663M in 2024, from the prior-year columns of R4 and R7). The drop came from depreciation and interest.",
+  "discussion": "Claude's read, confirmed by Joel 2026-10-09. Mismatch. The model is wrong, not the expectation. Tranche PASSes at 84 because it cannot see the two things that drive Joel's FLAG: all $1.45B of debt maturing in FY2028, inside the loan term (AUDIT P1-21), and the pending change of control (AUDIT P1-22). The earnings point is weaker than it looked: pre-tax income fell 27%, but EBITDA was flat ($665M in 2023, $663M in 2024, from the prior-year columns of R4 and R7). The drop came from depreciation and interest. | Update 2026-10-09, Claude's read, Joel to confirm: With cash taxes, rent and working capital added, Tranche now FLAGs (match), but not for Joel's reasons. The flag comes from main's combined severe cash-flow stress (cash-flow DSCR 0.43x), which holds maintenance capex at the $423M depreciation estimate while revenue falls 20%. A rental company would cut fleet spend in a downturn, so this is the conservative end. Right verdict, different reason: P1-21 and P1-22 are still needed for Tranche to see what Joel saw.",
   "builds": {
     "maintenanceCapex": {
       "terms": [
@@ -258,6 +303,7 @@
   },
   "caveats": [
     "TIMING: last 10-K before the 2025 Herc acquisition. Screen is as of February 2025.",
-    "ASSUMPTION, rating: H&E's February 2025 rating could not be verified. Weak is a conservative assumption. Adequate would lower the spread by 200 bps, from +200 to 0."
+    "ASSUMPTION, rating: H&E's February 2025 rating could not be verified. Weak is a conservative assumption. Adequate would lower the spread by 200 bps, from +200 to 0.",
+    "JUDGMENT, working capital: the $42.3M fall in accounts payable likely includes rental fleet purchase timing. Working capital absorbed $36.9M; without the payables line it released $5.5M."
   ]
 }

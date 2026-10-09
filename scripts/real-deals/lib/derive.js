@@ -118,6 +118,15 @@ function derive(fx) {
   if (actualAnnualDebtService != null) inputs.actualAnnualDebtService = actualAnnualDebtService;
   if (maintenanceCapex != null) inputs.maintenanceCapex = maintenanceCapex;
 
+  // Cash-flow inputs for main's cash-flow DSCR and FCCR. Optional: when one
+  // is missing, the screening says so in a note and the metric reads
+  // "not provided". It is never filled in.
+  for (const key of ['cashTaxes', 'workingCapitalIncrease', 'leasePayments']) {
+    const v = fig(key);
+    derivations.push({ field: key, value: v, formula: key });
+    if (v != null) inputs[key] = v;
+  }
+
   return { inputs, derivations, blockers, caveats: [...caveats, ...(fx.caveats || [])] };
 }
 

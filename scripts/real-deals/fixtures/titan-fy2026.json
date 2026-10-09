@@ -10,7 +10,7 @@
     "form": "10-K",
     "fiscalYearEnd": "2026-01-31",
     "companyFactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001409171.json",
-    "fetchedAt": "2026-10-07"
+    "fetchedAt": "2026-10-09"
   },
   "context": "CNH equipment dealer (agriculture, construction). Net loss in FY2026 on an inventory reduction push.",
   "figures": {
@@ -319,6 +319,52 @@
         }
       ],
       "value": 28164000
+    },
+    "cashTaxes": {
+      "tags": [
+        "us-gaap:IncomeTaxesPaidNet"
+      ],
+      "note": "Negative: a net refund of $1.8M.",
+      "sources": [
+        {
+          "tag": "us-gaap:IncomeTaxesPaidNet",
+          "val": -1849000,
+          "start": "2025-02-01",
+          "end": "2026-01-31",
+          "accn": "0001628280-26-022376",
+          "form": "10-K",
+          "filed": "2026-03-31",
+          "url": "https://www.sec.gov/Archives/edgar/data/1409171/000162828026022376/"
+        }
+      ],
+      "value": -1849000
+    },
+    "leasePayments": {
+      "tags": [
+        "us-gaap:OperatingLeasePayments"
+      ],
+      "note": "Cash paid on operating leases.",
+      "sources": [
+        {
+          "tag": "us-gaap:OperatingLeasePayments",
+          "val": 4992000,
+          "start": "2025-02-01",
+          "end": "2026-01-31",
+          "accn": "0001628280-26-022376",
+          "form": "10-K",
+          "filed": "2026-03-31",
+          "url": "https://www.sec.gov/Archives/edgar/data/1409171/000162828026022376/"
+        }
+      ],
+      "value": 4992000
+    },
+    "workingCapitalIncrease": {
+      "manual": {
+        "value": -18377000,
+        "cite": "Cash-flow statement (https://www.sec.gov/Archives/edgar/data/1409171/000162828026022376/R7.htm): receivables (499), prepaid 6,169, inventories 235,731, manufacturer floorplan (99,900), deferred revenue (10,868), payables and accrued 14,561, plus non-manufacturer floorplan (126,817) from financing activities. Sum 18,377, so working capital released $18.4M.",
+        "readBy": "Claude 2026-10-09, Joel to verify"
+      },
+      "note": "Both floorplan lines are included under the floorplan convention: floorplan finances inventory, so the inventory sell-down and the floorplan paydown net against each other."
     }
   },
   "assumptions": {
@@ -415,6 +461,8 @@
   "caveats": [
     "JUDGMENT, floorplan: treated as inventory financing. Floorplan interest is deducted in EBITDA and the $553.8M floorplan payable is left out of debt. This follows auto-dealer credit convention, not verified against Titan's own credit agreement. Including floorplan instead: EBITDA $30.9M, debt $783.0M.",
     "ESTIMATE, debt service: uses non-floorplan interest expense ($19.0M), not cash paid. Cash interest is reported only in total.",
-    "RATING: treated as Not Rated (+100 bps) because S&P shows no rating. Moody's was not checked. If Titan is rated B or below somewhere, the input becomes Weak (+200 bps)."
+    "RATING: treated as Not Rated (+100 bps) because S&P shows no rating. Moody's was not checked. If Titan is rated B or below somewhere, the input becomes Weak (+200 bps).",
+    "JUDGMENT, working capital: includes both floorplan paydowns ($226.7M), consistent with treating floorplan as inventory financing. Leaving out the non-manufacturer floorplan line (it sits in financing activities) would show a $145.2M cash release that actually went to floorplan lenders. Either way the release is one-off, from shrinking inventory, and not repeatable.",
+    "NOTE, cash taxes: a net refund of $1.8M, which adds to cash flow this year. Not a recurring source."
   ]
 }

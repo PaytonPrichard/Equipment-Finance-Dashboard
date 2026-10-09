@@ -45,7 +45,10 @@
     "loanTerm": 36,
     "essentialUse": true,
     "actualAnnualDebtService": 747000000,
-    "maintenanceCapex": 95000000
+    "maintenanceCapex": 95000000,
+    "cashTaxes": 80000000,
+    "workingCapitalIncrease": -52000000,
+    "leasePayments": 655000000
   },
   "derivations": [
     {
@@ -77,6 +80,21 @@
       "field": "maintenanceCapex",
       "value": 95000000,
       "formula": "nonVehicleDepreciation"
+    },
+    {
+      "field": "cashTaxes",
+      "value": 80000000,
+      "formula": "cashTaxes"
+    },
+    {
+      "field": "workingCapitalIncrease",
+      "value": -52000000,
+      "formula": "workingCapitalIncrease"
+    },
+    {
+      "field": "leasePayments",
+      "value": 655000000,
+      "formula": "leasePayments"
     }
   ],
   "caveats": [
@@ -84,7 +102,8 @@
     "JUDGMENT, EBITDA definition: GAAP build used (pre-tax -830 + non-vehicle interest 469 + non-vehicle D&A 117 = -$244M). Company-reported Adjusted EBITDA in the segment note (https://www.sec.gov/Archives/edgar/data/1657853/000165785326000008/R114.htm) is -$48M for the two segments combined and -$291M for Corporate. It adds back items management treats as one-off. All three readings are negative, so the direction of the verdict does not depend on the choice.",
     "JUDGMENT, interest: statement of operations shows non-vehicle interest of $469M. The segment note shows \"non-vehicle debt interest, net\" of $498M. Different measures. $469M used.",
     "SYNTHETIC STRUCTURE: Hertz does not fund its fleet with single-lender equipment finance. The deal terms are hypothetical and test the corporate credit read, not a realistic structure.",
-    "RATING TIMING: issuer rating at the 10-K filing date was B- or B (date of the B to B- cut unconfirmed). Both map to Weak. The CCC+ downgrade on 2026-08-12 is after the screen date and not used."
+    "RATING TIMING: issuer rating at the 10-K filing date was B- or B (date of the B to B- cut unconfirmed). Both map to Weak. The CCC+ downgrade on 2026-08-12 is after the screen date and not used.",
+    "JUDGMENT, cash-flow inputs: corporate-level working capital and rent are approximations. Accrued liabilities may include vehicle-related items, and variable airport concession rent ($274M) is left out of rent. EBITDA is negative, so the verdict does not depend on these."
   ],
   "blockers": []
 }

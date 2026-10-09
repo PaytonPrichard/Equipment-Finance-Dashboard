@@ -29,7 +29,10 @@
     "loanTerm": 60,
     "essentialUse": true,
     "actualAnnualDebtService": 69938000,
-    "maintenanceCapex": 10372000
+    "maintenanceCapex": 10372000,
+    "cashTaxes": 36399000,
+    "workingCapitalIncrease": 27790000,
+    "leasePayments": 22658000
   },
   "derivations": [
     {
@@ -61,6 +64,21 @@
       "field": "maintenanceCapex",
       "value": 10372000,
       "formula": "depreciation"
+    },
+    {
+      "field": "cashTaxes",
+      "value": 36399000,
+      "formula": "cashTaxes"
+    },
+    {
+      "field": "workingCapitalIncrease",
+      "value": 27790000,
+      "formula": "workingCapitalIncrease"
+    },
+    {
+      "field": "leasePayments",
+      "value": 22658000,
+      "formula": "leasePayments"
     }
   ],
   "caveats": [
