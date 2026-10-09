@@ -193,6 +193,10 @@ export interface EbitdaComparison {
   built: number;
   company: number;
   gap: number;
+  /** Add-backs the company lists in its bridge. */
+  explainedByAddBacks: number;
+  /** Difference caused by the firm's treatment rules, not by the company. */
+  explainedByTreatment: number;
   explained: number;
   unexplained: number;
   /** Unexplained as a share of built EBITDA. Null when built EBITDA is 0. */
@@ -449,12 +453,48 @@ export function buildBorrowerInputs(
       sourceOptions.length ? sourceOptions : ['built'], (v) => `${v} EBITDA scores`);
   }
 
+  // A company figure follows the company's definition. For each treatment
+  // row that applies, the analyst says whether the figure is before or after
+  // that item. Where it differs from this deal's treatment, Tranche moves it
+  // onto the treatment basis, so EBITDA pairs with debt and debt service
+  // whichever source scores.
+  type BasisRow = { row: TreatmentRow; item: string; matches: boolean; adj: Term[]; missing: string[] };
+  function companyBasis(fig: 'adjusted' | 'stated'): BasisRow[] {
+    const rows: BasisRow[] = [];
+    const add = (row: TreatmentRow, item: string, wantAfter: boolean, keys: LineItemKey[]) => {
+      const after = judge(`companyBasis.${fig}.${row}`, `${fig === 'adjusted' ? 'Adjusted' : 'Stated'} EBITDA is before or after ${item}`,
+        wantAfter, [true, false], (v) => `company ${fig} EBITDA is ${v ? 'after' : 'before'} ${item}`);
+      const matches = after === wantAfter;
+      const missing = matches ? [] : keys.filter((k) => !has(k)).map((k) => `${LINE_ITEM_LABELS[k]} is missing. Needed to put company EBITDA on this deal's treatment.`);
+      // Company before the item, treatment after: deduct it. And the reverse.
+      const sign: '+' | '-' = wantAfter ? '-' : '+';
+      const adj = matches || missing.length ? [] : keys.map((k) => ({ ...term(sign, k), label: `${LINE_ITEM_LABELS[k]} (treatment)` }));
+      rows.push({ row, item, matches, adj, missing });
+    };
+    if (floorplanPresent) add('floorplan', 'floorplan interest', treatment.floorplan === 'out', ['floorplanInterest']);
+    if (fleetPresent) add('captiveFleet', 'vehicle depreciation and interest', treatment.captiveFleet === 'corporate', ['vehicleDepreciation', 'vehicleInterest']);
+    if (financeLeasesPresent) add('financeLeases', 'finance lease cost', treatment.financeLeases === 'out', ['financeLeaseAmortization', 'financeLeaseInterest']);
+    if (positive('rentExpense') || treatment.operatingLeases === 'in') add('operatingLeases', 'rent', treatment.operatingLeases === 'out', ['rentExpense']);
+    return rows;
+  }
+  const basis: Partial<Record<'adjusted' | 'stated', BasisRow[]>> = {};
+  if (hasAdjusted) basis.adjusted = companyBasis('adjusted');
+  if (hasStated) basis.stated = companyBasis('stated');
+  const onTreatmentBasis = (d: Derivation, rows: BasisRow[]): Derivation => {
+    rows.forEach((r) => errors.push(...r.missing));
+    const blocked = rows.some((r) => r.missing.length);
+    const adj = rows.flatMap((r) => r.adj);
+    if (!adj.length && !blocked) return d;
+    const terms = [...d.terms, ...adj];
+    return { ...d, value: blocked ? null : sum(terms), terms, formula: formulaOf(terms), notes: [...d.notes, 'Moved onto this deal\'s treatment basis.'] };
+  };
+
   let ebitdaDerivation: Derivation;
   if (ebitdaSource === 'built') {
     ebitdaDerivation = built.derivation;
     errors.push(...built.missing);
   } else if (ebitdaSource === 'adjusted') {
-    ebitdaDerivation = adjustedDerivation();
+    ebitdaDerivation = onTreatmentBasis(adjustedDerivation(), basis.adjusted || []);
   } else {
     const v = num(stated?.value);
     ebitdaDerivation = {
@@ -464,6 +504,7 @@ export function buildBorrowerInputs(
       terms: v === null ? [] : [{ sign: '+', label: stated?.label || 'EBITDA, as stated', value: v, source: stated?.source }],
       notes: [],
     };
+    ebitdaDerivation = onTreatmentBasis(ebitdaDerivation, basis.stated || []);
     caveats.push('EBITDA is stated, not built from statements. The definition is the company\'s.');
   }
   if (ebitdaSource !== 'built' && built.missing.length) {
@@ -509,12 +550,19 @@ export function buildBorrowerInputs(
   const comparisons: EbitdaComparison[] = [];
   if (builtOk) {
     const b = built.derivation.value as number;
-    const compare = (against: 'adjusted' | 'stated', company: number, explained: number, companyLabel: string) => {
+    const compare = (against: 'adjusted' | 'stated', company: number, explainedByAddBacks: number, companyLabel: string) => {
+      // Where the company's basis differs from this deal's treatment, that
+      // part of the gap is the firm's policy, not the company's bridge.
+      // Built = company + treatment adjustment - add-backs, so the treatment
+      // explains minus the adjustment.
+      const rows = basis[against] || [];
+      const explainedByTreatment = rows.some((r) => r.missing.length) ? 0 : -sum(rows.flatMap((r) => r.adj));
+      const explained = explainedByAddBacks + explainedByTreatment;
       const gap = company - b;
       const unexplained = gap - explained;
       const unexplainedPct = b === 0 ? null : Math.abs(unexplained) / Math.abs(b);
       const overTolerance = unexplainedPct === null ? unexplained !== 0 : unexplainedPct > treatment.ebitdaGapTolerance;
-      comparisons.push({ against, companyLabel, built: b, company, gap, explained, unexplained, unexplainedPct, tolerance: treatment.ebitdaGapTolerance, overTolerance });
+      comparisons.push({ against, companyLabel, built: b, company, gap, explainedByAddBacks, explainedByTreatment, explained, unexplained, unexplainedPct, tolerance: treatment.ebitdaGapTolerance, overTolerance });
       if (overTolerance) {
         const pct = unexplainedPct === null ? '' : `, ${(unexplainedPct * 100).toFixed(1)}% of built`;
         caveats.push(`${companyLabel} is ${usd(company)} against built ${usd(b)}. Unexplained ${usd(unexplained)}${pct}. Caveat above ${(treatment.ebitdaGapTolerance * 100).toFixed(0)}%, your policy.`);
@@ -575,26 +623,44 @@ export function buildBorrowerInputs(
   if (dsNeed('interestPaid', 'debt service')) dsTerms.push(term('+', 'interestPaid'));
   if (dsNeed('currentMaturities', 'debt service')) dsTerms.push(term('+', 'currentMaturities'));
 
+  // Balance sheets often fold lease, fleet or floorplan principal into the
+  // current maturities line. The analyst says what the line holds, and
+  // Tranche adds or removes principal so it matches the debt counted above.
+  const cmIncludes = (what: string, id: string) => judge(`currentMaturitiesInclude.${id}`,
+    `Current maturities include ${what}`, false, [false, true],
+    (v) => `current maturities ${v ? 'include' : 'exclude'} ${what}`);
+  const cmLeases = financeLeasesPresent ? cmIncludes('finance leases', 'financeLeases') : false;
+  const cmVehicle = fleetPresent ? cmIncludes('vehicle debt', 'vehicleDebt') : false;
+  const cmFloorplan = floorplanPresent ? cmIncludes('floorplan', 'floorplan') : false;
+
   if (floorplanPresent) {
     const why = 'debt service with floorplan';
+    // Floorplan is repaid as units sell, never scheduled principal, under either treatment.
+    if (cmFloorplan && dsNeed('floorplanPayable', 'debt service, to take floorplan out of current maturities')) dsTerms.push(term('-', 'floorplanPayable'));
     if (treatment.floorplan === 'out' && floorplanInPaid && dsNeed('floorplanInterest', why)) dsTerms.push(term('-', 'floorplanInterest'));
     if (treatment.floorplan === 'in' && !floorplanInPaid && dsNeed('floorplanInterest', why)) dsTerms.push(term('+', 'floorplanInterest'));
     if (treatment.floorplan === 'in') dsNotes.push('Floorplan counts for interest only. It is repaid as units sell, not on a schedule.');
   }
   if (fleetPresent) {
-    if (treatment.captiveFleet === 'corporate' && vehicleInPaid && dsNeed('vehicleInterest', 'debt service with captive fleet at the corporate level')) dsTerms.push(term('-', 'vehicleInterest'));
-    if (treatment.captiveFleet === 'consolidated') {
+    if (treatment.captiveFleet === 'corporate') {
+      if (vehicleInPaid && dsNeed('vehicleInterest', 'debt service with captive fleet at the corporate level')) dsTerms.push(term('-', 'vehicleInterest'));
+      if (cmVehicle && dsNeed('currentVehicleDebtMaturities', 'debt service, to take vehicle debt out of current maturities')) dsTerms.push(term('-', 'currentVehicleDebtMaturities'));
+    } else {
       if (!vehicleInPaid && dsNeed('vehicleInterest', 'debt service with captive fleet consolidated')) dsTerms.push(term('+', 'vehicleInterest'));
-      if (dsNeed('currentVehicleDebtMaturities', 'debt service with captive fleet consolidated')) dsTerms.push(term('+', 'currentVehicleDebtMaturities'));
+      if (!cmVehicle && dsNeed('currentVehicleDebtMaturities', 'debt service with captive fleet consolidated')) dsTerms.push(term('+', 'currentVehicleDebtMaturities'));
     }
   }
   if (financeLeasesPresent) {
     if (treatment.financeLeases === 'in') {
-      if (has('currentFinanceLeaseLiabilities')) dsTerms.push(term('+', 'currentFinanceLeaseLiabilities'));
+      if (cmLeases) dsNotes.push('Lease principal already inside current maturities.');
+      else if (has('currentFinanceLeaseLiabilities')) dsTerms.push(term('+', 'currentFinanceLeaseLiabilities'));
       else caveats.push('Current finance lease liabilities not provided. Debt service leaves out lease principal and is understated.');
-    } else if (dsNeed('financeLeaseInterest', 'debt service with finance leases out')) {
+    } else {
       // ASC 842 puts finance lease interest inside interest paid.
-      dsTerms.push(term('-', 'financeLeaseInterest'));
+      if (dsNeed('financeLeaseInterest', 'debt service with finance leases out')) dsTerms.push(term('-', 'financeLeaseInterest'));
+      if (cmLeases && dsNeed('currentFinanceLeaseLiabilities', 'debt service, to take lease principal out of current maturities')) {
+        dsTerms.push(term('-', 'currentFinanceLeaseLiabilities'));
+      }
     }
   }
   if (treatment.operatingLeases === 'in' && dsNeed('rentExpense', 'debt service with operating leases in')) {
@@ -634,8 +700,11 @@ export function buildBorrowerInputs(
       caveats.push('ESTIMATE: total capex used as maintenance capex. An upper bound, includes growth capex.');
       return { value: line('capitalExpenditures'), label: 'Maintenance capex, estimate (total capex, upper bound)', formula: LINE_ITEM_LABELS.capitalExpenditures, terms: [term('+', 'capitalExpenditures')], notes: [], estimate: true };
     }
-    // Depreciation as proxy: D&A less amortization, less anything already
-    // deducted in EBITDA, so no cost is charged twice.
+    // Depreciation as proxy: D&A less amortization, and less the depreciation
+    // of assets that are debt-funded or already deducted in EBITDA. Leased
+    // and fleet assets are paid for through principal in debt service (or
+    // rent), so counting them again as capex charges them twice. Credit
+    // agreements do the same with "unfinanced capex".
     const terms: Term[] = [term('+', 'depreciationAmortization')];
     const notes: string[] = [];
     if (has('amortizationOfIntangibles')) terms.push(term('-', 'amortizationOfIntangibles'));
@@ -643,16 +712,28 @@ export function buildBorrowerInputs(
       notes.push('Amortization of intangibles not provided. Proxy uses full D&A and overstates capex.');
       caveats.push('Amortization of intangibles not provided. Maintenance capex proxy uses full D&A and overstates capex.');
     }
-    if (fleetPresent && treatment.captiveFleet === 'corporate' && has('vehicleDepreciation')) terms.push(term('-', 'vehicleDepreciation'));
-    if (financeLeasesPresent && treatment.financeLeases === 'out' && has('financeLeaseAmortization')) terms.push(term('-', 'financeLeaseAmortization'));
+    const exclude = (present: boolean, k: LineItemKey, what: string) => {
+      if (!present) return;
+      if (has(k)) terms.push(term('-', k));
+      else {
+        notes.push(`${LINE_ITEM_LABELS[k]} not provided. Proxy includes ${what} and overstates capex.`);
+        caveats.push(`${LINE_ITEM_LABELS[k]} not provided. Maintenance capex proxy includes ${what} and overstates capex.`);
+      }
+    };
+    exclude(fleetPresent, 'vehicleDepreciation', 'fleet depreciation');
+    exclude(financeLeasesPresent, 'financeLeaseAmortization', 'finance lease amortization');
     caveats.push('ESTIMATE: depreciation used as maintenance capex.');
     return { value: sum(terms), label: 'Maintenance capex, estimate (depreciation)', formula: formulaOf(terms), terms, notes, estimate: true };
   }
 
   // ---- Cash taxes, working capital, rent --------------------------------------------
-  const taxesDerivation: Derivation = has('incomeTaxesPaid')
-    ? { value: line('incomeTaxesPaid'), label: 'Cash taxes', formula: LINE_ITEM_LABELS.incomeTaxesPaid, terms: [term('+', 'incomeTaxesPaid')], notes: [] }
-    : { value: null, label: 'Cash taxes', formula: LINE_ITEM_LABELS.incomeTaxesPaid, terms: [], notes: [] };
+  let taxesDerivation: Derivation = { value: null, label: 'Cash taxes', formula: LINE_ITEM_LABELS.incomeTaxesPaid, terms: [], notes: [] };
+  if (has('incomeTaxesPaid')) {
+    const paid = line('incomeTaxesPaid') as number;
+    // A net refund is not repeatable cash for debt service, so it counts as 0.
+    taxesDerivation = { ...taxesDerivation, value: Math.max(0, paid), terms: [term('+', 'incomeTaxesPaid')],
+      notes: paid < 0 ? [`Net tax refund ${usd(-paid)}. Counted as 0, a refund is not repeatable.`] : [] };
+  }
   if (!has('incomeTaxesPaid')) caveats.push('Income taxes paid not provided. Cash-flow DSCR and FCCR not available.');
 
   let wcDerivation: Derivation = { value: null, label: 'Increase in working capital', formula: LINE_ITEM_LABELS.workingCapitalChange, terms: [], notes: [] };

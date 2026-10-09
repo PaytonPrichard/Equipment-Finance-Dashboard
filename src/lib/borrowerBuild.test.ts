@@ -296,7 +296,7 @@ describe('captive fleet (car rental), no operating income line', () => {
     expect(r.inputs.ebitda).toBe(25 * M);                    // -1 + 6 + 20
     expect(r.inputs.totalExistingDebt).toBe(74 * M);         // 24 + 50
     expect(r.inputs.actualAnnualDebtService).toBe(18.5 * M); // 5.5 + 3 + 10
-    expect(r.inputs.maintenanceCapex).toBe(19 * M);          // 20 - 1, vehicle depreciation not in EBITDA
+    expect(r.inputs.maintenanceCapex).toBe(1 * M);           // 20 - 1 - vehicle 18, fleet is debt-funded
   });
 
   test('consolidated without vehicle maturities is an error', () => {
@@ -315,6 +315,15 @@ describe('finance leases', () => {
     expect(r.inputs.ebitda).toBe(15 * M);
     expect(r.inputs.totalExistingDebt).toBe(29 * M);         // 24 + 5
     expect(r.inputs.actualAnnualDebtService).toBe(6 * M);    // 2 + 3 + 1
+    expect(r.inputs.maintenanceCapex).toBeCloseTo(3.1 * M);  // 5 - 1 - lease amortization 0.9, lease principal is in debt service
+  });
+
+  test('in, without the amortization line: proxy overstates, caveat', () => {
+    const f = leased();
+    delete f.lineItems.financeLeaseAmortization;
+    const r = confirmed(f);
+    expect(r.inputs.maintenanceCapex).toBe(4 * M);           // 5 - 1
+    expect(r.caveats).toContain('Finance lease amortization not provided. Maintenance capex proxy includes finance lease amortization and overstates capex.');
   });
 
   test('in, without the current portion: debt service understated, caveat', () => {
@@ -406,6 +415,101 @@ describe('EBITDA sources', () => {
   test('a stored source that is not available falls back to the proposal', () => {
     const r = buildBorrowerInputs(fin({}, { ebitdaSource: 'adjusted' }));
     expect(r.ebitdaSource).toBe('built');
+  });
+});
+
+describe('company EBITDA on the treatment basis', () => {
+  // Rental company, corporate fleet treatment. Stated EBITDA 25 is before
+  // vehicle depreciation 18 and vehicle interest 4.5.
+  const rental = () => fin({ vehicleDepreciation: 18 * M, vehicleInterest: 4.5 * M, vehicleDebt: 50 * M, interestPaid: 6.5 * M },
+    { ebitdaSource: 'stated', statedEbitda: { value: 25 * M, label: 'EBITDA' } });
+
+  test('stated EBITDA before vehicle costs is moved after them, pairing with non-vehicle debt', () => {
+    const f = confirmAll(rental());
+    f.judgments!['companyBasis.stated.captiveFleet'] = { confirmed: false };
+    const r = buildBorrowerInputs(f);
+    expect(r.inputs.ebitda).toBe(2.5 * M);                   // 25 - 18 - 4.5
+    expect(r.inputs.totalExistingDebt).toBe(24 * M);
+    expect(r.derivations.ebitda.notes).toContain('Moved onto this deal\'s treatment basis.');
+  });
+
+  test('unconfirmed basis is a caveat, and a basis that needs a missing line is an error', () => {
+    expect(buildBorrowerInputs(rental()).caveats).toContain('Proposed, not confirmed: company stated EBITDA is after vehicle depreciation and interest.');
+    const f = confirmAll(rental());
+    f.judgments!['companyBasis.stated.captiveFleet'] = { confirmed: false };
+    delete f.lineItems.vehicleInterest;
+    f.lineItems.vehicleDebt = { value: 50 * M };
+    const r = buildBorrowerInputs(f);
+    expect(r.inputs.ebitda).toBeNull();
+    expect(r.errors).toContain('Vehicle interest is missing. Needed to put company EBITDA on this deal\'s treatment.');
+  });
+
+  // Operating leases in. Company Adjusted 18 is after rent 1.2. Bridge 3.
+  const opLeasesIn = (rest: Partial<BorrowerFinancials> = {}) => fin({ operatingLeaseLiabilities: 8 * M }, {
+    treatmentOverrides: { operatingLeases: { rule: 'in', reason: 'Rating agency view' } },
+    adjustedEbitda: { value: 18 * M, addBacks: [{ label: 'Stock comp', amount: 3 * M, decision: 'accepted' }] },
+    ...rest,
+  });
+
+  test('adjusted EBITDA after rent gets rent added back under operating leases in', () => {
+    const f = confirmAll(opLeasesIn({ ebitdaSource: 'adjusted' }));
+    f.judgments!['companyBasis.adjusted.operatingLeases'] = { confirmed: true };
+    expect(buildBorrowerInputs(f).inputs.ebitda).toBe(19.2 * M); // 18 + rent 1.2
+  });
+
+  test('the gap comparison counts the treatment as explained, not the company', () => {
+    const f = confirmAll(opLeasesIn());
+    f.judgments!['companyBasis.adjusted.operatingLeases'] = { confirmed: true };
+    const r = buildBorrowerInputs(f);
+    expect(r.inputs.ebitda).toBe(16.2 * M);                  // built: 10 + 5 + 1.2
+    const c = r.comparisons[0];
+    expect(c.gap).toBeCloseTo(1.8 * M);                      // 18 - 16.2
+    expect(c.explainedByAddBacks).toBe(3 * M);
+    expect(c.explainedByTreatment).toBeCloseTo(-1.2 * M);    // rent the company deducted and the treatment adds back
+    expect(c.unexplained).toBeCloseTo(0);
+    expect(c.overTolerance).toBe(false);
+  });
+});
+
+describe('what current maturities include', () => {
+  test('finance leases in, already inside current maturities: not added twice', () => {
+    const f = confirmAll(fin({ financeLeaseLiabilities: 5 * M, currentFinanceLeaseLiabilities: 1 * M, financeLeaseAmortization: 0.9 * M }));
+    f.judgments!['currentMaturitiesInclude.financeLeases'] = { confirmed: true };
+    const r = buildBorrowerInputs(f);
+    expect(r.inputs.actualAnnualDebtService).toBe(5 * M);    // 2 + 3, lease principal inside the 3
+    expect(r.derivations.actualAnnualDebtService.notes).toContain('Lease principal already inside current maturities.');
+  });
+
+  test('finance leases out, inside current maturities: lease principal taken out', () => {
+    const f = confirmAll(fin({ financeLeaseLiabilities: 5 * M, currentFinanceLeaseLiabilities: 1 * M, financeLeaseAmortization: 0.9 * M, financeLeaseInterest: 0.3 * M },
+      { treatmentOverrides: { financeLeases: { rule: 'out', reason: 'Policy' } } }));
+    f.judgments!['currentMaturitiesInclude.financeLeases'] = { confirmed: true };
+    expect(buildBorrowerInputs(f).inputs.actualAnnualDebtService).toBeCloseTo(3.7 * M); // 2 - 0.3 + 3 - 1
+  });
+
+  test('corporate fleet, vehicle debt inside current maturities: vehicle principal taken out', () => {
+    const f = confirmAll(fin({ vehicleDepreciation: 1 * M, vehicleInterest: 0.5 * M, vehicleDebt: 10 * M, interestPaid: 2.5 * M, currentMaturities: 5 * M, currentVehicleDebtMaturities: 2 * M }));
+    f.judgments!['currentMaturitiesInclude.vehicleDebt'] = { confirmed: true };
+    expect(buildBorrowerInputs(f).inputs.actualAnnualDebtService).toBe(5 * M); // 2.5 - 0.5 + 5 - 2
+  });
+
+  test('floorplan inside current maturities: taken out under either treatment', () => {
+    const f = confirmAll(fin({ floorplanPayable: 30 * M, floorplanInterest: 2.5 * M, interestPaid: 4.5 * M, currentMaturities: 33 * M }));
+    f.judgments!['currentMaturitiesInclude.floorplan'] = { confirmed: true };
+    expect(buildBorrowerInputs(f).inputs.actualAnnualDebtService).toBe(5 * M); // 4.5 - 2.5 + 33 - 30
+  });
+
+  test('proposed: current maturities exclude each item', () => {
+    const r = buildBorrowerInputs(fin({ financeLeaseLiabilities: 5 * M }));
+    expect(r.caveats).toContain('Proposed, not confirmed: current maturities exclude finance leases.');
+  });
+});
+
+describe('cash taxes', () => {
+  test('a net refund counts as 0, with a note', () => {
+    const r = confirmed(fin({ incomeTaxesPaid: -2 * M }));
+    expect(r.inputs.cashTaxes).toBe(0);
+    expect(r.derivations.cashTaxes.notes).toEqual(['Net tax refund $2.0M. Counted as 0, a refund is not repeatable.']);
   });
 });
 

@@ -256,3 +256,13 @@ Each phase merges and deploys on its own.
 6. **Page limit for statement uploads.** Decided 2026-10-08: 15 pages per document.
 7. **Who can change firm treatment rules?** Decided 2026-10-08: admins only. Per-deal overrides by any analyst, with a reason and an audit entry.
 8. **Typed mode stays?** Decided 2026-10-08: yes. Typed EBITDA is labeled "stated, not built", with a caveat.
+
+### Step 1 build decisions (Joel, 2026-10-09)
+
+9. **No operating income line.** Built EBITDA starts from pretax income + interest expense, confirmed as a judgment.
+10. **Maintenance capex proxy.** D&A less amortization of intangibles (optional line), less fleet depreciation and finance lease amortization under every treatment. Those assets are debt-funded, so their cost is already in debt service. Missing lines: full D&A, caveat "overstates capex".
+11. **Working capital release and net tax refund** count as 0, with a note.
+12. **Current finance lease liabilities**, optional line, added to debt service under finance leases in. Caveat if missing.
+13. **Company EBITDA basis.** For adjusted or stated EBITDA, a judgment per applicable treatment row: is the company figure before or after the item. Tranche moves it onto the deal's treatment basis.
+14. **Current maturities composition.** A judgment per item (finance leases, vehicle debt, floorplan): does the line already include it. Proposed no.
+15. **Gap comparison.** Treatment differences are shown as explained, separate from add-backs.

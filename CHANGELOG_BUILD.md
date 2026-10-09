@@ -38,3 +38,21 @@
 **What Joel decided:** verdict first. FLAG may say "Advance with Conditions" only if the conditions are listed so nobody has to guess what they are.
 
 **Not done here:** saying what would clear each condition (e.g. how much EBITDA or how much less loan) is real-deals' AUDIT P1-16, after this branch merges.
+
+## 2026-10-09: EBITDA build Phase 1, step 1 (Workstream A)
+
+**What changed**
+- New shared pre-scoring layer `src/lib/borrowerBuild.ts`: `buildBorrowerInputs(financials, rules)` builds revenue, EBITDA, total debt, debt service, maintenance capex, cash taxes, working capital increase and rent from statement line items. Returns inputs, the formula and cited lines behind each, judgments, caveats and errors. No UI, no scoring change, not yet in the server bundle.
+- Firm treatment rules (`DEFAULT_TREATMENT_RULES`) with per-deal overrides that need a reason. Each override flips EBITDA, debt and debt service together.
+- Three EBITDA sources (built, adjusted, stated), labeled, with the built-versus-company gap split into add-backs, treatment and unexplained, against the 5% firm tolerance.
+- 53 hand-checked tests (`src/lib/borrowerBuild.test.ts`). Regression against the real-deals `derive()` snapshots waits for `real-deals` to merge.
+- Reviewed by the credit-reviewer agent. Fixed: missing interest lines in debt service are errors; unreviewed bridge deductions stay in EBITDA; debt labels say "total" and "including current portion"; pretax-start wording.
+
+**What Joel decided**
+- No operating income line: built EBITDA starts from pretax income + interest expense, as a judgment.
+- Maintenance capex proxy = D&A less amortization of intangibles (optional line; Tranche does the subtraction), less fleet depreciation and finance lease amortization under every treatment, since those assets are debt-funded. Missing lines mean full D&A with an "overstates capex" caveat.
+- Working capital release and net tax refund both count as 0, with a note.
+- Optional current finance lease liabilities line, added to debt service under finance leases in; caveat if missing.
+- Adjusted or stated EBITDA: the analyst says per treatment row whether the company figure is before or after the item, and Tranche moves it onto the deal's treatment basis.
+- Current maturities: a judgment per item (finance leases, vehicle debt, floorplan) on whether the line already includes it, proposed "no".
+- Gap comparison counts treatment differences as explained, not unexplained.
