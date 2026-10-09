@@ -589,3 +589,10 @@ test('no choice, no question: operating income only and one EBITDA source', () =
   // A company figure makes the source a real choice.
   expect(buildBorrowerInputs(fin({}, { statedEbitda: { value: 16 * M } })).judgments.map((j) => j.id)).toContain('ebitdaSource');
 });
+
+test('a non-cash gain inside operating income comes out of EBITDA, never an add-back', () => {
+  const r = confirmed(fin({ nonCashGainsInOperatingIncome: 6 * M }));
+  expect(r.inputs.ebitda).toBe(9 * M);                       // 10 + 5 - 6
+  expect(r.derivations.ebitda.notes).toContain('Non-cash gains taken out of operating income.');
+  expect(confirmed(fin({ nonCashGainsInOperatingIncome: -6 * M })).inputs.ebitda).toBe(15 * M); // a negative entry is ignored
+});

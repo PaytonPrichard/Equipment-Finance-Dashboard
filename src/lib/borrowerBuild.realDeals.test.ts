@@ -104,6 +104,76 @@ const CASES: Record<string, (fx: any) => BorrowerFinancials> = {
     revolver: 0,
     termLoansAndNotes: fig(fx, 'totalDebt'),
   }, { floorplanInterestInInterestPaid: false }),
+
+  // United Rentals: current maturities as cited ($118M) already leave out the
+  // $1,459M AR securitization, which renews every 364 days (Joel's rule).
+  'uri-fy2025': (fx) => financials(fx, {
+    revenue: fig(fx, 'revenue'),
+    operatingIncome: fig(fx, 'operatingIncome'),
+    depreciationAmortization: fig(fx, 'depreciationAmortization'),
+    amortizationOfIntangibles: fig(fx, 'depreciationAmortization') - fig(fx, 'depreciation'),
+    interestPaid: fig(fx, 'interestPaid'),
+    currentMaturities: fig(fx, 'currentMaturities'),
+    revolver: 0,
+    termLoansAndNotes: fig(fx, 'totalDebt'),
+  }),
+
+  // Custom Truck One Source and Alta: floorplan out, non-floorplan interest
+  // expense in place of cash interest, as for Titan.
+  'ctos-fy2025': (fx) => financials(fx, {
+    revenue: fig(fx, 'revenue'),
+    operatingIncome: fig(fx, 'operatingIncome'),
+    depreciationAmortization: fig(fx, 'depreciationAmortization'),
+    amortizationOfIntangibles: fig(fx, 'depreciationAmortization') - fig(fx, 'depreciation'),
+    floorplanInterest: fig(fx, 'floorplanInterest'),
+    floorplanPayable: fig(fx, 'floorplanPayable'),
+    interestPaid: fig(fx, 'otherInterest'),
+    currentMaturities: fig(fx, 'currentMaturities'),
+    revolver: 0,
+    termLoansAndNotes: fig(fx, 'totalDebt'),
+  }, { floorplanInterestInInterestPaid: false }),
+
+  'altg-fy2025': (fx) => financials(fx, {
+    revenue: fig(fx, 'revenue'),
+    operatingIncome: fig(fx, 'operatingIncome'),
+    depreciationAmortization: fig(fx, 'depreciationAmortization'),
+    amortizationOfIntangibles: fig(fx, 'depreciationAmortization') - fig(fx, 'depreciation'),
+    floorplanInterest: fig(fx, 'floorplanInterest'),
+    floorplanPayable: fig(fx, 'floorplanPayable'),
+    interestPaid: fig(fx, 'otherInterest'),
+    currentMaturities: fig(fx, 'currentMaturities'),
+    revolver: 0,
+    termLoansAndNotes: fig(fx, 'totalDebt'),
+  }, { floorplanInterestInInterestPaid: false }),
+
+  // Rush: floorplan counts as debt because its interest is not disclosed in
+  // dollars (Joel). The cited total debt already includes the floorplan
+  // payable, so the floorplan row is not marked. The app cannot yet say
+  // "floorplan in, interest unknown" on its own (backlog).
+  'rusha-fy2025': (fx) => financials(fx, {
+    revenue: fig(fx, 'revenue'),
+    operatingIncome: fig(fx, 'operatingIncome'),
+    depreciationAmortization: fig(fx, 'depreciationAmortization'),
+    amortizationOfIntangibles: fig(fx, 'depreciationAmortization') - fig(fx, 'depreciation'),
+    interestPaid: fig(fx, 'interestPaid'),
+    currentMaturities: fig(fx, 'currentMaturities'),
+    revolver: 0,
+    termLoansAndNotes: fig(fx, 'totalDebt'),
+  }),
+
+  // Wabash: a $418.6M non-cash litigation reversal inside operating income
+  // comes out of EBITDA (Joel), which leaves EBITDA negative.
+  'wnc-fy2025': (fx) => financials(fx, {
+    revenue: fig(fx, 'revenue'),
+    operatingIncome: fig(fx, 'operatingIncome'),
+    nonCashGainsInOperatingIncome: fig(fx, 'litigationReversal'),
+    depreciationAmortization: fig(fx, 'depreciationAmortization'),
+    amortizationOfIntangibles: fig(fx, 'depreciationAmortization') - fig(fx, 'depreciation'),
+    interestPaid: fig(fx, 'interestPaid'),
+    currentMaturities: fig(fx, 'currentMaturities'),
+    revolver: 0,
+    termLoansAndNotes: fig(fx, 'totalDebt'),
+  }),
 };
 
 const FIELDS = [

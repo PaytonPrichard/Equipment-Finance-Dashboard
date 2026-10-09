@@ -169,3 +169,12 @@
 **What changed:** the build no longer asks whether a revolver matures within 12 months. A revolver never counts as principal due. A new optional line, "Renewing facilities inside current maturities", takes a revolver, AR securitization or 364-day line back out of current maturities when the balance sheet folds one in, with a caveat that it is refinancing risk. Design doc updated.
 
 **What Joel decided** (relayed by Workstream B, from United Rentals: its $1,459M AR securitization sat in current maturities): debt service is cash interest plus scheduled principal due in 12 months. Renewing facilities are refinancing risk, shown in the maturity wall, not debt service.
+
+## 2026-10-09: Build regression covers nine real filings (Workstream A)
+
+**What changed**
+- Merged real-deals (93520e2): five new cases (United Rentals, Custom Truck One Source, Alta, Rush, Wabash). The build reproduces the harness on all nine filings, across all eight inputs.
+- New optional line, "Non-cash gains inside operating income", subtracted from built EBITDA (Wabash's $418.6M litigation reversal). Gains only. An add-back that raises EBITDA goes through the Adjusted EBITDA bridge.
+- Real-deals report regenerated: module stress FCCR columns now reflect capex scaling on the new cases. No verdict moves: 5 match, 2 acceptable, 2 mismatch (CTOS, where Joel agrees the model is right, and H&E, the P1-21/P1-22 blind spot).
+
+**Backlog:** the build cannot say "floorplan counts as debt, interest amount not disclosed" (Rush). Marking floorplan present asks for the interest line. Rush maps with floorplan inside the cited debt total.

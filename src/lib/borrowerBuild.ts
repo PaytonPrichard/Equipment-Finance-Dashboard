@@ -59,7 +59,8 @@ export type LineItemKey =
   | 'floorplanPayable'
   | 'vehicleDebt'
   | 'currentVehicleDebtMaturities'
-  | 'renewingInCurrentMaturities';
+  | 'renewingInCurrentMaturities'
+  | 'nonCashGainsInOperatingIncome';
 
 export const LINE_ITEM_LABELS: Record<LineItemKey, string> = {
   revenue: 'Revenue',
@@ -89,6 +90,7 @@ export const LINE_ITEM_LABELS: Record<LineItemKey, string> = {
   vehicleDebt: 'Vehicle debt, total',
   currentVehicleDebtMaturities: 'Current maturities of vehicle debt',
   renewingInCurrentMaturities: 'Renewing facilities inside current maturities',
+  nonCashGainsInOperatingIncome: 'Non-cash gains inside operating income',
 };
 
 export interface AddBack {
@@ -388,6 +390,15 @@ export function buildBorrowerInputs(
       notes.push('No operating income line. Pretax income + interest expense used in its place. This keeps other non-operating income and expense (gains, FX, investment income) in EBITDA, and if interest expense is reported net, interest income too.');
     }
     if (need('depreciationAmortization', 'built EBITDA')) terms.push(term('+', 'depreciationAmortization'));
+
+    // A non-cash gain booked inside operating income (a reserve reversal,
+    // say) is not cash for debt service, so it comes out. Only gains: an
+    // add-back that raises EBITDA is the borrower's story and goes through
+    // the Adjusted EBITDA bridge instead.
+    if (positive('nonCashGainsInOperatingIncome')) {
+      terms.push(term('-', 'nonCashGainsInOperatingIncome'));
+      notes.push('Non-cash gains taken out of operating income.');
+    }
 
     // Floorplan. Out: the interest is an operating cost of a dealer, so it is
     // deducted. In: it is financing, so it is added back.

@@ -36,6 +36,7 @@ const GROUPS = [
       { key: 'pretaxIncome', negative: true, section: 'noOperatingIncome' },
       { key: 'interestExpense', section: 'noOperatingIncome' },
       { key: 'rentExpense' },
+      { key: 'nonCashGainsInOperatingIncome', hint: 'E.g. a reserve reversal. Taken out of EBITDA.' },
       { key: 'floorplanInterest', section: 'floorplan' },
       { key: 'vehicleDepreciation', section: 'captiveFleet' },
       { key: 'vehicleInterest', section: 'captiveFleet' },
