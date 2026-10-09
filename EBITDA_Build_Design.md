@@ -172,7 +172,7 @@ Each rule has its alternative. For example, floorplan "In" treats the floorplan 
 
 Where each item sits (above or below operating income, inside or outside interest paid) is a judgment call: Tranche proposes it from the statement, the analyst confirms. An override flips the whole row (EBITDA, debt, debt service) together. The `credit-reviewer` agent reviews these once coded.
 
-**Debt service** = cash interest paid + current maturities, on the same debt that counts in leverage. Revolver balances are not amortizing principal, so they count for interest, not in current maturities, unless the analyst marks a revolver maturing within twelve months (a judgment call).
+**Debt service** = cash interest paid + current maturities, on the same debt that counts in leverage. Only scheduled principal counts (Joel, 2026-10-09). Facilities that renew (revolvers, AR securitizations, 364-day lines) count for interest, never as principal. A renewing facility folded into current maturities is entered as its own line and taken back out. It is refinancing risk, shown in the maturity wall.
 
 ## 9. Arithmetic versus judgment
 
@@ -188,7 +188,6 @@ Where each item sits (above or below operating income, inside or outside interes
 | Floorplan / fleet / finance lease present | From balance sheet lines | Labels vary by company |
 | Treatment override for this deal | Firm default | Credit agreement may differ |
 | Maintenance capex | See below | No statement reports it |
-| Revolver maturing in 12 months | No | Needs the debt note |
 | Non-recurring items in operating income | None | Company labels are not reliable |
 
 **Maintenance capex.** Companies don't report it. Tranche proposes one of three, labeled as an estimate wherever it shows:

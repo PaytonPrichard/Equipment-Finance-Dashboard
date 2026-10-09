@@ -60,6 +60,7 @@ const GROUPS = [
       { key: 'revolver' },
       { key: 'termLoansAndNotes' },
       { key: 'currentMaturities' },
+      { key: 'renewingInCurrentMaturities', hint: 'Revolver, AR securitization or 364-day line folded into current maturities. Taken back out.' },
       { key: 'financeLeaseLiabilities', section: 'financeLeases' },
       { key: 'currentFinanceLeaseLiabilities', section: 'financeLeases' },
       { key: 'floorplanPayable', section: 'floorplan' },

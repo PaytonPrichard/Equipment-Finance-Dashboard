@@ -58,7 +58,8 @@ export type LineItemKey =
   | 'operatingLeaseLiabilities'
   | 'floorplanPayable'
   | 'vehicleDebt'
-  | 'currentVehicleDebtMaturities';
+  | 'currentVehicleDebtMaturities'
+  | 'renewingInCurrentMaturities';
 
 export const LINE_ITEM_LABELS: Record<LineItemKey, string> = {
   revenue: 'Revenue',
@@ -87,6 +88,7 @@ export const LINE_ITEM_LABELS: Record<LineItemKey, string> = {
   floorplanPayable: 'Floorplan payable',
   vehicleDebt: 'Vehicle debt, total',
   currentVehicleDebtMaturities: 'Current maturities of vehicle debt',
+  renewingInCurrentMaturities: 'Renewing facilities inside current maturities',
 };
 
 export interface AddBack {
@@ -671,12 +673,15 @@ export function buildBorrowerInputs(
     dsTerms.push(term('+', 'rentExpense'));
   }
 
-  // Only worth asking when there is a revolver balance to mature.
-  if (positive('revolver')) {
-    const revolverMaturing = judge('revolverMaturing', 'Revolver matures within 12 months', false, [false, true],
-      (v) => (v ? 'revolver balance matures within 12 months' : 'revolver does not mature within 12 months'));
-    if (revolverMaturing) dsTerms.push(term('+', 'revolver'));
-    else dsNotes.push('Revolver balance counts for interest, not as principal due.');
+  // Debt service is scheduled principal only (Joel, 2026-10-09). Facilities
+  // that renew (revolvers, AR securitizations, 364-day lines) are not
+  // scheduled principal: a revolver balance never counts, and any renewing
+  // facility a balance sheet folds into current maturities comes back out.
+  // They are refinancing risk, which belongs in the maturity wall.
+  if (positive('revolver')) dsNotes.push('Revolver balance counts for interest, not as principal due. It renews, so it is refinancing risk.');
+  if (positive('renewingInCurrentMaturities')) {
+    dsTerms.push(term('-', 'renewingInCurrentMaturities'));
+    caveats.push(`Renewing facilities of ${usd(line('renewingInCurrentMaturities') as number)} taken out of current maturities. Not scheduled principal, refinancing risk.`);
   }
 
   const dsDerivation: Derivation = {

@@ -159,3 +159,9 @@
 - Untouched: the Granite Ridge documents the product video uses, the tutorial example (still the strong deal), and the demo firm's Settings (Tranche default treatment rules).
 
 **What Joel asked:** keep the demo current with the changes as they land.
+
+## 2026-10-09: Debt service is scheduled principal only (Workstream A)
+
+**What changed:** the build no longer asks whether a revolver matures within 12 months. A revolver never counts as principal due. A new optional line, "Renewing facilities inside current maturities", takes a revolver, AR securitization or 364-day line back out of current maturities when the balance sheet folds one in, with a caveat that it is refinancing risk. Design doc updated.
+
+**What Joel decided** (relayed by Workstream B, from United Rentals: its $1,459M AR securitization sat in current maturities): debt service is cash interest plus scheduled principal due in 12 months. Renewing facilities are refinancing risk, shown in the maturity wall, not debt service.

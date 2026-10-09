@@ -11,14 +11,14 @@ const GROUPS = [
   { title: 'Treatment', match: (id) => id.startsWith('treatment.') },
   {
     title: 'Where items sit',
-    match: (id) => id.endsWith('Placement') || id.endsWith('InInterestPaid') || id.startsWith('currentMaturitiesInclude.') || id === 'revolverMaturing',
+    match: (id) => id.endsWith('Placement') || id.endsWith('InInterestPaid') || id.startsWith('currentMaturitiesInclude.'),
   },
   { title: 'Company EBITDA', match: (id) => id.startsWith('companyBasis.') },
   { title: 'Maintenance capex', match: (id) => id === 'maintenanceCapex' },
 ];
 
 function optionLabel(id, v, start) {
-  if (id.endsWith('Present') || id.startsWith('currentMaturitiesInclude.') || id === 'revolverMaturing') return v ? 'Yes' : 'No';
+  if (id.endsWith('Present') || id.startsWith('currentMaturitiesInclude.')) return v ? 'Yes' : 'No';
   if (id.endsWith('InInterestPaid')) return v ? 'Included' : 'Not included';
   if (id.endsWith('Placement')) {
     if (v === 'operatingExpenses') return 'Inside operating expenses';

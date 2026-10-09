@@ -79,7 +79,7 @@ describe('plain borrower at default treatment', () => {
     expect(r.derivations.ebitda.formula).toBe('Operating income + Depreciation and amortization');
     expect(r.derivations.ebitda.terms[0].source).toEqual({ document: '10-K', page: 50 });
     expect(r.derivations.maintenanceCapex.estimate).toBe(true);
-    expect(r.derivations.actualAnnualDebtService.notes).toContain('Revolver balance counts for interest, not as principal due.');
+    expect(r.derivations.actualAnnualDebtService.notes).toContain('Revolver balance counts for interest, not as principal due. It renews, so it is refinancing risk.');
   });
 
   test('only the capex estimate remains as a caveat once judgments are confirmed', () => {
@@ -95,20 +95,26 @@ describe('judgments', () => {
     expect(allJudgmentsConfirmed(r)).toBe(false);
     expect(r.caveats).toContain('Proposed, not confirmed: fiscal year ended 2025-12-31 used.');
     expect(r.caveats).toContain('Proposed, not confirmed: depreciation used as maintenance capex.');
-    expect(r.caveats).toContain('Proposed, not confirmed: revolver does not mature within 12 months.');
   });
 
-  test('a revolver marked as maturing counts as principal due', () => {
-    const f = confirmAll(fin());
-    f.judgments!.revolverMaturing = { proposed: false, confirmed: true };
-    expect(buildBorrowerInputs(f).inputs.actualAnnualDebtService).toBe(9 * M); // 2 + 3 + revolver 4
+  test('a revolver never counts as principal due: it renews', () => {
+    const r = confirmed(fin());
+    expect(r.inputs.actualAnnualDebtService).toBe(5 * M);    // 2 + 3, revolver 4 left out
+    expect(r.judgments.find((j) => j.id === 'revolverMaturing')).toBeUndefined();
+  });
+
+  test('a renewing facility inside current maturities comes back out (the United Rentals case)', () => {
+    // Current maturities 3 include a 1.2 AR securitization that renews every 364 days.
+    const r = confirmed(fin({ renewingInCurrentMaturities: 1.2 * M }));
+    expect(r.inputs.actualAnnualDebtService).toBeCloseTo(3.8 * M); // 2 + 3 - 1.2
+    expect(r.caveats).toContain('Renewing facilities of $1.2M taken out of current maturities. Not scheduled principal, refinancing risk.');
   });
 
   test('a confirmed value outside the options is ignored', () => {
     const f = confirmAll(fin());
-    f.judgments!.revolverMaturing = { proposed: false, confirmed: 'maybe' };
+    f.judgments!.maintenanceCapex = { proposed: 'depreciation', confirmed: 'maybe' };
     const r = buildBorrowerInputs(f);
-    expect(r.inputs.actualAnnualDebtService).toBe(5 * M);
+    expect(r.inputs.maintenanceCapex).toBe(4 * M);          // proposal used
     expect(allJudgmentsConfirmed(r)).toBe(false);
   });
 
@@ -575,11 +581,6 @@ describe('setTreatmentOverride', () => {
   });
 });
 
-test('no revolver balance, no revolver-maturity question', () => {
-  const r = buildBorrowerInputs(fin({ revolver: 0 }));
-  expect(r.judgments.find((j) => j.id === 'revolverMaturing')).toBeUndefined();
-  expect(r.caveats.some((c) => c.includes('revolver'))).toBe(false);
-});
 
 test('no choice, no question: operating income only and one EBITDA source', () => {
   const ids = buildBorrowerInputs(fin()).judgments.map((j) => j.id);
