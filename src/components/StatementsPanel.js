@@ -2,22 +2,13 @@ import React from 'react';
 import NullableNumberInput from './NullableNumberInput';
 import { LINE_ITEM_LABELS } from '../lib/borrowerBuild';
 import { BUILT_FIELDS } from '../lib/statementBuild';
+import { BUILT_FIELD_LABELS, money, formulaWithValues } from '../utils/statementFormat';
 import StatementJudgments from './StatementJudgments';
 import EbitdaSourceSection from './EbitdaSourceSection';
 
 // Statement line items on the New Deal form. Whatever they are enough to
 // build fills the Borrower Profile fields above (src/lib/statementBuild.ts).
 
-export const BUILT_FIELD_LABELS = {
-  annualRevenue: 'Revenue',
-  ebitda: 'EBITDA',
-  totalExistingDebt: 'Total debt',
-  actualAnnualDebtService: 'Annual debt service',
-  maintenanceCapex: 'Maintenance capex',
-  cashTaxes: 'Cash taxes',
-  workingCapitalIncrease: 'Working capital increase',
-  leasePayments: 'Rent',
-};
 
 // Sections the analyst opens when the borrower has the item. A line with a
 // value always shows, whether or not its section is open.
@@ -76,31 +67,6 @@ const GROUPS = [
     lines: [{ key: 'statedMaintenanceCapex', hint: 'Only if a document states it.' }],
   },
 ];
-
-export function money(v) {
-  if (v === null || v === undefined) return '';
-  const sign = v < 0 ? '-' : '';
-  const a = Math.abs(v);
-  if (a >= 1e6) return `${sign}$${(a / 1e6).toFixed(1)}M`;
-  if (a >= 1e3) return `${sign}$${Math.round(a / 1e3)}K`;
-  return `${sign}$${Math.round(a)}`;
-}
-
-function sourceText(source) {
-  if (!source) return '';
-  const parts = [source.document, source.page != null && source.page !== '' ? `p. ${source.page}` : null].filter(Boolean);
-  return parts.join(', ');
-}
-
-/** "Operating income $10.0M (10-K, p. 54) + D&A $5.0M" */
-export function formulaWithValues(derivation) {
-  if (!derivation?.terms?.length) return '';
-  return derivation.terms.map((t, i) => {
-    const src = sourceText(t.source);
-    const piece = `${t.label} ${money(t.value)}${src ? ` (${src})` : ''}`;
-    return i === 0 && t.sign === '+' ? piece : `${t.sign} ${piece}`;
-  }).join(' ');
-}
 
 function LineRow({ line, item, onChange }) {
   const label = LINE_ITEM_LABELS[line.key];

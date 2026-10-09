@@ -30,7 +30,10 @@ const OUT_DIR = path.join(REPO, 'outputs');
 // looked like it had been written weeks after anyone opened the file.
 const READ_ON = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
-const MODULE_KEY = process.argv[2] || 'equipment_finance';
+// --statements renders the demo's statement-built deal (Heartland Foods),
+// to check the "How the numbers were built" section.
+const STATEMENTS = process.argv.includes('--statements');
+const MODULE_KEY = process.argv.slice(2).find((a) => !a.startsWith('--')) || 'equipment_finance';
 
 // US letter at 96dpi, with the margins the PDF actually uses.
 const PAGE_W = 816;        // 8.5in
@@ -242,7 +245,10 @@ async function bundle(entry, globalName) {
   const criteriaMod = await bundle('src/lib/screeningCriteria.ts');
   const borrower = await bundle('src/utils/borrowerMetrics.js');
 
-  const inputs = { ...constants.INITIAL_INPUTS, ...fixture.inputs };
+  const statementInputs = STATEMENTS
+    ? (await bundle('src/data/demoPipeline.js')).getInitialDemoPipeline().find((d) => d.inputs.financials).inputs
+    : null;
+  const inputs = { ...constants.INITIAL_INPUTS, ...(statementInputs || fixture.inputs) };
   const criteria = criteriaMod.DEFAULT_CRITERIA;
 
   const metrics = scoring.calculateMetrics(inputs);
@@ -269,7 +275,7 @@ async function bundle(entry, globalName) {
   });
 
   fs.mkdirSync(OUT_DIR, { recursive: true });
-  const out = path.join(OUT_DIR, `memo-preview-${MODULE_KEY}.html`);
+  const out = path.join(OUT_DIR, `memo-preview-${MODULE_KEY}${STATEMENTS ? '-statements' : ''}.html`);
   fs.writeFileSync(out, asSheet(html), 'utf-8');
 
   console.log(`Score ${riskScore.composite}/100, verdict ${screeningResult.verdict}`);

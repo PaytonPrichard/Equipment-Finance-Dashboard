@@ -1,6 +1,6 @@
 import React from 'react';
 import NullableNumberInput from './NullableNumberInput';
-import { money } from './StatementsPanel';
+import { money } from '../utils/statementFormat';
 
 // The company's own EBITDA figures, beside the one Tranche builds.
 //

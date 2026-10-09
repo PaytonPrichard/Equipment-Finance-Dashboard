@@ -35,6 +35,8 @@ export interface MemoModel {
   criteria?: Record<string, unknown> | null;
   commentary?: unknown;
   sourceDocuments?: unknown[];
+  /** Firm treatment rules, for a statement-built deal saved without its own copy. */
+  treatmentRules?: Record<string, unknown>;
 
   // Ambient values the renderer used to read from live state. Without these
   // a re-render silently picks up today's rate and today's date.

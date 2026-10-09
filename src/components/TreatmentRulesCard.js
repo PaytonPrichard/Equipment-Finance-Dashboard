@@ -1,38 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { DEFAULT_TREATMENT_RULES, TREATMENT_ROWS, treatmentOptions, validateTreatmentRules } from '../lib/borrowerBuild';
+import { TREATMENT_COPY } from '../utils/statementFormat';
 
-// What each treatment does to EBITDA, debt and debt service. Presentation
-// copy lives here, the rules themselves in src/lib/borrowerBuild.ts.
-export const TREATMENT_COPY = {
-  financeLeases: {
-    label: 'Finance leases',
-    options: {
-      in: { label: 'Debt', detail: 'Lease liabilities count as debt. Lease principal and interest count as debt service.' },
-      out: { label: 'Rent', detail: 'Lease cost deducted in EBITDA. Liabilities excluded from debt.' },
-    },
-  },
-  operatingLeases: {
-    label: 'Operating leases',
-    options: {
-      out: { label: 'Rent', detail: 'Rent stays an operating expense. Lease liabilities excluded from debt.' },
-      in: { label: 'Debt', detail: 'Rent added back to EBITDA. Lease liabilities count as debt, rent as debt service.' },
-    },
-  },
-  floorplan: {
-    label: 'Floorplan (dealers)',
-    options: {
-      out: { label: 'Inventory financing', detail: 'Interest deducted in EBITDA. Floorplan payable excluded from debt and debt service.' },
-      in: { label: 'Debt', detail: 'Interest added back to EBITDA. Payable counts as debt, interest as debt service.' },
-    },
-  },
-  captiveFleet: {
-    label: 'Captive fleet debt',
-    options: {
-      corporate: { label: 'Corporate level', detail: 'EBITDA after vehicle depreciation and interest. Vehicle debt excluded.' },
-      consolidated: { label: 'Consolidated', detail: 'EBITDA before vehicle costs. Vehicle debt and its maturities included.' },
-    },
-  },
-};
+// Wording shared with the New Deal form and the memo.
+export { TREATMENT_COPY };
 
 const SAVED_NOTICE = 'Saved. New screens use these rules. Deals already saved keep the rules they were built with.';
 
