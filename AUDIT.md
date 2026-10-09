@@ -88,6 +88,12 @@ All three modules set `leverage = 0` when `ebitda <= 0` (`equipment-finance/scor
 
 **Fix.** Treat non-positive EBITDA as unmeasurable leverage, not zero leverage: score the factor at its floor and add a fail reason ("EBITDA is negative, leverage cannot be measured"). Apply the DSCR gate to any DSCR below the floor, including negatives. Add tests with negative EBITDA for all three modules. Credit call for Joel: is negative EBITDA an automatic FAIL, or a FLAG with the score doing the rest?
 
+### P0-8. Recommendation contradicts the verdict
+
+Found 2026-10-07 (cash-flow stress work). The verdict honours the firm's gates; the recommendation does not. `getRecommendation(score)` in each module maps the composite score alone to a category, and `DealRecommendation`, the executive summary and the memo banner print it. A deal scoring 80 that FLAGs on a gate (cash-flow coverage breaking in the severe case, LTV, DSCR) shows FLAG and, directly below, "Strong Prospect. Recommend advancing to underwriting." Same class of bug as the three verdicts consolidated in `src/lib/dealVerdict.js`.
+
+**Fix.** One recommendation derived from the verdict and the score, shared by every surface (screening view, executive summary, memo, batch screening, comparison, pipeline). FAIL and FLAG override the score category and say what to resolve. Joel to approve the wording.
+
 ---
 
 ## P1 — Architecture and Consistency
@@ -178,7 +184,7 @@ webhook.site endpoints were added to the production org during integration testi
 
 ### P1-13. Stress FCCR drops the new loan when actual debt service is supplied
 
-**Status: fixed on `cashflow-stress` (25d4e0f, Workstream A), not yet merged to main.**
+**Status: fixed on main (25d4e0f, Workstream A).**
 
 Found 2026-10-07 by the real-deals harness smoke test.
 
@@ -188,7 +194,7 @@ Found 2026-10-07 by the real-deals harness smoke test.
 
 ### P1-14. Silent imputations never reach the memo
 
-**Status: the 3% capex imputation is removed on `cashflow-stress` (25d4e0f, Workstream A), not yet merged. The 8% debt-service estimate and the memo disclosure still need checking after the merge.**
+**Status: the 3% capex imputation is gone on main (25d4e0f, Workstream A). The 8% debt-service estimate is still open.**
 
 `runStressTest` sets maintenance capex to 3% of revenue when it is missing, in all three modules (`equipment-finance/scoring.ts:495`, `accounts-receivable/scoring.ts:556`, `inventory-finance/scoring.ts:661`). `calculateMetrics` estimates existing debt service at 8% of total debt. The 3% has no source and misses in both directions on real filings: DXP's total capex is 2.0% of revenue, but H&E's rental fleet purchases alone are 22.7%.
 
@@ -209,6 +215,18 @@ Joel, 2026-10-07: the verdict is the recommended next action, not a probability.
 **Prototype:** `scripts/real-deals/lib/analystView.js` (tested). For each breached gate it gives the EBITDA, debt service, debt, down payment or term that clears it, and flags "fails before this loan" when restructuring the new loan can't help. For a PASS it shows headroom (how far EBITDA can fall before each gate). It also shows liquidity runway, a 5-year maturity wall and collateral cover. Negative EBITDA gets fixed text: not a cash-flow credit, would need a collateral-based structure or outside support (wording Joel to confirm).
 
 **App version:** after Workstream A merges, since it touches `ScreeningVerdict.tsx` and the memo in `ExportPanel.js`, which A has already edited. The maturity wall needs new inputs. That belongs in A's raw-inputs design.
+
+### P1-17. Screening criteria are stored per user, not per firm
+
+Found 2026-10-07. `ScreeningCriteria.js` saves thresholds to `user_preferences.screening_criteria`. Two analysts at the same firm can screen the same deal against different floors and get different verdicts. Credit policy belongs to the firm: org-level criteria with an admin role to edit, user-level overrides off by default.
+
+### P1-18. Extraction does arithmetic it should not
+
+Found 2026-10-07 (live extraction test, Granite Ridge). The broker email said "15% cash" on a $6.275M quote. The model computed the down payment itself and got $940,750 (true $941,250). The credit application states $941,250 outright. The $500 gap is inside the merge's 1% tolerance, so no conflict was shown and the computed value won. **Fix.** Instruct extraction to copy stated values only, never derive; prefer a stated figure over a derived one in the merge precedence.
+
+### P1-19. Hardcoded fallback encryption key
+
+`src/lib/encryption.js:29` falls back to `'tranche-pilot-key-2026'` when `REACT_APP_ENCRYPTION_SECRET` is unset, and any `REACT_APP_` value ships in the browser bundle anyway. Whatever this encrypts is not protected. Extends P1-5.
 
 ---
 
@@ -274,6 +292,14 @@ The form takes EBITDA as a single number. Real filings place floorplan interest,
 Found 2026-10-08 entering real ratings. `CreditRating` has four values (Strong, Adequate, Weak, Not Rated). Under the mapping (IG = Strong, BB = Adequate, B or below = Weak), DXP at S&P B+ and Hertz at S&P CCC+ both become Weak and get the same +200 bps spread. CCC+ is near distress, while B+ is mid high-yield. The input loses the difference a credit analyst cares about most.
 
 **Fix.** Accept the agency letter grade (S&P or Moody's scale) and map it to a finer internal scale for spread and scoring. Credit call for Joel: the buckets and spreads.
+
+### P2-11. Cash-flow inputs missing from Copy Summary and extraction
+
+Found 2026-10-07. The cash-flow fields (cash taxes, working capital, rent, floating share) and the two new metrics are in the screening view, verdict and memo, but not in each module's `generateExportSummary` text or in `server-lib/extract.js` field specs. Extraction adds a small per-call token cost.
+
+### P2-12. New Deal form does not say what it holds
+
+Found 2026-10-07. Uploading onto a non-empty form asks "The form holds X" with no indication whether X is an unsaved draft or a reopened pipeline deal (`src/App.js:705-709` says as much). Agreed fix: a status chip above the form ("Draft, not in pipeline" / "Editing X (stage)"), with the dialog using the same words.
 
 ---
 

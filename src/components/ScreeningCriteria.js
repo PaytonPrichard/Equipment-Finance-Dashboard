@@ -213,6 +213,59 @@ export default function ScreeningCriteria({ activeModule, onCriteriaChange }) {
             </div>
           </div>
 
+          {/* Cash-flow coverage: all asset classes */}
+          <div>
+            <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">
+              Cash-Flow Coverage
+            </h4>
+            <p className="text-[11px] text-gray-400 mb-3">
+              Judged only when cash taxes, capex, working capital and rent are entered.
+            </p>
+            <div className="grid grid-cols-2 gap-4">
+              <CriteriaInput
+                label="Min Cash-Flow DSCR"
+                value={criteria.minCashFlowDscr}
+                onChange={(v) => updateField('minCashFlowDscr', v)}
+                suffix="x" step={0.05}
+                tip="EBITDA less taxes, maintenance capex and working capital, over debt service. Below 1.0x fails. 0 turns it off."
+              />
+              <CriteriaInput
+                label="Min FCCR"
+                value={criteria.minFccr}
+                onChange={(v) => updateField('minFccr', v)}
+                suffix="x" step={0.05}
+                tip="(EBITDA + rent - capex - taxes) / (debt service + rent). Below 1.0x fails. 0 turns it off."
+              />
+            </div>
+          </div>
+
+          <div>
+            <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">
+              Cash-Flow Stress Scenarios
+            </h4>
+            <p className="text-[11px] text-gray-400 mb-3">
+              Combined severe case below 1.0x flags the deal. 0 turns a scenario off.
+            </p>
+            <div className="grid grid-cols-3 gap-4">
+              <CriteriaInput label="Revenue Drop: Mild" value={criteria.stressRevenueDeclineMild} onChange={(v) => updateField('stressRevenueDeclineMild', v)} suffix="%" max={90}
+                tip="Revenue decline at a constant EBITDA margin." />
+              <CriteriaInput label="Revenue Drop: Moderate" value={criteria.stressRevenueDeclineModerate} onChange={(v) => updateField('stressRevenueDeclineModerate', v)} suffix="%" max={90}
+                tip="Revenue decline at a constant EBITDA margin." />
+              <CriteriaInput label="Revenue Drop: Severe" value={criteria.stressRevenueDeclineSevere} onChange={(v) => updateField('stressRevenueDeclineSevere', v)} suffix="%" max={90}
+                tip="Revenue decline at a constant EBITDA margin." />
+              <CriteriaInput label="Margin Compression" value={criteria.stressMarginCompressionBps} onChange={(v) => updateField('stressMarginCompressionBps', v)} suffix="bps" step={25}
+                tip="EBITDA margin falls by this much on the same revenue." />
+              <CriteriaInput label="Rate Shock" value={criteria.stressRateShockBps} onChange={(v) => updateField('stressRateShockBps', v)} suffix="bps" step={25}
+                tip="Added to floating-rate debt: the new revolver, plus the floating share of existing debt if entered." />
+              <CriteriaInput label="Slower Collections" value={criteria.stressWcDelayDays} onChange={(v) => updateField('stressWcDelayDays', v)} suffix="days"
+                tip="Customers pay this many days later. Ties up revenue x days / 365 of cash." />
+              <CriteriaInput label="Severe: Revenue Drop" value={criteria.stressCombinedRevenueDecline} onChange={(v) => updateField('stressCombinedRevenueDecline', v)} suffix="%" max={90}
+                tip="Revenue decline in the combined severe case." />
+              <CriteriaInput label="Severe: Margin Cut" value={criteria.stressCombinedMarginBps} onChange={(v) => updateField('stressCombinedMarginBps', v)} suffix="bps" step={25}
+                tip="Margin compression in the combined severe case." />
+            </div>
+          </div>
+
           {/* Module-specific limits */}
           {isEquipment && (
             <div>

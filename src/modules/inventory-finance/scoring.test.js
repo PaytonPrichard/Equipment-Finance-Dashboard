@@ -207,15 +207,23 @@ describe('Inventory Finance Scoring', () => {
       }
     });
 
+    // FCCR needs cash taxes, maintenance capex and rent. Without them it is
+    // not provided (null), never estimated.
+    const withCashFlow = runStressTest({ ...validInputs, cashTaxes: 500000, maintenanceCapex: 400000, leasePayments: 0 });
+
+    test('FCCR is not provided when cash-flow inputs are blank', () => {
+      for (const s of stress) expect(s.fccr).toBeNull();
+    });
+
     test('every scenario reports a finite FCCR', () => {
-      for (const s of stress) {
+      for (const s of withCashFlow) {
         expect(typeof s.fccr).toBe('number');
         expect(Number.isFinite(s.fccr)).toBe(true);
       }
     });
 
     test('severe stress FCCR is lower than base case', () => {
-      expect(stress[3].fccr).toBeLessThan(stress[0].fccr);
+      expect(withCashFlow[3].fccr).toBeLessThan(withCashFlow[0].fccr);
     });
   });
 

@@ -2,9 +2,12 @@ import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { formatCurrency, formatRatio, formatPercent } from '../utils/format';
 import { getModule } from '../modules';
 import { DEFAULT_SOFR } from '../modules/equipment-finance/constants';
+import { evaluateScreening, DEFAULT_CRITERIA } from '../lib/screeningCriteria';
+import { recommendationFor } from '../lib/recommendation';
+import { recommendationStyle } from './recommendationStyle';
 
 // Score deals using the appropriate module based on deal inputs
-function scoreDeal(deal, sofr) {
+function scoreDeal(deal, sofr, criteria = DEFAULT_CRITERIA) {
   // Detect module from deal inputs
   const moduleKey = deal.inputs?.totalAROutstanding ? 'accounts_receivable'
     : deal.inputs?.totalInventory ? 'inventory_finance'
@@ -12,7 +15,9 @@ function scoreDeal(deal, sofr) {
   const mod = getModule(moduleKey);
   const metrics = mod.calculateMetrics(deal.inputs, sofr);
   const riskScore = mod.calculateRiskScore(deal.inputs, metrics);
-  const rec = mod.getRecommendation(riskScore.composite);
+  // Verdict first, so a comparison never recommends a deal the firm's policy flags.
+  const screening = evaluateScreening(criteria, metrics, riskScore, deal.inputs, moduleKey);
+  const rec = recommendationFor(mod.getRecommendation(riskScore.composite), screening);
   return { metrics, riskScore, rec, moduleKey };
 }
 
@@ -39,8 +44,8 @@ const METRIC_ROWS = [
   { key: 'netFinanced',   label: 'Net Financed',      direction: 'lower',  format: (v) => formatCurrency(v) },
 ];
 
-function extractComparableValues(inputs, sofr = DEFAULT_SOFR) {
-  const { metrics, riskScore, rec } = scoreDeal({ inputs }, sofr);
+function extractComparableValues(inputs, sofr = DEFAULT_SOFR, criteria = DEFAULT_CRITERIA) {
+  const { metrics, riskScore, rec } = scoreDeal({ inputs }, sofr, criteria);
 
   return {
     metrics,
@@ -68,7 +73,7 @@ function determineBetter(leftVal, rightVal, direction) {
   return { left: leftVal < rightVal, right: rightVal < leftVal };
 }
 
-export default function DealComparison({ exampleDeals, savedDeals, historicalDeals, sofr = DEFAULT_SOFR }) {
+export default function DealComparison({ exampleDeals, savedDeals, historicalDeals, sofr = DEFAULT_SOFR, criteria = DEFAULT_CRITERIA }) {
   const [leftId, setLeftId] = useState('');
   const [rightId, setRightId] = useState('');
 
@@ -84,8 +89,8 @@ export default function DealComparison({ exampleDeals, savedDeals, historicalDea
   const leftDeal = leftId ? dealMap[leftId] : null;
   const rightDeal = rightId ? dealMap[rightId] : null;
 
-  const leftData = useMemo(() => leftDeal ? extractComparableValues(leftDeal.inputs, sofr) : null, [leftDeal, sofr]);
-  const rightData = useMemo(() => rightDeal ? extractComparableValues(rightDeal.inputs, sofr) : null, [rightDeal, sofr]);
+  const leftData = useMemo(() => leftDeal ? extractComparableValues(leftDeal.inputs, sofr, criteria) : null, [leftDeal, sofr, criteria]);
+  const rightData = useMemo(() => rightDeal ? extractComparableValues(rightDeal.inputs, sofr, criteria) : null, [rightDeal, sofr, criteria]);
 
   // Flat list of all deals for search
   const allDeals = useMemo(() => {
@@ -217,7 +222,7 @@ export default function DealComparison({ exampleDeals, savedDeals, historicalDea
     // Special rendering for recommendation
     if (row.key === 'recommendation') {
       const rec = data.recommendationObj;
-      return <span className={`text-sm font-semibold ${rec.textClass}`}>{rec.category}</span>;
+      return <span className={`text-sm font-semibold ${recommendationStyle(rec).textClass}`}>{rec.category}</span>;
     }
 
     const formatted = row.format(val);

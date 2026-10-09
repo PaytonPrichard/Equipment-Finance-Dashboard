@@ -13,6 +13,7 @@ import { INITIAL_INPUTS as AR_INITIAL } from '../modules/accounts-receivable/con
 import { INITIAL_INPUTS as INV_INITIAL } from '../modules/inventory-finance/constants';
 import { computeBorrowerExtras } from '../utils/borrowerMetrics';
 import { evaluateScreening, DEFAULT_CRITERIA } from '../lib/screeningCriteria';
+import { recommendationFor } from '../lib/recommendation';
 
 function buildPdfFor(moduleKey, mod, baseInputs) {
   const metrics = mod.calculateMetrics(baseInputs);
@@ -60,12 +61,22 @@ describe('generateBrandedPdfHtml — Equipment Finance', () => {
     // same category, same colour, same detail line, within about 200px on
     // page one. Derived from the module rather than hardcoded, so this
     // still holds if the fixture's verdict moves.
+    // The banner prints the verdict-led recommendation (AUDIT P0-8).
     const metrics = ef.calculateMetrics(inputs);
-    const rec = ef.getRecommendation(ef.calculateRiskScore(inputs, metrics).composite);
+    const riskScore = ef.calculateRiskScore(inputs, metrics);
+    const screening = evaluateScreening(DEFAULT_CRITERIA, metrics, riskScore, inputs, 'equipment_finance');
+    const rec = recommendationFor(ef.getRecommendation(riskScore.composite), screening);
     const count = (t) => html.split(t).length - 1;
     expect(count(rec.category)).toBe(1);
     expect(count(rec.detail)).toBe(1);
     expect(html).not.toContain('Recommended Action');
+  });
+
+  test('a gated verdict never prints the score-only recommendation', () => {
+    // This fixture scores below the pass line and breaks gates, so the
+    // memo must not tell the committee to advance it.
+    expect(html).not.toContain('Recommend advancing to underwriting');
+    expect(html).toMatch(/Fails policy|Conditions to advance/);
   });
 
   test('term coverage says what it is a percentage of', () => {
@@ -92,14 +103,30 @@ describe('generateBrandedPdfHtml — Equipment Finance', () => {
     expect(html).toMatch(/Severe \(-30%\)/);
   });
 
-  test('Sensitivity has DSCR and FCCR columns but no Borrowing Base column for EF', () => {
+  test('Sensitivity has a DSCR column but no Borrowing Base column for EF', () => {
     expect(html).toMatch(/>DSCR<\/th>/);
-    expect(html).toMatch(/>FCCR<\/th>/);
     expect(html).not.toMatch(/>Borrowing Base<\/th>/);
   });
 
-  test('Key Metrics table includes FCCR row', () => {
+  test('Key Metrics table includes FCCR and cash-flow DSCR rows', () => {
     expect(html).toMatch(/<td>FCCR<\/td>/);
+    expect(html).toMatch(/<td>Cash-Flow DSCR<\/td>/);
+  });
+
+  test('without cash-flow inputs the memo says not provided and why, and shows no FCCR column', () => {
+    expect(html).toContain('Cash-Flow Stress');
+    expect(html).toContain('FCCR not provided: missing cash taxes, maintenance capex and rent.');
+    expect(html).not.toMatch(/>FCCR<\/th>/);
+  });
+
+  test('with cash-flow inputs the memo prints both metrics per scenario', () => {
+    const full = buildPdfFor('equipment_finance', ef, {
+      ...inputs, cashTaxes: 100_000, maintenanceCapex: 200_000, workingCapitalIncrease: 0, leasePayments: 0,
+    });
+    expect(full).toMatch(/>FCCR<\/th>/);
+    expect(full).toMatch(/>Cash-Flow DSCR<\/th>/);
+    expect(full).toContain('Combined severe');
+    expect(full).not.toContain('FCCR not provided');
   });
 
   test('Suggested Structure section appears with structured EF content', () => {

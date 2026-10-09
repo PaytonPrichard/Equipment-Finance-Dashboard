@@ -7,7 +7,8 @@ import {
   formatPercent,
   formatRatio,
 } from '../../utils/format';
-import { computeFccr } from '../../utils/borrowerMetrics';
+import { fccrFor } from '../../utils/cashFlowMetrics';
+import { CASH_FLOW_CSV_ALIASES, CASH_FLOW_INITIAL_INPUTS, parseCashFlowCell } from '../cashFlowFields';
 
 import type {
   EquipmentFinanceInputs,
@@ -177,6 +178,8 @@ export function calculateMetrics(
     residualValue,
     equipmentValue,
     debtServiceEstimated,
+    // Term deals are priced fixed at screening, so a rate shock does not reach them.
+    newFloatingPrincipal: 0,
   };
 }
 
@@ -489,15 +492,10 @@ export function runStressTest(
     };
     const m = calculateMetrics(stressed, sofr);
     const rs = calculateRiskScore(stressed, m);
-    const maintCapex =
-      (stressed.maintenanceCapex || 0) > 0
-        ? stressed.maintenanceCapex!
-        : (stressed.annualRevenue || 0) * 0.03;
-    const debtService =
-      (stressed.actualAnnualDebtService || 0) > 0
-        ? stressed.actualAnnualDebtService!
-        : (m.existingDebtService || 0) + (m.newAnnualDebtService || 0);
-    const fccr = computeFccr(stressed.ebitda, maintCapex, debtService);
+    // Existing plus new debt service, the same denominator as DSCR. This used
+    // to drop the new facility whenever actual debt service was entered.
+    const debtService = (m.existingDebtService || 0) + (m.newAnnualDebtService || 0);
+    const fccr = fccrFor(stressed as unknown as Record<string, unknown>, stressed.ebitda, debtService);
     return {
       label: labels[i],
       decline: pct,
@@ -643,6 +641,7 @@ export function parseCsvDeals(csvText: string): { id: string; inputs: EquipmentF
     usefullife: 'usefulLife',
     loanterm: 'loanTerm', term: 'loanTerm',
     essentialuse: 'essentialUse', essential: 'essentialUse',
+    ...CASH_FLOW_CSV_ALIASES,
   };
 
   const numericFields = new Set([
@@ -657,7 +656,7 @@ export function parseCsvDeals(csvText: string): { id: string; inputs: EquipmentF
     const inputs: EquipmentFinanceInputs = {
       companyName: '',
       yearsInBusiness: 0, annualRevenue: 0, ebitda: 0, totalExistingDebt: 0,
-      actualAnnualDebtService: 0, maintenanceCapex: 0,
+      actualAnnualDebtService: 0, maintenanceCapex: 0, ...CASH_FLOW_INITIAL_INPUTS,
       cashOnHand: 0, availableLiquidity: 0,
       priorYearRevenue: 0, priorYearEbitda: 0,
       industrySector: 'Manufacturing', creditRating: 'Adequate',
@@ -673,6 +672,8 @@ export function parseCsvDeals(csvText: string): { id: string; inputs: EquipmentF
       const inp = inputs as unknown as Record<string, unknown>;
       if (field === 'essentialUse') {
         inp[field] = ['true', 'yes', '1', 'y'].includes(val.toLowerCase());
+      } else if (field in CASH_FLOW_INITIAL_INPUTS) {
+        inp[field] = parseCashFlowCell(val);
       } else if (numericFields.has(field)) {
         inp[field] = parseFloat(val.replace(/[^0-9.-]/g, '')) || 0;
       } else {

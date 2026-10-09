@@ -9,7 +9,8 @@ import {
   formatPercent,
   formatRatio,
 } from '../../utils/format';
-import { computeFccr } from '../../utils/borrowerMetrics';
+import { fccrFor } from '../../utils/cashFlowMetrics';
+import { CASH_FLOW_CSV_ALIASES, CASH_FLOW_INITIAL_INPUTS, parseCashFlowCell } from '../cashFlowFields';
 
 import type {
   InventoryFinanceInputs,
@@ -246,6 +247,8 @@ export function calculateMetrics(
     newAnnualDebtService,
     existingDebtService,
     debtServiceEstimated,
+    // The revolver prices off SOFR, so a rate shock reaches the full draw.
+    newFloatingPrincipal: borrowingBase,
   };
 }
 
@@ -656,13 +659,10 @@ export function runStressTest(
 
     const m = calculateMetrics(stressed, sofr);
     const rs = calculateRiskScore(stressed, m);
-    const maintCapex = (stressed.maintenanceCapex || 0) > 0
-      ? stressed.maintenanceCapex
-      : (stressed.annualRevenue || 0) * 0.03;
-    const debtService = (stressed.actualAnnualDebtService || 0) > 0
-      ? stressed.actualAnnualDebtService
-      : (m.existingDebtService || 0) + (m.newAnnualDebtService || 0);
-    const fccr = computeFccr(stressed.ebitda, maintCapex, debtService);
+    // Existing plus new debt service, the same denominator as DSCR. This used
+    // to drop the new facility whenever actual debt service was entered.
+    const debtService = (m.existingDebtService || 0) + (m.newAnnualDebtService || 0);
+    const fccr = fccrFor(stressed as unknown as Record<string, unknown>, stressed.ebitda, debtService);
 
     return {
       label: scenario.label,
@@ -892,6 +892,7 @@ export function parseCsvDeals(csvText: string): { id: string; inputs: InventoryF
     requestedadvancerate: 'requestedAdvanceRate', advancerate: 'requestedAdvanceRate',
     nolvpct: 'nolvPct', nolv: 'nolvPct',
     perishable: 'perishable',
+    ...CASH_FLOW_CSV_ALIASES,
   };
 
   const numericFields = new Set([
@@ -909,7 +910,7 @@ export function parseCsvDeals(csvText: string): { id: string; inputs: InventoryF
     const deal: InventoryFinanceInputs = {
       companyName: '',
       yearsInBusiness: 0, annualRevenue: 0, ebitda: 0, totalExistingDebt: 0,
-      actualAnnualDebtService: 0, maintenanceCapex: 0,
+      actualAnnualDebtService: 0, maintenanceCapex: 0, ...CASH_FLOW_INITIAL_INPUTS,
       cashOnHand: 0, availableLiquidity: 0,
       priorYearRevenue: 0, priorYearEbitda: 0,
       industrySector: 'Manufacturing', creditRating: 'Adequate',
@@ -925,6 +926,8 @@ export function parseCsvDeals(csvText: string): { id: string; inputs: InventoryF
       const inp = deal as unknown as Record<string, unknown>;
       if (field === 'perishable') {
         inp[field] = ['true', 'yes', '1', 'y'].includes(val.toLowerCase());
+      } else if (field in CASH_FLOW_INITIAL_INPUTS) {
+        inp[field] = parseCashFlowCell(val);
       } else if (numericFields.has(field)) {
         inp[field] = parseFloat(val.replace(/[^0-9.-]/g, '')) || 0;
       } else {

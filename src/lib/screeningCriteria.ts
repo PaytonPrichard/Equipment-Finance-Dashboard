@@ -14,6 +14,7 @@ import type {
   AssetClass,
   BaseMetrics,
 } from '../types';
+import { computeCashFlowAnalysis, describeMissing } from '../utils/cashFlowMetrics';
 
 // Widened metrics type to allow access to module-specific fields across all three modules.
 // Each field is guarded by the moduleKey check at the call site, so access is safe at runtime.
@@ -53,6 +54,23 @@ export const DEFAULT_CRITERIA: ScreeningCriteria = {
   // Inventory-specific
   minTurnover: 4.0,
   maxObsolescence: 10,
+
+  // Cash-flow coverage floors. Applied only when the inputs are provided.
+  // 1.10x FCCR is a common springing covenant level in ABL. Cash-flow DSCR
+  // has no market standard; 1.15x sits under the 1.20-1.25x that term
+  // lenders put on plain DSCR, because this measure is stricter.
+  minCashFlowDscr: 1.15,
+  minFccr: 1.10,
+
+  // Cash-flow stress scenarios. Deal_Screening_Model_Assumptions.md section 7.
+  stressRevenueDeclineMild: 10,
+  stressRevenueDeclineModerate: 20,
+  stressRevenueDeclineSevere: 30,
+  stressMarginCompressionBps: 200,
+  stressRateShockBps: 200,
+  stressWcDelayDays: 20,
+  stressCombinedRevenueDecline: 20,
+  stressCombinedMarginBps: 200,
 };
 
 /**
@@ -159,6 +177,42 @@ export function evaluateScreening(
     }
   }
 
+  // ---- Cash-flow coverage ----
+  // Judged only when the analyst gave the inputs. A metric that is not
+  // provided cannot pass or fail; it becomes a note the reader sees.
+  const notes: string[] = [];
+  const cf = computeCashFlowAnalysis(inputs as unknown as Record<string, unknown>, metrics, c);
+  const floorCheck = (value: number | null, floor: number, name: string, covers: string) => {
+    if (value == null || !(floor > 0) || value >= floor) return;
+    if (value < 1.0) {
+      reasons.push({ level: 'fail', text: `${name} ${value.toFixed(2)}x is below 1.0x, insufficient to cover ${covers}` });
+    } else {
+      reasons.push({ level: 'flag', text: `${name} ${value.toFixed(2)}x is below minimum (${floor}x)` });
+    }
+  };
+  floorCheck(cf.base.cashFlowDscr, c.minCashFlowDscr, 'Cash-flow DSCR', 'debt service');
+  floorCheck(cf.base.fccr, c.minFccr, 'FCCR', 'fixed charges');
+
+  const severe = cf.scenarios.find((s) => s.kind === 'combined');
+  if (severe) {
+    const broken = [
+      severe.cashFlowDscr != null && severe.cashFlowDscr < 1.0 ? `cash-flow DSCR ${severe.cashFlowDscr.toFixed(2)}x` : null,
+      severe.fccr != null && severe.fccr < 1.0 ? `FCCR ${severe.fccr.toFixed(2)}x` : null,
+    ].filter(Boolean);
+    // Only flag what the base case did not already flag or fail on.
+    const baseBroken = (cf.base.cashFlowDscr != null && cf.base.cashFlowDscr < 1.0) || (cf.base.fccr != null && cf.base.fccr < 1.0);
+    if (broken.length > 0 && !baseBroken) {
+      reasons.push({ level: 'flag', text: `Breaks under stress: ${broken.join(' and ')} in the combined severe case (${severe.detail.toLowerCase()})` });
+    }
+  }
+
+  if (cf.missing.cashFlowDscr.length > 0) {
+    notes.push(`Cash-flow DSCR not provided: missing ${describeMissing(cf.missing.cashFlowDscr)}.`);
+  }
+  if (cf.missing.fccr.length > 0) {
+    notes.push(`FCCR not provided: missing ${describeMissing(cf.missing.fccr)}.`);
+  }
+
   // ---- Determine final verdict ----
   const hasFail = reasons.some((r) => r.level === 'fail');
   const hasFlag = reasons.some((r) => r.level === 'flag');
@@ -167,7 +221,7 @@ export function evaluateScreening(
   if (hasFail) verdict = 'fail';
   else if (hasFlag) verdict = 'flag';
 
-  return { verdict, reasons };
+  return { verdict, reasons, notes };
 }
 
 export function validateCriteria(obj: unknown): ScreeningCriteria | null {
