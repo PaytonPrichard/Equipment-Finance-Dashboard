@@ -2,8 +2,10 @@
 //
 // Leverage used to read 0.0x and score 100 (best possible) for a loss-making
 // borrower, and the DSCR gate skipped negative coverage. Now leverage is not
-// meaningful (null), the factor drops out of the composite, and the verdict
-// fails on one reason that says why.
+// meaningful (null) and shown as NM, the factor scores at the floor of its
+// curve (worst case, weight kept), and the verdict fails on one reason that
+// says why. Joel chose the floor over dropping the factor: dropping it let a
+// loss-maker outscore a marginally profitable borrower.
 
 import * as ef from '../modules/equipment-finance/scoring';
 import * as ar from '../modules/accounts-receivable/scoring';
@@ -61,16 +63,20 @@ describe.each(MODULES)('negative EBITDA: $key', ({ key, mod, weights, inputs }) 
   const metrics = mod.calculateMetrics(inputs);
   const risk = mod.calculateRiskScore(inputs, metrics);
 
-  test('leverage is not meaningful, not zero', () => {
+  test('leverage is not meaningful (null), and its factor scores at the curve floor of 5', () => {
     expect(metrics.leverage).toBeNull();
-    expect(risk.factors.leverage).toBeNull();
+    expect(risk.factors.leverage).toBe(5);
   });
 
-  test('the composite leaves leverage out and re-weights the other factors', () => {
-    const others = Object.entries(weights).filter(([k]) => k !== 'leverage');
-    const sum = others.reduce((s, [k, w]) => s + risk.factors[k] * w, 0);
-    const weight = others.reduce((s, [, w]) => s + w, 0);
-    expect(risk.composite).toBe(Math.round(sum / weight));
+  test('the composite keeps the leverage weight at the floor score', () => {
+    const sum = Object.entries(weights).reduce((s, [k, w]) => s + risk.factors[k] * w, 0);
+    expect(risk.composite).toBe(Math.round(sum));
+  });
+
+  test('a loss-maker cannot outscore the same borrower with tiny positive EBITDA', () => {
+    const tiny = { ...inputs, ebitda: 100000 }; // leverage far past 10x, factor at 5
+    const m2 = mod.calculateMetrics(tiny);
+    expect(risk.composite).toBeLessThanOrEqual(mod.calculateRiskScore(tiny, m2).composite);
   });
 
   test('the verdict fails on one reason that names EBITDA, with no duplicate DSCR or leverage reason', () => {
@@ -110,7 +116,7 @@ test('a missing EBITDA is an incomplete input, not a loss-making borrower', () =
 test.each(MODULES)('$key factor table shows leverage as NM, not a passing 0.0x', ({ mod, inputs }) => {
   const metrics = mod.calculateMetrics(inputs);
   const row = mod.describeFactors(inputs, metrics, mod.calculateRiskScore(inputs, metrics)).find((f) => f.key === 'leverage');
-  expect(row.score).toBeNull();
+  expect(row.score).toBe(5);
   expect(row.caption).toBe('NM (EBITDA not positive)');
   expect(row.passed).toBe(false);
 });

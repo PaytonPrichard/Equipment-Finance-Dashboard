@@ -64,5 +64,8 @@
 - Point in time: ratings and every input as of the 10-K filing date. Later rating actions go in hindsight.
 - Ratings: DXP Weak (S&P B, Moody's B1, from its 10-K). Titan Not Rated (no S&P rating found, Moody's not checked). Hertz Weak (B- before the Aug 2026 cut to CCC+). H&E Weak, his conservative assumption because no free source exists.
 - Moody's skipped.
-- Negative EBITDA: leverage is NM, the factor drops out of the composite, and the verdict cannot pass. A negative DSCR fails the DSCR gate.
+- Negative EBITDA: leverage is shown as NM and the verdict FAILs with one reason naming EBITDA. In the score, NM leverage counts as worst case (the curve floor, weight kept). Joel first approved dropping the factor, then switched to the floor after a credit review showed dropping it let a loss-maker outscore a marginally profitable borrower.
+- FAIL means outside the firm's policy on something structure can't fix at these numbers, and every FAIL says what would have to change. Tranche never decides. It applies the firm's policy. Hard blocks only for non-credit rules (sanctions, legal limits), firm-configured.
+- Expected verdicts: DXP pass (would also accept flag), H&E flag (maturity wall, change of control), Titan fail, Hertz fail with a path (not blind).
+- First run: DXP and Titan match. H&E mismatches (Tranche PASS) because Tranche can't see debt maturing inside the loan term or a pending change of control (AUDIT P1-21, P1-22).
 - Verdicts are a recommended next action, not a probability.

@@ -269,7 +269,9 @@ export function calculateRiskScore(
   ] as [number, number][]);
 
   // Leverage (15%) — lower is better
-  factors.leverage = metrics.leverage == null ? null : lerp(metrics.leverage, [
+  // NM leverage (EBITDA not positive) scores at the floor of the curve:
+  // worst case, not absent and not zero (AUDIT P0-7, Joel 2026-10-09).
+  factors.leverage = lerp(metrics.leverage ?? Infinity, [
     [0, 100], [2.0, 90], [3.5, 72], [5.0, 48], [7.0, 22], [10.0, 5],
   ] as [number, number][]);
 

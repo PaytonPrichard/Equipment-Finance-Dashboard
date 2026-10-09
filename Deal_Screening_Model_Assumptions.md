@@ -134,7 +134,7 @@ The model produces a composite risk score (0-100), financial metrics, commentary
 
 **Assumption:** Leverage measures total indebtedness relative to cash flow. These thresholds are typical for middle-market commercial lending. Asset-heavy industries (rail, infrastructure) may tolerate higher leverage due to collateral value.
 
-**Zero or negative EBITDA.** Leverage is not meaningful (NM) and is shown as NM, never as 0.0x. This applies to all three asset classes. In the composite, the leverage factor is left out and the other factor weights are re-normalized (see the open item in AUDIT.md P0-7: floor-scoring the factor instead is under review). The screening verdict FAILs with one reason naming EBITDA: earnings cannot cover debt service. That reason replaces the DSCR, leverage and cash-flow coverage reasons, which would restate the same failure. A missing EBITDA is an incomplete input, not this case.
+**Zero or negative EBITDA.** Leverage is not meaningful (NM) and is shown as NM, never as 0.0x. This applies to all three asset classes. In the composite, the leverage factor scores at the floor of its curve (5, the same as 10x or worse) and keeps its weight. NM is treated as worst case, not as absent and not as zero, as rating agencies do. Leaving the factor out was rejected because it let a loss-maker outscore a marginally profitable borrower. The screening verdict FAILs with one reason naming EBITDA: earnings cannot cover debt service. That reason replaces the DSCR, leverage and cash-flow coverage reasons, which would restate the same failure. A missing EBITDA is an incomplete input, not this case.
 
 ### LTV (Loan-to-Value)
 - **Formula:** Net Financed Amount / Equipment Value
