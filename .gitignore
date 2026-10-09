@@ -77,3 +77,7 @@ _personal/
 # react-scripts. Tracking it produced a large diff on every build and it was
 # already on the backlog (AUDIT P2 item).
 src/tailwind-compiled.css
+
+# Real-deals harness: third-party PDFs are never committed; bundle is rebuilt each run
+scripts/real-deals/sources/
+scripts/real-deals/.build/

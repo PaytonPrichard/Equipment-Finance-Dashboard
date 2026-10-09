@@ -80,6 +80,20 @@ Found during the front-end polish pass (surface 1). The pricing UI offers three 
 
 This touches Stripe dashboard config (env vars must point at real Price IDs or checkout 500s), so it needs Joel's config side too. Not a code-only fix.
 
+### P0-7. Zero or negative EBITDA scores as best-in-class leverage
+
+**Status: fixed on `real-deals` 2026-10-09, pending merge to main.** Leverage is null (NM) when EBITDA is not positive. The factor scores at the floor of its curve (5) with its weight kept. `weightedComposite` in `src/utils/format.ts` (also used for custom weights in App.js and the weights preview) skips any factor that is null, as a guard. `evaluateScreening` fails with one reason naming EBITDA and suppresses the DSCR, leverage and cash-flow floor reasons that would restate it. Display surfaces print NM. Tests: `src/lib/negativeEbitda.test.js`. Joel decided: FAIL, not FLAG.
+
+**Decided 2026-10-09: floor, not drop.** The credit review found that dropping the factor and re-normalizing still inflated the composite for a loss-maker. With EF weights, the other factors are divided by 0.80, so a borrower with -$1M EBITDA can outscore one with +$0.1M EBITDA, whose leverage floors at 5. Every such deal FAILs, but `getSuggestedStructure` (advance-rate and reporting tiers in AR and inventory, the guarantee trigger in EF), batch sorting and pipeline chips key off the composite. The alternative is to keep NM in display but score the factor at the curve floor (5) with its weight kept, which matches how rating agencies treat NM leverage (worst-in-class, not absent). Joel chose the floor.
+
+**Not fixed here:** the New Deal screen still cannot screen a loss-maker (P1-20). A negative reported ratio passes a max-leverage covenant test (`src/lib/covenants.ts:46-48`), which is the monitoring twin of this bug.
+
+Found 2026-10-07 by the real-deals harness (Hertz FY2025: corporate EBITDA is negative under every definition).
+
+All three modules set `leverage = 0` when `ebitda <= 0` (`equipment-finance/scoring.ts:144`, `accounts-receivable/scoring.ts:139`, `inventory-finance/scoring.ts:228`). Leverage 0 interpolates to a factor score of 100, the best possible, on a 20% weight. Separately, `evaluateScreening` only applies the DSCR gate when `metrics.dscr > 0` (`screeningCriteria.ts:93`), so a negative DSCR skips the gate entirely. A loss-making borrower gets full leverage points and no DSCR reason.
+
+**Fix.** Treat non-positive EBITDA as unmeasurable leverage, not zero leverage: score the factor at its floor and add a fail reason ("EBITDA is negative, leverage cannot be measured"). Apply the DSCR gate to any DSCR below the floor, including negatives. Add tests with negative EBITDA for all three modules. Credit call for Joel: is negative EBITDA an automatic FAIL, or a FLAG with the score doing the rest?
+
 ### P0-8. Recommendation contradicts the verdict
 
 Found 2026-10-07 (cash-flow stress work). The verdict honours the firm's gates; the recommendation does not. `getRecommendation(score)` in each module maps the composite score alone to a category, and `DealRecommendation`, the executive summary and the memo banner print it. A deal scoring 80 that FLAGs on a gate (cash-flow coverage breaking in the severe case, LTV, DSCR) shows FLAG and, directly below, "Strong Prospect. Recommend advancing to underwriting." Same class of bug as the three verdicts consolidated in `src/lib/dealVerdict.js`.
@@ -174,6 +188,40 @@ webhook.site endpoints were added to the production org during integration testi
 
 **Fix.** Remove any `webhook.site` (or other non-production) URLs from the production org's webhook config after each test run. Longer term, run integration tests against a dedicated test org so production webhook config is never written to. Consider adding a guard to `scripts/test-crm-integration.js` that aborts if any registered webhook URL for a non-localhost org contains `webhook.site`.
 
+### P1-13. Stress FCCR drops the new loan when actual debt service is supplied
+
+**Status: fixed on main (25d4e0f, Workstream A).**
+
+Found 2026-10-07 by the real-deals harness smoke test.
+
+`calculateMetrics` treats `actualAnnualDebtService` as existing debt service and adds the new loan on top (`equipment-finance/scoring.ts:133`). `runStressTest` treats the same field as total debt service and leaves the new loan out (`:496-499`). AR has the same pattern (`accounts-receivable/scoring.ts:557`). On the DXP smoke test, base FCCR printed 2.38x. With the new loan included it is 2.23x.
+
+**Fix.** One definition: `actualAnnualDebtService` is existing debt service, and every coverage metric adds the new facility. Belongs with Workstream A (cash-flow stress).
+
+### P1-14. Silent imputations never reach the memo
+
+**Status: the 3% capex imputation is gone on main (25d4e0f, Workstream A). The 8% debt-service estimate is still open.**
+
+`runStressTest` sets maintenance capex to 3% of revenue when it is missing, in all three modules (`equipment-finance/scoring.ts:495`, `accounts-receivable/scoring.ts:556`, `inventory-finance/scoring.ts:661`). `calculateMetrics` estimates existing debt service at 8% of total debt. The 3% has no source and misses in both directions on real filings: DXP's total capex is 2.0% of revenue, but H&E's rental fleet purchases alone are 22.7%.
+
+Rule (Joel, 2026-10-07): any estimated or uncertain input that could change an outcome must be visible to the analyst in the screening view and the committee memo.
+
+**Fix.** (1) Every imputation returns a flag that the verdict rationale and memo print, as `debtServiceEstimated` already does for the 8%. (2) Replace the flat 3% with a sector benchmark from a cited public source (for example a published sector capex-to-sales dataset), labeled as an estimate. Verify the source before using it.
+
+### P1-15. Every structure assumes a first-priority lien
+
+The structure suggestions state a first-priority lien without asking (`equipment-finance/scoring.ts:438,441`, `inventory-finance/scoring.ts:547`). No module has an input for lien position or for senior debt ahead of the new facility. A second-lien equipment loan, or an inventory facility behind an ABL, screens exactly like a first lien.
+
+**Feature (Joel, 2026-10-07).** Add a lien position input (first, second, pari passu) and the amount of senior debt on the same collateral, across all three modules. Second lien should compute combined LTV (senior plus new over collateral value), reduce the effective advance rate on AR and inventory, and change the structure text. Credit calls for Joel: haircuts and thresholds for second lien.
+
+### P1-16. A FLAG or FAIL doesn't say what would change it
+
+Joel, 2026-10-07: the verdict is the recommended next action, not a probability. PASS means advance. FLAG means advance only if named issues are resolved. FAIL means decline on this structure and say what would have to be true. Today the verdict lists reasons but never inverts them, and shows no liquidity, maturity or trend context.
+
+**Prototype:** `scripts/real-deals/lib/analystView.js` (tested). For each breached gate it gives the EBITDA, debt service, debt, down payment or term that clears it, and flags "fails before this loan" when restructuring the new loan can't help. For a PASS it shows headroom (how far EBITDA can fall before each gate). It also shows liquidity runway, a 5-year maturity wall and collateral cover. Negative EBITDA gets fixed text: not a cash-flow credit, would need a collateral-based structure or outside support (wording Joel to confirm).
+
+**App version:** after Workstream A merges, since it touches `ScreeningVerdict.tsx` and the memo in `ExportPanel.js`, which A has already edited. The maturity wall needs new inputs. That belongs in A's raw-inputs design.
+
 ### P1-17. Screening criteria are stored per user, not per firm
 
 Found 2026-10-07. `ScreeningCriteria.js` saves thresholds to `user_preferences.screening_criteria`. Two analysts at the same firm can screen the same deal against different floors and get different verdicts. Credit policy belongs to the firm: org-level criteria with an admin role to edit, user-level overrides off by default.
@@ -185,6 +233,18 @@ Found 2026-10-07 (live extraction test, Granite Ridge). The broker email said "1
 ### P1-19. Hardcoded fallback encryption key
 
 `src/lib/encryption.js:29` falls back to `'tranche-pilot-key-2026'` when `REACT_APP_ENCRYPTION_SECRET` is unset, and any `REACT_APP_` value ships in the browser bundle anyway. Whatever this encrypts is not protected. Extends P1-5.
+
+### P1-20. The New Deal screen cannot screen a loss-making borrower
+
+Found 2026-10-09 (credit review of P0-7). `isInputValid` requires `ebitda > 0` in all three modules (EF, AR and inventory scoring), and App.js gates the verdict, memo and stress tests on it. The currency input also strips the minus sign (`DealInputForm.js`). A negative EBITDA from extraction, batch or the pipeline shows "Enter Deal Parameters", which reads as an incomplete input instead of a FAIL. The P0-7 verdict only reaches batch, the API and pipeline verdicts. **Fix.** Accept negative EBITDA in the form, keep a blank as blank (not 0, or it trips the "EBITDA is $0.0M" FAIL), and relax `isInputValid` to require EBITDA present, not positive. Touches `DealInputForm.js`, which Workstream A also edits.
+
+### P1-21. Refinancing risk inside the loan term never reaches the verdict
+
+Found 2026-10-09 by the first real-deals run. H&E (FY2024) screens PASS at 84. Joel expected FLAG. All $1.45B of its debt matures in 2028, inside a 5-year loan term, and nothing in Tranche sees it. DXP has the same shape: an $812M term loan due 2030, before a 60-month loan from 2026 matures. **Fix.** With a maturity schedule input (Workstream A raw-inputs design), FLAG when debt maturing before the new facility matures exceeds liquidity, or a share of total debt. Credit call for Joel: the threshold.
+
+### P1-22. No input for event risk (pending change of control, litigation)
+
+Found 2026-10-09 (H&E). By its 10-K filing date H&E had agreed to be acquired, and Joel flags a pending change of control on its own. Tranche has no field for it, so the screen cannot reflect it. **Fix.** An event-risk input (change of control, material litigation, going-concern language, covenant waiver) that adds a FLAG reason naming the event. Extraction could pre-fill it from filings, with the analyst confirming.
 
 ---
 
@@ -233,13 +293,35 @@ Tests exist for: scoring modules (equipment, AR, inventory), `screeningCriteria.
 
 **Fix.** Add `server-lib/validate.test.js` (Jest, `--testEnvironment node`) covering: required-field rejection, percent-range rejection (0-100 bounds), currency-range rejection (negative, over $1T), size-cap rejection (>32KB payload), and a fully valid input acceptance case for each of the three validators. The P1-9 aging-bucket sum check should get its own test once that fix is in place.
 
-### P2-10. Cash-flow inputs missing from Copy Summary and extraction
+### P2-7. SOFR default disagrees with the spec
+
+`Deal_Screening_Model_Assumptions.md:18` says 4.50%. `equipment-finance/constants.ts:18` has `DEFAULT_SOFR = 0.0425`. The server scores at the code value. Per CLAUDE.md the spec is the source of truth, so update one to match the other.
+
+### P2-8. Stress table has no stressed verdict
+
+The stress test shows each scenario's metrics and score, but not whether the deal still passes. On the DXP smoke test, leverage crossed the 5.0x ceiling at -30% EBITDA with no flag shown. Run `evaluateScreening` per scenario and show pass/flag/fail.
+
+### P2-9. The EBITDA input has no definition guidance
+
+The form takes EBITDA as a single number. Real filings place floorplan interest, finance-lease amortization and fleet depreciation differently by company (see `scripts/real-deals/README.md`). An analyst can enter EBITDA that doesn't pair with the debt entered. Add help text stating the pairing rules.
+
+### P2-10. The credit rating input is too coarse to tell B+ from CCC+
+
+Found 2026-10-08 entering real ratings. `CreditRating` has four values (Strong, Adequate, Weak, Not Rated). Under the mapping (IG = Strong, BB = Adequate, B or below = Weak), DXP at S&P B+ and Hertz at S&P CCC+ both become Weak and get the same +200 bps spread. CCC+ is near distress, while B+ is mid high-yield. The input loses the difference a credit analyst cares about most.
+
+**Fix.** Accept the agency letter grade (S&P or Moody's scale) and map it to a finer internal scale for spread and scoring. Credit call for Joel: the buckets and spreads.
+
+### P2-11. Cash-flow inputs missing from Copy Summary and extraction
 
 Found 2026-10-07. The cash-flow fields (cash taxes, working capital, rent, floating share) and the two new metrics are in the screening view, verdict and memo, but not in each module's `generateExportSummary` text or in `server-lib/extract.js` field specs. Extraction adds a small per-call token cost.
 
-### P2-11. New Deal form does not say what it holds
+### P2-12. New Deal form does not say what it holds
 
 Found 2026-10-07. Uploading onto a non-empty form asks "The form holds X" with no indication whether X is an unsaved draft or a reopened pipeline deal (`src/App.js:705-709` says as much). Agreed fix: a status chip above the form ("Draft, not in pipeline" / "Editing X (stage)"), with the dialog using the same words.
+
+### P2-13. EBITDA stress improves a loss-making borrower
+
+Found 2026-10-09. `runStressTest` multiplies EBITDA by 0.9, 0.8 and 0.7. When EBITDA is negative that shrinks the loss, so "Severe (-30%)" reads better than the base case. The same pattern is in all three modules (`runStressTest`) and in `src/utils/cashFlowMetrics.ts`. The verdict is unaffected (P0-7 fails the deal), but the stress table and memo print coverage improving under severe stress. **Fix.** Stress the loss in the adverse direction (EBITDA minus a share of revenue or of the absolute value), or show the table as not applicable when EBITDA is not positive. Credit call for Joel.
 
 ---
 

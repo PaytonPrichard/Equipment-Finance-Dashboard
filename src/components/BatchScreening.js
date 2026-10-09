@@ -36,7 +36,7 @@ function getColumns(moduleKey) {
     ...common,
     assetCol[moduleKey] || assetCol.equipment_finance,
     { key: 'dscr', label: 'DSCR', accessor: (d) => d.metrics.dscr, format: (v) => v.toFixed(2) + 'x' },
-    { key: 'leverage', label: 'Leverage', accessor: (d) => d.metrics.leverage, format: (v) => v.toFixed(1) + 'x' },
+    { key: 'leverage', label: 'Leverage', accessor: (d) => d.metrics.leverage, format: (v) => (v == null ? 'NM' : v.toFixed(1) + 'x') },
     { key: 'score', label: 'Risk Score', accessor: (d) => d.riskScore.composite, badge: true },
     { key: 'recommendation', label: 'Recommendation', accessor: (d) => d.rec.category, recStyle: true },
   ];
@@ -306,6 +306,8 @@ export default function BatchScreening({ sofr = DEFAULT_SOFR, onLoadDeal, active
     return [...scoredDeals].sort((a, b) => {
       let va = col.accessor(a);
       let vb = col.accessor(b);
+      // Not-meaningful values sort last in either direction.
+      if (va == null || vb == null) return va == null && vb == null ? 0 : va == null ? 1 : -1;
       if (typeof va === 'string') va = va.toLowerCase();
       if (typeof vb === 'string') vb = vb.toLowerCase();
       if (va < vb) return sortAsc ? -1 : 1;

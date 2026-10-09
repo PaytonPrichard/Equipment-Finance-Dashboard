@@ -57,6 +57,7 @@ import {
   formatPercent,
   formatCurrencyFull,
   formatCurrency,
+  weightedComposite,
 } from './utils/format';
 import { getModule, getAvailableModules, DEFAULT_MODULE } from './modules';
 import { computeBorrowerExtras, coverageStatus, liquidityCoverageStatus, revenueGrowthStatus } from './utils/borrowerMetrics';
@@ -154,6 +155,7 @@ function getDscrStatus(d) {
   return 'weak';
 }
 function getLeverageStatus(l) {
+  if (l == null) return 'weak'; // not meaningful: EBITDA is not positive
   if (l < 2.0) return 'excellent';
   if (l <= 3.5) return 'good';
   if (l <= 5.0) return 'adequate';
@@ -546,11 +548,10 @@ function AuthenticatedApp({ profile, user }) {
     const { factors } = baseRiskScore;
     const total = Object.values(customWeights).reduce((a, b) => a + b, 0);
     if (total === 0) return baseRiskScore;
-    const composite = Math.round(
-      Object.keys(customWeights).reduce((sum, key) => {
-        const factorScore = factors[key] || 0;
-        return sum + factorScore * (customWeights[key] / total);
-      }, 0)
+    // Not-meaningful factors (null) drop out and the rest re-normalize,
+    // the same rule the modules use (AUDIT P0-7).
+    const composite = weightedComposite(
+      Object.keys(customWeights).map((key) => [factors[key], customWeights[key]]),
     );
     return { ...baseRiskScore, composite };
   }, [baseRiskScore, customWeights]);

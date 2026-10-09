@@ -68,7 +68,9 @@ function generateTakeaways(
     });
   }
 
-  const factorEntries = Object.entries(riskScore.factors).sort((a, b) => b[1] - a[1]);
+  // Factors that are not meaningful (null) are neither a strength nor a weakness.
+  const factorEntries = (Object.entries(riskScore.factors).filter(([, v]) => v != null) as [string, number][])
+    .sort((a, b) => b[1] - a[1]);
   const strongest = factorEntries[0];
   const factorDescriptions: Record<string, string> = {
     dscr: 'The borrower\'s debt service coverage is the strongest part of this deal.',

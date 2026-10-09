@@ -4,6 +4,7 @@
 
 import {
   lerp,
+  weightedComposite,
   formatCurrency,
   formatCurrencyFull,
   formatPercent,
@@ -137,9 +138,11 @@ export function calculateMetrics(
     : 0;
 
   // Leverage = total debt (existing + facility) / EBITDA
+  // Not meaningful when EBITDA is not positive. Null, never 0: zero leverage
+  // used to score as best-in-class for a loss-making borrower (AUDIT P0-7).
   const leverage = ebitda > 0
     ? ((totalExistingDebt || 0) + borrowingBase) / ebitda
-    : 0;
+    : null;
 
   return {
     eligibleAR,
@@ -169,7 +172,7 @@ export function calculateRiskScore(
   inputs: AccountsReceivableInputs,
   metrics: AccountsReceivableMetrics,
 ): RiskScore {
-  const factors: Record<string, number> = {};
+  const factors: Record<string, number | null> = {};
 
   // DSCR (25%) — higher is better
   factors.dscr = lerp(metrics.dscr, [
@@ -177,7 +180,9 @@ export function calculateRiskScore(
   ] as [number, number][]);
 
   // Leverage (15%) — lower is better
-  factors.leverage = lerp(metrics.leverage, [
+  // NM leverage (EBITDA not positive) scores at the floor of the curve:
+  // worst case, not absent and not zero (AUDIT P0-7, Joel 2026-10-09).
+  factors.leverage = lerp(metrics.leverage ?? Infinity, [
     [0, 100], [2.0, 90], [3.5, 72], [5.0, 48], [7.0, 22], [10.0, 5],
   ] as [number, number][]);
 
@@ -211,15 +216,15 @@ export function calculateRiskScore(
   else if (tier === 'moderate') factors.industry = 65;
   else factors.industry = 35;
 
-  const composite = Math.round(
-    factors.dscr * 0.25 +
-    factors.leverage * 0.15 +
-    factors.arQuality * 0.20 +
-    factors.concentration * 0.15 +
-    factors.dilution * 0.10 +
-    factors.yearsInBusiness * 0.10 +
-    factors.industry * 0.05
-  );
+  const composite = weightedComposite([
+    [factors.dscr, 0.25],
+    [factors.leverage, 0.15],
+    [factors.arQuality, 0.20],
+    [factors.concentration, 0.15],
+    [factors.dilution, 0.10],
+    [factors.yearsInBusiness, 0.10],
+    [factors.industry, 0.05],
+  ]);
 
   return { composite, factors };
 }
@@ -239,7 +244,7 @@ export function describeFactors(
     // ABL floor (minDscrAR), not the equipment-finance 1.25x. Keeps the factor
     // table consistent with evaluateScreening and the export summary.
     { key: 'dscr', label: 'DSCR', score: f.dscr || 0, weight: 0.25, caption: `${(metrics.dscr || 0).toFixed(2)}x`, target: `≥ ${DEFAULT_CRITERIA.minDscrAR.toFixed(2)}x`, passed: (metrics.dscr || 0) >= DEFAULT_CRITERIA.minDscrAR },
-    { key: 'leverage', label: 'Leverage', score: f.leverage || 0, weight: 0.15, caption: `${(metrics.leverage || 0).toFixed(1)}x`, target: `≤ ${FACTOR_TARGETS.maxLeverage.toFixed(1)}x`, passed: (metrics.leverage || 0) <= FACTOR_TARGETS.maxLeverage },
+    { key: 'leverage', label: 'Leverage', score: f.leverage ?? null, weight: 0.15, caption: metrics.leverage == null ? 'NM (EBITDA not positive)' : `${metrics.leverage.toFixed(1)}x`, target: `≤ ${FACTOR_TARGETS.maxLeverage.toFixed(1)}x`, passed: metrics.leverage != null && metrics.leverage <= FACTOR_TARGETS.maxLeverage },
     { key: 'arQuality', label: 'AR aging', score: f.arQuality || 0, weight: 0.20, caption: `${pctOver30.toFixed(0)}% past 30 days`, target: `< ${FACTOR_TARGETS.maxAgingOver30}%`, passed: pctOver30 < FACTOR_TARGETS.maxAgingOver30 },
     { key: 'concentration', label: 'Top customer concentration', score: f.concentration || 0, weight: 0.15, caption: `${((metrics.concentrationRisk || 0) * 100).toFixed(0)}%`, target: `≤ ${(CONCENTRATION_THRESHOLD * 100).toFixed(0)}%`, passed: (metrics.concentrationRisk || 0) <= CONCENTRATION_THRESHOLD },
     { key: 'dilution', label: 'Dilution', score: f.dilution || 0, weight: 0.10, caption: `${((metrics.dilutionRate || 0) * 100).toFixed(1)}%`, target: `≤ ${(DILUTION_THRESHOLD * 100).toFixed(0)}%`, passed: (metrics.dilutionRate || 0) <= DILUTION_THRESHOLD },
@@ -482,7 +487,7 @@ export function getSuggestedStructure(
       'Springing fixed charge coverage ratio (minimum 1.10x) triggered when availability falls below threshold'
     );
   }
-  if (metrics.leverage > 4.0) {
+  if (metrics.leverage != null && metrics.leverage > 4.0) {
     suggestions.enhancements.push(
       'Maximum total leverage covenant of 4.0x with step-down schedule'
     );

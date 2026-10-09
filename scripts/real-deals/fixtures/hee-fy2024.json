@@ -1,0 +1,263 @@
+{
+  "case": "hee-fy2024",
+  "assetClass": "equipment_finance",
+  "borrower": {
+    "name": "H&E Equipment Services, Inc.",
+    "ticker": "HEES",
+    "cik": 1339605
+  },
+  "period": {
+    "form": "10-K",
+    "fiscalYearEnd": "2024-12-31",
+    "companyFactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001339605.json",
+    "fetchedAt": "2026-10-07"
+  },
+  "context": "Equipment rental. Acquired by Herc Holdings in 2025, so FY2024 is the last 10-K. Treat this as a screen dated February 2025.",
+  "figures": {
+    "revenue": {
+      "tags": [
+        "us-gaap:Revenues"
+      ],
+      "sources": [
+        {
+          "tag": "us-gaap:Revenues",
+          "val": 1516583000,
+          "start": "2024-01-01",
+          "end": "2024-12-31",
+          "accn": "0000950170-25-024867",
+          "form": "10-K",
+          "filed": "2025-02-21",
+          "url": "https://www.sec.gov/Archives/edgar/data/1339605/000095017025024867/"
+        }
+      ],
+      "value": 1516583000
+    },
+    "operatingIncome": {
+      "tags": [
+        "us-gaap:OperatingIncomeLoss"
+      ],
+      "sources": [
+        {
+          "tag": "us-gaap:OperatingIncomeLoss",
+          "val": 229311000,
+          "start": "2024-01-01",
+          "end": "2024-12-31",
+          "accn": "0000950170-25-024867",
+          "form": "10-K",
+          "filed": "2025-02-21",
+          "url": "https://www.sec.gov/Archives/edgar/data/1339605/000095017025024867/"
+        }
+      ],
+      "value": 229311000
+    },
+    "depreciationAmortization": {
+      "manual": {
+        "value": 434022000,
+        "cite": "Cash-flow statement (https://www.sec.gov/Archives/edgar/data/1339605/000095017025024867/R7.htm): Depreciation and amortization of property and equipment 47,982 + Depreciation of rental equipment 375,330 + Amortization of intangible assets 10,265 + Amortization of finance lease ROU assets 445.",
+        "readBy": "Claude 2026-10-07, Joel to verify"
+      },
+      "note": "Excludes amortization of deferred financing costs (1,400), which is interest. XBRL companyfacts carries only the $48.0M line."
+    },
+    "totalDebt": {
+      "manual": {
+        "value": 1447606000,
+        "cite": "Balance sheet (https://www.sec.gov/Archives/edgar/data/1339605/000095017025024867/R2.htm): Senior secured credit facility 199,304 + Senior unsecured notes 1,244,295 + Finance lease liabilities 4,007.",
+        "readBy": "Claude 2026-10-07, Joel to verify"
+      },
+      "note": "Senior notes are shown net of discount and deferred financing costs."
+    },
+    "interestPaid": {
+      "tags": [
+        "us-gaap:InterestPaidNet"
+      ],
+      "sources": [
+        {
+          "tag": "us-gaap:InterestPaidNet",
+          "val": 70617000,
+          "start": "2024-01-01",
+          "end": "2024-12-31",
+          "accn": "0000950170-25-024867",
+          "form": "10-K",
+          "filed": "2025-02-21",
+          "url": "https://www.sec.gov/Archives/edgar/data/1339605/000095017025024867/"
+        }
+      ],
+      "value": 70617000
+    },
+    "currentMaturities": {
+      "manual": {
+        "value": 622000,
+        "cite": "Leases note (https://www.sec.gov/Archives/edgar/data/1339605/000095017025024867/R73.htm): finance lease payments due 2025, 622 (undiscounted). Balance sheet (R2) shows no current portion of the credit facility or notes.",
+        "readBy": "Claude 2026-10-07, Joel to verify"
+      }
+    },
+    "totalCapex": {
+      "tags": [
+        "us-gaap:PaymentsToAcquirePropertyPlantAndEquipment"
+      ],
+      "note": "Non-rental PP&E only. Rental fleet purchases are a separate cash-flow line.",
+      "sources": [
+        {
+          "tag": "us-gaap:PaymentsToAcquirePropertyPlantAndEquipment",
+          "val": 106616000,
+          "start": "2024-01-01",
+          "end": "2024-12-31",
+          "accn": "0000950170-25-024867",
+          "form": "10-K",
+          "filed": "2025-02-21",
+          "url": "https://www.sec.gov/Archives/edgar/data/1339605/000095017025024867/"
+        }
+      ],
+      "value": 106616000
+    },
+    "yearsInBusiness": {
+      "manual": {
+        "value": 63,
+        "cite": "10-K Item 1: \"Founded in 1961 through our predecessor companies, we have been in the equipment services business for approximately 63 years.\"",
+        "readBy": "Claude 2026-10-07, Joel to verify"
+      }
+    },
+    "depreciation": {
+      "manual": {
+        "value": 423312000,
+        "cite": "Cash-flow statement (https://www.sec.gov/Archives/edgar/data/1339605/000095017025024867/R7.htm): 47,982 + 375,330.",
+        "readBy": "Claude 2026-10-07, Joel to verify"
+      },
+      "note": "PP&E plus rental fleet depreciation. Maintenance capex proxy."
+    },
+    "rentalCapex": {
+      "manual": {
+        "value": 344642000,
+        "cite": "Cash-flow statement (https://www.sec.gov/Archives/edgar/data/1339605/000095017025024867/R7.htm): Purchases of rental equipment (344,642).",
+        "readBy": "Claude 2026-10-07, Joel to verify"
+      },
+      "note": "Informational."
+    },
+    "maturityY1": {
+      "manual": {
+        "value": 622000,
+        "cite": "Leases note (https://www.sec.gov/Archives/edgar/data/1339605/000095017025024867/R73.htm): finance lease payments due 2025, 622.",
+        "readBy": "Claude 2026-10-07, Joel to verify"
+      },
+      "note": "H&E does not tag a maturity table. Years 2-3 finance lease amounts not split out here, under $4.4M combined."
+    },
+    "maturityY2": {
+      "manual": {
+        "value": 0,
+        "cite": "Notes (https://www.sec.gov/Archives/edgar/data/1339605/000095017025024867/R67.htm): \"No principal payments are due until maturity.\" Credit facility matures 2028 (https://www.sec.gov/Archives/edgar/data/1339605/000095017025024867/R69.htm).",
+        "readBy": "Claude 2026-10-07, Joel to verify"
+      }
+    },
+    "maturityY3": {
+      "manual": {
+        "value": 0,
+        "cite": "Same as year 2.",
+        "readBy": "Claude 2026-10-07, Joel to verify"
+      }
+    },
+    "maturityY4": {
+      "manual": {
+        "value": 1449304000,
+        "cite": "Senior notes $1,250,000 due Dec. 15, 2028 (https://www.sec.gov/Archives/edgar/data/1339605/000095017025024867/R67.htm) + credit facility $199,304 drawn, matures Feb. 2, 2028 (https://www.sec.gov/Archives/edgar/data/1339605/000095017025024867/R69.htm, R2).",
+        "readBy": "Claude 2026-10-07, Joel to verify"
+      },
+      "note": "Notes at face, not the net carrying value."
+    },
+    "maturityY5": {
+      "manual": {
+        "value": 0,
+        "cite": "No debt maturing in 2029 in the notes read.",
+        "readBy": "Claude 2026-10-07, Joel to verify"
+      }
+    },
+    "availableLiquidity": {
+      "manual": {
+        "value": 535900000,
+        "cite": "Credit facility note (https://www.sec.gov/Archives/edgar/data/1339605/000095017025024867/R69.htm): \"Available borrowings under our senior secured credit facility\" 535.9.",
+        "readBy": "Claude 2026-10-07, Joel to verify"
+      }
+    },
+    "cash": {
+      "tags": [
+        "us-gaap:CashAndCashEquivalentsAtCarryingValue"
+      ],
+      "note": "Year-end cash, balance sheet.",
+      "sources": [
+        {
+          "tag": "us-gaap:CashAndCashEquivalentsAtCarryingValue",
+          "val": 16413000,
+          "start": null,
+          "end": "2024-12-31",
+          "accn": "0000950170-25-024867",
+          "form": "10-K",
+          "filed": "2025-02-21",
+          "url": "https://www.sec.gov/Archives/edgar/data/1339605/000095017025024867/"
+        }
+      ],
+      "value": 16413000
+    }
+  },
+  "assumptions": {
+    "industrySector": {
+      "value": "Construction",
+      "why": "Proposed by Claude, confirmed by Joel 2026-10-07. Rental customers are mostly construction."
+    },
+    "equipmentType": {
+      "value": "Construction Equipment",
+      "why": "Proposed by Claude, confirmed by Joel 2026-10-07. Rental fleet additions."
+    },
+    "equipmentCondition": {
+      "value": "New",
+      "why": "Proposed by Claude, confirmed by Joel 2026-10-07. "
+    },
+    "equipmentCost": {
+      "value": 50000000,
+      "why": "Proposed by Claude, confirmed by Joel 2026-10-07. About 3.3% of revenue. Sized up because fleet purchases run $300M+ a year."
+    },
+    "downPayment": {
+      "value": 7500000,
+      "why": "Proposed by Claude, confirmed by Joel 2026-10-07. 15%, Tranche default."
+    },
+    "financingType": {
+      "value": "EFA",
+      "why": "Proposed by Claude, confirmed by Joel 2026-10-07. "
+    },
+    "usefulLife": {
+      "value": 10,
+      "why": "Proposed by Claude, confirmed by Joel 2026-10-07. Within Tranche range of 8-15 years."
+    },
+    "loanTerm": {
+      "value": 60,
+      "why": "Proposed by Claude, confirmed by Joel 2026-10-07. "
+    },
+    "essentialUse": {
+      "value": true,
+      "why": "Proposed by Claude, confirmed by Joel 2026-10-07. "
+    },
+    "creditRating": {
+      "value": "Weak",
+      "why": "JOEL'S ASSUMPTION 2026-10-09: no free source for the S&P or Moody's rating in effect on 2025-02-21 (S&P history is paywalled, Moody's unavailable). Conservative choice: Weak (B range) rather than Adequate (BB range)."
+    }
+  },
+  "expected": {
+    "verdict": "flag",
+    "reason": "Coverage is strong, but pre-tax income fell 27%, all $1.45B of debt matures in 2028 inside the loan term, and a change of control was pending. The change of control is a flag on its own.",
+    "writtenOn": "2026-10-09"
+  },
+  "discussion": "Claude's read, confirmed by Joel 2026-10-09. Mismatch. The model is wrong, not the expectation. Tranche PASSes at 84 because it cannot see the two things that drive Joel's FLAG: all $1.45B of debt maturing in FY2028, inside the loan term (AUDIT P1-21), and the pending change of control (AUDIT P1-22). The earnings point is weaker than it looked: pre-tax income fell 27%, but EBITDA was flat ($665M in 2023, $663M in 2024, from the prior-year columns of R4 and R7). The drop came from depreciation and interest.",
+  "builds": {
+    "maintenanceCapex": {
+      "terms": [
+        [
+          "+",
+          "depreciation"
+        ]
+      ],
+      "estimate": "Depreciation ($423.3M, mostly rental fleet) used as maintenance capex proxy. Actual 2024 purchases were $344.6M rental plus $106.6M other."
+    }
+  },
+  "caveats": [
+    "TIMING: last 10-K before the 2025 Herc acquisition. Screen is as of February 2025.",
+    "ASSUMPTION, rating: H&E's February 2025 rating could not be verified. Weak is a conservative assumption. Adequate would lower the spread by 200 bps, from +200 to 0."
+  ]
+}

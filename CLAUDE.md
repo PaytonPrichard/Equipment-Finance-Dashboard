@@ -70,6 +70,7 @@ When adding scoring logic, add a test. When changing a threshold, update the spe
 - Don't import `recharts`, `html2pdf`, or `exceljs` outside of components that need them — they're big and should stay lazy-loaded.
 - Don't write to `pipeline_deals` without writing the matching `audit_log` entry.
 - Don't add new asset-class behavior to App.js or shared components. Put it in `src/modules/<asset-class>/`.
+- Don't estimate or impute an input silently. Any estimate or uncertain input that could change an outcome must be visible to the analyst: in the screening view, the verdict rationale, the committee memo and the real-deals report.
 
 ## Active Migrations and Refactors
 

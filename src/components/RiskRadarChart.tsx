@@ -62,11 +62,13 @@ function CustomTooltip({ active, payload }: CustomTooltipProps): React.ReactElem
 const AngleAxis = PolarAngleAxis as any;
 
 export interface RiskRadarChartProps {
-  factors: Record<string, number>;
+  factors: Record<string, number | null>;
 }
 
 export default function RiskRadarChart({ factors }: RiskRadarChartProps): React.ReactElement {
-  const data: RadarDataPoint[] = Object.entries(FACTOR_LABELS).map(([key, label]) => ({
+  // A factor that is not meaningful (null) has no axis. Plotting it at 0
+  // would read as the worst score, which it is not (AUDIT P0-7).
+  const data: RadarDataPoint[] = Object.entries(FACTOR_LABELS).filter(([key]) => factors[key] !== null).map(([key, label]) => ({
     factor: label,
     label,
     score: factors[key] || 0,

@@ -238,7 +238,7 @@ export default function DealProvenance({
                       {f.target}
                     </td>
                     <td className="py-1.5 pr-3 text-right font-mono tabular-nums text-gray-900">
-                      {Math.round(f.score)}
+                      {f.score == null ? 'NM' : Math.round(f.score)}
                     </td>
                     <td className="py-1.5 text-right font-mono tabular-nums text-gray-400">
                       {Math.round(f.weight * 100)}%

@@ -1,0 +1,407 @@
+{
+  "case": "dxp-fy2025",
+  "assetClass": "equipment_finance",
+  "borrower": {
+    "name": "DXP Enterprises, Inc.",
+    "ticker": "DXPE",
+    "cik": 1020710
+  },
+  "period": {
+    "form": "10-K",
+    "fiscalYearEnd": "2025-12-31",
+    "companyFactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001020710.json",
+    "fetchedAt": "2026-10-07"
+  },
+  "context": "Industrial distributor (MRO, pumps, safety). Term loan B refinanced in 2025.",
+  "figures": {
+    "revenue": {
+      "tags": [
+        "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax"
+      ],
+      "sources": [
+        {
+          "tag": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+          "val": 2016365000,
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "accn": "0001628280-26-012382",
+          "form": "10-K",
+          "filed": "2026-02-26",
+          "url": "https://www.sec.gov/Archives/edgar/data/1020710/000162828026012382/"
+        }
+      ],
+      "value": 2016365000
+    },
+    "operatingIncome": {
+      "tags": [
+        "us-gaap:OperatingIncomeLoss"
+      ],
+      "sources": [
+        {
+          "tag": "us-gaap:OperatingIncomeLoss",
+          "val": 176870000,
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "accn": "0001628280-26-012382",
+          "form": "10-K",
+          "filed": "2026-02-26",
+          "url": "https://www.sec.gov/Archives/edgar/data/1020710/000162828026012382/"
+        }
+      ],
+      "value": 176870000
+    },
+    "depreciationAmortization": {
+      "tags": [
+        "us-gaap:Depreciation",
+        "us-gaap:AmortizationOfIntangibleAssets",
+        "us-gaap:FinanceLeaseRightOfUseAssetAmortization"
+      ],
+      "note": "Depreciation + intangible amortization + finance-lease ROU amortization. Ties to the cash-flow statement (R6): Depreciation 10,372 + Amortization of intangibles and finance lease assets 28,478 = $38.85M. https://www.sec.gov/Archives/edgar/data/1020710/000162828026012382/R6.htm",
+      "sources": [
+        {
+          "tag": "us-gaap:Depreciation",
+          "val": 10372000,
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "accn": "0001628280-26-012382",
+          "form": "10-K",
+          "filed": "2026-02-26",
+          "url": "https://www.sec.gov/Archives/edgar/data/1020710/000162828026012382/"
+        },
+        {
+          "tag": "us-gaap:AmortizationOfIntangibleAssets",
+          "val": 21670000,
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "accn": "0001628280-26-012382",
+          "form": "10-K",
+          "filed": "2026-02-26",
+          "url": "https://www.sec.gov/Archives/edgar/data/1020710/000162828026012382/"
+        },
+        {
+          "tag": "us-gaap:FinanceLeaseRightOfUseAssetAmortization",
+          "val": 6808000,
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "accn": "0001628280-26-012382",
+          "form": "10-K",
+          "filed": "2026-02-26",
+          "url": "https://www.sec.gov/Archives/edgar/data/1020710/000162828026012382/"
+        }
+      ],
+      "value": 38850000
+    },
+    "totalDebt": {
+      "tags": [
+        "us-gaap:LongTermDebtCurrent",
+        "us-gaap:LongTermDebtNoncurrent",
+        "us-gaap:FinanceLeaseLiability"
+      ],
+      "note": "Funded debt plus finance leases. Operating leases excluded.",
+      "sources": [
+        {
+          "tag": "us-gaap:LongTermDebtCurrent",
+          "val": 8580000,
+          "start": null,
+          "end": "2025-12-31",
+          "accn": "0001628280-26-012382",
+          "form": "10-K",
+          "filed": "2026-02-26",
+          "url": "https://www.sec.gov/Archives/edgar/data/1020710/000162828026012382/"
+        },
+        {
+          "tag": "us-gaap:LongTermDebtNoncurrent",
+          "val": 818476000,
+          "start": null,
+          "end": "2025-12-31",
+          "accn": "0001628280-26-012382",
+          "form": "10-K",
+          "filed": "2026-02-26",
+          "url": "https://www.sec.gov/Archives/edgar/data/1020710/000162828026012382/"
+        },
+        {
+          "tag": "us-gaap:FinanceLeaseLiability",
+          "val": 20883000,
+          "start": null,
+          "end": "2025-12-31",
+          "accn": "0001628280-26-012382",
+          "form": "10-K",
+          "filed": "2026-02-26",
+          "url": "https://www.sec.gov/Archives/edgar/data/1020710/000162828026012382/"
+        }
+      ],
+      "value": 847939000
+    },
+    "interestPaid": {
+      "tags": [
+        "us-gaap:InterestPaidNet"
+      ],
+      "sources": [
+        {
+          "tag": "us-gaap:InterestPaidNet",
+          "val": 53698000,
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "accn": "0001628280-26-012382",
+          "form": "10-K",
+          "filed": "2026-02-26",
+          "url": "https://www.sec.gov/Archives/edgar/data/1020710/000162828026012382/"
+        }
+      ],
+      "value": 53698000
+    },
+    "currentMaturities": {
+      "tags": [
+        "us-gaap:LongTermDebtCurrent",
+        "us-gaap:FinanceLeaseLiabilityCurrent"
+      ],
+      "sources": [
+        {
+          "tag": "us-gaap:LongTermDebtCurrent",
+          "val": 8580000,
+          "start": null,
+          "end": "2025-12-31",
+          "accn": "0001628280-26-012382",
+          "form": "10-K",
+          "filed": "2026-02-26",
+          "url": "https://www.sec.gov/Archives/edgar/data/1020710/000162828026012382/"
+        },
+        {
+          "tag": "us-gaap:FinanceLeaseLiabilityCurrent",
+          "val": 7660000,
+          "start": null,
+          "end": "2025-12-31",
+          "accn": "0001628280-26-012382",
+          "form": "10-K",
+          "filed": "2026-02-26",
+          "url": "https://www.sec.gov/Archives/edgar/data/1020710/000162828026012382/"
+        }
+      ],
+      "value": 16240000
+    },
+    "totalCapex": {
+      "tags": [
+        "us-gaap:PaymentsToAcquirePropertyPlantAndEquipment"
+      ],
+      "note": "Total capex, informational. The filing does not split maintenance from growth.",
+      "sources": [
+        {
+          "tag": "us-gaap:PaymentsToAcquirePropertyPlantAndEquipment",
+          "val": 40286000,
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "accn": "0001628280-26-012382",
+          "form": "10-K",
+          "filed": "2026-02-26",
+          "url": "https://www.sec.gov/Archives/edgar/data/1020710/000162828026012382/"
+        }
+      ],
+      "value": 40286000
+    },
+    "yearsInBusiness": {
+      "manual": {
+        "value": 117,
+        "cite": "10-K Item 1: \"Founded in 1908, DXP Enterprises, Inc.\" 2025 - 1908.",
+        "readBy": "Claude 2026-10-07, Joel to verify"
+      },
+      "note": "Fiscal-year-end year minus founding year. The factor saturates at 30 years."
+    },
+    "depreciation": {
+      "tags": [
+        "us-gaap:Depreciation"
+      ],
+      "note": "PP&E depreciation only. Used as the maintenance capex proxy.",
+      "sources": [
+        {
+          "tag": "us-gaap:Depreciation",
+          "val": 10372000,
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "accn": "0001628280-26-012382",
+          "form": "10-K",
+          "filed": "2026-02-26",
+          "url": "https://www.sec.gov/Archives/edgar/data/1020710/000162828026012382/"
+        }
+      ],
+      "value": 10372000
+    },
+    "maturityY1": {
+      "tags": [
+        "us-gaap:LongTermDebtMaturitiesRepaymentsOfPrincipalInNextTwelveMonths"
+      ],
+      "note": "Debt maturities by year, excluding finance leases.",
+      "sources": [
+        {
+          "tag": "us-gaap:LongTermDebtMaturitiesRepaymentsOfPrincipalInNextTwelveMonths",
+          "val": 8580000,
+          "start": null,
+          "end": "2025-12-31",
+          "accn": "0001628280-26-012382",
+          "form": "10-K",
+          "filed": "2026-02-26",
+          "url": "https://www.sec.gov/Archives/edgar/data/1020710/000162828026012382/"
+        }
+      ],
+      "value": 8580000
+    },
+    "maturityY2": {
+      "tags": [
+        "us-gaap:LongTermDebtMaturitiesRepaymentsOfPrincipalInYearTwo"
+      ],
+      "sources": [
+        {
+          "tag": "us-gaap:LongTermDebtMaturitiesRepaymentsOfPrincipalInYearTwo",
+          "val": 8580000,
+          "start": null,
+          "end": "2025-12-31",
+          "accn": "0001628280-26-012382",
+          "form": "10-K",
+          "filed": "2026-02-26",
+          "url": "https://www.sec.gov/Archives/edgar/data/1020710/000162828026012382/"
+        }
+      ],
+      "value": 8580000
+    },
+    "maturityY3": {
+      "tags": [
+        "us-gaap:LongTermDebtMaturitiesRepaymentsOfPrincipalInYearThree"
+      ],
+      "sources": [
+        {
+          "tag": "us-gaap:LongTermDebtMaturitiesRepaymentsOfPrincipalInYearThree",
+          "val": 8580000,
+          "start": null,
+          "end": "2025-12-31",
+          "accn": "0001628280-26-012382",
+          "form": "10-K",
+          "filed": "2026-02-26",
+          "url": "https://www.sec.gov/Archives/edgar/data/1020710/000162828026012382/"
+        }
+      ],
+      "value": 8580000
+    },
+    "maturityY4": {
+      "tags": [
+        "us-gaap:LongTermDebtMaturitiesRepaymentsOfPrincipalInYearFour"
+      ],
+      "sources": [
+        {
+          "tag": "us-gaap:LongTermDebtMaturitiesRepaymentsOfPrincipalInYearFour",
+          "val": 9080000,
+          "start": null,
+          "end": "2025-12-31",
+          "accn": "0001628280-26-012382",
+          "form": "10-K",
+          "filed": "2026-02-26",
+          "url": "https://www.sec.gov/Archives/edgar/data/1020710/000162828026012382/"
+        }
+      ],
+      "value": 9080000
+    },
+    "maturityY5": {
+      "tags": [
+        "us-gaap:LongTermDebtMaturitiesRepaymentsOfPrincipalInYearFive"
+      ],
+      "sources": [
+        {
+          "tag": "us-gaap:LongTermDebtMaturitiesRepaymentsOfPrincipalInYearFive",
+          "val": 811965000,
+          "start": null,
+          "end": "2025-12-31",
+          "accn": "0001628280-26-012382",
+          "form": "10-K",
+          "filed": "2026-02-26",
+          "url": "https://www.sec.gov/Archives/edgar/data/1020710/000162828026012382/"
+        }
+      ],
+      "value": 811965000
+    },
+    "cash": {
+      "tags": [
+        "us-gaap:CashAndCashEquivalentsAtCarryingValue"
+      ],
+      "note": "Year-end cash, balance sheet.",
+      "sources": [
+        {
+          "tag": "us-gaap:CashAndCashEquivalentsAtCarryingValue",
+          "val": 303783000,
+          "start": null,
+          "end": "2025-12-31",
+          "accn": "0001628280-26-012382",
+          "form": "10-K",
+          "filed": "2026-02-26",
+          "url": "https://www.sec.gov/Archives/edgar/data/1020710/000162828026012382/"
+        }
+      ],
+      "value": 303783000
+    }
+  },
+  "assumptions": {
+    "industrySector": {
+      "value": "Other",
+      "why": "Proposed by Claude, confirmed by Joel 2026-10-07. Industrial distributor, no clean sector fit. Energy if oil and gas customer exposure dominates."
+    },
+    "equipmentType": {
+      "value": "Vehicles/Fleet",
+      "why": "Proposed by Claude, confirmed by Joel 2026-10-07. Service truck fleet for service centers."
+    },
+    "equipmentCondition": {
+      "value": "New",
+      "why": "Proposed by Claude, confirmed by Joel 2026-10-07. "
+    },
+    "equipmentCost": {
+      "value": 15000000,
+      "why": "Proposed by Claude, confirmed by Joel 2026-10-07. About 0.7% of revenue, so borrower credit drives the verdict, not deal size."
+    },
+    "downPayment": {
+      "value": 1500000,
+      "why": "Proposed by Claude, confirmed by Joel 2026-10-07. 10%, Tranche default for Vehicles/Fleet."
+    },
+    "financingType": {
+      "value": "TRAC",
+      "why": "Proposed by Claude, confirmed by Joel 2026-10-07. Tranche suggested structure for Vehicles/Fleet."
+    },
+    "usefulLife": {
+      "value": 7,
+      "why": "Proposed by Claude, confirmed by Joel 2026-10-07. Within Tranche range of 5-8 years."
+    },
+    "loanTerm": {
+      "value": 60,
+      "why": "Proposed by Claude, confirmed by Joel 2026-10-07. "
+    },
+    "essentialUse": {
+      "value": true,
+      "why": "Proposed by Claude, confirmed by Joel 2026-10-07. Service fleet is core to field operations."
+    },
+    "creditRating": {
+      "value": "Weak",
+      "why": "DXP 10-K, Credit Ratings section: corporate ratings as of 2025-12-31 are Moody's B1 and S&P B (https://www.sec.gov/Archives/edgar/data/1020710/000162828026012382/dxpe-20251231.htm). Lower of the two is S&P B. Mapped by Joel's rule: B or below = Weak. Read by Claude 2026-10-08, Joel to verify."
+    }
+  },
+  "expected": {
+    "verdict": "pass",
+    "alsoAcceptable": [
+      "flag"
+    ],
+    "reason": "Leverage 3.9x with 3x coverage, $304M of cash, and a loan that is 0.06x EBITDA. Could be a flag on the single-B rating if being conservative.",
+    "writtenOn": "2026-10-09"
+  },
+  "discussion": "Claude's read, confirmed by Joel 2026-10-09. Match. PASS at 80 with no gate reasons. Pro forma leverage of 4.0x misses the 3.5x scoring target but clears the 5.0x ceiling. Tranche cannot see that DXP's $812M term loan is due in FY2030, before this 60-month loan matures (AUDIT P1-21). With that check, DXP would likely FLAG, which Joel marked acceptable.",
+  "builds": {
+    "maintenanceCapex": {
+      "terms": [
+        [
+          "+",
+          "depreciation"
+        ]
+      ],
+      "estimate": "PP&E depreciation ($10.4M) used as maintenance capex proxy. Total capex was $40.3M, so if most capex is maintenance this understates it about 4x."
+    }
+  },
+  "caveats": [
+    "RATING TIMING: rating used is as of the 10-K (S&P B, Moody's B1 at 2025-12-31). S&P upgraded DXP to B+ on 2026-07-20 (S&P Global Ratings site, read by Joel 2026-10-08). Both map to Weak, so the input is unchanged."
+  ],
+  "hindsight": [
+    "2026-07-20: S&P upgraded DXP to B+ (S&P Global Ratings site, read by Joel 2026-10-08)."
+  ]
+}

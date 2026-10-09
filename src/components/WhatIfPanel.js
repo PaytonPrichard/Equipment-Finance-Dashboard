@@ -259,8 +259,10 @@ export default function WhatIfPanel({ inputs, metrics: baseMetrics, riskScore: b
                   better: (a, b) => a < b,
                 },
               ].map((m) => {
-                const improved = m.better(m.adj, m.base);
-                const changed = Math.abs(m.adj - m.base) > 0.005;
+                // A not-meaningful value (null) has no direction of improvement.
+                const comparable = m.adj != null && m.base != null;
+                const improved = comparable && m.better(m.adj, m.base);
+                const changed = comparable ? Math.abs(m.adj - m.base) > 0.005 : m.adj !== m.base;
                 return (
                   <div key={m.label} className="bg-gray-50 rounded-xl px-3 py-2.5">
                     <span className="text-[10px] text-gray-400">{m.label}</span>

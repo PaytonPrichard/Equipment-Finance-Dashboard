@@ -1,0 +1,288 @@
+{
+  "case": "hertz-fy2025",
+  "assetClass": "equipment_finance",
+  "borrower": {
+    "name": "Hertz Global Holdings, Inc.",
+    "ticker": "HTZ",
+    "cik": 1657853
+  },
+  "period": {
+    "form": "10-K",
+    "fiscalYearEnd": "2025-12-31",
+    "companyFactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001657853.json",
+    "fetchedAt": "2026-10-07"
+  },
+  "context": "Car rental. Net loss of $747M in FY2025. Analyzed at the corporate level: vehicle debt ($11.6B) is serviced by the fleet through a separate financing structure, so EBITDA is after vehicle depreciation and vehicle interest, and debt is non-vehicle only.",
+  "figures": {
+    "revenue": {
+      "tags": [
+        "us-gaap:Revenues"
+      ],
+      "sources": [
+        {
+          "tag": "us-gaap:Revenues",
+          "val": 8504000000,
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "accn": "0001657853-26-000008",
+          "form": "10-K",
+          "filed": "2026-02-26",
+          "url": "https://www.sec.gov/Archives/edgar/data/1657853/000165785326000008/"
+        }
+      ],
+      "value": 8504000000
+    },
+    "totalDebt": {
+      "manual": {
+        "value": 5425000000,
+        "cite": "Balance sheet (https://www.sec.gov/Archives/edgar/data/1657853/000165785326000008/R3.htm): Non-Vehicle Debt, Total debt 5,425.",
+        "readBy": "Claude 2026-10-07, Joel to verify"
+      },
+      "note": "Paired with corporate EBITDA. Vehicle debt is serviced by the fleet, and its cost is already in EBITDA."
+    },
+    "interestPaid": {
+      "manual": {
+        "value": 463000000,
+        "cite": "Cash-flow statement supplemental (https://www.sec.gov/Archives/edgar/data/1657853/000165785326000008/R13.htm): Interest, net of amounts capitalized, Non-vehicle, 463.",
+        "readBy": "Claude 2026-10-07, Joel to verify"
+      }
+    },
+    "currentMaturities": {
+      "manual": {
+        "value": 284000000,
+        "cite": "Debt maturities (https://www.sec.gov/Archives/edgar/data/1657853/000165785326000008/R71.htm): Non-Vehicle Debt, 2026, 284.",
+        "readBy": "Claude 2026-10-07, Joel to verify"
+      }
+    },
+    "yearsInBusiness": {
+      "manual": {
+        "value": 107,
+        "cite": "10-K Item 1: Hertz \"is a successor to corporations that have been engaged in the vehicle rental and leasing business since 1918.\" 2025 - 1918.",
+        "readBy": "Claude 2026-10-07, Joel to verify"
+      }
+    },
+    "pretaxIncome": {
+      "tags": [
+        "us-gaap:IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest"
+      ],
+      "note": "Hertz Global (HGH) consolidated pre-tax loss, https://www.sec.gov/Archives/edgar/data/1657853/000165785326000008/R7.htm. The Hertz Corporation subsidiary reports -786.",
+      "sources": [
+        {
+          "tag": "us-gaap:IncomeLossFromContinuingOperationsBeforeIncomeTaxesExtraordinaryItemsNoncontrollingInterest",
+          "val": -830000000,
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "accn": "0001657853-26-000008",
+          "form": "10-K",
+          "filed": "2026-02-26",
+          "url": "https://www.sec.gov/Archives/edgar/data/1657853/000165785326000008/"
+        }
+      ],
+      "value": -830000000
+    },
+    "nonVehicleInterest": {
+      "manual": {
+        "value": 469000000,
+        "cite": "Statement of operations (https://www.sec.gov/Archives/edgar/data/1657853/000165785326000008/R7.htm): Interest expense, net, Non-vehicle, 469.",
+        "readBy": "Claude 2026-10-07, Joel to verify"
+      }
+    },
+    "nonVehicleDA": {
+      "tags": [
+        "us-gaap:DepreciationAndAmortization"
+      ],
+      "note": "Statement of operations line \"Non-vehicle depreciation and amortization\" 117.",
+      "sources": [
+        {
+          "tag": "us-gaap:DepreciationAndAmortization",
+          "val": 117000000,
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "accn": "0001657853-26-000008",
+          "form": "10-K",
+          "filed": "2026-02-26",
+          "url": "https://www.sec.gov/Archives/edgar/data/1657853/000165785326000008/"
+        }
+      ],
+      "value": 117000000
+    },
+    "nonVehicleDepreciation": {
+      "tags": [
+        "us-gaap:Depreciation"
+      ],
+      "note": "Non-vehicle depreciation excluding intangible amortization. Maintenance capex proxy.",
+      "sources": [
+        {
+          "tag": "us-gaap:Depreciation",
+          "val": 95000000,
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "accn": "0001657853-26-000008",
+          "form": "10-K",
+          "filed": "2026-02-26",
+          "url": "https://www.sec.gov/Archives/edgar/data/1657853/000165785326000008/"
+        }
+      ],
+      "value": 95000000
+    },
+    "consolidatedDebt": {
+      "tags": [
+        "us-gaap:DebtAndCapitalLeaseObligations"
+      ],
+      "note": "Informational. Includes $11,629M of vehicle debt.",
+      "sources": [
+        {
+          "tag": "us-gaap:DebtAndCapitalLeaseObligations",
+          "val": 17054000000,
+          "start": null,
+          "end": "2025-12-31",
+          "accn": "0001657853-26-000008",
+          "form": "10-K",
+          "filed": "2026-02-26",
+          "url": "https://www.sec.gov/Archives/edgar/data/1657853/000165785326000008/"
+        }
+      ],
+      "value": 17054000000
+    },
+    "maturityY1": {
+      "manual": {
+        "value": 284000000,
+        "cite": "Debt maturities (https://www.sec.gov/Archives/edgar/data/1657853/000165785326000008/R71.htm): Non-Vehicle Debt, 2026, 284.",
+        "readBy": "Claude 2026-10-07, Joel to verify"
+      },
+      "note": "Non-vehicle only. Tagged XBRL maturities include vehicle debt."
+    },
+    "maturityY2": {
+      "manual": {
+        "value": 18000000,
+        "cite": "Debt maturities (https://www.sec.gov/Archives/edgar/data/1657853/000165785326000008/R71.htm): Non-Vehicle Debt, 2027, 18.",
+        "readBy": "Claude 2026-10-07, Joel to verify"
+      }
+    },
+    "maturityY3": {
+      "manual": {
+        "value": 2270000000,
+        "cite": "Debt maturities (https://www.sec.gov/Archives/edgar/data/1657853/000165785326000008/R71.htm): Non-Vehicle Debt, 2028, 2270.",
+        "readBy": "Claude 2026-10-07, Joel to verify"
+      }
+    },
+    "maturityY4": {
+      "manual": {
+        "value": 2521000000,
+        "cite": "Debt maturities (https://www.sec.gov/Archives/edgar/data/1657853/000165785326000008/R71.htm): Non-Vehicle Debt, 2029, 2521.",
+        "readBy": "Claude 2026-10-07, Joel to verify"
+      }
+    },
+    "maturityY5": {
+      "manual": {
+        "value": 425000000,
+        "cite": "Debt maturities (https://www.sec.gov/Archives/edgar/data/1657853/000165785326000008/R71.htm): Non-Vehicle Debt, 2030, 425.",
+        "readBy": "Claude 2026-10-07, Joel to verify"
+      }
+    },
+    "cash": {
+      "tags": [
+        "us-gaap:CashAndCashEquivalentsAtCarryingValue"
+      ],
+      "note": "Year-end cash, balance sheet.",
+      "sources": [
+        {
+          "tag": "us-gaap:CashAndCashEquivalentsAtCarryingValue",
+          "val": 565000000,
+          "start": null,
+          "end": "2025-12-31",
+          "accn": "0001657853-26-000008",
+          "form": "10-K",
+          "filed": "2026-02-26",
+          "url": "https://www.sec.gov/Archives/edgar/data/1657853/000165785326000008/"
+        }
+      ],
+      "value": 565000000
+    }
+  },
+  "assumptions": {
+    "industrySector": {
+      "value": "Transportation/Logistics",
+      "why": "Proposed by Claude, confirmed by Joel 2026-10-07. "
+    },
+    "equipmentType": {
+      "value": "Vehicles/Fleet",
+      "why": "Proposed by Claude, confirmed by Joel 2026-10-07. "
+    },
+    "equipmentCondition": {
+      "value": "New",
+      "why": "Proposed by Claude, confirmed by Joel 2026-10-07. "
+    },
+    "equipmentCost": {
+      "value": 100000000,
+      "why": "Proposed by Claude, confirmed by Joel 2026-10-07. About 1.2% of revenue."
+    },
+    "downPayment": {
+      "value": 10000000,
+      "why": "Proposed by Claude, confirmed by Joel 2026-10-07. 10%, Tranche default."
+    },
+    "financingType": {
+      "value": "TRAC",
+      "why": "Proposed by Claude, confirmed by Joel 2026-10-07. Tranche suggested structure for Vehicles/Fleet."
+    },
+    "usefulLife": {
+      "value": 5,
+      "why": "Proposed by Claude, confirmed by Joel 2026-10-07. Bottom of Tranche range. Rental fleets cycle faster than this."
+    },
+    "loanTerm": {
+      "value": 36,
+      "why": "Proposed by Claude, confirmed by Joel 2026-10-07. "
+    },
+    "essentialUse": {
+      "value": true,
+      "why": "Proposed by Claude, confirmed by Joel 2026-10-07. "
+    },
+    "creditRating": {
+      "value": "Weak",
+      "why": "S&P Global Ratings research update, Aug. 12, 2026 (text provided by Joel 2026-10-08): issuer credit rating lowered to CCC+ from B-. So at the 10-K filing (2026-02-26) the issuer rating was B- or higher. An undated news report says B- followed a cut from B. B- and B both map to Weak (Joel's rule)."
+    }
+  },
+  "expected": {
+    "verdict": "fail",
+    "reason": "Corporate EBITDA is negative, so earnings cannot cover debt service. Should FAIL with a path: not a cash-flow credit at these numbers, would need a collateral-based structure or outside support. Not blind: written after reading the Aug 2026 S&P downgrade.",
+    "writtenOn": "2026-10-09"
+  },
+  "discussion": "Claude's read, confirmed by Joel 2026-10-09. Match, but not blind (Joel read the Aug 2026 S&P downgrade first). FAIL on one reason naming EBITDA, with the path: not a cash-flow credit, would need a collateral-based structure or outside support. The score of 47 sits above Titan's 44 because of the industry tier (moderate vs high), not leverage. Both fail, so the order does not matter here. S&P's later downgrade cites the same 2028-29 maturities and liquidity the analyst view shows.",
+  "builds": {
+    "ebitda": {
+      "terms": [
+        [
+          "+",
+          "pretaxIncome"
+        ],
+        [
+          "+",
+          "nonVehicleInterest"
+        ],
+        [
+          "+",
+          "nonVehicleDA"
+        ]
+      ]
+    },
+    "maintenanceCapex": {
+      "terms": [
+        [
+          "+",
+          "nonVehicleDepreciation"
+        ]
+      ],
+      "estimate": "Non-vehicle depreciation ($95M) used as maintenance capex proxy. Vehicle depreciation is already deducted in corporate EBITDA. Actual non-vehicle capex was $97M."
+    }
+  },
+  "caveats": [
+    "JUDGMENT, EBITDA definition: GAAP build used (pre-tax -830 + non-vehicle interest 469 + non-vehicle D&A 117 = -$244M). Company-reported Adjusted EBITDA in the segment note (https://www.sec.gov/Archives/edgar/data/1657853/000165785326000008/R114.htm) is -$48M for the two segments combined and -$291M for Corporate. It adds back items management treats as one-off. All three readings are negative, so the direction of the verdict does not depend on the choice.",
+    "JUDGMENT, interest: statement of operations shows non-vehicle interest of $469M. The segment note shows \"non-vehicle debt interest, net\" of $498M. Different measures. $469M used.",
+    "SYNTHETIC STRUCTURE: Hertz does not fund its fleet with single-lender equipment finance. The deal terms are hypothetical and test the corporate credit read, not a realistic structure.",
+    "RATING TIMING: issuer rating at the 10-K filing date was B- or B (date of the B to B- cut unconfirmed). Both map to Weak. The CCC+ downgrade on 2026-08-12 is after the screen date and not used."
+  ],
+  "hindsight": [
+    "2026-08-12: S&P lowered Hertz's issuer credit rating to CCC+ from B-, negative outlook. Reasons: refinancing risk on 2028-29 maturities, continued operating cash burn, a capital structure S&P views as unsustainable, and liquidity it views as less than adequate. S&P's path to a stable outlook: refinance the maturities, improve the liquidity cushion, EBIT interest coverage near 1.0x or debt to capital below 90%. (S&P research update, provided by Joel.)",
+    "Joel read this update before writing the Hertz expectation, so that expectation is not blind to the outcome."
+  ]
+}

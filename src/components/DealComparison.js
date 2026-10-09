@@ -65,7 +65,7 @@ function extractComparableValues(inputs, sofr = DEFAULT_SOFR, criteria = DEFAULT
 }
 
 function determineBetter(leftVal, rightVal, direction) {
-  if (direction === null || leftVal === rightVal) return { left: false, right: false };
+  if (direction === null || leftVal === rightVal || leftVal == null || rightVal == null) return { left: false, right: false };
   if (direction === 'higher') {
     return { left: leftVal > rightVal, right: rightVal > leftVal };
   }

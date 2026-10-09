@@ -21,16 +21,18 @@ const METRIC_DEFS: MetricDef[] = [
 
 interface IndustryAverages {
   dscr: number;
-  leverage: number;
+  leverage: number | null;
   ltv: number;
   termCoverage: number;
   revenueConcentration: number;
   riskScore: number;
 }
 
-function average(values: number[]): number {
-  if (values.length === 0) return 0;
-  return values.reduce((sum, v) => sum + v, 0) / values.length;
+// Not-meaningful values (null) are left out rather than averaged in as zero.
+function average(values: (number | null)[]): number {
+  const xs = values.filter((v): v is number => v != null && Number.isFinite(v));
+  if (xs.length === 0) return 0;
+  return xs.reduce((sum, v) => sum + v, 0) / xs.length;
 }
 
 export interface IndustryBenchmarksProps {
@@ -136,9 +138,10 @@ export default function IndustryBenchmarks({ inputs, metrics, riskScore, sofr = 
         {METRIC_DEFS.map((def) => {
           const current = currentValues[def.key as keyof IndustryAverages];
           const avg = industryAverages[def.key as keyof IndustryAverages];
-          const delta = current - avg;
-          const isBetter = def.higherIsBetter ? delta > 0 : delta < 0;
-          const isNeutral = Math.abs(delta) < 0.01;
+          // A value that is not meaningful (NM) has no direction against the average.
+          const delta = current != null && avg != null ? current - avg : null;
+          const isBetter = delta != null && (def.higherIsBetter ? delta > 0 : delta < 0);
+          const isNeutral = delta == null || Math.abs(delta) < 0.01;
 
           let arrowColor: string;
           let arrowChar: string;
@@ -153,7 +156,7 @@ export default function IndustryBenchmarks({ inputs, metrics, riskScore, sofr = 
             arrowChar = '▼';
           }
 
-          if (!isNeutral) {
+          if (!isNeutral && delta != null) {
             arrowChar = delta > 0 ? '▲' : '▼';
           }
 
@@ -164,10 +167,10 @@ export default function IndustryBenchmarks({ inputs, metrics, riskScore, sofr = 
             >
               <span className="text-sm text-gray-700 font-medium">{def.label}</span>
               <span className="font-mono font-semibold text-sm text-gray-800 text-right">
-                {def.format(current)}
+                {current == null ? 'NM' : def.format(current)}
               </span>
               <span className="font-mono font-semibold text-sm text-gray-500 text-right">
-                {def.format(avg)}
+                {avg == null ? 'NM' : def.format(avg)}
               </span>
               <div className="flex justify-center">
                 <span className={`font-mono font-bold text-sm ${arrowColor}`}>

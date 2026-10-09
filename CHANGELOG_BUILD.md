@@ -1,5 +1,22 @@
 # Build changelog
 
+## 2026-10-07: Real-deals harness (Workstream B)
+
+**What changed.** Added `scripts/real-deals/`, a harness that pulls borrower financials from SEC EDGAR XBRL, combines them with Joel's hypothetical deal terms, and runs them through the real equipment finance scoring code. It writes a dated report that compares Tranche's verdict with Joel's expectation, written beforehand. Fixtures are set up for DXP Enterprises, Titan Machinery, H&E Equipment Services and Hertz. XBRL figures are fetched. Manual figures, deal terms and expectations are still empty.
+
+**Why.** To test the credit logic on real numbers, with every figure traceable to a filing.
+
+**What Joel decided.**
+- Equipment finance module only for now.
+- Companies: DXP, Titan Machinery, H&E (FY2024, last 10-K before the Herc acquisition), Hertz.
+- SEC User-Agent: `Tranche joelpeter617@gmail.com`.
+- Hertz: corporate view, GAAP-built EBITDA. Company-adjusted EBITDA must appear in the caveats (it does, with citation).
+- Manual reads with citations for figures XBRL can't supply. No statement scraping yet.
+- Maintenance capex: no flat 3%. Depreciation as a proxy, always labeled as an estimate.
+- Credit rating mapping: IG = Strong, BB = Adequate, B or below = Weak, unrated = Not Rated.
+- New rule: any estimated or uncertain input that could change an outcome must be visible to the analyst (report, screening view, memo). Added to CLAUDE.md.
+- Bugs found while building go in AUDIT.md (P0-7, P1-13 to P1-16, P2-7 to P2-10), not here.
+
 ## 2026-10-07: Cash-flow stress test (Workstream A)
 
 **What changed**
@@ -38,6 +55,20 @@
 **What Joel decided:** verdict first. FLAG may say "Advance with Conditions" only if the conditions are listed so nobody has to guess what they are.
 
 **Not done here:** saying what would clear each condition (e.g. how much EBITDA or how much less loan) is real-deals' AUDIT P1-16, after this branch merges.
+
+## 2026-10-09: Real-deals ratings, analyst view, P0-7 (Workstream B)
+
+**What changed.** Credit ratings recorded for all four cases. Analyst sheet and report gained liquidity runway, a five-year maturity wall, "what would change this" and headroom (AUDIT P1-16 prototype). A `hindsight` field records events after the screen date, printed after the result and never scored. Merged main (Workstream A's cash-flow work) into `real-deals`.
+
+**What Joel decided.**
+- Point in time: ratings and every input as of the 10-K filing date. Later rating actions go in hindsight.
+- Ratings: DXP Weak (S&P B, Moody's B1, from its 10-K). Titan Not Rated (no S&P rating found, Moody's not checked). Hertz Weak (B- before the Aug 2026 cut to CCC+). H&E Weak, his conservative assumption because no free source exists.
+- Moody's skipped.
+- Negative EBITDA: leverage is shown as NM and the verdict FAILs with one reason naming EBITDA. In the score, NM leverage counts as worst case (the curve floor, weight kept). Joel first approved dropping the factor, then switched to the floor after a credit review showed dropping it let a loss-maker outscore a marginally profitable borrower.
+- FAIL means outside the firm's policy on something structure can't fix at these numbers, and every FAIL says what would have to change. Tranche never decides. It applies the firm's policy. Hard blocks only for non-credit rules (sanctions, legal limits), firm-configured.
+- Expected verdicts: DXP pass (would also accept flag), H&E flag (maturity wall, change of control), Titan fail, Hertz fail with a path (not blind).
+- First run: DXP and Titan match. H&E mismatches (Tranche PASS) because Tranche can't see debt maturing inside the loan term or a pending change of control (AUDIT P1-21, P1-22).
+- Verdicts are a recommended next action, not a probability.
 
 ## 2026-10-09: EBITDA build Phase 1, step 1 (Workstream A)
 
