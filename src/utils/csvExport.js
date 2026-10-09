@@ -49,7 +49,7 @@ export function downloadCsv(csvString, filename) {
 export function exportScreeningCsv(inputs, metrics, riskScore, recommendation, verdict) {
   const fmtCurrency = (v) => v ? `$${Math.round(v).toLocaleString()}` : '$0';
   const fmtPct = (v) => v !== undefined ? `${(v * 100).toFixed(1)}%` : '';
-  const fmtRatio = (v) => v !== undefined ? `${v.toFixed(2)}x` : '';
+  const fmtRatio = (v) => (v === undefined ? '' : v == null || !Number.isFinite(v) ? 'NM' : `${v.toFixed(2)}x`);
 
   const columns = [
     { key: 'label', label: 'Metric' },
@@ -136,7 +136,7 @@ export function exportBatchCsv(results) {
     { key: (r) => r.inputs?.annualRevenue ? `$${Math.round(r.inputs.annualRevenue).toLocaleString()}` : '', label: 'Revenue' },
     { key: (r) => r.inputs?.ebitda ? `$${Math.round(r.inputs.ebitda).toLocaleString()}` : '', label: 'EBITDA' },
     { key: (r) => r.metrics?.dscr ? r.metrics.dscr.toFixed(2) + 'x' : '', label: 'DSCR' },
-    { key: (r) => r.metrics?.leverage ? r.metrics.leverage.toFixed(2) + 'x' : '', label: 'Leverage' },
+    { key: (r) => r.metrics?.leverage === null ? 'NM' : r.metrics?.leverage ? r.metrics.leverage.toFixed(2) + 'x' : '', label: 'Leverage' },
   ];
 
   const csv = toCsv(results, columns);

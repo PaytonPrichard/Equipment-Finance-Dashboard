@@ -179,7 +179,7 @@ export default function HistoricalDealsTable({ deals, sofr = DEFAULT_SOFR }) {
                       <div className="grid grid-cols-3 gap-2">
                         {[
                           { l: 'DSCR', v: `${deal.m.dscr.toFixed(2)}x` },
-                          { l: 'Leverage', v: `${deal.m.leverage.toFixed(1)}x` },
+                          { l: 'Leverage', v: deal.m.leverage == null ? 'NM' : `${deal.m.leverage.toFixed(1)}x` },
                           { l: 'LTV', v: `${(deal.m.ltv * 100).toFixed(0)}%` },
                         ].map((x) => (
                           <div key={x.l} className="bg-gray-50 rounded-xl p-2.5 text-center">

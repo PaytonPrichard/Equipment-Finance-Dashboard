@@ -2,6 +2,7 @@ import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react'
 import { useAuth } from '../contexts/AuthContext';
 import { fetchPreferences, upsertPreferences } from '../lib/preferences';
 import { DEFAULT_WEIGHTS, validateWeights } from '../lib/scoringWeights';
+import { weightedComposite } from '../utils/format';
 
 
 const FACTOR_LABELS = {
@@ -129,14 +130,10 @@ export default function ScoringWeights({ inputs, metrics, riskScore, onWeightsCh
       weightFractions[key] = weights[key] / total;
     });
 
-    const composite = Math.round(
-      (factors.dscr || 0) * weightFractions.dscr +
-      (factors.leverage || 0) * weightFractions.leverage +
-      (factors.industry || 0) * weightFractions.industry +
-      (factors.essentiality || 0) * weightFractions.essentiality +
-      (factors.equipmentLtv || 0) * weightFractions.equipmentLtv +
-      (factors.yearsInBusiness || 0) * weightFractions.yearsInBusiness +
-      (factors.termCoverage || 0) * weightFractions.termCoverage
+    // Same rule as App.js and the modules, so the preview matches the score
+    // that is applied: a not-meaningful factor (null) drops out (AUDIT P0-7).
+    const composite = weightedComposite(
+      Object.keys(DEFAULT_WEIGHTS).map((key) => [factors[key], weightFractions[key]]),
     );
 
     return { composite, factors };

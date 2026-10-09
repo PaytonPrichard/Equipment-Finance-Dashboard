@@ -134,6 +134,8 @@ The model produces a composite risk score (0-100), financial metrics, commentary
 
 **Assumption:** Leverage measures total indebtedness relative to cash flow. These thresholds are typical for middle-market commercial lending. Asset-heavy industries (rail, infrastructure) may tolerate higher leverage due to collateral value.
 
+**Zero or negative EBITDA.** Leverage is not meaningful (NM) and is shown as NM, never as 0.0x. This applies to all three asset classes. In the composite, the leverage factor is left out and the other factor weights are re-normalized (see the open item in AUDIT.md P0-7: floor-scoring the factor instead is under review). The screening verdict FAILs with one reason naming EBITDA: earnings cannot cover debt service. That reason replaces the DSCR, leverage and cash-flow coverage reasons, which would restate the same failure. A missing EBITDA is an incomplete input, not this case.
+
 ### LTV (Loan-to-Value)
 - **Formula:** Net Financed Amount / Equipment Value
 - Equipment value = cost (new) or cost * 0.85 (used)
@@ -289,6 +291,8 @@ The model applies EBITDA decline scenarios to simulate borrower cash flow deteri
 | Severe Stress | -30% | Significant downturn / industry shock |
 
 For each scenario, the model recalculates DSCR, leverage, and the composite risk score. AR and inventory also stress collateral (aging, dilution, obsolescence, turnover). This shows how much cushion exists before the deal "breaks" (e.g., DSCR falls below 1.0x).
+
+**Known limitation (AUDIT P2-13).** The decline is applied as a multiplier, so a negative EBITDA shrinks under stress and the severe case reads better than the base case. Until that is fixed, ignore the stress tables for a borrower with negative EBITDA. The verdict already fails such a deal.
 
 ### Cash-flow stress (all asset classes)
 

@@ -177,7 +177,7 @@ export function generateBrandedPdfHtml({ summaryText, inputs, metrics, riskScore
     return '$' + Math.round(v).toLocaleString();
   };
   const fmtPct = (v) => v !== undefined && v !== null ? (v * 100).toFixed(1) + '%' : '';
-  const fmtRatio = (v) => v !== undefined ? v.toFixed(2) + 'x' : '';
+  const fmtRatio = (v) => (v === undefined ? '' : v == null || !Number.isFinite(v) ? 'NM' : v.toFixed(2) + 'x');
 
   // Build key metrics table based on what's available.
   //
@@ -205,7 +205,7 @@ export function generateBrandedPdfHtml({ summaryText, inputs, metrics, riskScore
       ? ['FCCR', fmtRatio(fc), coverageColor(fc, c.minFccr)]
       : ['FCCR', 'Not provided', '#94a3b8']);
   }
-  if (metrics?.leverage !== undefined) metricRows.push(['Leverage', fmtRatio(metrics.leverage), metrics.leverage <= c.maxLeverage ? '#16a34a' : metrics.leverage <= c.maxLeverage * 1.5 ? '#ca8a04' : '#dc2626']);
+  if (metrics?.leverage !== undefined) metricRows.push(['Leverage', fmtRatio(metrics.leverage), metrics.leverage == null ? '#dc2626' : metrics.leverage <= c.maxLeverage ? '#16a34a' : metrics.leverage <= c.maxLeverage * 1.5 ? '#ca8a04' : '#dc2626']);
   if (metrics?.ltv !== undefined) metricRows.push(['LTV', fmtPct(metrics.ltv), metrics.ltv * 100 <= c.maxLtv ? '#16a34a' : metrics.ltv <= 1.2 ? '#ca8a04' : '#dc2626']);
   if (metrics?.termCoverage !== undefined) {
     // DSCR, FCCR, leverage and LTV are standard and travel on their own.
@@ -325,30 +325,34 @@ export function generateBrandedPdfHtml({ summaryText, inputs, metrics, riskScore
 
   // Red flags — bottom sub-scores under 50, paired with their underlying metric.
   // Don't pad: show 0-3 items, sorted worst first.
+  // A factor that is not meaningful (score null, e.g. leverage when EBITDA is
+  // negative) is a concern, shown as NM and ranked worst, never as 0/100.
+  const rank = (f) => (f.score == null ? -1 : f.score);
+  const subScore = (f) => (f.score == null ? 'NM' : `${Math.round(f.score)}/100`);
   const redFlagItems = (factors || [])
-    .filter((f) => f.score < 50)
+    .filter((f) => f.score == null || f.score < 50)
     .slice()
-    .sort((a, b) => a.score - b.score)
+    .sort((a, b) => rank(a) - rank(b))
     .slice(0, 3);
 
   // Strengths & Concerns — page 2. Top 3 ≥75, bottom 3 <50, drawn from the
   // same factor array but expressed for committee skim-reading.
   const strengths = (factors || [])
-    .filter((f) => f.score >= 75)
+    .filter((f) => f.score != null && f.score >= 75)
     .slice()
     .sort((a, b) => b.score - a.score)
     .slice(0, 3);
   const concerns = (factors || [])
-    .filter((f) => f.score < 50)
+    .filter((f) => f.score == null || f.score < 50)
     .slice()
-    .sort((a, b) => a.score - b.score)
+    .sort((a, b) => rank(a) - rank(b))
     .slice(0, 3);
   const factorRow = (f, side) => {
     const accent = side === 'strength' ? '#16a34a' : '#dc2626';
     return `<div style="border-left:3px solid ${accent};padding:6px 10px;margin-bottom:6px;background:${side === 'strength' ? '#f0fdf4' : '#fef2f2'};border-radius:0 4px 4px 0">
       <div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px">
         <span style="font-size:12.5px;font-weight:700;color:#1f2937">${esc(f.label)}</span>
-        <span style="font-size:11.5px;color:${accent};font-weight:600;flex-shrink:0">${Math.round(f.score)}/100</span>
+        <span style="font-size:11.5px;color:${accent};font-weight:600;flex-shrink:0">${subScore(f)}</span>
       </div>
       <div style="font-size:11.5px;color:#475569;margin-top:2px">${esc(f.caption)} <span style="color:#94a3b8">· target ${esc(f.target)}</span></div>
     </div>`;
@@ -443,7 +447,7 @@ export function generateBrandedPdfHtml({ summaryText, inputs, metrics, riskScore
     <div style="font-size:12.5px;font-weight:700;color:#991b1b;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px">Red Flags</div>
     ${redFlagItems.map((f) => `<div style="display:flex;gap:8px;align-items:baseline;margin-bottom:4px">
       <span style="color:#dc2626;font-size:12.5px;flex-shrink:0">&#10148;</span>
-      <span style="font-size:12.5px;color:#1f2937"><strong>${esc(f.label)}</strong> ${esc(f.caption)}, target ${esc(f.target)} <span style="color:#6b7280">(sub-score ${Math.round(f.score)}/100)</span></span>
+      <span style="font-size:12.5px;color:#1f2937"><strong>${esc(f.label)}</strong> ${esc(f.caption)}, target ${esc(f.target)} <span style="color:#6b7280">(sub-score ${subScore(f)})</span></span>
     </div>`).join('')}
   </div>`;
 

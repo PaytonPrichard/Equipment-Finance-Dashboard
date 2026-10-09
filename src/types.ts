@@ -187,7 +187,8 @@ export interface RateInfo {
 
 export interface BaseMetrics {
   dscr: number;
-  leverage: number;
+  /** Total debt / EBITDA. Null when EBITDA is not positive: not meaningful (NM), not zero. */
+  leverage: number | null;
   rateInfo: RateInfo;
   newAnnualDebtService: USD;
   existingDebtService: USD;
@@ -254,13 +255,14 @@ export type FactorScore = number;
 
 export interface RiskScore {
   composite: number;                          // 0-100
-  factors: Record<string, FactorScore>;
+  /** Null means the factor is not meaningful and is left out of the composite. */
+  factors: Record<string, FactorScore | null>;
 }
 
 export interface FactorDescriptor {
   key: string;
   label: string;
-  score: FactorScore;
+  score: FactorScore | null;
   weight: number;                  // 0-1, sums to 1.0 across all factors
   caption: string;                 // e.g. "1.45x" or "32%"
   target: string;                  // e.g. "≥ 1.25x"
@@ -467,7 +469,7 @@ export interface StressScenario {
   decline: number;                 // EBITDA decline as a fraction (0-1)
   ebitda: USD;
   dscr: number;
-  leverage: number;
+  leverage: number | null;
   fccr?: number | null;
   score: number;
   /** AR-specific. */

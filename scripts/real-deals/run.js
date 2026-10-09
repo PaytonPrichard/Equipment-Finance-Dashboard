@@ -36,6 +36,9 @@ function buildBundle() {
 const money = (n) =>
   n == null ? 'n/a' : `${n < 0 ? '-' : ''}$${(Math.abs(n) / 1e6).toLocaleString('en-US', { maximumFractionDigits: 1 })}M`;
 const x = (n, d = 2) => (n == null || !Number.isFinite(n) ? 'n/a' : `${n.toFixed(d)}x`);
+// Leverage is null when EBITDA is not positive (NM). FCCR is null when its inputs are missing.
+const lev = (n) => (n == null ? 'NM' : x(n, 1));
+const fccrText = (n) => (n == null ? 'not provided' : x(n));
 const MONEY_FIELDS = new Set(['annualRevenue', 'ebitda', 'totalExistingDebt', 'actualAnnualDebtService', 'equipmentCost', 'downPayment', 'maintenanceCapex']);
 const fmtField = (k, v) => (v == null ? 'n/a' : MONEY_FIELDS.has(k) ? money(v) : String(v));
 
@@ -59,11 +62,10 @@ function runCase(fx, S) {
   if (metrics.debtServiceEstimated) {
     warnings.push('FALLBACK: existing debt service estimated at 8% of total debt. No actual figure was supplied.');
   }
-  if (inputs.maintenanceCapex == null) {
-    warnings.push('FALLBACK: stress-test FCCR uses 3% of revenue as maintenance capex. runStressTest imputes it silently.');
-  }
+  // Metrics the screening could not compute because inputs are missing.
+  for (const n of screening.notes || []) warnings.push(`NOTE: ${n}`);
   if (!(inputs.ebitda > 0)) {
-    warnings.push('DEFECT: EBITDA is zero or negative. Leverage reads 0.0x and scores as best-in-class, and the DSCR gate is skipped. This result is not valid until AUDIT.md P0-7 is fixed.');
+    warnings.push('STRESS: EBITDA is negative, so the EBITDA-decline scenarios shrink the loss and read better than the base case (AUDIT P2-13). Ignore the stress table for this case.');
   }
 
   const actual = screening.verdict;
@@ -120,10 +122,10 @@ function caseSection(r) {
   const m = r.metrics;
   out.push('', '### Tranche output', '');
   out.push(`**${r.actual.toUpperCase()}**, composite score ${r.risk.composite}. ${r.match ? 'Matches' : '**Does not match**'} the expectation.`);
-  out.push('', `Rate ${(m.rate * 100).toFixed(2)}% all-in. DSCR ${x(m.dscr)}. Leverage ${x(m.leverage, 1)}. LTV ${(m.ltv * 100).toFixed(0)}%. Term coverage ${m.termCoverage.toFixed(0)}%. Revenue concentration ${m.revenueConcentration.toFixed(1)}%. EBITDA margin ${m.ebitdaMargin.toFixed(1)}%.`);
+  out.push('', `Rate ${(m.rate * 100).toFixed(2)}% all-in. DSCR ${x(m.dscr)}. Leverage ${lev(m.leverage)}. LTV ${(m.ltv * 100).toFixed(0)}%. Term coverage ${m.termCoverage.toFixed(0)}%. Revenue concentration ${m.revenueConcentration.toFixed(1)}%. EBITDA margin ${m.ebitdaMargin.toFixed(1)}%.`);
   out.push('', '| Factor | Weight | Score | Reading | Target | Met |', '|---|---|---|---|---|---|');
   for (const f of r.factors) {
-    out.push(`| ${f.label} | ${(f.weight * 100).toFixed(0)}% | ${Math.round(f.score)} | ${f.caption} | ${f.target} | ${f.passed ? 'yes' : 'no'} |`);
+    out.push(`| ${f.label} | ${(f.weight * 100).toFixed(0)}% | ${f.score == null ? 'NM' : Math.round(f.score)} | ${f.caption} | ${f.target} | ${f.passed ? 'yes' : 'no'} |`);
   }
   out.push('', '**Verdict reasons**', '');
   if (r.screening.reasons.length) for (const re of r.screening.reasons) out.push(`- ${re.level.toUpperCase()}: ${re.text}`);
@@ -155,7 +157,7 @@ function caseSection(r) {
   out.push('- Trend: see the analyst sheet for prior-year revenue and pre-tax income.');
 
   out.push('', '**EBITDA stress**', '', '| Scenario | EBITDA | DSCR | Leverage | FCCR | Score |', '|---|---|---|---|---|---|');
-  for (const s of r.stress) out.push(`| ${s.label} | ${money(s.ebitda)} | ${x(s.dscr)} | ${x(s.leverage, 1)} | ${x(s.fccr)} | ${s.score} |`);
+  for (const s of r.stress) out.push(`| ${s.label} | ${money(s.ebitda)} | ${x(s.dscr)} | ${lev(s.leverage)} | ${fccrText(s.fccr)} | ${s.score} |`);
 
 
   if (fx.hindsight?.length) {

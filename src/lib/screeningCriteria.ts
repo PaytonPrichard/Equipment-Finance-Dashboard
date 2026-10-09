@@ -106,9 +106,24 @@ export function evaluateScreening(
     reasons.push({ level: 'flag', text: `Score ${riskScore.composite} is below pass threshold (${c.passScore})` });
   }
 
+  // ---- Non-positive EBITDA (AUDIT P0-7) ----
+  // Coverage is negative and leverage is not meaningful. One reason says so,
+  // in place of the DSCR, leverage and cash-flow floor reasons, which would
+  // each restate the same failure. A missing EBITDA is not this case: that is
+  // an incomplete input, not a loss-making borrower.
+  const ebitdaValue = (inputs as { ebitda?: unknown }).ebitda;
+  const ebitdaNotPositive = ebitdaValue != null && ebitdaValue !== '' && Number(ebitdaValue) <= 0;
+  if (ebitdaNotPositive) {
+    const e = Number(ebitdaValue);
+    reasons.push({
+      level: 'fail',
+      text: `EBITDA is ${e < 0 ? '-' : ''}$${Math.abs(e / 1e6).toFixed(1)}M. Earnings cannot cover debt service, and leverage is not meaningful`,
+    });
+  }
+
   // ---- DSCR ----
   const dscrFloor = dscrFloorFor(c, moduleKey);
-  if (dscrFloor > 0 && metrics.dscr > 0 && metrics.dscr < dscrFloor) {
+  if (!ebitdaNotPositive && dscrFloor > 0 && metrics.dscr > 0 && metrics.dscr < dscrFloor) {
     if (metrics.dscr < 1.0) {
       reasons.push({ level: 'fail', text: `DSCR ${metrics.dscr.toFixed(2)}x is below 1.0x, insufficient to service debt` });
     } else {
@@ -117,7 +132,7 @@ export function evaluateScreening(
   }
 
   // ---- Leverage ----
-  if (c.maxLeverage > 0 && metrics.leverage > c.maxLeverage) {
+  if (c.maxLeverage > 0 && metrics.leverage != null && metrics.leverage > c.maxLeverage) {
     if (metrics.leverage > c.maxLeverage * 1.5) {
       reasons.push({ level: 'fail', text: `Leverage ${metrics.leverage.toFixed(1)}x far exceeds maximum (${c.maxLeverage}x)` });
     } else {
@@ -190,11 +205,13 @@ export function evaluateScreening(
       reasons.push({ level: 'flag', text: `${name} ${value.toFixed(2)}x is below minimum (${floor}x)` });
     }
   };
-  floorCheck(cf.base.cashFlowDscr, c.minCashFlowDscr, 'Cash-flow DSCR', 'debt service');
-  floorCheck(cf.base.fccr, c.minFccr, 'FCCR', 'fixed charges');
+  if (!ebitdaNotPositive) {
+    floorCheck(cf.base.cashFlowDscr, c.minCashFlowDscr, 'Cash-flow DSCR', 'debt service');
+    floorCheck(cf.base.fccr, c.minFccr, 'FCCR', 'fixed charges');
+  }
 
   const severe = cf.scenarios.find((s) => s.kind === 'combined');
-  if (severe) {
+  if (severe && !ebitdaNotPositive) {
     const broken = [
       severe.cashFlowDscr != null && severe.cashFlowDscr < 1.0 ? `cash-flow DSCR ${severe.cashFlowDscr.toFixed(2)}x` : null,
       severe.fccr != null && severe.fccr < 1.0 ? `FCCR ${severe.fccr.toFixed(2)}x` : null,

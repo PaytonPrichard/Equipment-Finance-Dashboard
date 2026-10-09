@@ -24,7 +24,9 @@ export function formatPercent(value: number, decimals: number = 1): string {
   return value.toFixed(decimals) + '%';
 }
 
-export function formatRatio(value: number): string {
+/** "1.25x", or "NM" (not meaningful) when the ratio cannot be measured. */
+export function formatRatio(value: number | null | undefined): string {
+  if (value == null || !Number.isFinite(value)) return 'NM';
   return value.toFixed(2) + 'x';
 }
 
@@ -57,6 +59,25 @@ export function formatPlanName(plan: string | null | undefined): string {
     PLAN_LABELS[plan] ||
     plan.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
   );
+}
+
+/**
+ * Weighted average of factor scores, skipping factors that are not
+ * meaningful (null), with the remaining weights re-normalized.
+ *
+ * A factor that cannot be measured (leverage when EBITDA is not positive)
+ * must neither score 0 nor 100. It drops out, and the gates in
+ * evaluateScreening carry the judgement instead (AUDIT P0-7).
+ */
+export function weightedComposite(parts: ReadonlyArray<readonly [number | null | undefined, number]>): number {
+  let sum = 0;
+  let weight = 0;
+  for (const [score, w] of parts) {
+    if (score == null || !Number.isFinite(score)) continue;
+    sum += score * w;
+    weight += w;
+  }
+  return weight > 0 ? Math.round(sum / weight) : 0;
 }
 
 /** A single breakpoint: [inputValue, score]. */

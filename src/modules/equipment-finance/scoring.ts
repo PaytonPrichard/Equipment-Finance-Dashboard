@@ -1,5 +1,6 @@
 import {
   lerp,
+  weightedComposite,
   calculateMonthlyPayment,
   generateAmortizationSchedule,
   formatCurrency,
@@ -141,8 +142,10 @@ export function calculateMetrics(
       ? ebitda / (existingDebtService + newAnnualDebtService)
       : 0;
 
+  // Not meaningful when EBITDA is not positive. Null, never 0: zero leverage
+  // used to score as best-in-class for a loss-making borrower (AUDIT P0-7).
   const leverage =
-    ebitda > 0 ? ((totalExistingDebt || 0) + netFinanced) / ebitda : 0;
+    ebitda > 0 ? ((totalExistingDebt || 0) + netFinanced) / ebitda : null;
 
   const equipmentValue =
     equipmentCondition === 'Used'
@@ -189,7 +192,7 @@ export function calculateRiskScore(
   inputs: EquipmentFinanceInputs,
   metrics: EquipmentMetrics,
 ): RiskScore {
-  const factors: Record<string, number> = {};
+  const factors: Record<string, number | null> = {};
 
   // DSCR (25%) — higher is better
   factors.dscr = lerp(metrics.dscr, [
@@ -197,7 +200,7 @@ export function calculateRiskScore(
   ] as [number, number][]);
 
   // Leverage (20%) — lower is better
-  factors.leverage = lerp(metrics.leverage, [
+  factors.leverage = metrics.leverage == null ? null : lerp(metrics.leverage, [
     [0, 100], [2.0, 90], [3.5, 72], [5.0, 48], [7.0, 22], [10.0, 5],
   ] as [number, number][]);
 
@@ -226,15 +229,15 @@ export function calculateRiskScore(
     [0, 100], [40, 95], [60, 78], [80, 45], [100, 15],
   ] as [number, number][]);
 
-  const composite = Math.round(
-    factors.dscr * 0.25 +
-      factors.leverage * 0.2 +
-      factors.industry * 0.15 +
-      factors.essentiality * 0.1 +
-      factors.equipmentLtv * 0.1 +
-      factors.yearsInBusiness * 0.1 +
-      factors.termCoverage * 0.1,
-  );
+  const composite = weightedComposite([
+    [factors.dscr, 0.25],
+    [factors.leverage, 0.2],
+    [factors.industry, 0.15],
+    [factors.essentiality, 0.1],
+    [factors.equipmentLtv, 0.1],
+    [factors.yearsInBusiness, 0.1],
+    [factors.termCoverage, 0.1],
+  ]);
 
   return { composite, factors };
 }
@@ -250,7 +253,7 @@ export function describeFactors(
   const tier = INDUSTRY_RISK_TIER[inputs.industrySector] || 'moderate';
   return [
     { key: 'dscr', label: 'DSCR', score: f.dscr || 0, weight: 0.25, caption: `${(metrics.dscr || 0).toFixed(2)}x`, target: `≥ ${FACTOR_TARGETS.minDscr.toFixed(2)}x`, passed: (metrics.dscr || 0) >= FACTOR_TARGETS.minDscr },
-    { key: 'leverage', label: 'Leverage', score: f.leverage || 0, weight: 0.20, caption: `${(metrics.leverage || 0).toFixed(1)}x`, target: `≤ ${FACTOR_TARGETS.maxLeverage.toFixed(1)}x`, passed: (metrics.leverage || 0) <= FACTOR_TARGETS.maxLeverage },
+    { key: 'leverage', label: 'Leverage', score: f.leverage ?? null, weight: 0.20, caption: metrics.leverage == null ? 'NM (EBITDA not positive)' : `${metrics.leverage.toFixed(1)}x`, target: `≤ ${FACTOR_TARGETS.maxLeverage.toFixed(1)}x`, passed: metrics.leverage != null && metrics.leverage <= FACTOR_TARGETS.maxLeverage },
     { key: 'industry', label: 'Industry', score: f.industry || 0, weight: 0.15, caption: `${inputs.industrySector || '—'} (${tier} risk)`, target: 'low-risk sector', passed: tier === 'low' },
     { key: 'essentiality', label: 'Essential use', score: f.essentiality || 0, weight: 0.10, caption: inputs.essentialUse ? 'Yes' : 'No', target: 'essential', passed: !!inputs.essentialUse },
     { key: 'equipmentLtv', label: 'LTV', score: f.equipmentLtv || 0, weight: 0.10, caption: `${((metrics.ltv || 0) * 100).toFixed(0)}% (${inputs.equipmentCondition || '—'})`, target: `≤ ${(FACTOR_TARGETS.maxLtv * 100).toFixed(0)}%`, passed: (metrics.ltv || 0) <= FACTOR_TARGETS.maxLtv },
@@ -327,7 +330,11 @@ export function generateCommentary(
     );
   }
 
-  if (metrics.leverage > 5.0) {
+  if (metrics.leverage == null) {
+    comments.push(
+      'Leverage is not meaningful because EBITDA is not positive. Debt cannot be measured against earnings. This is not a cash-flow credit at these numbers.',
+    );
+  } else if (metrics.leverage > 5.0) {
     comments.push(
       `Total leverage of ${metrics.leverage.toFixed(1)}x EBITDA is elevated; assess whether asset-backed structure adequately mitigates credit risk.`,
     );
@@ -455,7 +462,7 @@ export function getSuggestedStructure(
   if (metrics.dscr < 1.5) {
     suggestions.enhancements.push('Cash sweep or step-up payment structure to accelerate deleveraging');
   }
-  if (metrics.leverage > 4.0) {
+  if (metrics.leverage != null && metrics.leverage > 4.0) {
     suggestions.enhancements.push('Additional collateral or cross-collateralization with other assets');
   }
   if (compositeScore < 75 && compositeScore >= 35) {

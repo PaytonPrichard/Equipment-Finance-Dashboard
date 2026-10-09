@@ -82,6 +82,12 @@ This touches Stripe dashboard config (env vars must point at real Price IDs or c
 
 ### P0-7. Zero or negative EBITDA scores as best-in-class leverage
 
+**Status: fixed on `real-deals` 2026-10-09, pending merge to main.** Leverage is null (NM) when EBITDA is not positive. The factor drops out of the composite and the remaining weights re-normalize (`weightedComposite` in `src/utils/format.ts`, also used for custom weights in App.js). `evaluateScreening` fails with one reason naming EBITDA and suppresses the DSCR, leverage and cash-flow floor reasons that would restate it. Display surfaces print NM. Tests: `src/lib/negativeEbitda.test.js`. Joel decided: FAIL, not FLAG.
+
+**Open decision (credit review 2026-10-09):** dropping the factor and re-normalizing still inflates the composite for a loss-maker. With EF weights, the other factors are divided by 0.80, so a borrower with -$1M EBITDA can outscore one with +$0.1M EBITDA, whose leverage floors at 5. Every such deal FAILs, but `getSuggestedStructure` (advance-rate and reporting tiers in AR and inventory, the guarantee trigger in EF), batch sorting and pipeline chips key off the composite. The alternative is to keep NM in display but score the factor at the curve floor (5) with its weight kept, which matches how rating agencies treat NM leverage (worst-in-class, not absent). Either way, it is better than before the fix, when leverage scored 100. Joel to choose.
+
+**Not fixed here:** the New Deal screen still cannot screen a loss-maker (P1-20). A negative reported ratio passes a max-leverage covenant test (`src/lib/covenants.ts:46-48`), which is the monitoring twin of this bug.
+
 Found 2026-10-07 by the real-deals harness (Hertz FY2025: corporate EBITDA is negative under every definition).
 
 All three modules set `leverage = 0` when `ebitda <= 0` (`equipment-finance/scoring.ts:144`, `accounts-receivable/scoring.ts:139`, `inventory-finance/scoring.ts:228`). Leverage 0 interpolates to a factor score of 100, the best possible, on a 20% weight. Separately, `evaluateScreening` only applies the DSCR gate when `metrics.dscr > 0` (`screeningCriteria.ts:93`), so a negative DSCR skips the gate entirely. A loss-making borrower gets full leverage points and no DSCR reason.
@@ -228,6 +234,10 @@ Found 2026-10-07 (live extraction test, Granite Ridge). The broker email said "1
 
 `src/lib/encryption.js:29` falls back to `'tranche-pilot-key-2026'` when `REACT_APP_ENCRYPTION_SECRET` is unset, and any `REACT_APP_` value ships in the browser bundle anyway. Whatever this encrypts is not protected. Extends P1-5.
 
+### P1-20. The New Deal screen cannot screen a loss-making borrower
+
+Found 2026-10-09 (credit review of P0-7). `isInputValid` requires `ebitda > 0` in all three modules (EF, AR and inventory scoring), and App.js gates the verdict, memo and stress tests on it. The currency input also strips the minus sign (`DealInputForm.js`). A negative EBITDA from extraction, batch or the pipeline shows "Enter Deal Parameters", which reads as an incomplete input instead of a FAIL. The P0-7 verdict only reaches batch, the API and pipeline verdicts. **Fix.** Accept negative EBITDA in the form, keep a blank as blank (not 0, or it trips the "EBITDA is $0.0M" FAIL), and relax `isInputValid` to require EBITDA present, not positive. Touches `DealInputForm.js`, which Workstream A also edits.
+
 ---
 
 ## P2 — Smells and Polish
@@ -300,6 +310,10 @@ Found 2026-10-07. The cash-flow fields (cash taxes, working capital, rent, float
 ### P2-12. New Deal form does not say what it holds
 
 Found 2026-10-07. Uploading onto a non-empty form asks "The form holds X" with no indication whether X is an unsaved draft or a reopened pipeline deal (`src/App.js:705-709` says as much). Agreed fix: a status chip above the form ("Draft, not in pipeline" / "Editing X (stage)"), with the dialog using the same words.
+
+### P2-13. EBITDA stress improves a loss-making borrower
+
+Found 2026-10-09. `runStressTest` multiplies EBITDA by 0.9, 0.8 and 0.7. When EBITDA is negative that shrinks the loss, so "Severe (-30%)" reads better than the base case. The same pattern is in all three modules (`runStressTest`) and in `src/utils/cashFlowMetrics.ts`. The verdict is unaffected (P0-7 fails the deal), but the stress table and memo print coverage improving under severe stress. **Fix.** Stress the loss in the adverse direction (EBITDA minus a share of revenue or of the absolute value), or show the table as not applicable when EBITDA is not positive. Credit call for Joel.
 
 ---
 

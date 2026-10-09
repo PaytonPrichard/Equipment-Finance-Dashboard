@@ -4,6 +4,7 @@
 
 import {
   lerp,
+  weightedComposite,
   formatCurrency,
   formatCurrencyFull,
   formatPercent,
@@ -54,7 +55,7 @@ interface InventoryStressScenario {
   ebitda: number;
   borrowingBase: number;
   dscr: number;
-  leverage: number;
+  leverage: number | null;
   fccr: number | null;
   obsolescenceRate: number;
   turnoverRatio: number;
@@ -225,8 +226,10 @@ export function calculateMetrics(
       ? ebitda / (existingDebtService + newAnnualDebtService)
       : 0;
 
+  // Not meaningful when EBITDA is not positive. Null, never 0: zero leverage
+  // used to score as best-in-class for a loss-making borrower (AUDIT P0-7).
   const leverage =
-    ebitda > 0 ? ((totalExistingDebt || 0) + borrowingBase) / ebitda : 0;
+    ebitda > 0 ? ((totalExistingDebt || 0) + borrowingBase) / ebitda : null;
 
   const effectiveRate = rate;
 
@@ -258,7 +261,7 @@ export function calculateRiskScore(
   inputs: InventoryFinanceInputs,
   metrics: InventoryFinanceMetrics,
 ): RiskScore {
-  const factors: Record<string, number> = {};
+  const factors: Record<string, number | null> = {};
 
   // DSCR (20%) — higher is better
   factors.dscr = lerp(metrics.dscr, [
@@ -266,7 +269,7 @@ export function calculateRiskScore(
   ] as [number, number][]);
 
   // Leverage (15%) — lower is better
-  factors.leverage = lerp(metrics.leverage, [
+  factors.leverage = metrics.leverage == null ? null : lerp(metrics.leverage, [
     [0, 100], [2.0, 90], [3.5, 72], [5.0, 48], [7.0, 22], [10.0, 5],
   ] as [number, number][]);
 
@@ -310,15 +313,15 @@ export function calculateRiskScore(
   else if (tier === 'moderate') factors.industry = 65;
   else factors.industry = 35;
 
-  const composite = Math.round(
-    factors.dscr * 0.20 +
-    factors.leverage * 0.15 +
-    factors.inventoryQuality * 0.20 +
-    factors.composition * 0.15 +
-    factors.liquidationValue * 0.10 +
-    factors.yearsInBusiness * 0.10 +
-    factors.industry * 0.10
-  );
+  const composite = weightedComposite([
+    [factors.dscr, 0.20],
+    [factors.leverage, 0.15],
+    [factors.inventoryQuality, 0.20],
+    [factors.composition, 0.15],
+    [factors.liquidationValue, 0.10],
+    [factors.yearsInBusiness, 0.10],
+    [factors.industry, 0.10],
+  ]);
 
   return { composite, factors };
 }
@@ -336,7 +339,7 @@ export function describeFactors(
   const finishedPct = ((metrics.compositionMix && metrics.compositionMix.finishedPct) || 0) * 100;
   return [
     { key: 'dscr', label: 'DSCR', score: f.dscr || 0, weight: 0.20, caption: `${(metrics.dscr || 0).toFixed(2)}x`, target: `≥ ${FACTOR_TARGETS.minDscr.toFixed(2)}x`, passed: (metrics.dscr || 0) >= FACTOR_TARGETS.minDscr },
-    { key: 'leverage', label: 'Leverage', score: f.leverage || 0, weight: 0.15, caption: `${(metrics.leverage || 0).toFixed(1)}x`, target: `≤ ${FACTOR_TARGETS.maxLeverage.toFixed(1)}x`, passed: (metrics.leverage || 0) <= FACTOR_TARGETS.maxLeverage },
+    { key: 'leverage', label: 'Leverage', score: f.leverage ?? null, weight: 0.15, caption: metrics.leverage == null ? 'NM (EBITDA not positive)' : `${metrics.leverage.toFixed(1)}x`, target: `≤ ${FACTOR_TARGETS.maxLeverage.toFixed(1)}x`, passed: metrics.leverage != null && metrics.leverage <= FACTOR_TARGETS.maxLeverage },
     { key: 'inventoryQuality', label: 'Inventory turnover & obsolescence', score: f.inventoryQuality || 0, weight: 0.20, caption: `${(metrics.turnoverRatio || 0).toFixed(1)}x turn, ${((metrics.obsolescenceRate || 0) * 100).toFixed(1)}% obsolete`, target: `≥ ${MIN_TURNOVER.toFixed(1)}x turn, < ${(OBSOLESCENCE_THRESHOLD * 100).toFixed(0)}% obsolete`, passed: (metrics.turnoverRatio || 0) >= MIN_TURNOVER && (metrics.obsolescenceRate || 0) < OBSOLESCENCE_THRESHOLD },
     { key: 'composition', label: 'Composition (finished goods)', score: f.composition || 0, weight: 0.15, caption: `${finishedPct.toFixed(0)}% finished goods`, target: `≥ ${FACTOR_TARGETS.minFinishedGoodsPct}% finished`, passed: finishedPct >= FACTOR_TARGETS.minFinishedGoodsPct },
     { key: 'liquidationValue', label: 'NOLV', score: f.liquidationValue || 0, weight: 0.10, caption: `${(nolvFrac * 100).toFixed(0)}%`, target: `≥ ${(FACTOR_TARGETS.minNolv * 100).toFixed(0)}%`, passed: nolvFrac >= FACTOR_TARGETS.minNolv },
@@ -585,7 +588,7 @@ export function getSuggestedStructure(
       'Minimum DSCR covenant of 1.25x tested quarterly'
     );
   }
-  if (metrics.leverage > 4.0) {
+  if (metrics.leverage != null && metrics.leverage > 4.0) {
     suggestions.enhancements.push(
       'Maximum leverage covenant or cross-collateralization with accounts receivable'
     );
