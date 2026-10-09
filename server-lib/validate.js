@@ -6,6 +6,7 @@ const VALID_INDUSTRY_SECTORS = [
   'Manufacturing',
   'Construction',
   'Transportation/Logistics',
+  'Trucking',
   'Marine',
   'Rail',
   'Energy',

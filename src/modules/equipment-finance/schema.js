@@ -25,7 +25,7 @@ export const FORM_SCHEMA = {
         ...CASH_FLOW_FIELDS,
         { key: 'cashOnHand', label: 'Cash on Hand', type: 'currency', placeholder: 'Optional', tip: 'Unrestricted cash and equivalents from the most recent balance sheet.', half: true },
         { key: 'availableLiquidity', label: 'Other Available Liquidity', type: 'currency', placeholder: 'Optional', tip: 'Undrawn revolver capacity and other immediately accessible liquidity. Combined with cash on hand to compute months of debt service coverage.', half: true },
-        { key: 'industrySector', label: 'Industry', type: 'select', options: INDUSTRY_OPTIONS, tip: 'Affects risk tier and rate. Healthcare & Infrastructure = low risk. Construction, Mining & Aviation = higher risk.', half: true },
+        { key: 'industrySector', label: 'Industry', type: 'select', options: INDUSTRY_OPTIONS, tip: 'Affects risk tier and rate. Healthcare & Infrastructure = low risk. Construction, Trucking, Mining & Aviation = higher risk.', half: true },
         { key: 'creditRating', label: 'Credit Rating', type: 'select', options: CREDIT_OPTIONS, tip: 'Borrower credit quality. Strong = investment-grade equivalent. Adequate = middle market. Weak = below average.', half: true },
       ],
     },

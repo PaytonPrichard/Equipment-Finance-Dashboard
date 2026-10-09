@@ -307,8 +307,8 @@
   ],
   "assumptions": {
     "industrySector": {
-      "value": "Transportation/Logistics",
-      "why": "Proposed by Claude, accepted by Joel 2026-10-09. Truck dealer serving trucking and fleet operators."
+      "value": "Trucking",
+      "why": "Was Transportation/Logistics. Moved to the new Trucking sector (2026-10-09) under the end-market rule: Rush sells and leases trucks to trucking fleets and owner-operators."
     },
     "equipmentType": {
       "value": "Vehicles/Fleet",

@@ -120,3 +120,12 @@
 **What Joel decided** (relayed through Workstream B): capex scales with revenue in every revenue scenario, all sectors.
 
 **Open:** the module stress tables (EBITDA -10/-20/-30% per module) still hold capex in their FCCR column. Whether those declines are revenue or margin declines decides if capex should scale there too.
+
+## 2026-10-09: Public equipment ABS benchmarks and industry tiers (Workstream B)
+
+**What changed.** Pulled pool and loss data from the three equipment ABS programs with public prospectuses (John Deere Owner Trust 2026-B, CNH Equipment Trust 2026-B, Daimler Trucks Retail Trust 2024-1 plus 10-D reports). Results in `scripts/real-deals/benchmarks/abs-2026-10.md`. New Trucking sector (high risk), split out of Transportation/Logistics. Agriculture moved from high to moderate. Applied in all three modules, server validation, extraction, form tip and spec doc, with tests.
+
+**What Joel decided.**
+- Recorded his loss ranking before the data: trucks, construction, agriculture (worst first). Data supports trucks worst (4-6x the losses of ag/construction pools at the same vintage). Construction vs agriculture is not separable from public data.
+- Tiers: option 2 (Trucking split out at high) plus option 3 (Agriculture to moderate).
+- Rush reclassified to Trucking under the end-market rule. Rerun: no verdict changes (Rush 85 to 81, still PASS; Titan 44 to 49, still FAIL).

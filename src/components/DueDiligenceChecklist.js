@@ -125,7 +125,9 @@ function generateChecklist(inputs, metrics, riskScore) {
   }
 
   // ---- Industry-specific ----
-  const highRiskIndustries = ['Construction', 'Mining', 'Aviation', 'Marine', 'Agriculture'];
+  // Cyclical industries that warrant a cycle question. Agriculture stays here even
+  // though its scoring tier is now moderate: farm income is still cyclical.
+  const highRiskIndustries = ['Construction', 'Mining', 'Aviation', 'Marine', 'Agriculture', 'Trucking'];
   if (highRiskIndustries.includes(inputs.industrySector)) {
     items.push({
       id: 'industry-cycle',

@@ -47,6 +47,7 @@ export type IndustrySector =
   | 'Manufacturing'
   | 'Construction'
   | 'Transportation/Logistics'
+  | 'Trucking'
   | 'Marine'
   | 'Rail'
   | 'Energy'

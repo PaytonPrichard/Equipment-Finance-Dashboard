@@ -53,7 +53,7 @@ const BORROWER_FIELDS = [
   { key: 'maintenanceCapex', type: 'currency', description: 'Annual maintenance capital expenditure, in USD, if stated.' },
   { key: 'cashOnHand', type: 'currency', description: 'Unrestricted cash and equivalents from the most recent balance sheet, in USD.' },
   { key: 'availableLiquidity', type: 'currency', description: 'Other available liquidity such as undrawn revolver capacity, in USD. Do not include cash on hand.' },
-  { key: 'industrySector', type: 'enum', options: VALID_INDUSTRY_SECTORS, description: 'Borrower industry, mapped to the closest listed option. Use "Other" only if nothing fits.' },
+  { key: 'industrySector', type: 'enum', options: VALID_INDUSTRY_SECTORS, description: 'Borrower industry, mapped to the closest listed option. Trucking means carriers, fleets and owner-operators; Transportation/Logistics means brokerage, 3PL and warehousing. Use "Other" only if nothing fits.' },
   // Do NOT map silence to "Not Rated". "Not Rated" is a scored credit
   // opinion carrying +100bps of spread (CREDIT_SPREAD_BPS), while the form
   // default is "Adequate" at 0bps. Emitting it for a document that simply

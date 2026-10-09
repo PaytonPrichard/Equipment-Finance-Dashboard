@@ -34,13 +34,18 @@ export const INDUSTRY_RISK_TIER: Record<IndustrySector, IndustryTier> = {
   Infrastructure: 'low',
   Manufacturing: 'low',
   'Transportation/Logistics': 'moderate',
+  // Trucking split out of Transportation/Logistics and Agriculture moved from
+  // high to moderate, both from public equipment ABS loss data: truck pools
+  // lost 4-6x more than ag/construction pools at the same vintage
+  // (scripts/real-deals/benchmarks/abs-2026-10.md, Joel 2026-10-09).
+  Trucking: 'high',
   Energy: 'moderate',
   Rail: 'moderate',
   Construction: 'high',
   Marine: 'high',
   Mining: 'high',
   Aviation: 'high',
-  Agriculture: 'high',
+  Agriculture: 'moderate',
   Other: 'moderate',
 };
 
@@ -111,7 +116,7 @@ export const TRAC_RESIDUAL_PCT: Partial<Record<EquipmentType, number>> = {
 };
 
 export const INDUSTRY_OPTIONS: IndustrySector[] = [
-  'Manufacturing', 'Construction', 'Transportation/Logistics', 'Marine',
+  'Manufacturing', 'Construction', 'Transportation/Logistics', 'Trucking', 'Marine',
   'Rail', 'Energy', 'Healthcare', 'Infrastructure', 'Mining',
   'Agriculture', 'Aviation', 'Other',
 ];
