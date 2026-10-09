@@ -62,8 +62,8 @@
     "essentialUse": true,
     "actualAnnualDebtService": 47550000,
     "maintenanceCapex": 35765000,
-    "cashTaxes": -1849000,
-    "workingCapitalIncrease": -18377000,
+    "cashTaxes": 0,
+    "workingCapitalIncrease": 0,
     "leasePayments": 4992000
   },
   "derivations": [
@@ -99,13 +99,13 @@
     },
     {
       "field": "cashTaxes",
-      "value": -1849000,
-      "formula": "cashTaxes"
+      "value": 0,
+      "formula": "max(0, cashTaxes) (filed $1.8M)"
     },
     {
       "field": "workingCapitalIncrease",
-      "value": -18377000,
-      "formula": "workingCapitalIncrease"
+      "value": 0,
+      "formula": "max(0, workingCapitalIncrease) (filed $18.4M)"
     },
     {
       "field": "leasePayments",
@@ -115,11 +115,12 @@
   ],
   "caveats": [
     "ESTIMATE, maintenanceCapex: Depreciation (D&A $37.6M less intangible amortization $1.8M) used as maintenance capex proxy.",
+    "RULE, cash taxes: net refund of $1.8M. Counted as 0, a refund is not repeatable.",
+    "RULE, working capital: released $18.4M. Counted as 0, a release is not repeatable.",
     "JUDGMENT, floorplan: treated as inventory financing. Floorplan interest is deducted in EBITDA and the $553.8M floorplan payable is left out of debt. This follows auto-dealer credit convention, not verified against Titan's own credit agreement. Including floorplan instead: EBITDA $30.9M, debt $783.0M.",
     "ESTIMATE, debt service: uses non-floorplan interest expense ($19.0M), not cash paid. Cash interest is reported only in total.",
     "RATING: treated as Not Rated (+100 bps) because S&P shows no rating. Moody's was not checked. If Titan is rated B or below somewhere, the input becomes Weak (+200 bps).",
-    "JUDGMENT, working capital: includes both floorplan paydowns ($226.7M), consistent with treating floorplan as inventory financing. Leaving out the non-manufacturer floorplan line (it sits in financing activities) would show a $145.2M cash release that actually went to floorplan lenders. Either way the release is one-off, from shrinking inventory, and not repeatable.",
-    "NOTE, cash taxes: a net refund of $1.8M, which adds to cash flow this year. Not a recurring source."
+    "JUDGMENT, working capital: includes both floorplan paydowns ($226.7M), consistent with treating floorplan as inventory financing. Leaving out the non-manufacturer floorplan line (it sits in financing activities) would show a $145.2M cash release that actually went to floorplan lenders. Either way the release is one-off, from shrinking inventory, and not repeatable."
   ],
   "blockers": []
 }

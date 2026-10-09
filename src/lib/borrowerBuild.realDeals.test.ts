@@ -111,14 +111,6 @@ const FIELDS = [
   'cashTaxes', 'leasePayments', 'workingCapitalIncrease',
 ] as const;
 
-// Where the app differs from derive() on purpose (Joel, 2026-10-09): a
-// working capital release and a net tax refund count as 0, because neither
-// is repeatable cash for debt service. derive() keeps the negative figure.
-const FLOORED: Record<string, Partial<Record<(typeof FIELDS)[number], true>>> = {
-  'hertz-fy2025': { workingCapitalIncrease: true },        // -52M release
-  'titan-fy2026': { workingCapitalIncrease: true, cashTaxes: true }, // -18.4M release, -1.8M refund
-};
-
 describe.each(Object.keys(CASES))('%s builds the same inputs as derive()', (c) => {
   const fx = fixture(c);
   const want = expected(c).inputs;
@@ -129,12 +121,7 @@ describe.each(Object.keys(CASES))('%s builds the same inputs as derive()', (c) =
   });
 
   test.each(FIELDS)('%s', (field) => {
-    if (FLOORED[c]?.[field]) {
-      expect(want[field]).toBeLessThan(0);
-      expect(r.inputs[field]).toBe(0);
-    } else {
-      expect(r.inputs[field]).toBeCloseTo(want[field], 0);
-    }
+    expect(r.inputs[field]).toBeCloseTo(want[field], 0);
   });
 });
 
@@ -143,6 +130,13 @@ test('Titan uses floorplan out: interest deducted, payable excluded', () => {
   expect(r.treatment.floorplan).toBe('out');
   expect(r.derivations.ebitda.formula).toBe('Operating income + Depreciation and amortization - Floorplan interest');
   expect(r.derivations.totalExistingDebt.notes).toContain('Floorplan payable excluded, floorplan out.');
+});
+
+test('a working-capital release and a tax refund count as 0 in both the build and derive()', () => {
+  const r = buildBorrowerInputs(CASES['titan-fy2026'](fixture('titan-fy2026')));
+  expect(r.inputs.workingCapitalIncrease).toBe(0);
+  expect(r.inputs.cashTaxes).toBe(0);
+  expect(expected('titan-fy2026').inputs.workingCapitalIncrease).toBe(0);
 });
 
 test('Hertz has negative EBITDA and it passes through', () => {

@@ -74,3 +74,11 @@ test('cash-flow inputs pass through when cited and stay absent when missing', ()
   expect(inputs.leasePayments).toBe(0); // an entered 0 is an answer, not missing
   expect('workingCapitalIncrease' in inputs).toBe(false);
 });
+
+test('a working-capital release and a tax refund count as 0, with a caveat each', () => {
+  const { inputs, caveats } = derive(fixture({ ...full, workingCapitalIncrease: { value: -18.4e6 }, cashTaxes: { value: -1.8e6 } }));
+  expect(inputs.workingCapitalIncrease).toBe(0);
+  expect(inputs.cashTaxes).toBe(0);
+  expect(caveats).toContain('RULE, working capital: released $18.4M. Counted as 0, a release is not repeatable.');
+  expect(caveats).toContain('RULE, cash taxes: net refund of $1.8M. Counted as 0, a refund is not repeatable.');
+});

@@ -462,7 +462,6 @@
     "JUDGMENT, floorplan: treated as inventory financing. Floorplan interest is deducted in EBITDA and the $553.8M floorplan payable is left out of debt. This follows auto-dealer credit convention, not verified against Titan's own credit agreement. Including floorplan instead: EBITDA $30.9M, debt $783.0M.",
     "ESTIMATE, debt service: uses non-floorplan interest expense ($19.0M), not cash paid. Cash interest is reported only in total.",
     "RATING: treated as Not Rated (+100 bps) because S&P shows no rating. Moody's was not checked. If Titan is rated B or below somewhere, the input becomes Weak (+200 bps).",
-    "JUDGMENT, working capital: includes both floorplan paydowns ($226.7M), consistent with treating floorplan as inventory financing. Leaving out the non-manufacturer floorplan line (it sits in financing activities) would show a $145.2M cash release that actually went to floorplan lenders. Either way the release is one-off, from shrinking inventory, and not repeatable.",
-    "NOTE, cash taxes: a net refund of $1.8M, which adds to cash flow this year. Not a recurring source."
+    "JUDGMENT, working capital: includes both floorplan paydowns ($226.7M), consistent with treating floorplan as inventory financing. Leaving out the non-manufacturer floorplan line (it sits in financing activities) would show a $145.2M cash release that actually went to floorplan lenders. Either way the release is one-off, from shrinking inventory, and not repeatable."
   ]
 }
