@@ -1,0 +1,17 @@
+{
+  "question": "Rank expected loss rates on equipment loans by asset type, worst first.",
+  "joel": {
+    "ranking": [
+      "trucks",
+      "construction",
+      "agriculture"
+    ],
+    "writtenOn": "2026-10-09",
+    "note": "Written before any ABS loss data was shown."
+  },
+  "tranche": {
+    "source": "src/modules/equipment-finance/constants.ts INDUSTRY_RISK_TIER",
+    "ranking": "Agriculture = high, Construction = high, Transportation/Logistics = moderate (agriculture and construction tied, trucks better)"
+  },
+  "data": "Pending: John Deere Owner Trust, CNH Equipment Trust, Daimler Trucks Retail Trust prospectuses."
+}
