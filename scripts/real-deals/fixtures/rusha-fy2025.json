@@ -1,0 +1,354 @@
+{
+  "case": "rusha-fy2025",
+  "assetClass": "equipment_finance",
+  "borrower": {
+    "name": "Rush Enterprises, Inc.",
+    "ticker": "RUSHA",
+    "cik": 1012019
+  },
+  "period": {
+    "form": "10-K",
+    "fiscalYearEnd": "2025-12-31",
+    "accession": "0001437749-26-005424",
+    "companyFactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001012019.json",
+    "fetchedAt": "2026-10-09"
+  },
+  "context": "Commercial truck dealer network (Rush Truck Centers) selling new and used trucks, parts and service, with Idealease and PacLease lease and rental fleets.",
+  "figures": {
+    "revenue": {
+      "tags": [
+        "us-gaap:Revenues"
+      ],
+      "sources": [
+        {
+          "tag": "us-gaap:Revenues",
+          "val": 7434195000,
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "accn": "0001437749-26-005424",
+          "form": "10-K",
+          "filed": "2026-02-25",
+          "url": "https://www.sec.gov/Archives/edgar/data/1012019/000143774926005424/"
+        }
+      ],
+      "value": 7434195000
+    },
+    "operatingIncome": {
+      "tags": [
+        "us-gaap:OperatingIncomeLoss"
+      ],
+      "sources": [
+        {
+          "tag": "us-gaap:OperatingIncomeLoss",
+          "val": 393756000,
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "accn": "0001437749-26-005424",
+          "form": "10-K",
+          "filed": "2026-02-25",
+          "url": "https://www.sec.gov/Archives/edgar/data/1012019/000143774926005424/"
+        }
+      ],
+      "value": 393756000
+    },
+    "depreciationAmortization": {
+      "tags": [
+        "us-gaap:DepreciationDepletionAndAmortization"
+      ],
+      "note": "Cash-flow D&A 252,843 ($000), including $181.8M of lease and rental fleet D&A booked in cost of sales.",
+      "sources": [
+        {
+          "tag": "us-gaap:DepreciationDepletionAndAmortization",
+          "val": 252843000,
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "accn": "0001437749-26-005424",
+          "form": "10-K",
+          "filed": "2026-02-25",
+          "url": "https://www.sec.gov/Archives/edgar/data/1012019/000143774926005424/"
+        }
+      ],
+      "value": 252843000
+    },
+    "totalDebt": {
+      "manual": {
+        "value": 1315548000,
+        "cite": "https://www.sec.gov/Archives/edgar/data/1012019/000143774926005424/R2.htm ($000): floor plan notes payable 917,955; long-term debt 274,798 + current 127 (lease and rental fleet term notes); finance leases 34,519 + 88,149.",
+        "readBy": "Research agent 2026-10-09, spot-checked by Claude, Joel to verify"
+      },
+      "note": "INCLUDES floorplan. See caveat. Without floorplan, debt is $397.6M."
+    },
+    "floorplanPayable": {
+      "manual": {
+        "value": 917955000,
+        "cite": "https://www.sec.gov/Archives/edgar/data/1012019/000143774926005424/R2.htm 'Floor plan notes payable' 917,955 ($000).",
+        "readBy": "Research agent 2026-10-09, spot-checked by Claude, Joel to verify"
+      },
+      "note": "Informational. Included in totalDebt for this case."
+    },
+    "interestPaid": {
+      "tags": [
+        "us-gaap:InterestPaidNet"
+      ],
+      "note": "Total cash interest, including floorplan and finance-lease interest.",
+      "sources": [
+        {
+          "tag": "us-gaap:InterestPaidNet",
+          "val": 53883000,
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "accn": "0001437749-26-005424",
+          "form": "10-K",
+          "filed": "2026-02-25",
+          "url": "https://www.sec.gov/Archives/edgar/data/1012019/000143774926005424/"
+        }
+      ],
+      "value": 53883000
+    },
+    "currentMaturities": {
+      "manual": {
+        "value": 34646000,
+        "cite": "https://www.sec.gov/Archives/edgar/data/1012019/000143774926005424/R2.htm current maturities of long-term debt 127 + finance lease 34,519 ($000).",
+        "readBy": "Research agent 2026-10-09, Joel to verify"
+      },
+      "note": "Excludes CAD 40.4M of RTC Canada revolver due Sept 2026, classified long-term on refinancing intent."
+    },
+    "maturityY1": {
+      "tags": [
+        "us-gaap:LongTermDebtMaturitiesRepaymentsOfPrincipalInNextTwelveMonths"
+      ],
+      "note": "Term debt only, excluding finance leases and floorplan.",
+      "sources": [
+        {
+          "tag": "us-gaap:LongTermDebtMaturitiesRepaymentsOfPrincipalInNextTwelveMonths",
+          "val": 29519000,
+          "start": null,
+          "end": "2025-12-31",
+          "accn": "0001437749-26-005424",
+          "form": "10-K",
+          "filed": "2026-02-25",
+          "url": "https://www.sec.gov/Archives/edgar/data/1012019/000143774926005424/"
+        }
+      ],
+      "value": 29519000
+    },
+    "maturityY2": {
+      "tags": [
+        "us-gaap:LongTermDebtMaturitiesRepaymentsOfPrincipalInYearTwo"
+      ],
+      "sources": [
+        {
+          "tag": "us-gaap:LongTermDebtMaturitiesRepaymentsOfPrincipalInYearTwo",
+          "val": 127000,
+          "start": null,
+          "end": "2025-12-31",
+          "accn": "0001437749-26-005424",
+          "form": "10-K",
+          "filed": "2026-02-25",
+          "url": "https://www.sec.gov/Archives/edgar/data/1012019/000143774926005424/"
+        }
+      ],
+      "value": 127000
+    },
+    "maturityY3": {
+      "tags": [
+        "us-gaap:LongTermDebtMaturitiesRepaymentsOfPrincipalInYearThree"
+      ],
+      "sources": [
+        {
+          "tag": "us-gaap:LongTermDebtMaturitiesRepaymentsOfPrincipalInYearThree",
+          "val": 22405000,
+          "start": null,
+          "end": "2025-12-31",
+          "accn": "0001437749-26-005424",
+          "form": "10-K",
+          "filed": "2026-02-25",
+          "url": "https://www.sec.gov/Archives/edgar/data/1012019/000143774926005424/"
+        }
+      ],
+      "value": 22405000
+    },
+    "maturityY4": {
+      "tags": [
+        "us-gaap:LongTermDebtMaturitiesRepaymentsOfPrincipalInYearFour"
+      ],
+      "sources": [
+        {
+          "tag": "us-gaap:LongTermDebtMaturitiesRepaymentsOfPrincipalInYearFour",
+          "val": 220127000,
+          "start": null,
+          "end": "2025-12-31",
+          "accn": "0001437749-26-005424",
+          "form": "10-K",
+          "filed": "2026-02-25",
+          "url": "https://www.sec.gov/Archives/edgar/data/1012019/000143774926005424/"
+        }
+      ],
+      "value": 220127000
+    },
+    "maturityY5": {
+      "tags": [
+        "us-gaap:LongTermDebtMaturitiesRepaymentsOfPrincipalInYearFive"
+      ],
+      "sources": [
+        {
+          "tag": "us-gaap:LongTermDebtMaturitiesRepaymentsOfPrincipalInYearFive",
+          "val": 2620000,
+          "start": null,
+          "end": "2025-12-31",
+          "accn": "0001437749-26-005424",
+          "form": "10-K",
+          "filed": "2026-02-25",
+          "url": "https://www.sec.gov/Archives/edgar/data/1012019/000143774926005424/"
+        }
+      ],
+      "value": 2620000
+    },
+    "cash": {
+      "tags": [
+        "us-gaap:CashAndCashEquivalentsAtCarryingValue"
+      ],
+      "note": "Includes $6.3M restricted cash.",
+      "sources": [
+        {
+          "tag": "us-gaap:CashAndCashEquivalentsAtCarryingValue",
+          "val": 212645000,
+          "start": null,
+          "end": "2025-12-31",
+          "accn": "0001437749-26-005424",
+          "form": "10-K",
+          "filed": "2026-02-25",
+          "url": "https://www.sec.gov/Archives/edgar/data/1012019/000143774926005424/"
+        }
+      ],
+      "value": 212645000
+    },
+    "availableLiquidity": {
+      "manual": {
+        "value": 159000000,
+        "cite": "https://www.sec.gov/Archives/edgar/data/1012019/000143774926005424/R57.htm ($M): WF revolver remaining capacity 152.7 + line of credit 6.3.",
+        "readBy": "Research agent 2026-10-09, Joel to verify"
+      },
+      "note": "PLC and RTC Canada undrawn capacity not stated, excluded."
+    },
+    "cashTaxes": {
+      "tags": [
+        "us-gaap:IncomeTaxesPaidNet"
+      ],
+      "sources": [
+        {
+          "tag": "us-gaap:IncomeTaxesPaidNet",
+          "val": 77525000,
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "accn": "0001437749-26-005424",
+          "form": "10-K",
+          "filed": "2026-02-25",
+          "url": "https://www.sec.gov/Archives/edgar/data/1012019/000143774926005424/"
+        }
+      ],
+      "value": 77525000
+    },
+    "leasePayments": {
+      "manual": {
+        "value": 22088000,
+        "cite": "https://www.sec.gov/Archives/edgar/data/1012019/000143774926005424/R61.htm operating lease cost 14,236 (SG&A) + 7,852 (lease and rental cost of sales) ($000).",
+        "readBy": "Research agent 2026-10-09, Joel to verify"
+      },
+      "note": "Operating leases only. The cash figure (28,153) also includes 6,065 of finance-lease interest, already in interest paid."
+    },
+    "workingCapitalIncrease": {
+      "manual": {
+        "value": -213787000,
+        "cite": "https://www.sec.gov/Archives/edgar/data/1012019/000143774926005424/R7.htm ($000): receivables 73,206; inventories 354,937; prepaid (34,816); trade payables (13,733); floor plan trade (112,639); customer deposits 1,797; accrued 15,782; other (1,710); financing: floor plan non-trade (69,037). Sum 213,787 released.",
+        "readBy": "Research agent 2026-10-09, Joel to verify"
+      }
+    },
+    "depreciation": {
+      "manual": {
+        "value": 250540000,
+        "cite": "Note 2: depreciation $224.9M + R61 finance-lease ROU amortization 25,640 ($000).",
+        "readBy": "Research agent 2026-10-09, Joel to verify"
+      },
+      "note": "Mostly lease and rental fleet."
+    },
+    "rentalCapex": {
+      "manual": {
+        "value": 289600000,
+        "cite": "MD&A: '$289.6 million for purchases of commercial vehicles for our rental and leasing operations'.",
+        "readBy": "Research agent 2026-10-09, Joel to verify"
+      },
+      "note": "Informational."
+    },
+    "yearsInBusiness": {
+      "manual": {
+        "value": 60,
+        "cite": "10-K Item 1: 'Rush Enterprises, Inc. was incorporated in Texas in 1965'. 2025 - 1965.",
+        "readBy": "Research agent 2026-10-09, Joel to verify"
+      }
+    }
+  },
+  "builds": {
+    "maintenanceCapex": {
+      "terms": [
+        [
+          "+",
+          "depreciation"
+        ]
+      ],
+      "estimate": "Depreciation ($250.5M, mostly lease and rental fleet) used as maintenance capex proxy, scaled with revenue in stress. Fleet purchases were $289.6M."
+    }
+  },
+  "caveats": [
+    "JUDGMENT, floorplan: Rush does not disclose floorplan interest in dollars, so the dealer convention (deduct floorplan interest from EBITDA, leave floorplan out of debt) cannot be applied. Applied the other consistent pairing instead: floorplan ($918.0M) is in debt and its interest stays in debt service. Leverage reads higher than under the convention.",
+    "NOTE, all non-floorplan funded debt ($274.9M) finances the lease and rental fleet.",
+    "NOTE, debt maturities in the tagged table exclude finance leases and floorplan."
+  ],
+  "assumptions": {
+    "industrySector": {
+      "value": "Transportation/Logistics",
+      "why": "Proposed by Claude 2026-10-09, Joel to confirm. Truck dealer serving trucking and fleet operators."
+    },
+    "equipmentType": {
+      "value": "Vehicles/Fleet",
+      "why": "Proposed by Claude 2026-10-09, Joel to confirm. Lease and rental truck fleet."
+    },
+    "equipmentCondition": {
+      "value": "New",
+      "why": "Proposed by Claude 2026-10-09, Joel to confirm. "
+    },
+    "equipmentCost": {
+      "value": 75000000,
+      "why": "Proposed by Claude 2026-10-09, Joel to confirm. About 1.0% of revenue."
+    },
+    "downPayment": {
+      "value": 7500000,
+      "why": "Proposed by Claude 2026-10-09, Joel to confirm. 10%, Tranche default for Vehicles/Fleet."
+    },
+    "financingType": {
+      "value": "TRAC",
+      "why": "Proposed by Claude 2026-10-09, Joel to confirm. Tranche suggested structure for Vehicles/Fleet."
+    },
+    "usefulLife": {
+      "value": 7,
+      "why": "Proposed by Claude 2026-10-09, Joel to confirm. Within Tranche range of 5-8 years."
+    },
+    "loanTerm": {
+      "value": 60,
+      "why": "Proposed by Claude 2026-10-09, Joel to confirm. "
+    },
+    "essentialUse": {
+      "value": true,
+      "why": "Proposed by Claude 2026-10-09, Joel to confirm. "
+    },
+    "creditRating": {
+      "value": null,
+      "why": "Joel: S&P issuer credit rating in effect on the 10-K filing date. IG = Strong, BB = Adequate, B or below = Weak, unrated = Not Rated."
+    }
+  },
+  "expected": {
+    "verdict": null,
+    "reason": "",
+    "writtenOn": null
+  }
+}

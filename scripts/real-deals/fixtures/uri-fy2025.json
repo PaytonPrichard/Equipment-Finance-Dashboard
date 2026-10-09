@@ -1,0 +1,352 @@
+{
+  "case": "uri-fy2025",
+  "assetClass": "equipment_finance",
+  "borrower": {
+    "name": "United Rentals, Inc.",
+    "ticker": "URI",
+    "cik": 1067701
+  },
+  "period": {
+    "form": "10-K",
+    "fiscalYearEnd": "2025-12-31",
+    "accession": "0001067701-26-000007",
+    "companyFactsUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001067701.json",
+    "fetchedAt": "2026-10-09"
+  },
+  "context": "Largest US equipment rental company. Equipment rentals were $13.8B of $16.1B 2025 revenue.",
+  "figures": {
+    "revenue": {
+      "tags": [
+        "us-gaap:Revenues"
+      ],
+      "sources": [
+        {
+          "tag": "us-gaap:Revenues",
+          "val": 16099000000,
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "accn": "0001067701-26-000007",
+          "form": "10-K",
+          "filed": "2026-01-28",
+          "url": "https://www.sec.gov/Archives/edgar/data/1067701/000106770126000007/"
+        }
+      ],
+      "value": 16099000000
+    },
+    "operatingIncome": {
+      "tags": [
+        "us-gaap:OperatingIncomeLoss"
+      ],
+      "sources": [
+        {
+          "tag": "us-gaap:OperatingIncomeLoss",
+          "val": 3973000000,
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "accn": "0001067701-26-000007",
+          "form": "10-K",
+          "filed": "2026-01-28",
+          "url": "https://www.sec.gov/Archives/edgar/data/1067701/000106770126000007/"
+        }
+      ],
+      "value": 3973000000
+    },
+    "depreciationAmortization": {
+      "manual": {
+        "value": 3108000000,
+        "cite": "https://www.sec.gov/Archives/edgar/data/1067701/000106770126000007/R10.htm 'Depreciation and amortization' 3,108 ($M). Ties to R5: rental depreciation 2,670 + non-rental D&A 438.",
+        "readBy": "Research agent 2026-10-09, spot-checked by Claude, Joel to verify"
+      },
+      "note": "Includes intangible amortization 238 and finance-lease ROU amortization 54. Excludes deferred financing cost amortization 15."
+    },
+    "totalDebt": {
+      "manual": {
+        "value": 14229000000,
+        "cite": "https://www.sec.gov/Archives/edgar/data/1067701/000106770126000007/R64.htm 'Total debt' 14,229 ($M), also us-gaap:DebtAndCapitalLeaseObligations. Components: AR securitization 1,459; ABL 1,645; term loan 975; senior and secured notes 9,819; finance leases 331.",
+        "readBy": "Research agent 2026-10-09, Joel to verify"
+      },
+      "note": "Carrying value (principal 14,302). Operating leases (1,441) excluded."
+    },
+    "interestPaid": {
+      "tags": [
+        "us-gaap:InterestPaidNet"
+      ],
+      "sources": [
+        {
+          "tag": "us-gaap:InterestPaidNet",
+          "val": 703000000,
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "accn": "0001067701-26-000007",
+          "form": "10-K",
+          "filed": "2026-01-28",
+          "url": "https://www.sec.gov/Archives/edgar/data/1067701/000106770126000007/"
+        }
+      ],
+      "value": 703000000
+    },
+    "currentMaturities": {
+      "tags": [
+        "us-gaap:DebtCurrent"
+      ],
+      "note": "Dominated by the $1,459M AR securitization facility, which renews on a 364-day basis.",
+      "sources": [
+        {
+          "tag": "us-gaap:DebtCurrent",
+          "val": 1577000000,
+          "start": null,
+          "end": "2025-12-31",
+          "accn": "0001067701-26-000007",
+          "form": "10-K",
+          "filed": "2026-01-28",
+          "url": "https://www.sec.gov/Archives/edgar/data/1067701/000106770126000007/"
+        }
+      ],
+      "value": 1577000000
+    },
+    "maturityY1": {
+      "tags": [
+        "us-gaap:LongTermDebtMaturitiesRepaymentsOfPrincipalInNextTwelveMonths"
+      ],
+      "sources": [
+        {
+          "tag": "us-gaap:LongTermDebtMaturitiesRepaymentsOfPrincipalInNextTwelveMonths",
+          "val": 1577000000,
+          "start": null,
+          "end": "2025-12-31",
+          "accn": "0001067701-26-000007",
+          "form": "10-K",
+          "filed": "2026-01-28",
+          "url": "https://www.sec.gov/Archives/edgar/data/1067701/000106770126000007/"
+        }
+      ],
+      "value": 1577000000
+    },
+    "maturityY2": {
+      "tags": [
+        "us-gaap:LongTermDebtMaturitiesRepaymentsOfPrincipalInYearTwo"
+      ],
+      "sources": [
+        {
+          "tag": "us-gaap:LongTermDebtMaturitiesRepaymentsOfPrincipalInYearTwo",
+          "val": 851000000,
+          "start": null,
+          "end": "2025-12-31",
+          "accn": "0001067701-26-000007",
+          "form": "10-K",
+          "filed": "2026-01-28",
+          "url": "https://www.sec.gov/Archives/edgar/data/1067701/000106770126000007/"
+        }
+      ],
+      "value": 851000000
+    },
+    "maturityY3": {
+      "tags": [
+        "us-gaap:LongTermDebtMaturitiesRepaymentsOfPrincipalInYearThree"
+      ],
+      "sources": [
+        {
+          "tag": "us-gaap:LongTermDebtMaturitiesRepaymentsOfPrincipalInYearThree",
+          "val": 1747000000,
+          "start": null,
+          "end": "2025-12-31",
+          "accn": "0001067701-26-000007",
+          "form": "10-K",
+          "filed": "2026-01-28",
+          "url": "https://www.sec.gov/Archives/edgar/data/1067701/000106770126000007/"
+        }
+      ],
+      "value": 1747000000
+    },
+    "maturityY4": {
+      "tags": [
+        "us-gaap:LongTermDebtMaturitiesRepaymentsOfPrincipalInYearFour"
+      ],
+      "sources": [
+        {
+          "tag": "us-gaap:LongTermDebtMaturitiesRepaymentsOfPrincipalInYearFour",
+          "val": 1537000000,
+          "start": null,
+          "end": "2025-12-31",
+          "accn": "0001067701-26-000007",
+          "form": "10-K",
+          "filed": "2026-01-28",
+          "url": "https://www.sec.gov/Archives/edgar/data/1067701/000106770126000007/"
+        }
+      ],
+      "value": 1537000000
+    },
+    "maturityY5": {
+      "tags": [
+        "us-gaap:LongTermDebtMaturitiesRepaymentsOfPrincipalInYearFive"
+      ],
+      "sources": [
+        {
+          "tag": "us-gaap:LongTermDebtMaturitiesRepaymentsOfPrincipalInYearFive",
+          "val": 3170000000,
+          "start": null,
+          "end": "2025-12-31",
+          "accn": "0001067701-26-000007",
+          "form": "10-K",
+          "filed": "2026-01-28",
+          "url": "https://www.sec.gov/Archives/edgar/data/1067701/000106770126000007/"
+        }
+      ],
+      "value": 3170000000
+    },
+    "cash": {
+      "tags": [
+        "us-gaap:CashAndCashEquivalentsAtCarryingValue"
+      ],
+      "sources": [
+        {
+          "tag": "us-gaap:CashAndCashEquivalentsAtCarryingValue",
+          "val": 459000000,
+          "start": null,
+          "end": "2025-12-31",
+          "accn": "0001067701-26-000007",
+          "form": "10-K",
+          "filed": "2026-01-28",
+          "url": "https://www.sec.gov/Archives/edgar/data/1067701/000106770126000007/"
+        }
+      ],
+      "value": 459000000
+    },
+    "availableLiquidity": {
+      "manual": {
+        "value": 2863000000,
+        "cite": "https://www.sec.gov/Archives/edgar/data/1067701/000106770126000007/R64.htm 'Borrowing capacity, net of letters of credit': ABL 2,822 + AR securitization 41 ($M).",
+        "readBy": "Research agent 2026-10-09, Joel to verify"
+      }
+    },
+    "cashTaxes": {
+      "tags": [
+        "us-gaap:IncomeTaxesPaidNet"
+      ],
+      "note": "Fell from $994M in 2024 after July 2025 tax legislation. May not be steady-state.",
+      "sources": [
+        {
+          "tag": "us-gaap:IncomeTaxesPaidNet",
+          "val": 602000000,
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "accn": "0001067701-26-000007",
+          "form": "10-K",
+          "filed": "2026-01-28",
+          "url": "https://www.sec.gov/Archives/edgar/data/1067701/000106770126000007/"
+        }
+      ],
+      "value": 602000000
+    },
+    "leasePayments": {
+      "tags": [
+        "us-gaap:OperatingLeasePayments"
+      ],
+      "sources": [
+        {
+          "tag": "us-gaap:OperatingLeasePayments",
+          "val": 371000000,
+          "start": "2025-01-01",
+          "end": "2025-12-31",
+          "accn": "0001067701-26-000007",
+          "form": "10-K",
+          "filed": "2026-01-28",
+          "url": "https://www.sec.gov/Archives/edgar/data/1067701/000106770126000007/"
+        }
+      ],
+      "value": 371000000
+    },
+    "workingCapitalIncrease": {
+      "manual": {
+        "value": 279000000,
+        "cite": "https://www.sec.gov/Archives/edgar/data/1067701/000106770126000007/R10.htm: accounts receivable (120), inventory (38), prepaid and other (135), accounts payable (22), accrued and other 36 ($M). Sum (279).",
+        "readBy": "Research agent 2026-10-09, Joel to verify"
+      },
+      "note": "The prepaid line includes an unquantified rise in income taxes receivable, which cannot be removed."
+    },
+    "depreciation": {
+      "manual": {
+        "value": 2870000000,
+        "cite": "https://www.sec.gov/Archives/edgar/data/1067701/000106770126000007/R5.htm rental depreciation 2,670 + non-rental D&A 438 less R60 intangible amortization 238 ($M).",
+        "readBy": "Research agent 2026-10-09, Joel to verify"
+      }
+    },
+    "rentalCapex": {
+      "manual": {
+        "value": 4149000000,
+        "cite": "https://www.sec.gov/Archives/edgar/data/1067701/000106770126000007/R10.htm 'Payments for purchases of rental equipment' (4,149) ($M).",
+        "readBy": "Research agent 2026-10-09, Joel to verify"
+      },
+      "note": "Informational. Gross; used-fleet sale proceeds were 1,413."
+    },
+    "yearsInBusiness": {
+      "manual": {
+        "value": 28,
+        "cite": "10-K Item 1: 'United Rentals, Inc., incorporated in Delaware in 1997'. 2025 - 1997.",
+        "readBy": "Research agent 2026-10-09, Joel to verify"
+      }
+    }
+  },
+  "builds": {
+    "maintenanceCapex": {
+      "terms": [
+        [
+          "+",
+          "depreciation"
+        ]
+      ],
+      "estimate": "Depreciation ($2,870M, mostly rental fleet) used as maintenance capex proxy, scaled with revenue in stress. Actual gross rental capex was $4,149M."
+    }
+  },
+  "caveats": [
+    "JUDGMENT, debt service: current maturities are mostly a $1,459M AR securitization facility that renews every 364 days. Treating it as principal due overstates debt service.",
+    "NOTE, operating income excludes $81M of other income tied to the terminated H&E acquisition. EBITDA is $7,081M here, against $7,162M company-reported."
+  ],
+  "assumptions": {
+    "industrySector": {
+      "value": "Construction",
+      "why": "Proposed by Claude 2026-10-09, Joel to confirm. Rental customers are mostly construction and industrial."
+    },
+    "equipmentType": {
+      "value": "Construction Equipment",
+      "why": "Proposed by Claude 2026-10-09, Joel to confirm. Rental fleet additions."
+    },
+    "equipmentCondition": {
+      "value": "New",
+      "why": "Proposed by Claude 2026-10-09, Joel to confirm. "
+    },
+    "equipmentCost": {
+      "value": 150000000,
+      "why": "Proposed by Claude 2026-10-09, Joel to confirm. About 0.9% of revenue."
+    },
+    "downPayment": {
+      "value": 22500000,
+      "why": "Proposed by Claude 2026-10-09, Joel to confirm. 15%, Tranche default."
+    },
+    "financingType": {
+      "value": "EFA",
+      "why": "Proposed by Claude 2026-10-09, Joel to confirm. "
+    },
+    "usefulLife": {
+      "value": 10,
+      "why": "Proposed by Claude 2026-10-09, Joel to confirm. Within Tranche range of 8-15 years."
+    },
+    "loanTerm": {
+      "value": 60,
+      "why": "Proposed by Claude 2026-10-09, Joel to confirm. "
+    },
+    "essentialUse": {
+      "value": true,
+      "why": "Proposed by Claude 2026-10-09, Joel to confirm. "
+    },
+    "creditRating": {
+      "value": "Adequate",
+      "why": "10-K MD&A: 'Our credit ratings as of January 26, 2026 were ... Moody's Ba1 Stable, Standard & Poor's BB+ Stable'. BB maps to Adequate (Joel's rule)."
+    }
+  },
+  "expected": {
+    "verdict": null,
+    "reason": "",
+    "writtenOn": null
+  }
+}
