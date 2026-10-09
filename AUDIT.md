@@ -238,6 +238,14 @@ Found 2026-10-07 (live extraction test, Granite Ridge). The broker email said "1
 
 Found 2026-10-09 (credit review of P0-7). `isInputValid` requires `ebitda > 0` in all three modules (EF, AR and inventory scoring), and App.js gates the verdict, memo and stress tests on it. The currency input also strips the minus sign (`DealInputForm.js`). A negative EBITDA from extraction, batch or the pipeline shows "Enter Deal Parameters", which reads as an incomplete input instead of a FAIL. The P0-7 verdict only reaches batch, the API and pipeline verdicts. **Fix.** Accept negative EBITDA in the form, keep a blank as blank (not 0, or it trips the "EBITDA is $0.0M" FAIL), and relax `isInputValid` to require EBITDA present, not positive. Touches `DealInputForm.js`, which Workstream A also edits.
 
+### P1-21. Refinancing risk inside the loan term never reaches the verdict
+
+Found 2026-10-09 by the first real-deals run. H&E (FY2024) screens PASS at 84. Joel expected FLAG. All $1.45B of its debt matures in 2028, inside a 5-year loan term, and nothing in Tranche sees it. DXP has the same shape: an $812M term loan due 2030, before a 60-month loan from 2026 matures. **Fix.** With a maturity schedule input (Workstream A raw-inputs design), FLAG when debt maturing before the new facility matures exceeds liquidity, or a share of total debt. Credit call for Joel: the threshold.
+
+### P1-22. No input for event risk (pending change of control, litigation)
+
+Found 2026-10-09 (H&E). By its 10-K filing date H&E had agreed to be acquired, and Joel flags a pending change of control on its own. Tranche has no field for it, so the screen cannot reflect it. **Fix.** An event-risk input (change of control, material litigation, going-concern language, covenant waiver) that adds a FLAG reason naming the event. Extraction could pre-fill it from filings, with the analyst confirming.
+
 ---
 
 ## P2 — Smells and Polish
