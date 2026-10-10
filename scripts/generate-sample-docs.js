@@ -2,7 +2,8 @@
 // ============================================================
 // Generate the sample deal document corpus.
 //
-//   node scripts/generate-sample-docs.js
+//   node scripts/generate-sample-docs.js              # every scenario
+//   node scripts/generate-sample-docs.js ridgeline    # render one, by name prefix
 //
 // Renders each scenario's documents into test-deal-sheets/ and writes
 // EXPECTED.json, the answer key that scripts/score-extraction.js grades
@@ -27,6 +28,7 @@ const SCENARIOS = [
   require('./sample-docs/granite-ridge'),
   require('./sample-docs/atlas-industrial'),
   require('./sample-docs/cascade-outdoor'),
+  require('./sample-docs/ridgeline-freight'),
 ];
 
 // ---- Locating a Chromium ----
@@ -114,7 +116,10 @@ async function main() {
   let textCount = 0;
 
   try {
-    for (const scenario of SCENARIOS) {
+    // An optional name prefix renders only matching scenarios, so adding one
+    // scenario does not rewrite every other PDF. The answer key always covers all.
+    const only = process.argv[2];
+    for (const scenario of SCENARIOS.filter((s) => !only || s.scenario.startsWith(only))) {
       const dir = path.join(OUT_ROOT, scenario.assetClass, scenario.scenario);
       fs.mkdirSync(dir, { recursive: true });
 
