@@ -1,0 +1,22 @@
+{
+  "question": "Do Tranche's equipment valuation assumptions match public resale and useful-life data?",
+  "tranche": {
+    "source": "src/modules/equipment-finance/scoring.ts calculateMetrics, constants.ts EQUIPMENT_DEFAULTS and FACTOR_TARGETS, Deal_Screening_Model_Assumptions.md sections 3 and term coverage",
+    "usedHaircut": "Used equipment valued at 85% of stated cost (15% haircut). Read as the gap between the price paid and forced-sale value.",
+    "newHaircut": "New equipment valued at 100% of cost (0% haircut).",
+    "conditionBonus": "New equipment also gets +12 points on the LTV factor (scoring.ts). Used gets the haircut and no bonus.",
+    "termCoverageLimit": "Loan term above 80% of useful life is weak (maxTermCoverage 80).",
+    "usefulLifeRanges": "EQUIPMENT_DEFAULTS.usefulLifeRange per equipment type, shown to the analyst as a hint. The analyst enters useful life."
+  },
+  "joel": {
+    "writtenOn": "2026-10-09",
+    "note": "Written before any resale data was shown. Joel declined to give numeric expectations: he does not have the experience to give numbers he would trust.",
+    "usedHaircut": "No view on whether 15% is right.",
+    "newHaircut": "Directional: 0% is not enough for new equipment.",
+    "conditionBonus": "Double penalty on used equipment might be overkill, but is not necessarily inaccurate.",
+    "usefulLife": "No numeric view.",
+    "termCoverage": "No numeric view."
+  },
+  "data": "See resale-2026-10.md.",
+  "result": null
+}
