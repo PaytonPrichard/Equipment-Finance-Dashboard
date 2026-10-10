@@ -58,7 +58,9 @@ export type LineItemKey =
   | 'operatingLeaseLiabilities'
   | 'floorplanPayable'
   | 'vehicleDebt'
-  | 'currentVehicleDebtMaturities';
+  | 'currentVehicleDebtMaturities'
+  | 'renewingInCurrentMaturities'
+  | 'nonCashGainsInOperatingIncome';
 
 export const LINE_ITEM_LABELS: Record<LineItemKey, string> = {
   revenue: 'Revenue',
@@ -87,6 +89,8 @@ export const LINE_ITEM_LABELS: Record<LineItemKey, string> = {
   floorplanPayable: 'Floorplan payable',
   vehicleDebt: 'Vehicle debt, total',
   currentVehicleDebtMaturities: 'Current maturities of vehicle debt',
+  renewingInCurrentMaturities: 'Renewing facilities inside current maturities',
+  nonCashGainsInOperatingIncome: 'Non-cash gains inside operating income',
 };
 
 export interface AddBack {
@@ -330,9 +334,11 @@ export function buildBorrowerInputs(
   // companies report none), pretax income + interest expense gets there.
   const canOperating = has('operatingIncome');
   const canPretax = has('pretaxIncome') && has('interestExpense');
-  const start = (canOperating || canPretax)
+  // Only a question when pretax lines are entered. Starting from operating
+  // income with nothing else to start from is not a judgment.
+  const start = canPretax
     ? judge<'operatingIncome' | 'pretaxIncome'>('ebitdaStart', 'Built EBITDA starts from',
-      canOperating ? 'operatingIncome' : 'pretaxIncome', ['operatingIncome', 'pretaxIncome'],
+      canOperating ? 'operatingIncome' : 'pretaxIncome', canOperating ? ['operatingIncome', 'pretaxIncome'] : ['pretaxIncome'],
       (v) => (v === 'operatingIncome' ? 'built EBITDA starts from operating income'
         : 'built EBITDA starts from pretax income + interest expense (no operating income line)'))
     : 'operatingIncome';
@@ -384,6 +390,15 @@ export function buildBorrowerInputs(
       notes.push('No operating income line. Pretax income + interest expense used in its place. This keeps other non-operating income and expense (gains, FX, investment income) in EBITDA, and if interest expense is reported net, interest income too.');
     }
     if (need('depreciationAmortization', 'built EBITDA')) terms.push(term('+', 'depreciationAmortization'));
+
+    // A non-cash gain booked inside operating income (a reserve reversal,
+    // say) is not cash for debt service, so it comes out. Only gains: an
+    // add-back that raises EBITDA is the borrower's story and goes through
+    // the Adjusted EBITDA bridge instead.
+    if (positive('nonCashGainsInOperatingIncome')) {
+      terms.push(term('-', 'nonCashGainsInOperatingIncome'));
+      notes.push('Non-cash gains taken out of operating income.');
+    }
 
     // Floorplan. Out: the interest is an operating cost of a dealer, so it is
     // deducted. In: it is financing, so it is added back.
@@ -448,9 +463,11 @@ export function buildBorrowerInputs(
   if (storedSource && sourceOptions.includes(storedSource)) {
     ebitdaSource = storedSource;
     judgments.push({ id: 'ebitdaSource', label: 'Which EBITDA scores', proposed: proposedSource, value: storedSource, options: sourceOptions, confirmed: true });
+  } else if (sourceOptions.length > 1) {
+    ebitdaSource = judge('ebitdaSource', 'Which EBITDA scores', proposedSource, sourceOptions, (v) => `${v} EBITDA scores`);
   } else {
-    ebitdaSource = judge('ebitdaSource', 'Which EBITDA scores', proposedSource,
-      sourceOptions.length ? sourceOptions : ['built'], (v) => `${v} EBITDA scores`);
+    // One EBITDA available, nothing to choose.
+    ebitdaSource = proposedSource;
   }
 
   // A company figure follows the company's definition. For each treatment
@@ -513,7 +530,8 @@ export function buildBorrowerInputs(
 
   function adjustedDerivation(): Derivation {
     const total = num(adjusted?.value) as number;
-    const addBacks = adjusted?.addBacks || [];
+    // A bridge line with no amount yet is still being typed. It does not count.
+    const addBacks = (adjusted?.addBacks || []).filter((a) => num(a.amount) !== null);
     const accepted = addBacks.filter((a) => a.decision === 'accepted');
     const rejected = addBacks.filter((a) => a.decision === 'rejected');
     const undecided = addBacks.filter((a) => a.decision !== 'accepted' && a.decision !== 'rejected');
@@ -667,10 +685,16 @@ export function buildBorrowerInputs(
     dsTerms.push(term('+', 'rentExpense'));
   }
 
-  const revolverMaturing = judge('revolverMaturing', 'Revolver matures within 12 months', false, [false, true],
-    (v) => (v ? 'revolver balance matures within 12 months' : 'revolver does not mature within 12 months'));
-  if (revolverMaturing && has('revolver')) dsTerms.push(term('+', 'revolver'));
-  else dsNotes.push('Revolver balance counts for interest, not as principal due.');
+  // Debt service is scheduled principal only (Joel, 2026-10-09). Facilities
+  // that renew (revolvers, AR securitizations, 364-day lines) are not
+  // scheduled principal: a revolver balance never counts, and any renewing
+  // facility a balance sheet folds into current maturities comes back out.
+  // They are refinancing risk, which belongs in the maturity wall.
+  if (positive('revolver')) dsNotes.push('Revolver balance counts for interest, not as principal due. It renews, so it is refinancing risk.');
+  if (positive('renewingInCurrentMaturities')) {
+    dsTerms.push(term('-', 'renewingInCurrentMaturities'));
+    caveats.push(`Renewing facilities of ${usd(line('renewingInCurrentMaturities') as number)} taken out of current maturities. Not scheduled principal, refinancing risk.`);
+  }
 
   const dsDerivation: Derivation = {
     value: dsComplete ? sum(dsTerms) : null, label: 'Annual debt service', formula: formulaOf(dsTerms), terms: dsTerms, notes: dsNotes,

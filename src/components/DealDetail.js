@@ -462,6 +462,13 @@ function describeAudit(entry) {
       return newV.verdict && newV.score != null
         ? `Committee memo generated, ${newV.verdict} at ${Math.round(newV.score)}`
         : 'Committee memo generated';
+    case 'override': {
+      // One row per override on a statement-built deal (api/score-deal.js).
+      const what = newV.kind === 'treatment' ? `${newV.key} treatment` : `built ${newV.key}`;
+      if (newV.removed) return `Override removed: ${what}`;
+      const rule = newV.kind === 'treatment' && newV.rule ? ` set to "${newV.rule}"` : ' typed over';
+      return `Override: ${what}${rule}. Reason: ${newV.reason || 'none given'}`;
+    }
     case 'delete':
       return 'Deleted';
     default:

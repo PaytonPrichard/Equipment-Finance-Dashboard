@@ -41,6 +41,7 @@ import ScreeningCriteria from './components/ScreeningCriteria';
 import { DEFAULT_CRITERIA, dscrFloorFor, evaluateScreening, validateCriteria } from './lib/screeningCriteria';
 import { validateWeights } from './lib/scoringWeights';
 import { computeDealMetrics } from './utils/dealMetrics';
+import { applyStatementBuild, statementState, pendingJudgments, withRulesSnapshot } from './lib/statementBuild';
 import StressTestPanel from './components/StressTestPanel';
 import CashFlowStressPanel from './components/CashFlowStressPanel';
 import ExportPanel from './components/ExportPanel';
@@ -311,7 +312,7 @@ function AuthenticatedApp({ profile, user }) {
     const newMod = getModule(newModuleKey);
     // Preserve shared borrower fields across asset class switches
     const sharedFields = ['companyName', 'yearsInBusiness', 'annualRevenue', 'ebitda',
-      'totalExistingDebt', 'actualAnnualDebtService', 'industrySector', 'creditRating'];
+      'totalExistingDebt', 'actualAnnualDebtService', 'industrySector', 'creditRating', 'financials'];
     const preserved = {};
     sharedFields.forEach(f => { if (inputs[f] !== undefined && inputs[f] !== 0 && inputs[f] !== '') preserved[f] = inputs[f]; });
     setInputs({ ...newMod.INITIAL_INPUTS, ...preserved });
@@ -529,6 +530,22 @@ function AuthenticatedApp({ profile, user }) {
 
   // Org credit policy overrides
   const orgSettings = useMemo(() => profile?.organizations?.org_settings || {}, [profile?.organizations?.org_settings]);
+
+  // Statement line items build some of the flat fields. Whatever set the
+  // inputs (the form, a document merge, a module switch, a loaded draft),
+  // the built values win, so a built field is never silently typed over.
+  useEffect(() => {
+    const next = applyStatementBuild(inputs, orgSettings.treatmentRules);
+    if (next !== inputs) setInputs(next);
+  }, [inputs, orgSettings]);
+  // Saving needs every judgment on the statement build confirmed.
+  const judgmentsPending = useMemo(
+    () => pendingJudgments(statementState(inputs, orgSettings.treatmentRules)),
+    [inputs, orgSettings],
+  );
+  const saveBlockedNote = judgmentsPending > 0
+    ? `${judgmentsPending} judgment${judgmentsPending === 1 ? '' : 's'} to confirm in Financial statements before saving.`
+    : null;
 
   // Dynamic module calculations, at the live rate and under the firm's
   // spreads. Shared with the pipeline drawer through utils/dealMetrics, which
@@ -1008,7 +1025,9 @@ function AuthenticatedApp({ profile, user }) {
                           });
                           if (!ok) return;
                         }
-                        const { error } = await updatePipelineDeal(activePipelineDealId, inputs, riskScore.composite);
+                        const toSave = withRulesSnapshot(inputs, orgSettings.treatmentRules);
+                        if (toSave !== inputs) setInputs(toSave);
+                        const { error } = await updatePipelineDeal(activePipelineDealId, toSave, riskScore.composite);
                         if (error) {
                           addToast('Failed to update deal', 'error');
                         } else {
@@ -1016,13 +1035,15 @@ function AuthenticatedApp({ profile, user }) {
                           setPipelineDealsList((prev) =>
                             prev.map((d) =>
                               d.id === activePipelineDealId
-                                ? { ...d, inputs, score: riskScore.composite, updated_at: new Date().toISOString() }
+                                ? { ...d, inputs: toSave, score: riskScore.composite, updated_at: new Date().toISOString() }
                                 : d,
                             ),
                           );
                         }
                       }}
-                      className="px-4 py-2 rounded-xl bg-white text-[11px] font-semibold text-gray-700 border border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-all"
+                      disabled={!!saveBlockedNote}
+                      title={saveBlockedNote || undefined}
+                      className="px-4 py-2 rounded-xl bg-white text-[11px] font-semibold text-gray-700 border border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-all disabled:opacity-50"
                     >
                       Update Pipeline Deal
                     </button>
@@ -1037,8 +1058,11 @@ function AuthenticatedApp({ profile, user }) {
                         setSavingToPipeline(true);
                         const dealName = (inputs.companyName || '').trim() || `Untitled Deal, ${new Date().toLocaleDateString()}`;
                         const { createPipelineDeal } = await import('./lib/pipeline');
+                        // The deal keeps the firm's treatment rules as of today.
+                        const toSave = withRulesSnapshot(inputs, orgSettings.treatmentRules);
+                        if (toSave !== inputs) setInputs(toSave);
                         const { data, error } = await createPipelineDeal(
-                          dealName, inputs, riskScore?.composite ?? null, activeModule,
+                          dealName, toSave, riskScore?.composite ?? null, activeModule,
                           toStoredProvenance(extraction),
                         );
                         setSavingToPipeline(false);
@@ -1069,7 +1093,8 @@ function AuthenticatedApp({ profile, user }) {
                           }
                         }
                       }}
-                      disabled={savingToPipeline}
+                      disabled={savingToPipeline || !!saveBlockedNote}
+                      title={saveBlockedNote || undefined}
                       className="px-4 py-2 rounded-xl text-[11px] font-semibold text-gray-900 hover:opacity-90 disabled:opacity-50 transition-all flex items-center gap-1.5"
                       style={{ backgroundColor: '#D4A843' }}
                     >
@@ -1079,6 +1104,9 @@ function AuthenticatedApp({ profile, user }) {
                       </svg>
                       {savingToPipeline ? 'Saving...' : 'Save to Pipeline'}
                     </button>
+                  )}
+                  {valid && saveBlockedNote && (
+                    <span className="text-[10px] text-amber-700 max-w-[14rem] leading-snug">{saveBlockedNote}</span>
                   )}
                   <button
                     onClick={clearForm}
@@ -1204,6 +1232,7 @@ function AuthenticatedApp({ profile, user }) {
                     analystName={profile?.full_name || user?.user_metadata?.full_name || ''}
                     analystEmail={user?.email || ''}
                     draftStatus={draftStatus}
+                    treatmentRules={orgSettings.treatmentRules}
                   />
                 </div>
               </div>
@@ -1295,6 +1324,12 @@ function AuthenticatedApp({ profile, user }) {
                         className="px-4 py-2.5 rounded-xl border border-gray-300 text-sm text-gray-700 font-medium hover:border-gray-400 transition-all"
                       >
                         Try a borderline deal (~50)
+                      </button>
+                      <button
+                        onClick={() => loadExample(exampleDeals.find(d => d.id === 'statements'))}
+                        className="px-4 py-2.5 rounded-xl border border-gray-300 text-sm text-gray-700 font-medium hover:border-gray-400 transition-all"
+                      >
+                        Try a deal built from statements
                       </button>
                     </div>
                   )}

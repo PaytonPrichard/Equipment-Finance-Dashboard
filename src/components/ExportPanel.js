@@ -5,6 +5,7 @@ import { computeCashFlowAnalysis, describeMissing } from '../utils/cashFlowMetri
 import { recommendationFor } from '../lib/recommendation';
 import { createMemoSnapshot } from '../lib/memos';
 import packageJson from '../../package.json';
+import { buildStatementsMemoHtml } from '../utils/statementMemo';
 
 const APP_VERSION = process.env.REACT_APP_VERSION || packageJson.version || 'dev';
 
@@ -141,7 +142,7 @@ function parseCommentaryFromSummary(summaryText) {
 // boundary landed between them on the inventory memo and the last page
 // carried nothing but the disclaimer. Together they are about a third of a
 // page, so keeping them whole is always affordable.
-export function generateBrandedPdfHtml({ summaryText, inputs, metrics, riskScore, recommendation, screeningResult, orgName, analystName, moduleLabel, branding, factors = [], structure = null, stressResults = [], moduleKey = 'equipment_finance', borrowerExtras = null, criteria = null, commentary = null, sourceDocuments = [], keptFields = [], generatedAt = null }) {
+export function generateBrandedPdfHtml({ summaryText, inputs, metrics, riskScore, recommendation, screeningResult, orgName, analystName, moduleLabel, branding, factors = [], structure = null, stressResults = [], moduleKey = 'equipment_finance', borrowerExtras = null, criteria = null, commentary = null, sourceDocuments = [], keptFields = [], generatedAt = null, treatmentRules = undefined }) {
   const companyName = inputs?.companyName || 'N/A';
   // Read from the model, not the clock. A memo reopened next quarter has to
   // print the date it went to committee, not the date it was reopened.
@@ -607,6 +608,9 @@ export function generateBrandedPdfHtml({ summaryText, inputs, metrics, riskScore
   <!-- Suggested Structure (module-aware, structured) -->
   ${renderStructureSection()}
 
+  <!-- How the numbers were built (statement line items only) -->
+  ${buildStatementsMemoHtml(inputs, treatmentRules)}
+
   <!-- Source Documents + Footer -->
   <div class="keep-together">
   <div class="section">
@@ -755,6 +759,9 @@ const CONTENT_PX = Math.round((CONTENT_MM * 96) / 25.4);
       moduleKey, factors, structure, stressResults, borrowerExtras, criteria,
       commentary, sourceDocuments, keptFields,
       sofr, sofrDate, generatedAt: new Date().toISOString(),
+      // Firm treatment rules, for a statement-built deal not yet saved with
+      // its own copy. Stored with the memo so a re-render matches.
+      treatmentRules: profile?.organizations?.org_settings?.treatmentRules,
     };
     const html = generateBrandedPdfHtml(model);
 

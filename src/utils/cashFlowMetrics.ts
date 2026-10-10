@@ -278,11 +278,14 @@ function formatUsdShort(v: number): string {
  * FCCR for one EBITDA figure against total debt service, or null when cash
  * taxes, maintenance capex or rent is not provided. The module stress
  * tables use this so their FCCR column matches the metric card.
+ * `revenueFactor` scales maintenance capex with revenue in a downturn,
+ * the same rule as the cash-flow stress (0.8 for revenue -20%).
  */
-export function fccrFor(inputs: InputsIn | null | undefined, ebitda: number, debtService: number): number | null {
+export function fccrFor(inputs: InputsIn | null | undefined, ebitda: number, debtService: number, revenueFactor = 1): number | null {
   if (missingFrom(inputs, FCCR_INPUTS).length > 0) return null;
   const rent = providedValue(inputs, 'leasePayments') as number;
   const denom = debtService + rent;
   if (!(denom > 0)) return null;
-  return (ebitda + rent - (providedValue(inputs, 'maintenanceCapex') as number) - (providedValue(inputs, 'cashTaxes') as number)) / denom;
+  const capex = (providedValue(inputs, 'maintenanceCapex') as number) * revenueFactor;
+  return (ebitda + rent - capex - (providedValue(inputs, 'cashTaxes') as number)) / denom;
 }

@@ -1,3 +1,5 @@
+import { PRAIRIE_FINANCIALS } from './demoStatements';
+
 const exampleDeals = [
   {
     id: 'strong',
@@ -107,6 +109,28 @@ const exampleDeals = [
       usefulLife: 15,
       loanTerm: 84,
       essentialUse: false,
+    },
+  },
+  {
+    // Revenue, EBITDA, debt and debt service are built from the statement
+    // line items when the deal loads, not typed here.
+    id: 'statements',
+    label: 'Built from statements: $4M rental fleet',
+    subtitle: 'Equipment dealer · Floorplan · EFA',
+    inputs: {
+      companyName: 'Prairie Equipment Dealers Inc.',
+      yearsInBusiness: 34,
+      industrySector: 'Agriculture',
+      creditRating: 'Adequate',
+      equipmentType: 'Construction Equipment',
+      equipmentCondition: 'New',
+      equipmentCost: 4000000,
+      downPayment: 400000,
+      financingType: 'EFA',
+      usefulLife: 10,
+      loanTerm: 60,
+      essentialUse: true,
+      financials: PRAIRIE_FINANCIALS,
     },
   },
 ];

@@ -130,6 +130,15 @@ describe('missing inputs are never filled in', () => {
   });
 });
 
+describe('fccrFor', () => {
+  test('scales maintenance capex by the revenue factor', () => {
+    // (6.4 + 0.4 - 1.5 x 0.8 - 1.0) / (3.0 + 0.4) = 4.6 / 3.4
+    expect(fccrFor(inputs, 6_400_000, 3_000_000, 0.8)).toBeCloseTo(4.6 / 3.4, 6);
+    // Default factor 1 holds capex: (6.4 + 0.4 - 1.5 - 1.0) / 3.4
+    expect(fccrFor(inputs, 6_400_000, 3_000_000)).toBeCloseTo(4.3 / 3.4, 6);
+  });
+});
+
 describe('rate shock coverage', () => {
   test('a revolver takes the shock on its full draw', () => {
     const a = computeCashFlowAnalysis({ ...inputs, floatingRateDebtPct: null }, { ...metrics, newFloatingPrincipal: 10_000_000 }, DEFAULT_CRITERIA);

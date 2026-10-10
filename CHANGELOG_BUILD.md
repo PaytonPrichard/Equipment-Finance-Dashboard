@@ -121,6 +121,74 @@
 
 **Open:** the module stress tables (EBITDA -10/-20/-30% per module) still hold capex in their FCCR column. Whether those declines are revenue or margin declines decides if capex should scale there too.
 
+## 2026-10-09: Module stress tables scale capex too (Workstream A)
+
+**What changed:** the per-module EBITDA stress tables (-10/-20/-30%) now cut maintenance capex by the same percentage in their FCCR column, via `fccrFor(..., revenueFactor)`. Both stress tables now give the same FCCR for the same downturn. Spec section 7 updated. Real-deals: no verdict moves, FCCR columns only.
+
+**What Joel decided:** the module declines are downturns at a held margin, so capex scales, same as the cash-flow stress.
+
+## 2026-10-09: EBITDA build step 3, piece 1: statements on the New Deal form (Workstream A)
+
+**What changed**
+- Borrower Profile has a "Financial statements" panel (`StatementsPanel.js`) for line items, each with an optional document and page. It covers the income statement, cash flow statement, balance sheet and debt note. Floorplan, captive fleet, finance lease and no-operating-income lines open when the analyst says the borrower has them.
+- Whatever the line items are enough to build fills the matching Borrower Profile field: revenue, EBITDA, debt, debt service, maintenance capex, cash taxes, working capital and rent. Each built field shows a "Built" badge and its formula with page citations. Other fields stay typed, and a partial build is fine.
+- A built field is read-only. Override asks for a reason and hands the field back to typing. "Use built value" undoes it. App writes built values over whatever set the inputs (form, document merge, module switch, draft), so a built field is never silently typed over. `src/lib/statementBuild.ts`.
+- The panel lists what each field is built from, what is still needed, and the notes.
+- Statements survive an asset-class switch. The provenance panel skips them. `NullableNumberInput` moved to its own file.
+
+**What Joel decided:** one form, no mode toggle. Statements fill the typed fields, and analysts add to them. Override-with-reason guards built fields. Source citation is optional. Prior-year figures stay typed.
+
+**Next (piece 2):** treatment overrides and judgment confirmation on the form, Save to Pipeline gated on confirmations, firm rules snapshot at save.
+
+## 2026-10-09: EBITDA build step 3, piece 2: judgments, treatment overrides, save gating (Workstream A)
+
+**What changed**
+- The statements panel lists every judgment the build needs, grouped: statements, what the borrower has, treatment, where items sit, company EBITDA, maintenance capex. Tranche's proposal is pre-selected in amber. One click confirms it, or picking another option confirms that one. Each confirmation records who and when.
+- Treatment rows show the firm rule and what it does. "Override for this deal" shows the alternative and needs a reason. "Use firm rule" undoes it.
+- Save to Pipeline and Update Pipeline Deal are disabled while any judgment is pending, with the count shown next to the buttons.
+- At first save the deal keeps a copy of the firm's treatment rules (`financials.firmRules`). Later builds of that deal use the copy. If the firm's rules have changed since, the panel says so.
+- Fewer needless questions: no revolver-maturity question without a revolver balance, no "starts from" question without pretax lines, no "which EBITDA" question when only one exists.
+- Treatment wording shared between Settings and the form (`TREATMENT_COPY`).
+
+**What Joel decided:** no "confirm all" button. One click per judgment, revisit if it feels heavy.
+
+**Not checked in the browser:** the disabled Save button itself (the demo deal needs every required field before Save shows). The panel, judgments and override flow were checked.
+
+## 2026-10-09: Demo shows statement-built deals (Workstream A)
+
+**What changed**
+- New Deal (demo only): a third example, "Try a deal built from statements". Prairie Equipment Dealers, a fictional dealer with floorplan. Revenue, EBITDA, debt, debt service and the cash-flow inputs build from cited line items. The 11 judgments are left for the visitor, so Save shows the "judgments to confirm" note. It screens FLAG (82, then 87 after the Agriculture tier moved to moderate): a 6.4% margin breaks in the combined severe case.
+- Demo pipeline: Heartland Foods (Funded) is now built from statements. The line items build its existing revenue, EBITDA and debt exactly. Every judgment is confirmed by the demo analyst, and firm rules are kept. PASS 94, same score as before.
+- `src/data/demoStatements.js`, tested in `demoStatements.test.js` so the demo numbers cannot drift from their builds.
+- Untouched: the Granite Ridge documents the product video uses, the tutorial example (still the strong deal), and the demo firm's Settings (Tranche default treatment rules).
+
+**What Joel asked:** keep the demo current with the changes as they land.
+
+## 2026-10-09: Debt service is scheduled principal only (Workstream A)
+
+**What changed:** the build no longer asks whether a revolver matures within 12 months. A revolver never counts as principal due. A new optional line, "Renewing facilities inside current maturities", takes a revolver, AR securitization or 364-day line back out of current maturities when the balance sheet folds one in, with a caveat that it is refinancing risk. Design doc updated.
+
+**What Joel decided** (relayed by Workstream B, from United Rentals: its $1,459M AR securitization sat in current maturities): debt service is cash interest plus scheduled principal due in 12 months. Renewing facilities are refinancing risk, shown in the maturity wall, not debt service.
+
+## 2026-10-09: Build regression covers nine real filings (Workstream A)
+
+**What changed**
+- Merged real-deals (93520e2): five new cases (United Rentals, Custom Truck One Source, Alta, Rush, Wabash). The build reproduces the harness on all nine filings, across all eight inputs.
+- New optional line, "Non-cash gains inside operating income", subtracted from built EBITDA (Wabash's $418.6M litigation reversal). Gains only. An add-back that raises EBITDA goes through the Adjusted EBITDA bridge.
+- Real-deals report regenerated: module stress FCCR columns now reflect capex scaling on the new cases. No verdict moves: 5 match, 2 acceptable, 2 mismatch (CTOS, where Joel agrees the model is right, and H&E, the P1-21/P1-22 blind spot).
+
+**Backlog:** the build cannot say "floorplan counts as debt, interest amount not disclosed" (Rush). Marking floorplan present asks for the interest line. Rush maps with floorplan inside the cited debt total.
+
+## 2026-10-09: EBITDA build step 3, piece 3: company EBITDA and the add-back bridge (Workstream A)
+
+**What changed**
+- The statements panel has a "Company EBITDA" section. It takes a stated EBITDA and an Adjusted EBITDA, each with the company's own name for it and its source, plus the add-back bridge line by line. Each add-back is accepted or rejected. One left undecided is excluded and blocks Save until reviewed.
+- The comparison splits the gap to built EBITDA into listed add-backs, the firm's treatment rules, and unexplained, with the firm tolerance printed ("Caveat above 5%, your policy."). Which EBITDA scores is a judgment in the list.
+- A company figure alone is enough to start the build. It scores as stated. A bridge line with no amount yet is ignored.
+- Demo: Prairie Equipment Dealers carries the dealer's Adjusted EBITDA of $13.4M with a three-line bridge, one a pro forma acquisition, left for the visitor to review. The bridge explains the gap to built ($11.6M) within $100K.
+
+Step 3 is complete. Step 4 next: memo section "How the numbers were built", server rerun of the build, audit entries for overrides at save, and rescore with current firm rules.
+
 ## 2026-10-09: Public equipment ABS benchmarks and industry tiers (Workstream B)
 
 **What changed.** Pulled pool and loss data from the three equipment ABS programs with public prospectuses (John Deere Owner Trust 2026-B, CNH Equipment Trust 2026-B, Daimler Trucks Retail Trust 2024-1 plus 10-D reports). Results in `scripts/real-deals/benchmarks/abs-2026-10.md`. New Trucking sector (high risk), split out of Transportation/Logistics. Agriculture moved from high to moderate. Applied in all three modules, server validation, extraction, form tip and spec doc, with tests.
