@@ -1,18 +1,97 @@
 import React, { useState, useEffect } from 'react';
 import { DEFAULT_TREATMENT_RULES, TREATMENT_ROWS, treatmentOptions, validateTreatmentRules } from '../lib/borrowerBuild';
 import { TREATMENT_COPY } from '../utils/statementFormat';
+import { useConfirm } from '../contexts/ConfirmContext';
 
 // Wording shared with the New Deal form and the memo.
 export { TREATMENT_COPY };
 
 const SAVED_NOTICE = 'Saved. New screens use these rules. Deals already saved keep the rules they were built with.';
 
+const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
+
+/**
+ * Admin only. Open deals (Screening, Under Review) still on older rules can
+ * be rebuilt in one go. The admin's action confirms the changed rows; each
+ * deal gets its own audit entry. Approved and Funded deals are not touched.
+ * `onPreview()` and `onRebuild()` resolve { data, error }.
+ */
+function RulesRebuildSection({ rulesKey, onPreview, onRebuild }) {
+  const confirm = useConfirm();
+  const [preview, setPreview] = useState(null);
+  const [running, setRunning] = useState(false);
+  const [result, setResult] = useState(null);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    let live = true;
+    onPreview().then(({ data, error: e }) => {
+      if (!live) return;
+      if (e) setError(e.message);
+      else setPreview(data);
+    });
+    return () => { live = false; };
+  }, [rulesKey, onPreview]);
+
+  const run = async () => {
+    const ok = await confirm({
+      title: `Rebuild ${plural(preview.count, 'deal')}?`,
+      body: `${plural(preview.count, 'deal')} in Screening or Under Review move onto your current treatment rules and are rescored. Your action confirms the changed treatment rows, in your name, on each deal. Approved and Funded deals keep their rules.`,
+      confirmLabel: 'Rebuild',
+    });
+    if (!ok) return;
+    setRunning(true);
+    const { data, error: e } = await onRebuild();
+    setRunning(false);
+    if (e) { setError(e.message); return; }
+    setResult(data);
+    const after = await onPreview();
+    if (!after.error) setPreview(after.data);
+  };
+
+  return (
+    <div className="mt-4 border-t border-gray-200 pt-3 space-y-2" data-testid="rules-rebuild">
+      {error && <p className="text-[11px] text-rose-700">{error}</p>}
+      {preview && preview.count > 0 && (
+        <>
+          <p className="text-[12px] text-gray-700">
+            {plural(preview.count, 'deal')} in Screening or Under Review {preview.count === 1 ? 'uses' : 'use'} older rules.
+          </p>
+          <button
+            type="button"
+            onClick={run}
+            disabled={running}
+            className="px-4 py-2 rounded-lg bg-gray-100 text-gray-900 text-[12px] font-semibold hover:bg-gray-200 transition-all disabled:opacity-50"
+          >
+            {running ? 'Rebuilding...' : `Rebuild ${plural(preview.count, 'deal')} with current rules`}
+          </button>
+        </>
+      )}
+      {preview && preview.count === 0 && !result && (
+        <p className="text-[11px] text-gray-400">Every deal in Screening or Under Review uses the current rules.</p>
+      )}
+      {result && (
+        <div role="status" className="space-y-1">
+          <p className="text-[11px] text-gray-600">
+            Rebuilt {plural(result.rebuilt.length, 'deal')}.{result.skipped.length ? ` Skipped ${result.skipped.length}, still on older rules:` : ''}
+          </p>
+          {result.skipped.length > 0 && (
+            <ul className="space-y-0.5">
+              {result.skipped.map((d) => <li key={d.id} className="text-[11px] text-gray-600">{d.name}: {d.reason}</li>)}
+            </ul>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 /**
  * Firm treatment rules for building EBITDA, debt and debt service from
  * statements. Admins edit, everyone else reads. `onSave(rules)` resolves
  * true on success.
  */
-export default function TreatmentRulesCard({ rules: savedRaw, editable, onSave }) {
+export default function TreatmentRulesCard({ rules: savedRaw, editable, onSave, onPreviewRebuild, onRebuild }) {
   const saved = validateTreatmentRules(savedRaw);
   const [draft, setDraft] = useState(saved);
   const [saving, setSaving] = useState(false);
@@ -114,6 +193,9 @@ export default function TreatmentRulesCard({ rules: savedRaw, editable, onSave }
         </div>
       ) : (
         <p className="mt-3 text-[11px] text-gray-400">Set by your firm's admin.</p>
+      )}
+      {onPreviewRebuild && onRebuild && (
+        <RulesRebuildSection rulesKey={savedKey} onPreview={onPreviewRebuild} onRebuild={onRebuild} />
       )}
     </div>
   );

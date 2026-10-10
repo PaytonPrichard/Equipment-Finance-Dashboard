@@ -197,3 +197,25 @@ Step 3 is complete. Step 4 next: memo section "How the numbers were built", serv
 - Recorded his loss ranking before the data: trucks, construction, agriculture (worst first). Data supports trucks worst (4-6x the losses of ag/construction pools at the same vintage). Construction vs agriculture is not separable from public data.
 - Tiers: option 2 (Trucking split out at high) plus option 3 (Agriculture to moderate).
 - Rush reclassified to Trucking under the end-market rule. Rerun: no verdict changes (Rush 85 to 81, still PASS; Titan 44 to 49, still FAIL).
+
+## 2026-10-09: Rebuild with current firm rules (EBITDA build step 4, last piece) (Workstream A)
+
+**What changed**
+- Per deal: when a saved deal's treatment rules differ from the firm's, the statements panel lists what changed ("Floorplan (dealers): Inventory financing to Debt") and offers "Rebuild with current firm rules". Changed treatment rows go back to pending. The analyst confirms them, then updates the deal.
+- Bulk, admin only: the Treatment Rules card shows how many Screening and Under Review deals use older rules, with a Rebuild button and a confirmation dialog. The admin's action confirms the changed rows in the admin's name. Each deal is rebuilt, validated and rescored on the server, gets one `rebuild_rules` audit row, and fires `deal.scored` if the score moved. Approved and Funded deals are never touched. Server: `POST /api/score-deal?action=rebuild-rules` (`dryRun=1` for the count), logic in `server-lib/rulesRebuild.js`. No new Vercel function.
+- A deal that fails in bulk (validation, a judgment still open, or edited by someone else mid-run) is skipped, listed with the reason, and stays on its old rules. The write only lands if the deal has not been saved since it was read.
+- Memo: "Rebuilt with firm rules on <date> by <name>", plus ", with the firm's open deals" for a bulk run, and what changed. Deal history shows the same.
+- A new deal that carries an older copy of the rules (a loaded draft, a copied deal) cannot be saved until it is rebuilt.
+
+**Fixed along the way**
+- A treatment confirmation given under an older firm rule used to keep counting as confirmed, so the form could show "confirmed" while a different rule applied. A confirmation now counts only for the rule that applies.
+- The server kept whatever rules copy the browser sent. A client could send made-up rules and skip the override-with-reason audit. The server now accepts only the deal's saved rules or the firm's current rules, and refuses anything else with a 409. It also stamps the rebuild record itself, so a client cannot invent one. A client that drops the copy stays on its saved rules.
+- Save and Update failures now show the server's message instead of a generic toast.
+
+**What Joel decided**
+- Bulk touches only Screening and Under Review. Per deal, from the statements panel. Bulk is admin only, and the admin's action is the confirmation, with one audit row per deal.
+- An override that now matches the new firm rule is kept, with its reason.
+- Bulk failures are skipped and listed, not all-or-nothing.
+- The memo carries one line on the rebuild.
+
+**Tests:** 676 client, 56 server, 15 harness. tsc clean, CI build clean apart from the old html2pdf source-map warning.

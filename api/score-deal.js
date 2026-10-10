@@ -11,7 +11,8 @@ const { handlePreflight } = require('../server-lib/cors');
 const { checkRateLimit } = require('../server-lib/rateLimit');
 const { checkPlanStatus } = require('../server-lib/planCheck');
 const { dispatchWebhooks } = require('../server-lib/webhookDispatch');
-const { recomputeScore, prepareStatementInputs, VALID_ASSET_CLASSES } = require('./_scoring.cjs');
+const { recomputeScore, prepareStatementInputs, rebuildDealRules, dealRulesOutOfDate, VALID_ASSET_CLASSES } = require('./_scoring.cjs');
+const { runRulesRebuild } = require('../server-lib/rulesRebuild');
 const { validateDealInputs, validateARInputs, validateInventoryInputs } = require('../server-lib/validate');
 
 function validateInputs(assetClass, inputs) {
@@ -32,7 +33,7 @@ async function authenticateRequest(req) {
 async function getProfile(userId) {
   const { data } = await supabaseAdmin
     .from('profiles')
-    .select('org_id')
+    .select('org_id, role, full_name')
     .eq('id', userId)
     .single();
   return data || null;
@@ -40,10 +41,12 @@ async function getProfile(userId) {
 
 // A deal built from statement line items is rebuilt here before it is
 // validated or scored: built figures the client sent are replaced, the deal
-// keeps the firm rules it was first saved with, and a deal with unconfirmed
-// judgments is refused. Returns { inputs, overrides } or { status, body }.
+// keeps the firm rules it was first saved with or moves onto the firm's
+// current rules (never rules the client made up), and a deal with
+// unconfirmed judgments is refused.
+// Returns { inputs, overrides, rulesChange } or { status, body }.
 async function prepareDealInputs(orgId, inputs, previous) {
-  if (!inputs.financials && !previous?.financials) return { inputs, overrides: [] };
+  if (!inputs.financials && !previous?.financials) return { inputs, overrides: [], rulesChange: null };
   let orgRules;
   if (inputs.financials) {
     const { data: org } = await supabaseAdmin.from('organizations').select('org_settings').eq('id', orgId).single();
@@ -51,13 +54,14 @@ async function prepareDealInputs(orgId, inputs, previous) {
   }
   const prep = await prepareStatementInputs(inputs, orgRules, previous);
   if (prep.error) return { status: 500, body: { error: prep.error } };
+  if (prep.rulesError) return { status: 409, body: { error: prep.rulesError } };
   if (prep.pending > 0) {
     return {
       status: 400,
       body: { error: `${prep.pending} judgment${prep.pending === 1 ? '' : 's'} on the statement build not confirmed. Confirm them before saving.` },
     };
   }
-  return { inputs: prep.inputs, overrides: prep.overrides };
+  return { inputs: prep.inputs, overrides: prep.overrides, rulesChange: prep.rulesChange };
 }
 
 // One audit row per override, so a reviewer sees each one with its reason
@@ -118,6 +122,20 @@ module.exports = async function handler(req, res) {
     if (planStatus.expired) {
       return res.status(403).json({ error: planStatus.message });
     }
+  }
+
+  // ============ POST ?action=rebuild-rules — Bulk rebuild, admin only ============
+  if (req.method === 'POST' && req.query?.action === 'rebuild-rules') {
+    if (profile.role !== 'admin') return res.status(403).json({ error: 'Only an admin can rebuild deals with the firm rules.' });
+    const result = await runRulesRebuild({
+      db: supabaseAdmin,
+      orgId,
+      userId: user.id,
+      adminName: profile.full_name || user.email || undefined,
+      dryRun: req.query?.dryRun === '1',
+      deps: { rebuildDealRules, dealRulesOutOfDate, recomputeScore, validateInputs, writeAuditLog, dispatchWebhooks },
+    });
+    return res.status(result.status).json(result.body);
   }
 
   // ===================== POST — Create a scored deal =====================
@@ -267,6 +285,9 @@ module.exports = async function handler(req, res) {
       newValues: { inputs: data.inputs, score: data.score },
     });
     await auditOverrides({ userId: user.id, orgId, dealId: data.id, overrides: prepared.overrides });
+    if (prepared.rulesChange) {
+      await writeAuditLog({ userId: user.id, orgId, action: 'rebuild_rules', dealId: data.id, newValues: { rulesChange: prepared.rulesChange, bulk: false } });
+    }
 
     if (data.score !== existing.score) {
       await dispatchWebhooks(orgId, 'deal.scored', {

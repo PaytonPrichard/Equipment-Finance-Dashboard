@@ -41,7 +41,7 @@ import ScreeningCriteria from './components/ScreeningCriteria';
 import { DEFAULT_CRITERIA, dscrFloorFor, evaluateScreening, validateCriteria } from './lib/screeningCriteria';
 import { validateWeights } from './lib/scoringWeights';
 import { computeDealMetrics } from './utils/dealMetrics';
-import { applyStatementBuild, statementState, pendingJudgments, withRulesSnapshot } from './lib/statementBuild';
+import { applyStatementBuild, statementState, pendingJudgments, withRulesSnapshot, rulesOutOfDate } from './lib/statementBuild';
 import StressTestPanel from './components/StressTestPanel';
 import CashFlowStressPanel from './components/CashFlowStressPanel';
 import ExportPanel from './components/ExportPanel';
@@ -543,9 +543,14 @@ function AuthenticatedApp({ profile, user }) {
     () => pendingJudgments(statementState(inputs, orgSettings.treatmentRules)),
     [inputs, orgSettings],
   );
-  const saveBlockedNote = judgmentsPending > 0
-    ? `${judgmentsPending} judgment${judgmentsPending === 1 ? '' : 's'} to confirm in Financial statements before saving.`
-    : null;
+  // A new deal is built under the firm's rules today. One that carries an
+  // older copy (a loaded draft, a copied deal) is rebuilt first.
+  const staleRulesOnNewDeal = !activePipelineDealId && rulesOutOfDate(inputs, orgSettings.treatmentRules);
+  const saveBlockedNote = staleRulesOnNewDeal
+    ? 'Built under older firm rules. Rebuild with current firm rules in Financial statements before saving.'
+    : judgmentsPending > 0
+      ? `${judgmentsPending} judgment${judgmentsPending === 1 ? '' : 's'} to confirm in Financial statements before saving.`
+      : null;
 
   // Dynamic module calculations, at the live rate and under the firm's
   // spreads. Shared with the pipeline drawer through utils/dealMetrics, which
@@ -1029,7 +1034,7 @@ function AuthenticatedApp({ profile, user }) {
                         if (toSave !== inputs) setInputs(toSave);
                         const { error } = await updatePipelineDeal(activePipelineDealId, toSave, riskScore.composite);
                         if (error) {
-                          addToast('Failed to update deal', 'error');
+                          addToast(error.message || 'Failed to update deal', 'error');
                         } else {
                           addToast('Pipeline deal updated', 'success');
                           setPipelineDealsList((prev) =>
@@ -1067,7 +1072,7 @@ function AuthenticatedApp({ profile, user }) {
                         );
                         setSavingToPipeline(false);
                         if (error) {
-                          addToast('Failed to save to pipeline.', 'error');
+                          addToast(error.message || 'Failed to save to pipeline.', 'error');
                         } else if (data) {
                           addToast(`Saved "${dealName}" to pipeline`, 'success');
                           setPipelineDealsList((prev) => [data, ...prev]);

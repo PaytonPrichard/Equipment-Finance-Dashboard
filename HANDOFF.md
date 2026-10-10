@@ -18,7 +18,9 @@
 - Demo: "Try a deal built from statements" (Prairie Equipment Dealers, fictional dealer, judgments pending, Adjusted EBITDA bridge). Heartland Foods (Funded) in the demo pipeline is statement-built and fully confirmed. `src/data/demoStatements.js`, tested.
 - From Workstream B (merged and shipped): 9 real-deals fixtures, P0-7 negative EBITDA, industry tiers from public ABS data (Trucking split out at high, Agriculture to moderate), Ridgeline Freight trucking extraction scenario.
 
-**Next: rescore with current firm rules (last piece of step 4).** Joel decided 2026-10-09:
+**Built 2026-10-09 late, branch `rescore-rules`, not pushed:** rescore with current firm rules, per deal and bulk (details in `CHANGELOG_BUILD.md`). Also closes a server gap: the client could send any rules copy. Joel approves the push. Verify in the browser before pushing: per-deal rebuild on a saved dealer deal, bulk from Settings as admin, and a 409 if the rules copy is tampered with.
+
+**Was next: rescore with current firm rules (last piece of step 4).** Joel decided 2026-10-09:
 1. Bulk rescore touches only Screening and Under Review deals. Approved and Funded keep the rules they were decided under (they can still be rebuilt one at a time).
 2. Per deal: "Rebuild with current firm rules" in the statements panel (where it already says the firm's rules changed). It replaces `financials.firmRules`, and treatment rows whose rule changed go back to pending, so the analyst re-confirms before Update.
 3. Bulk, admin only, from the Treatment Rules card: the admin's action counts as the confirmation for the changed rows, one audit row per deal naming the admin. Confirmation dialog shows how many deals it touches.

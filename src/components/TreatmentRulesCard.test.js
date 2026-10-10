@@ -48,4 +48,53 @@ describe('TreatmentRulesCard', () => {
     await waitFor(() => expect(onSave).toHaveBeenCalled());
     expect(screen.queryByRole('status')).toBeNull();
   });
+
+  describe('bulk rebuild (admin)', () => {
+    const preview = (count) => jest.fn(async () => ({ data: { count, deals: [] }, error: null }));
+
+    test('hidden without the handlers', () => {
+      render(<TreatmentRulesCard rules={undefined} editable onSave={jest.fn()} />);
+      expect(screen.queryByTestId('rules-rebuild')).toBeNull();
+    });
+
+    test('shows the count of open deals on older rules', async () => {
+      render(<TreatmentRulesCard rules={undefined} editable onSave={jest.fn()} onPreviewRebuild={preview(3)} onRebuild={jest.fn()} />);
+      expect(await screen.findByText('3 deals in Screening or Under Review use older rules.')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Rebuild 3 deals with current rules' })).toBeInTheDocument();
+    });
+
+    test('none on older rules: says so, no button', async () => {
+      render(<TreatmentRulesCard rules={undefined} editable onSave={jest.fn()} onPreviewRebuild={preview(0)} onRebuild={jest.fn()} />);
+      expect(await screen.findByText(/Every deal in Screening or Under Review uses the current rules/)).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /Rebuild/ })).toBeNull();
+    });
+
+    test('asks first, then lists what it skipped', async () => {
+      const spy = jest.spyOn(window, 'confirm').mockReturnValue(true);
+      const onRebuild = jest.fn(async () => ({
+        data: { rebuilt: [{ id: 'a' }], skipped: [{ id: 'b', name: 'Wabash', reason: 'Does not pass validation under the new rules.' }] },
+        error: null,
+      }));
+      const onPreview = jest.fn()
+        .mockResolvedValueOnce({ data: { count: 2, deals: [] }, error: null })
+        .mockResolvedValue({ data: { count: 1, deals: [] }, error: null });
+      render(<TreatmentRulesCard rules={undefined} editable onSave={jest.fn()} onPreviewRebuild={onPreview} onRebuild={onRebuild} />);
+      fireEvent.click(await screen.findByRole('button', { name: 'Rebuild 2 deals with current rules' }));
+      await waitFor(() => expect(onRebuild).toHaveBeenCalled());
+      expect(spy.mock.calls[0][0]).toMatch(/Approved and Funded deals keep their rules/);
+      expect(await screen.findByText(/Rebuilt 1 deal\. Skipped 1, still on older rules:/)).toBeInTheDocument();
+      expect(screen.getByText('Wabash: Does not pass validation under the new rules.')).toBeInTheDocument();
+      spy.mockRestore();
+    });
+
+    test('declining the dialog runs nothing', async () => {
+      const spy = jest.spyOn(window, 'confirm').mockReturnValue(false);
+      const onRebuild = jest.fn();
+      render(<TreatmentRulesCard rules={undefined} editable onSave={jest.fn()} onPreviewRebuild={preview(2)} onRebuild={onRebuild} />);
+      fireEvent.click(await screen.findByRole('button', { name: 'Rebuild 2 deals with current rules' }));
+      await waitFor(() => expect(spy).toHaveBeenCalled());
+      expect(onRebuild).not.toHaveBeenCalled();
+      spy.mockRestore();
+    });
+  });
 });

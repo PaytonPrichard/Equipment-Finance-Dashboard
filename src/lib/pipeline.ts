@@ -267,3 +267,40 @@ export async function deletePipelineDeal(
 
   return { data: data as PipelineDealRow | null, error };
 }
+
+export interface RulesRebuildPreview {
+  count: number;
+  deals: { id: string; name: string; stage: string }[];
+}
+
+export interface RulesRebuildResult {
+  rebuilt: { id: string; name: string; oldScore: number | null; newScore: number | null; changed: string[] }[];
+  skipped: { id: string; name: string; reason: string }[];
+}
+
+/**
+ * Bulk rebuild of Screening and Under Review deals with the firm's current
+ * treatment rules. Admin only, enforced on the server. `dryRun` returns the
+ * deals it would touch, for the confirmation dialog.
+ */
+export async function rebuildDealsWithFirmRules(dryRun: true): Promise<{ data: RulesRebuildPreview | null; error: { message: string } | null }>;
+export async function rebuildDealsWithFirmRules(dryRun: false): Promise<{ data: RulesRebuildResult | null; error: { message: string } | null }>;
+export async function rebuildDealsWithFirmRules(dryRun: boolean): Promise<{ data: RulesRebuildPreview | RulesRebuildResult | null; error: { message: string } | null }> {
+  if (isDemoMode() || !supabase) return { data: dryRun ? { count: 0, deals: [] } : { rebuilt: [], skipped: [] }, error: null };
+  const { data: sessionData } = await supabase.auth.getSession();
+  const token = sessionData?.session?.access_token;
+  if (!token) return { data: null, error: { message: 'Not authenticated' } };
+  try {
+    const res = await fetch(`/api/score-deal?action=rebuild-rules${dryRun ? '&dryRun=1' : ''}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      body: '{}',
+    });
+    let payload: any = null;
+    try { payload = await res.json(); } catch { payload = null; }
+    if (!res.ok) return { data: null, error: { message: payload?.error || `HTTP ${res.status}` } };
+    return { data: payload, error: null };
+  } catch (err: unknown) {
+    return { data: null, error: { message: (err as Error).message || 'Network error' } };
+  }
+}

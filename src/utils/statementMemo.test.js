@@ -58,3 +58,24 @@ test('a working capital build reads as reported, sign reversed', () => {
   const deal = getInitialDemoPipeline().find((d) => d.name === 'Heartland Foods Manufacturing');
   expect(text(buildStatementsMemoHtml(deal.inputs, undefined))).toContain('Working capital increase $500K Change in working capital -$500K (FY2025 audited financials, p. 7), sign reversed');
 });
+
+describe('a deal rebuilt with newer firm rules', () => {
+  const { rebuildWithCurrentRules } = require('../lib/statementBuild');
+  const deal = getInitialDemoPipeline().find((d) => d.name === 'Heartland Foods Manufacturing');
+  const from = deal.inputs.financials.firmRules;
+  const to = { ...from, ebitdaGapTolerance: 0.1 };
+
+  test('per deal: says when and who', () => {
+    const { inputs } = rebuildWithCurrentRules(deal.inputs, to, { by: 'J. Peter', at: '2026-10-09T12:00:00Z' });
+    expect(text(buildStatementsMemoHtml(inputs, to))).toContain('Rebuilt with firm rules on 2026-10-09 by J. Peter. EBITDA gap tolerance: 5% to 10%.');
+  });
+
+  test('bulk: says it was the admin, with the open deals', () => {
+    const { inputs } = rebuildWithCurrentRules(deal.inputs, to, { by: 'Admin', at: '2026-10-09T12:00:00Z', bulk: true });
+    expect(text(buildStatementsMemoHtml(inputs, to))).toContain("Rebuilt with firm rules on 2026-10-09 by Admin, with the firm's open deals.");
+  });
+
+  test('never rebuilt, no line', () => {
+    expect(text(buildStatementsMemoHtml(deal.inputs, undefined))).not.toContain('Rebuilt with firm rules');
+  });
+});

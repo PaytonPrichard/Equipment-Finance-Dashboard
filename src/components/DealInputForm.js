@@ -6,9 +6,9 @@ import TutorialBeacon from './TutorialBeacon';
 import { getMissingFields, generateRequestInfoEmail } from '../lib/incompleteFields';
 import NullableNumberInput from './NullableNumberInput';
 import StatementsPanel from './StatementsPanel';
-import { formulaWithValues } from '../utils/statementFormat';
+import { formulaWithValues, describeRuleChanges } from '../utils/statementFormat';
 import { useConfirm } from '../contexts/ConfirmContext';
-import { statementState, overrideField, clearFieldOverride, clearStatements, confirmJudgment, setDealTreatment, firmRulesFor } from '../lib/statementBuild';
+import { statementState, overrideField, clearFieldOverride, clearStatements, confirmJudgment, setDealTreatment, firmRulesFor, rulesOutOfDate, changedRules, rebuildWithCurrentRules } from '../lib/statementBuild';
 import { validateTreatmentRules } from '../lib/borrowerBuild';
 
 const DS_ESTIMATE_RATE = 0.08;
@@ -700,8 +700,9 @@ export default function DealInputForm({ inputs, onChange, schema, modules, activ
     onClearOverride: (key) => onChange(clearFieldOverride(inputs, key)),
   };
   const firmRules = firmRulesFor(inputs, treatmentRules);
-  const rulesChanged = !!inputs.financials?.firmRules
-    && JSON.stringify(inputs.financials.firmRules) !== JSON.stringify(validateTreatmentRules(treatmentRules));
+  const rulesChanged = rulesOutOfDate(inputs, treatmentRules)
+    ? describeRuleChanges(inputs.financials.firmRules, validateTreatmentRules(treatmentRules), changedRules(inputs.financials.firmRules, treatmentRules))
+    : null;
   const clearAllStatements = async () => {
     const ok = await confirm({
       title: 'Clear the statements?',
@@ -824,6 +825,7 @@ export default function DealInputForm({ inputs, onChange, schema, modules, activ
                 onClear={clearAllStatements}
                 firmRules={firmRules}
                 rulesChanged={rulesChanged}
+                onRebuild={() => onChange(rebuildWithCurrentRules(inputs, treatmentRules, { by: analystName || undefined }).inputs)}
                 onConfirm={(id, value, proposed) => onChange(confirmJudgment(inputs, id, value, proposed, analystName || undefined))}
                 onTreatment={(row, rule, reason) => {
                   const r = setDealTreatment(inputs, row, rule, reason, treatmentRules, analystName || undefined);

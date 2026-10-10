@@ -232,6 +232,49 @@ describe('judgments on the statement build', () => {
     fireEvent.click(row('treatment.floorplan').getByRole('button', { name: 'Override' }));
     expect(onChange.mock.calls[0][0].financials.treatmentOverrides.floorplan).toMatchObject({ rule: 'in', reason: 'Credit agreement counts it as debt', by: 'J. Peter' });
   });
+
+  describe('firm rules changed since the deal was saved', () => {
+    const saved = {
+      ...dealer,
+      financials: {
+        ...dealer.financials,
+        firmRules: { financeLeases: 'in', operatingLeases: 'out', floorplan: 'out', captiveFleet: 'corporate', ebitdaGapTolerance: 0.05 },
+        judgments: { 'treatment.floorplan': { proposed: 'out', confirmed: 'out', by: 'J. Peter', at: '2026-10-01' } },
+      },
+    };
+    function setupWith(inputs, treatmentRules) {
+      const onChange = jest.fn();
+      render(
+        <TutorialProvider userId={null}>
+        <DealInputForm inputs={inputs} onChange={onChange} schema={mod.FORM_SCHEMA} modules={getAvailableModules()}
+          activeModule="equipment_finance" onModuleChange={() => {}} pipelineDeals={[]} sofr={0.0389} analystName="J. Peter"
+          treatmentRules={treatmentRules} />
+        </TutorialProvider>,
+      );
+      return { onChange };
+    }
+
+    test('names what changed and offers the rebuild', () => {
+      setupWith(saved, { floorplan: 'in' });
+      const box = within(screen.getByTestId('rules-changed'));
+      expect(box.getByText('Floorplan (dealers): Inventory financing to Debt')).toBeInTheDocument();
+      expect(box.getByRole('button', { name: 'Rebuild with current firm rules' })).toBeInTheDocument();
+    });
+
+    test('rebuild takes the new rules and puts the changed row back to pending', () => {
+      const { onChange } = setupWith(saved, { floorplan: 'in' });
+      fireEvent.click(screen.getByRole('button', { name: 'Rebuild with current firm rules' }));
+      const next = onChange.mock.calls[0][0];
+      expect(next.financials.firmRules.floorplan).toBe('in');
+      expect(next.financials.judgments['treatment.floorplan']).toBeUndefined();
+      expect(next.financials.rulesRebuilt).toMatchObject({ by: 'J. Peter', changed: ['floorplan'] });
+    });
+
+    test('rules unchanged: no notice', () => {
+      setupWith(saved, { floorplan: 'out' });
+      expect(screen.queryByTestId('rules-changed')).toBeNull();
+    });
+  });
 });
 
 describe('company EBITDA and the add-back bridge', () => {
