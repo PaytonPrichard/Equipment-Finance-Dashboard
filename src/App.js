@@ -6,6 +6,7 @@ import LandingPage from './components/LandingPage';
 import RequestAccessPage from './components/RequestAccessPage';
 import OrgSetup from './components/OrgSetup';
 import useSofrRate from './hooks/useSofrRate';
+import { sofrMoveSinceLastSession } from './utils/sofrAlert';
 import { useIdleTimeout } from './hooks/useIdleTimeout';
 import { isDemoMode } from './lib/demoMode';
 import DemoBanner from './components/DemoBanner';
@@ -500,30 +501,23 @@ function AuthenticatedApp({ profile, user }) {
     return () => { if (draftSaveTimer.current) clearTimeout(draftSaveTimer.current); };
   }, [inputs, activeDeal, activePipelineDealId, recentDeals, activeModule, userId]);
 
-  // SOFR change notification — compare current rate against last acknowledged rate
+  // SOFR change notification. Compares the live rate with the rate seen in
+  // the previous session, then records today's rate, so the banner shows
+  // once per real move rather than on every visit. Only a FRED rate counts:
+  // the placeholder shown before the live rate loads is never stored.
   useEffect(() => {
-    if (!sofr) return;
+    if (!sofr || !String(sofrSource).startsWith('FRED')) return;
     try {
-      const stored = localStorage.getItem('efd_last_sofr');
-      if (stored !== null) {
-        const lastSofr = parseFloat(stored);
-        if (!isNaN(lastSofr) && Math.abs(sofr - lastSofr) > 0.0025) {
-          setLastAcknowledgedSofr(lastSofr);
-          setSofrAlert(true);
-        }
-      } else {
-        // First visit — seed localStorage so future sessions can compare
-        localStorage.setItem('efd_last_sofr', String(sofr));
+      const last = sofrMoveSinceLastSession(localStorage.getItem('efd_last_sofr'), sofr);
+      if (last !== null) {
+        setLastAcknowledgedSofr(last);
+        setSofrAlert(true);
       }
-    } catch { /* ignore localStorage errors */ }
-  }, [sofr]);
-
-  const dismissSofrAlert = () => {
-    setSofrAlert(false);
-    try {
       localStorage.setItem('efd_last_sofr', String(sofr));
-    } catch { /* ignore */ }
-  };
+    } catch { /* ignore localStorage errors */ }
+  }, [sofr, sofrSource]);
+
+  const dismissSofrAlert = () => setSofrAlert(false);
 
   const valid = mod.isInputValid(inputs);
   const partialValid = (inputs.annualRevenue || 0) > 0 && (inputs.ebitda || 0) > 0;
