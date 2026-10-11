@@ -18,5 +18,9 @@
     "termCoverage": "No numeric view."
   },
   "data": "See resale-2026-10.md.",
-  "result": null
+  "result": {
+    "joel": "0% on new is not enough: supported. Year-1 value 65-85% of new (ISU auction vs list, BEA market value); SBA counts new at 75% of price.",
+    "tranche": "15% used haircut: the tight-market end of every source (typical retail-to-auction gap 25-40%). 0% new: unsupported. +12 condition bonus: not supported by collateral data. 80% term limit: holds as an outer guard; the shortfall peaks in years 1-2. Useful lives: consistent or conservative except Construction (top 15 vs BEA 8-10) and Energy (mixes 8-year engines with 32-year turbines).",
+    "changed": "Liquidation LTV by type and condition, LTV on cost limit 90%, bonus removed, Agricultural Equipment and Engines/Generators added, Construction 8-12, Energy 20-30. Commit b46f56b, 2026-10-11."
+  }
 }
