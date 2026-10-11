@@ -274,11 +274,25 @@ export default function ScreeningCriteria({ activeModule, onCriteriaChange }) {
               </h4>
               <div className="grid grid-cols-2 gap-4">
                 <CriteriaInput
-                  label="Max LTV"
+                  label="Max LTV on cost"
                   value={criteria.maxLtv}
                   onChange={(v) => updateField('maxLtv', v)}
                   suffix="%" max={150}
-                  tip="Maximum loan-to-value ratio. Set to 100 to disable."
+                  tip="Net financed vs equipment cost. Flags above this. 0 disables."
+                />
+                <CriteriaInput
+                  label="Max liquidation LTV"
+                  value={criteria.maxLiquidationLtv}
+                  onChange={(v) => updateField('maxLiquidationLtv', v)}
+                  suffix="%" max={300}
+                  tip="Net financed vs forced-sale value. Flags above this. 0 disables."
+                />
+                <CriteriaInput
+                  label="Liquidation LTV fail limit"
+                  value={criteria.failLiquidationLtv}
+                  onChange={(v) => updateField('failLiquidationLtv', v)}
+                  suffix="%" max={300}
+                  tip="Fails above this. Off by default (0)."
                 />
                 <CriteriaInput
                   label="Max Term Coverage"

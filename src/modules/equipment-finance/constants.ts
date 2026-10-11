@@ -65,10 +65,63 @@ export const EQUIPMENT_DEFAULTS: Record<EquipmentType, EquipmentDefault> = {
   'Aircraft/Helicopters':  { usefulLifeRange: [12, 20],  suggestedType: 'FMV',  typicalDownPct: 20 },
   'Medical Equipment':     { usefulLifeRange: [7, 12],   suggestedType: 'FMV',  typicalDownPct: 10 },
   'IT/Data Center':        { usefulLifeRange: [3, 7],    suggestedType: 'FMV',  typicalDownPct: 10 },
-  'Construction Equipment':{ usefulLifeRange: [8, 15],   suggestedType: 'EFA',  typicalDownPct: 15 },
-  'Energy/Power Generation':{ usefulLifeRange: [15, 25], suggestedType: 'EFA',  typicalDownPct: 15 },
+  'Construction Equipment':{ usefulLifeRange: [8, 12],   suggestedType: 'EFA',  typicalDownPct: 15 },
+  'Agricultural Equipment':{ usefulLifeRange: [10, 15],  suggestedType: 'EFA',  typicalDownPct: 20 },
+  'Energy/Power Generation':{ usefulLifeRange: [20, 30], suggestedType: 'EFA',  typicalDownPct: 15 },
+  'Engines/Generators':    { usefulLifeRange: [8, 12],   suggestedType: 'EFA',  typicalDownPct: 15 },
   'Other':                 { usefulLifeRange: [5, 15],   suggestedType: 'EFA',  typicalDownPct: 10 },
 };
+// Ranges checked against BEA service lives, IRS class lives and 10-K
+// disclosures (scripts/real-deals/benchmarks/resale-2026-10.md, Joel
+// 2026-10-09). Construction narrowed to BEA's 8-10 plus room for maintained
+// fleets. Energy/Power Generation now means turbines and grid equipment
+// (BEA 32-33); engines and gensets (BEA 8) split out. Agricultural Equipment
+// added: BEA farm tractors 9, ag machinery 14, ISU 10-15; 20% down from the
+// John Deere Owner Trust seasonal-payment minimum.
+
+// ------- Liquidation haircuts -------
+// Share of cost a lender should not expect back in a forced sale (auction
+// basis). Drives liquidation LTV, shown beside LTV on cost. Set by equipment
+// type where public data exists; every other type uses the general haircut,
+// and the screening notes say so. Evidence and caveats:
+// scripts/real-deals/benchmarks/resale-2026-10.md. Joel 2026-10-09.
+//
+// `basis` says what backs each number:
+//   'data'      type-specific resale data
+//   'estimated' type-specific, but from market-value curves (BEA), not sale data
+//   'general'   no type-specific data, general haircut applied
+export type HaircutBasis = 'data' | 'estimated' | 'general';
+
+interface LiquidationHaircut {
+  rate: number;
+  basis: HaircutBasis;
+}
+
+export const GENERAL_LIQUIDATION_HAIRCUT: Record<'New' | 'Used', number> = {
+  New: 0.25,  // SBA SOP 50 10 8 values new machinery at 75% of price
+  Used: 0.30, // Sandhills 2026 asking-to-auction spreads, farm equipment
+};
+
+export const LIQUIDATION_HAIRCUT: Partial<Record<EquipmentType, Record<'New' | 'Used', LiquidationHaircut>>> = {
+  // Used: Sandhills Dec 2021, sleepers 17-39% below asking across the cycle.
+  // New: BEA trucks, 17% first-year decline (market value, not sale value).
+  'Vehicles/Fleet': { New: { rate: 0.20, basis: 'estimated' }, Used: { rate: 0.30, basis: 'data' } },
+  // Used: Sandhills Dec 2021, dozers 24-31% below asking.
+  // New: BEA construction machinery and tractors, 15-16% first-year decline.
+  'Construction Equipment': { New: { rate: 0.20, basis: 'estimated' }, Used: { rate: 0.30, basis: 'data' } },
+  // Used: Sandhills 2026, tractors 31-33% and combines 36-38% EVI spread.
+  // New: ISU A3-29, year-1 auction value 65-69% of list.
+  'Agricultural Equipment': { New: { rate: 0.25, basis: 'data' }, Used: { rate: 0.30, basis: 'data' } },
+};
+
+export function getLiquidationHaircut(
+  equipmentType: EquipmentType | string | undefined,
+  condition: 'New' | 'Used' | string | undefined,
+): LiquidationHaircut {
+  const cond: 'New' | 'Used' = condition === 'Used' ? 'Used' : 'New';
+  const byType = LIQUIDATION_HAIRCUT[equipmentType as EquipmentType];
+  return byType ? byType[cond] : { rate: GENERAL_LIQUIDATION_HAIRCUT[cond], basis: 'general' };
+}
 
 interface FinancingTypeInfo {
   label: string;
@@ -105,7 +158,10 @@ export const FMV_RESIDUAL_PCT: Record<EquipmentType, number> = {
   'Medical Equipment': 0.10,
   'IT/Data Center': 0.05,
   'Construction Equipment': 0.15,
+  // New types inherit the type they were split from. Not separately sourced.
+  'Agricultural Equipment': 0.15,
   'Energy/Power Generation': 0.12,
+  'Engines/Generators': 0.12,
   Other: 0.10,
 };
 
@@ -124,7 +180,8 @@ export const INDUSTRY_OPTIONS: IndustrySector[] = [
 export const EQUIPMENT_OPTIONS: EquipmentType[] = [
   'Heavy Machinery', 'Vehicles/Fleet', 'Rail Cars', 'Marine Vessels',
   'Aircraft/Helicopters', 'Medical Equipment', 'IT/Data Center',
-  'Construction Equipment', 'Energy/Power Generation', 'Other',
+  'Construction Equipment', 'Agricultural Equipment', 'Energy/Power Generation',
+  'Engines/Generators', 'Other',
 ];
 
 export const CREDIT_OPTIONS: CreditRating[] = ['Strong', 'Adequate', 'Weak', 'Not Rated'];

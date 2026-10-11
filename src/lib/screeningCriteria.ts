@@ -20,6 +20,9 @@ import { computeCashFlowAnalysis, describeMissing } from '../utils/cashFlowMetri
 // Each field is guarded by the moduleKey check at the call site, so access is safe at runtime.
 type ModuleMetrics = BaseMetrics & {
   ltv?: number;
+  liquidationLtv?: number;
+  liquidationHaircut?: number;
+  liquidationHaircutBasis?: 'data' | 'estimated' | 'general';
   termCoverage?: number;
   concentrationRisk?: number;
   dilutionRate?: number;
@@ -43,7 +46,17 @@ export const DEFAULT_CRITERIA: ScreeningCriteria = {
   minYearsInBusiness: 0,
 
   // Equipment-specific
-  maxLtv: 100,
+  // LTV on cost. Net financed can never exceed cost, so a 100% limit could
+  // never fire. 90% means at least 10% down, the John Deere Owner Trust
+  // minimum for construction and monthly-pay ag (abs-2026-10.md). Joel
+  // 2026-10-09.
+  maxLtv: 90,
+  // Liquidation LTV (net financed / forced-sale value). Flags above 115%:
+  // thin equity, not standard 10-20% down structures, which sit near 100-115%
+  // on a forced-sale basis. Fail ceiling off by default. resale-2026-10.md,
+  // Joel 2026-10-09.
+  maxLiquidationLtv: 115,
+  failLiquidationLtv: 0,
   maxTermCoverage: 80,
   maxRevenueConcentration: 25,
 
@@ -167,6 +180,12 @@ export function evaluateScreening(
     if (c.maxLtv > 0 && metrics.ltv && metrics.ltv * 100 > c.maxLtv) {
       reasons.push({ level: 'flag', text: `LTV ${(metrics.ltv * 100).toFixed(0)}% exceeds maximum (${c.maxLtv}%)` });
     }
+    const liq = metrics.liquidationLtv;
+    if (liq && c.failLiquidationLtv > 0 && liq * 100 > c.failLiquidationLtv) {
+      reasons.push({ level: 'fail', text: `Liquidation LTV ${(liq * 100).toFixed(0)}% exceeds limit (${c.failLiquidationLtv}%)` });
+    } else if (liq && c.maxLiquidationLtv > 0 && liq * 100 > c.maxLiquidationLtv) {
+      reasons.push({ level: 'flag', text: `Liquidation LTV ${(liq * 100).toFixed(0)}% exceeds maximum (${c.maxLiquidationLtv}%)` });
+    }
     if (c.maxTermCoverage > 0 && metrics.termCoverage && metrics.termCoverage > c.maxTermCoverage) {
       reasons.push({ level: 'flag', text: `Term coverage ${metrics.termCoverage.toFixed(0)}% exceeds maximum (${c.maxTermCoverage}%)` });
     }
@@ -221,6 +240,16 @@ export function evaluateScreening(
     if (broken.length > 0 && !baseBroken) {
       reasons.push({ level: 'flag', text: `Breaks under stress: ${broken.join(' and ')} in the combined severe case (${severe.detail.toLowerCase()})` });
     }
+  }
+
+  // The liquidation haircut is an estimate whenever it is not backed by
+  // type-specific sale data. Say so wherever the verdict is read.
+  if (moduleKey === 'equipment_finance' && metrics.liquidationHaircutBasis && metrics.liquidationHaircutBasis !== 'data') {
+    const pct = ((metrics.liquidationHaircut || 0) * 100).toFixed(0);
+    const cond = (inputs as { equipmentCondition?: string }).equipmentCondition === 'Used' ? 'used' : 'new';
+    notes.push(metrics.liquidationHaircutBasis === 'general'
+      ? `Liquidation LTV uses the general ${pct}% ${cond}-equipment haircut. No type-specific resale data.`
+      : `Liquidation LTV uses an estimated ${pct}% ${cond}-equipment haircut, from market-value curves, not sale data.`);
   }
 
   if (cf.missing.cashFlowDscr.length > 0) {

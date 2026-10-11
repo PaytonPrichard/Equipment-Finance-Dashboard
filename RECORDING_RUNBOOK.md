@@ -99,8 +99,8 @@ fails there instead of surfacing halfway through a take.
    runs past 2:05, cut 0:12 to 0:20 as the script already tells you to.
 
 One drift worth knowing about: the screening rate is live SOFR from FRED,
-which demo mode does not replay, and the 80 the voiceover says holds while
-SOFR is at or below about 4.5%. It was 3.87% on 2026-09-23. The test carries
+which demo mode does not replay, and the 78 the voiceover says holds while
+SOFR is between 3% and 6%. It was 3.87% on 2026-09-23. The test carries
 that band, so you will see it fail rather than discover it on tape.
 
 **Do not fix product bugs in this phase.** If something is visibly broken,
@@ -184,7 +184,7 @@ video. Grouping by screen state means less setup between takes.
 | `05_ebitda` | Cursor rests on the EBITDA row. Do not click. Just hold | 0:52 to 1:08 |
 | `06_usethat` | Click **Use that**, let the right pane recompute, hold | 1:08 to 1:14 |
 | `07_restore` | Click **Use that** again, then expand **Show what came from where**, slow scroll | 1:14 to 1:24 |
-| `08_score` | Right pane, score 80 PASS, hold, then cursor to the mining red flag | 1:24 to 1:40 |
+| `08_score` | Right pane, score 78 PASS, hold, then cursor to the mining red flag | 1:24 to 1:40 |
 | `09_memo` | Click Download PDF, open it, scroll from the top through sources and uses | 1:40 to 1:48 |
 | `10_sources` | Keep scrolling to Source Documents, stop, hold five seconds | 1:48 to 2:00 |
 
@@ -258,7 +258,7 @@ Most LinkedIn video is watched with the sound off.
 1. CapCut, **Text, Auto captions**, English, generate.
 2. **Proofread every single one.** Auto-captioning reliably mangles exactly
    the words this video depends on: EBITDA, DSCR, LTV, SOFR, "7.4 million",
-   "80 out of 100", and "Tranche" itself. A caption reading "e bit duh"
+   "78 out of 100", and "Tranche" itself. A caption reading "e bit duh"
    undoes the whole credibility argument.
 3. Style: white text, dark box behind it, lower third but above where
    LinkedIn puts its own UI. Keep the default font.

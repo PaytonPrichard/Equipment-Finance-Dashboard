@@ -201,7 +201,7 @@ function generateChecklist(inputs, metrics, riskScore) {
   });
 
   // ---- Environmental (certain equipment) ----
-  const envTypes = ['Heavy Machinery', 'Construction Equipment', 'Energy/Power Generation', 'Marine Vessels'];
+  const envTypes = ['Heavy Machinery', 'Construction Equipment', 'Energy/Power Generation', 'Engines/Generators', 'Marine Vessels'];
   if (envTypes.includes(inputs.equipmentType)) {
     items.push({
       id: 'environmental',
