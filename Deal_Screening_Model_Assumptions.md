@@ -128,13 +128,13 @@ The haircut is the share of cost a lender should not expect back in an auction s
 | Construction Equipment | BEA construction machinery, 15.50%/yr, then 30% | Estimated |
 | Heavy Machinery | BEA construction machinery as a proxy, then the general used haircut (30%) | Estimated |
 | Agricultural Equipment | Iowa State A3-29 combine auction values (lowest of its four curves), straight line between ages, no extra haircut. Ages past 20 years unchecked | Data |
-| Aircraft/Helicopters | Air Lease policy, straight line to 15% at 25 years, then the general used haircut (30%) | Estimated |
+| Aircraft/Helicopters | Air Lease policy, straight line to 15% at 25 years, then the general used haircut (30%). Assumes the aircraft is new at lease start; overstated for used aircraft, and a note says so | Estimated |
 | All other types | None. Not checked | n/a |
 
 - **FMV:** coverage below **1.0x** flags. The forced-sale haircut already makes the value conservative, so there is no buffer on top. Configurable as `minResidualCoverage`. 0 disables.
 - **TRAC:** coverage is shown for information only and never flags. The lessee guarantees the residual, so the asset shortfall only bites if the lessee also fails.
 - **Not checked** (no curve for the type, or the term runs past the curve): a note says so. An estimated curve is also named in the notes. Both reach the screening view, the memo and the real-deals report.
-- **What the test found.** At typical terms, Tranche's flat residuals sit well below what lessors book: PACCAR 30-70% of cost at 3-5 year truck leases, Cat Financial about 36% at 1-7 years, John Deere Capital about 56% at a 47-month average term. A low residual is conservative on collateral, but it raises FMV payments, so DSCR on FMV deals is understated. The check catches the opposite case: long terms, where a flat residual exceeds the projected value. Vehicles at a 25% residual drop below 1.0x past 6 years. Term-dependent residuals are backlogged, not changed here.
+- **What the test found.** At typical terms, Tranche's flat residuals sit well below what lessors book: PACCAR 30-70% of cost at 3-5 year truck leases, Cat Financial about 36% at 1-7 years, John Deere Capital about 56% at a 47-month average term. A low residual is conservative on collateral, but it raises FMV payments, so DSCR on FMV deals is understated. The check catches the opposite case: long terms, where a flat residual exceeds the projected value. Vehicles at a 25% residual drop below 1.0x past about 65 months (5.4 years), construction at 15% past about 110 months (9.1 years). Term-dependent residuals are backlogged, not changed here.
 
 ### TRAC (Terminal Rental Adjustment Clause) Lease
 - Only available for **Vehicles/Fleet** and **Rail Cars**

@@ -11,7 +11,9 @@
 - Evidence: `scripts/real-deals/benchmarks/residual-2026-10.md`, with 12 cited extracts in `residual-sources/`.
 - Expectation committed first (d1cc21c).
 
-**What the data said.** At typical terms, Tranche's residuals are below what lessors book, which understates DSCR on FMV deals. At long terms, a flat residual exceeds the projected value. Vehicles at 25% fall below 1.0x past 72 months.
+**What the data said.** At typical terms, Tranche's residuals are below what lessors book, which understates DSCR on FMV deals. At long terms, a flat residual exceeds the projected value. Vehicles at 25% fall below 1.0x past about 65 months (5.4 years).
+
+**Credit review fixes.** Corrected the crossover terms. Used aircraft get a note that coverage assumes new at lease start. The export summary now says when a term runs past the curve rather than claiming no data. The memo row and the screening view mark estimated and TRAC.
 
 **What Joel decided**
 - Forced-sale basis.

@@ -224,7 +224,8 @@ export function generateBrandedPdfHtml({ summaryText, inputs, metrics, riskScore
   if (metrics?.residualCoverage != null) {
     const rc = metrics.residualCoverage;
     const color = inputs?.financingType === 'TRAC' ? '#334155' : c.minResidualCoverage > 0 && rc < c.minResidualCoverage ? '#dc2626' : '#16a34a';
-    metricRows.push(['Residual Coverage', fmtRatio(rc), color, 'forced-sale value at maturity / residual']);
+    const tags = [metrics.residualCoverageBasis === 'estimated' ? 'estimated' : null, inputs?.financingType === 'TRAC' ? 'TRAC, information only' : null].filter(Boolean);
+    metricRows.push(['Residual Coverage', fmtRatio(rc), color, `value at maturity / residual${tags.length ? ` (${tags.join(', ')})` : ''}`]);
   }
   if (metrics?.borrowingBase !== undefined) metricRows.push(['Borrowing Base', fmtCurrency(metrics.borrowingBase), '#334155']);
   if (metrics?.dso !== undefined) metricRows.push(['DSO', Math.round(metrics.dso) + ' days', metrics.dso <= 60 ? '#16a34a' : '#ca8a04']);

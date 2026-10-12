@@ -449,7 +449,7 @@ describe('Equipment Finance residual coverage at maturity (residual-2026-10.md)'
     const inputs = { ...base, equipmentType: 'Vehicles/Fleet', financingType: 'FMV', loanTerm: 84 };
     expect(summary(inputs)).toMatch(/Residual Cover: {3}0\.74x {2}\(forced-sale value at maturity, estimated; min 1\.00x\)/);
     expect(summary({ ...inputs, equipmentType: 'Medical Equipment' }))
-      .toMatch(/Residual Cover: {3}not checked \(no public value data for Medical Equipment\)/);
+      .toMatch(/Residual Cover: {3}not checked \(no public value data for Medical Equipment at this term\)/);
   });
 });
 

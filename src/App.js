@@ -1700,7 +1700,7 @@ function AuthenticatedApp({ profile, user }) {
                           <span className="ml-2 text-gold-400 normal-case font-medium text-[11px]">
                             {ftLabel} &middot; {formatCurrency(metrics.residualValue)} residual
                             {metrics.residualCoverage != null
-                              ? <> &middot; {metrics.residualCoverage.toFixed(2)}x covered at maturity</>
+                              ? <> &middot; {metrics.residualCoverage.toFixed(2)}x covered at maturity{metrics.residualCoverageBasis === 'estimated' ? ' (estimated)' : ''}{ft === 'TRAC' ? ', information only' : ''}</>
                               : <> &middot; coverage not checked</>}
                           </span>
                         )}

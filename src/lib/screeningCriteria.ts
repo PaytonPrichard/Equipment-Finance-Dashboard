@@ -280,6 +280,12 @@ export function evaluateScreening(
       if (metrics.residualCoverageBasis === 'estimated') {
         notes.push(`Residual coverage uses an estimated value curve (${metrics.residualCoverageSource}), not sale data.`);
       }
+      // A straight line in new cost, run from lease start, ignores the age
+      // of a used aircraft and overstates its coverage. The geometric curves
+      // decline at the same rate at any age, so only aircraft needs this.
+      if (type === 'Aircraft/Helicopters' && (inputs as { equipmentCondition?: string }).equipmentCondition === 'Used') {
+        notes.push('Residual coverage assumes the aircraft is new at lease start. Overstated for a used aircraft.');
+      }
     }
   }
 

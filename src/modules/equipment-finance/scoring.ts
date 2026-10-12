@@ -632,7 +632,7 @@ export function generateExportSummary(
           : DEFAULT_CRITERIA.minResidualCoverage;
       lines.push(`Residual Cover:   ${formatRatio(metrics.residualCoverage)}  (forced-sale value at maturity${metrics.residualCoverageBasis === 'estimated' ? ', estimated' : ''}${ft === 'TRAC' ? '; lessee-guaranteed, information only' : resLimit > 0 ? `; min ${resLimit.toFixed(2)}x` : ''})`);
     } else {
-      lines.push(`Residual Cover:   not checked (no public value data for ${inputs.equipmentType})`);
+      lines.push(`Residual Cover:   not checked (no public value data for ${inputs.equipmentType} at this term)`);
     }
   }
   const amort = generateAmortizationSchedule(metrics.financedPrincipal, metrics.rate, inputs.loanTerm);

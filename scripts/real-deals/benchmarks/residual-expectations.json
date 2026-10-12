@@ -20,7 +20,7 @@
   "data": "See residual-2026-10.md and residual-sources/.",
   "result": {
     "joel": "No prior view on the level. Nothing to confirm or refute.",
-    "tranche": "At typical terms the flat residuals are below lessor-booked residuals (PACCAR 30-70%, Cat ~36%, Deere ~56% at lease end): conservative on collateral, understates FMV DSCR. At long terms a flat residual exceeds projected forced-sale value: Vehicles 25% below 1.0x past 72 months, Construction 15% past 96. No public curve for medical, IT, rail, energy, engines, other.",
+    "tranche": "At typical terms the flat residuals are below lessor-booked residuals (PACCAR 30-70%, Cat ~36%, Deere ~56% at lease end): conservative on collateral, understates FMV DSCR. At long terms a flat residual exceeds projected forced-sale value: Vehicles 25% below 1.0x past about 65 months (5.4 years), Construction 15% past about 110 months (9.1 years). No public curve for medical, IT, rail, energy, engines, other.",
     "changed": "Residual coverage at maturity added; FMV flags below 1.0x (configurable), TRAC information only, unchecked and estimated bases noted. Residuals unchanged; term-dependent residuals backlogged as AUDIT P1-23. 2026-10-12."
   }
 }

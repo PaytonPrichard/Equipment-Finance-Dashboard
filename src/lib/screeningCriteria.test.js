@@ -247,6 +247,16 @@ describe('Screening Criteria', () => {
       expect(r.notes).toContain('Residual not checked: no public value data for Medical Equipment at this term.');
     });
 
+    test('a used aircraft is told its coverage assumes new at lease start', () => {
+      const m = lease(2.7, { residualCoverageBasis: 'estimated', residualCoverageSource: 'Air Lease depreciation policy' });
+      const used = evaluateScreening(baseCriteria, m, passScore, { ...inputs('FMV', 'Aircraft/Helicopters'), equipmentCondition: 'Used' }, 'equipment_finance');
+      expect(used.notes).toContain('Residual coverage assumes the aircraft is new at lease start. Overstated for a used aircraft.');
+      const fresh = evaluateScreening(baseCriteria, m, passScore, { ...inputs('FMV', 'Aircraft/Helicopters'), equipmentCondition: 'New' }, 'equipment_finance');
+      expect(fresh.notes.some((n) => /new at lease start/.test(n))).toBe(false);
+      const truck = evaluateScreening(baseCriteria, m, passScore, { ...inputs('FMV'), equipmentCondition: 'Used' }, 'equipment_finance');
+      expect(truck.notes.some((n) => /new at lease start/.test(n))).toBe(false);
+    });
+
     test('an estimated curve is called out', () => {
       const r = run(lease(1.5, { residualCoverageBasis: 'estimated', residualCoverageSource: 'BEA trucks' }));
       expect(r.notes).toContain('Residual coverage uses an estimated value curve (BEA trucks), not sale data.');

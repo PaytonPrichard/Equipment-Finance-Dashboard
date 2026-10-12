@@ -38,6 +38,8 @@ Coverage = projected forced-sale value at maturity / residual. Computed by Tranc
 - **Ag:** Iowa State A3-29 combine auction values, the lowest of its four curves.
 - **Aircraft:** Air Lease's straight line to 15% at 25 years.
 
+Equipment age at lease start is not an input. For the geometric BEA curves that does not matter, since the decline from today's value is the same at any age. For Iowa State it is immaterial (2.07x vs about 2.16x adjusted for a 3-year-old combine at 84 months). For aircraft it overstates coverage on used aircraft: a 15-year-old aircraft at 120 months shows 2.72x against about 1.26x adjusted. Used aircraft get a note saying so (credit review, 2026-10-12).
+
 Every BEA and aircraft value gets the used liquidation haircut (30%). The Iowa State values are already auction values, so they don't.
 
 | Type | Residual | 36 mo | 48 mo | 60 mo | 72 mo | 84 mo | 96 mo | 120 mo |
@@ -52,7 +54,7 @@ Every BEA and aircraft value gets the used liquidation haircut (30%). The Iowa S
 ## 3. Result
 
 - **At typical terms, Tranche's residuals are low, not high.** Lessors book 30-70% (trucks), about 36% (Cat) and about 56% (Deere) at lease end. Tranche uses 15-25%. On collateral, a low residual is conservative. But it means FMV payments run higher than a lessor would set them, so Tranche **understates DSCR on FMV deals**.
-- **The risk is at long terms.** A flat residual ignores the term. Vehicles at 25% fall below 1.0x past 72 months, and construction at 15% past 96 months. That is the case the check now catches.
+- **The risk is at long terms.** A flat residual ignores the term. Vehicles at 25% fall below 1.0x past about 65 months (5.4 years), and construction at 15% past about 110 months (9.1 years). Solved from the curves: 0.8275^t x 0.70 = 0.25 and 0.845^t x 0.70 = 0.15. That is the case the check now catches.
 - **Data is thinnest where FMV is most common.** Medical and IT/Data Center default to FMV, and no public curve was found for them. They are left unchecked and say so.
 - **Aircraft discrepancy.** The code uses 17% and the spec table says 20%. Coverage here uses 17%. Open for Joel.
 
