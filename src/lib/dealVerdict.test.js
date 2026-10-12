@@ -76,9 +76,16 @@ describe('verdictForDeal', () => {
     expect(v.reasons).toBeDefined();
   });
 
-  it('reports no verdict for an unscored deal with no usable inputs', () => {
+  it('an unscored deal with missing inputs is a draft, never a pass, flag or fail', () => {
     const v = verdictForDeal({ score: null, inputs: null }, { criteria: DEFAULT_CRITERIA });
-    expect(v.category === 'none' || v.gated).toBe(true);
+    expect(v.category).toBe('draft');
+    expect(v.label).toBe('DRAFT');
+    expect(v.metrics).toBeNull();
+  });
+
+  it('a draft from the API with only a name and revenue is a draft', () => {
+    const v = verdictForDeal({ score: null, inputs: { companyName: 'Dealer Co', annualRevenue: 40000000 } }, { criteria: DEFAULT_CRITERIA });
+    expect(v.category).toBe('draft');
   });
 
   it('does not throw on a malformed deal', () => {

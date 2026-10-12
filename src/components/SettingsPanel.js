@@ -608,7 +608,7 @@ function IntegrationsSection({ addToast }) {
       <div className="p-4 rounded-xl bg-gray-50 border border-gray-200">
         <h3 className="text-sm font-bold text-gray-900 mb-2">Connect your CRM to Tranche</h3>
         <p className="text-[12px] text-gray-500 leading-relaxed mb-3">
-          Push deals from Salesforce, HubSpot, or any system directly into Tranche for scoring. Get results back automatically via webhooks. No manual data entry. No switching between tools.
+          Send deals in from Salesforce, HubSpot or any system that can call a web address. Scores and stage changes come back by webhook. Setup is a one-time job for whoever runs your CRM, usually a workflow or Zapier step. Deals with only a name and a few figures arrive as drafts for an analyst to finish.
         </p>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-[11px]">
           <div className="flex items-start gap-2">
@@ -668,7 +668,7 @@ function IntegrationsSection({ addToast }) {
       <div>
         <h3 className="text-sm font-bold text-gray-900 mb-1">Webhooks</h3>
         <p className="text-[12px] text-gray-400 mb-1">Receive real-time notifications when deals are created, scored, or move pipeline stages.</p>
-        <p className="text-[10px] text-gray-400 mb-4">Events: deal.created, deal.scored, pipeline.stage_changed. Payloads signed with HMAC-SHA256.</p>
+        <p className="text-[10px] text-gray-400 mb-4">Events: deal.created, deal.scored, pipeline.stage_changed. HTTPS only. Each delivery carries X-Tranche-Timestamp and X-Tranche-Signature, an HMAC-SHA256 of "timestamp.body" with your signing secret. Refuse deliveries older than five minutes.</p>
 
         {createdSecret && (
           <div className="mb-4 p-3 rounded-lg bg-amber-50 border border-amber-200">
@@ -717,10 +717,17 @@ function IntegrationsSection({ addToast }) {
           </div>
           <div className="border-t border-gray-200 pt-3 space-y-2">
             <p className="text-gray-500 text-[10px] uppercase tracking-wider font-sans mb-1">Endpoints</p>
-            <p className="text-gray-700"><span className="text-emerald-600">POST</span> /api/v1?resource=deals · Create a deal</p>
-            <p className="text-gray-700"><span className="text-blue-600">GET</span> /api/v1?resource=deals · List pipeline deals</p>
+            <p className="text-gray-700"><span className="text-emerald-600">POST</span> /api/v1?resource=deals · Create a deal: name, inputs, asset_class</p>
+            <p className="text-gray-700"><span className="text-blue-600">GET</span> /api/v1?resource=deals · List pipeline deals (limit up to 100, offset, stage)</p>
             <p className="text-gray-700"><span className="text-blue-600">GET</span> /api/v1?resource=deals&amp;id=123 · Get specific deal</p>
-            <p className="text-gray-700"><span className="text-amber-600">PATCH</span> /api/v1?resource=deals&amp;id=123 · Update stage or notes</p>
+            <p className="text-gray-700"><span className="text-amber-600">PATCH</span> /api/v1?resource=deals&amp;id=123 · Update stage, notes or inputs</p>
+          </div>
+          <div className="border-t border-gray-200 pt-3 space-y-1.5 font-sans text-gray-600">
+            <p className="text-gray-500 text-[10px] uppercase tracking-wider mb-1">Notes</p>
+            <p><span className="font-mono text-gray-800">"draft": true</span> creates a deal from the fields you have. It is not scored until an analyst completes it in Tranche, then deal.scored fires.</p>
+            <p>Stages: Screening, Under Review, Approved, Funded, Declined.</p>
+            <p>Financial statements are entered in Tranche, not through the API. A deal built from statements cannot have its inputs changed through the API.</p>
+            <p>Every API change is in the deal history and the audit log, under the admin who created the key.</p>
           </div>
         </div>
       </div>

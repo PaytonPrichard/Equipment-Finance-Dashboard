@@ -109,13 +109,15 @@ export async function createPipelineDeal(
   });
 }
 
-// Move a pipeline deal to a new stage.
-// Fetches the current stage first so we can log old_values / new_values.
+// Move a pipeline deal to a new stage. Goes through the server, which
+// checks the stage permission, writes the audit row and fires the
+// pipeline.stage_changed webhook. userId and orgId are kept for existing
+// callers; the server takes both from the session.
 export async function updatePipelineStage(
   dealId: string,
   newStage: string,
-  userId: string,
-  orgId: string,
+  _userId?: string,
+  _orgId?: string,
 ): Promise<SingleResult> {
   if (isDemoMode()) {
     const deal = updateDemoPipelineStage(dealId, newStage);
@@ -123,29 +125,7 @@ export async function updatePipelineStage(
   }
   if (!supabase) return { data: null, error: null };
 
-  const { data: existing, error: fetchError } = await supabase
-    .from('pipeline_deals')
-    .select('stage')
-    .eq('id', dealId)
-    .single();
-
-  if (fetchError) return { data: null, error: fetchError };
-
-  const oldStage = (existing as { stage: string }).stage;
-  const now = new Date().toISOString();
-
-  const { data, error } = await supabase
-    .from('pipeline_deals')
-    .update({ stage: newStage, updated_at: now, stage_entered_at: now })
-    .eq('id', dealId)
-    .select()
-    .single();
-
-  if (!error && data) {
-    logAudit(userId, orgId, 'update_stage', 'pipeline_deal', dealId, { stage: oldStage }, { stage: newStage });
-  }
-
-  return { data: data as PipelineDealRow | null, error };
+  return callScoreDeal('PATCH', `/api/score-deal?id=${encodeURIComponent(dealId)}&action=stage`, { stage: newStage });
 }
 
 // Rename a pipeline deal.

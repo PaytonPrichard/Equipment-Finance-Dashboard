@@ -39,6 +39,7 @@ const VERDICT_STYLES = {
   flag: { chip: 'bg-amber-50 text-amber-800 border-amber-200', dot: 'bg-amber-600' },
   fail: { chip: 'bg-rose-50 text-rose-800 border-rose-200', dot: 'bg-rose-600' },
   none: { chip: 'bg-gray-50 text-gray-600 border-gray-200', dot: 'bg-gray-400' },
+  draft: { chip: 'bg-gray-50 text-gray-600 border-gray-200', dot: 'bg-gray-400' },
 };
 
 function fmtDate(iso) {
@@ -243,7 +244,7 @@ export default function DealDetail({
           <div className="flex items-center gap-2 mt-3">
             <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[11px] font-semibold ${style.chip}`}>
               <span className={`w-1.5 h-1.5 rounded-full ${style.dot}`} />
-              {score != null ? `${evaluated.label || verdict.toUpperCase()} · ${score}/100` : 'Not scored'}
+              {score != null ? `${evaluated.label || verdict.toUpperCase()} · ${score}/100` : verdict === 'draft' ? 'Draft, not scored' : 'Not scored'}
             </span>
             {deal.inputs && (
               <span className="text-[11px] text-gray-500">
@@ -435,7 +436,15 @@ export default function DealDetail({
 
 // Audit rows are structured, so the sentence is built here rather than
 // stored. Keeps the log readable without a schema change.
+// A change made through the public API names the key that made it. The row
+// is filed under the admin who created the key.
 function describeAudit(entry) {
+  const text = describeAuditAction(entry);
+  const via = entry.metadata?.via === 'api' ? ` (API key ${entry.metadata.apiKeyName || entry.metadata.apiKeyPrefix || ''})` : '';
+  return text ? `${text}${via}` : text;
+}
+
+function describeAuditAction(entry) {
   const oldV = entry.old_values || {};
   const newV = entry.new_values || {};
   switch (entry.action) {

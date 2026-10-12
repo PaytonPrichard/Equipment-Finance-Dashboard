@@ -276,3 +276,22 @@ Step 3 is complete. Step 4 next: memo section "How the numbers were built", serv
 **What Joel decided**
 - Debt gap blocks the save rather than warning.
 - Statements get a full-width view next (after the push). Guide update after that.
+
+## 2026-10-12: Public API batch (Workstream A)
+
+**What changed**
+- Draft deals: `POST /api/v1?resource=deals` with `"draft": true` accepts the fields a CRM has (a present value is still validated). The deal is unscored, shows DRAFT on the board and "Draft, not scored" in the drawer, and fires `deal.created` with `draft: true`. `deal.scored` fires when an analyst completes and saves it. A draft opened in New Deal gets the module's blanks for missing fields.
+- Every API write (create, stage, notes, inputs) writes an `audit_log` row, filed under the admin who created the key, with the key's name and prefix in metadata. Deal history shows "(API key HubSpot)".
+- Statements are refused through the API, and a statement-built deal's inputs cannot be replaced through it (409). Closes the gap where the API skipped the rules check, pending judgments and the debt gap.
+- Stage moves in the app go through `PATCH /api/score-deal?action=stage`: the server checks the stage permission (with firm overrides, shared map `STAGE_PERMISSION` in `src/lib/permissions.ts`), resets days in stage, audits, and fires `pipeline.stage_changed`. Before, the webhook fired only for API moves and the permission was checked only in the browser.
+- API stage values are validated; a move resets `stage_entered_at`. Page size capped at 100.
+- Keys and webhooks: admins only (Joel). Webhook URLs must be https and public (no localhost, private or link-local IPs).
+- Webhook signature now covers a timestamp: `X-Tranche-Timestamp`, and `X-Tranche-Signature` = HMAC-SHA256 of "timestamp.body". Breaking for any receiver verifying the old scheme; none known (no customers).
+- Expired plans cannot write through the API.
+- Settings > Integrations copy rewritten (no "No manual data entry"); API reference documents drafts, stages, statements and audit.
+
+**What Joel decided**
+- Keys and webhooks admin only. Drafts through the API: yes. Batch before the statements redesign.
+- Not done: richer webhook payload (verdict, DSCR, leverage). The verdict depends on each user's own criteria today, so a firm-level verdict for webhooks needs a decision first.
+
+**For Workstream C (landing copy):** "Already tracking deals in a CRM? Tranche has an API and webhooks. Send deals in from Salesforce, HubSpot or any system that can call a web address. Scores, verdicts and stage changes come back. Setup is a one-time job for whoever runs your CRM." Drop "verdicts" until webhook payloads carry them.

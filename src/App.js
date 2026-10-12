@@ -798,7 +798,9 @@ function AuthenticatedApp({ profile, user }) {
     if (assetClass && assetClass !== activeModule) {
       setActiveModule(assetClass);
     }
-    setInputs(dealInputs);
+    // A draft from the API carries only the fields the CRM knew. The
+    // module's blanks fill the rest; saved fields always win.
+    setInputs({ ...getModule(assetClass || activeModule).INITIAL_INPUTS, ...dealInputs });
     setActiveDeal(null);
     setActivePipelineDealId(dealId || null);
     clearExtraction();

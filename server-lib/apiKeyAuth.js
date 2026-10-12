@@ -11,7 +11,9 @@ function hashKey(key) {
 
 /**
  * Authenticate a request using X-API-Key header.
- * Returns { orgId, keyId } on success, null on failure.
+ * Returns { orgId, keyId, keyName, keyPrefix, createdBy } on success, null on
+ * failure. createdBy is the admin who made the key: audit rows written for
+ * API calls are filed under that person and name the key.
  * Also updates last_used_at timestamp (fire-and-forget).
  */
 async function authenticateApiKey(req) {
@@ -22,7 +24,7 @@ async function authenticateApiKey(req) {
 
   const { data, error } = await supabaseAdmin
     .from('api_keys')
-    .select('id, org_id')
+    .select('id, org_id, name, key_prefix, created_by')
     .eq('key_hash', hash)
     .is('revoked_at', null)
     .single();
@@ -38,7 +40,7 @@ async function authenticateApiKey(req) {
       .eq('id', data.id);
   } catch { /* best-effort */ }
 
-  return { orgId: data.org_id, keyId: data.id };
+  return { orgId: data.org_id, keyId: data.id, keyName: data.name, keyPrefix: data.key_prefix, createdBy: data.created_by };
 }
 
 /**

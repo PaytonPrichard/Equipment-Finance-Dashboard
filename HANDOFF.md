@@ -1,6 +1,29 @@
 # Tranche — where things stand
 
-## Current state, 2026-10-09 evening (read this first)
+## Current state, 2026-10-12 (read this first)
+
+**Production:** `main` @ `cfc547d`, pushed 2026-10-12 with Joel's OK in person. Vercel deploy succeeded, isolation test passed on that commit. 707 client, 57 server and 15 harness tests pass, CI build clean (only the old html2pdf source-map warning), tsc clean.
+
+**Shipped in cfc547d (details in `CHANGELOG_BUILD.md`, entries 2026-10-09 and 2026-10-12):**
+- Rebuild with current firm rules, per deal (statements panel) and bulk (admin, Treatment Rules card). Server accepts only the deal's saved rules or the firm's current ones (409 otherwise).
+- Workstream B: liquidation LTV by equipment type, LTV on cost, maxLtv default 90, resale benchmarks.
+- Debt gap (Joel, option 1): a statement deal whose rules put an item into debt cannot save until debt and debt service are built. Server, bulk and Save button.
+- New Deal form: "More inputs (optional)" group, "Add statements" at the top, missing badges after a field is left empty, build-from-statements hint on Revenue/EBITDA, cursor bug fixed.
+- Settings: unsaved-changes flags per card; Firm Assumptions saves only its own keys, audited.
+- SOFR banner compares with the previous session's live rate.
+- `user_preferences` gained `tutorial_state`, `screening_criteria`, `deal_templates` (migration run by Joel 2026-10-12). Before that, every write to those three failed silently: the welcome came back on every sign-in and saved credit boxes were very likely never stored.
+
+**Browser-tested by Joel 2026-10-12:** per-deal rebuild, debt treatment numbers (Debt 3.63x, Inventory financing 7.51x), SOFR banner, welcome. Not browser-tested: bulk rebuild (unit-tested only).
+
+**Next (Workstream A): statements full-width redesign.** Plan with Joel before building. Joel's points:
+- The statements panel is cramped in the form column. Full-width view, three statements side by side, each "Borrower has" item grouped (floorplan interest and payable together).
+- Put each judgment next to the raw line it is about, or default the usual answer and show the assumption in place. Similar information currently sits in different places.
+- Rebuild flow: box at the top, show the effect before applying (EBITDA, debt, DSCR from and to), one "Apply new rules" click confirms the changed rows in the analyst's name. This reverses the 2026-10-09 per-deal "back to pending" decision; Joel agreed in principle, confirm in the plan.
+After that: InfoGuide update (statements, treatment rules, monitoring, extraction, Settings policy). Then review API access and the HubSpot/CRM story (Settings copy "No manual data entry" overstates it).
+
+**Workstream B / C:** B merges from main after this release. Workstream C (landing page refresh) will branch off main and touch `LandingPage.js` and `landing/*`.
+
+## State, 2026-10-09 evening (superseded)
 
 **Production:** `main` @ `ae5dd00`, pushed 2026-10-09 with Joel's OK. 650 client, 49 server and 15 harness tests pass, the CI build is clean (only the old html2pdf source-map warning), tsc is clean. Work continues on branch `ebitda-build-p1` (same commit as main). Isolation workflow for ae5dd00: pending at handoff, check with `gh run list --limit 3`.
 
