@@ -1,0 +1,22 @@
+{
+  "question": "Do Tranche's FMV and TRAC residual assumptions hold up against the equipment's projected value at lease maturity?",
+  "tranche": {
+    "source": "src/modules/equipment-finance/constants.ts FMV_RESIDUAL_PCT and TRAC_RESIDUAL_PCT, scoring.ts getResidualValue, Deal_Screening_Model_Assumptions.md FMV and TRAC sections",
+    "fmvResidual": "Flat % of cost by equipment type, the same at any term: Heavy Machinery 15, Vehicles/Fleet 25, Rail Cars 20, Marine 15, Aircraft 17, Medical 10, IT 5, Construction 15, Agricultural 15 (inherited), Energy 12, Engines 12 (inherited), Other 10.",
+    "tracResidual": "Vehicles/Fleet 20, Rail Cars 15. Lessee-guaranteed.",
+    "check": "None. Tranche does not compare the residual to value at maturity."
+  },
+  "joel": {
+    "writtenOn": "2026-10-12",
+    "note": "Written before any residual benchmark or value-at-maturity figure was shown. Joel asked for benchmark research rather than give an expectation he could not back.",
+    "residualLevel": "No view on whether today's FMV residuals are too high, about right or too low.",
+    "decisions": {
+      "valueBasis": "Forced-sale value at maturity (liquidation haircut applied), matching liquidation LTV.",
+      "shortfall": "Flag when coverage is below the limit, configurable in the credit box. Not a scored factor.",
+      "trac": "Shown for information only, no flag. The lessee guarantees the residual.",
+      "scope": "Check only. Flat residuals are not changed in this step. Making residuals term-dependent is a separate decision."
+    }
+  },
+  "data": "To come: residual-2026-10.md.",
+  "result": null
+}
