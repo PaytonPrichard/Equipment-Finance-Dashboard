@@ -37,7 +37,7 @@ live on a call. This one is for recording.
   the timestamp of the beat each one belongs to. Run the tests before a shoot
   and a scoring change that would have broken a beat fails there first.
 - The screening rate is the one thing demo mode does not replay. It comes
-  from FRED live, and 80 holds while SOFR is at or below about 4.5%.
+  from FRED live, and 78 holds while SOFR is between 3% and 6%.
 - Check the pipeline looks lived-in before you start: fifteen deals, mixed
   verdicts, notes on the cards. Monitoring carries two facilities, one
   tracking its underwrite and one that has drifted well below it.
@@ -81,9 +81,9 @@ phase 0 of `RECORDING_RUNBOOK.md`.
 | **0:45** | Scroll to the amber conflict block. Hold. | "Because here is where the documents disagree." |
 | **0:52** | Cursor rests on the EBITDA line. | "The broker says EBITDA is just under 7.9 million. The reviewed financials say 7.4." |
 | **1:00** | Still on the EBITDA line. | "It took the financials. Statements outrank a broker summary on financial data. And it is telling me it did, with both numbers and both filenames." |
-| **1:08** | Click **Use that**. Right pane recomputes: margin 19.3 to 20.6, debt yield 138.7 to 148.1. **Punch in on the metrics line in the edit.** The score stays 80 and the only thing that moves is two figures in a thin grey line, which is invisible at feed size unscaled. | "If I disagree, I override it, and everything downstream moves." |
+| **1:08** | Click **Use that**. Right pane recomputes: margin 19.3 to 20.6, debt yield 138.7 to 148.1. **Punch in on the metrics line in the edit.** The score moves 78 to 79. **Direction to revisit (2026-10-09):** this used to say the score stays put and only two figures in a thin grey line move. | "If I disagree, I override it, and everything downstream moves." |
 | **1:14** | Click **Use that** again to restore. Then expand **Show what came from where**. | "Every field traces to a document. Financials won on money. The dealer quote won on the equipment. The application won on who the borrower is." |
-| **1:24** | Right pane: score 80, PASS. | "Twenty fields, four documents, and none of them typed. It scores 80." |
+| **1:24** | Right pane: score 78, PASS. | "Twenty fields, four documents, and none of them typed. It scores 78." |
 | **1:32** | Scroll to **Preliminary Assessment Notes**, cursor on the Mining line: "Mining sector carries cyclical/operational risk; consider shorter tenor, step-up payments, or additional credit support." Not the Executive Summary, which never names the sector. | "And it says which factor cost it points, not just the number." |
 | **1:40** | Click **Download PDF**. Cut to the memo, top. Scroll: transaction summary, sources and uses. | "The memo opens on the ask, the way a memo should." |
 | **1:48** | Keep scrolling to Source Documents. Hold. | "And it closes by naming every document the figures came from." |

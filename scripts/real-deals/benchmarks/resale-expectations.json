@@ -1,0 +1,26 @@
+{
+  "question": "Do Tranche's equipment valuation assumptions match public resale and useful-life data?",
+  "tranche": {
+    "source": "src/modules/equipment-finance/scoring.ts calculateMetrics, constants.ts EQUIPMENT_DEFAULTS and FACTOR_TARGETS, Deal_Screening_Model_Assumptions.md sections 3 and term coverage",
+    "usedHaircut": "Used equipment valued at 85% of stated cost (15% haircut). Read as the gap between the price paid and forced-sale value.",
+    "newHaircut": "New equipment valued at 100% of cost (0% haircut).",
+    "conditionBonus": "New equipment also gets +12 points on the LTV factor (scoring.ts). Used gets the haircut and no bonus.",
+    "termCoverageLimit": "Loan term above 80% of useful life is weak (maxTermCoverage 80).",
+    "usefulLifeRanges": "EQUIPMENT_DEFAULTS.usefulLifeRange per equipment type, shown to the analyst as a hint. The analyst enters useful life."
+  },
+  "joel": {
+    "writtenOn": "2026-10-09",
+    "note": "Written before any resale data was shown. Joel declined to give numeric expectations: he does not have the experience to give numbers he would trust.",
+    "usedHaircut": "No view on whether 15% is right.",
+    "newHaircut": "Directional: 0% is not enough for new equipment.",
+    "conditionBonus": "Double penalty on used equipment might be overkill, but is not necessarily inaccurate.",
+    "usefulLife": "No numeric view.",
+    "termCoverage": "No numeric view."
+  },
+  "data": "See resale-2026-10.md.",
+  "result": {
+    "joel": "0% on new is not enough: supported. Year-1 value 65-85% of new (ISU auction vs list, BEA market value); SBA counts new at 75% of price.",
+    "tranche": "15% used haircut: the tight-market end of every source (typical retail-to-auction gap 25-40%). 0% new: unsupported. +12 condition bonus: not supported by collateral data. 80% term limit: holds as an outer guard; the shortfall peaks in years 1-2. Useful lives: consistent or conservative except Construction (top 15 vs BEA 8-10) and Energy (mixes 8-year engines with 32-year turbines).",
+    "changed": "Liquidation LTV by type and condition, LTV on cost limit 90%, bonus removed, Agricultural Equipment and Engines/Generators added, Construction 8-12, Energy 20-30. Commit b46f56b, 2026-10-11."
+  }
+}

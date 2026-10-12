@@ -29,7 +29,9 @@ const VALID_EQUIPMENT_TYPES = [
   'Medical Equipment',
   'IT/Data Center',
   'Construction Equipment',
+  'Agricultural Equipment',
   'Energy/Power Generation',
+  'Engines/Generators',
   'Other',
 ];
 

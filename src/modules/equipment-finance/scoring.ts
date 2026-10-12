@@ -41,6 +41,7 @@ import {
   TRAC_RESIDUAL_PCT,
   FINANCING_TYPES,
   FACTOR_TARGETS,
+  getLiquidationHaircut,
 } from './constants';
 
 interface SuggestedStructure {
@@ -53,7 +54,7 @@ interface SuggestedStructure {
   sizingFlag?: string;
 }
 
-type ExportCriteria = { minDscr?: number; maxTermCoverage?: number; maxRevenueConcentration?: number } | null | undefined;
+type ExportCriteria = { minDscr?: number; maxTermCoverage?: number; maxRevenueConcentration?: number; maxLiquidationLtv?: number } | null | undefined;
 
 // ------- Rate Calculation -------
 
@@ -147,12 +148,18 @@ export function calculateMetrics(
   const leverage =
     ebitda > 0 ? ((totalExistingDebt || 0) + netFinanced) / ebitda : null;
 
-  const equipmentValue =
-    equipmentCondition === 'Used'
-      ? (equipmentCost || 0) * 0.85
-      : equipmentCost || 0;
-
+  // LTV on cost, new and used alike: the market convention, and what the
+  // firm's LTV limit applies to. The liquidation view sits beside it.
+  const equipmentValue = equipmentCost || 0;
   const ltv = equipmentValue > 0 ? netFinanced / equipmentValue : 0;
+
+  // Liquidation LTV: net financed against forced-sale value. Uses net
+  // financed, not the principal net of residual, because day-one exposure
+  // under TRAC/FMV is the full amount. Haircut by type and condition, from
+  // public resale data (resale-2026-10.md); the basis says how well sourced.
+  const haircut = getLiquidationHaircut(equipmentType, equipmentCondition);
+  const liquidationValue = equipmentValue * (1 - haircut.rate);
+  const liquidationLtv = liquidationValue > 0 ? netFinanced / liquidationValue : 0;
 
   const termYears = (loanTerm || 0) / 12;
   const termCoverage = usefulLife > 0 ? (termYears / usefulLife) * 100 : 0;
@@ -180,6 +187,10 @@ export function calculateMetrics(
     financedPrincipal,
     residualValue,
     equipmentValue,
+    liquidationValue,
+    liquidationLtv,
+    liquidationHaircut: haircut.rate,
+    liquidationHaircutBasis: haircut.basis,
     debtServiceEstimated,
     // Term deals are priced fixed at screening, so a rate shock does not reach them.
     newFloatingPrincipal: 0,
@@ -215,9 +226,11 @@ export function calculateRiskScore(
   // Essentiality (10%) — binary
   factors.essentiality = inputs.essentialUse ? 100 : 30;
 
-  // Equipment condition & LTV (10%) — lower LTV is better, new equipment gets a bonus
-  const conditionBonus = inputs.equipmentCondition === 'New' ? 12 : 0;
-  factors.equipmentLtv = Math.min(100, conditionBonus + lerp(metrics.ltv, [
+  // LTV on cost (10%), lower is better. No bonus for new equipment: resale
+  // data shows new loses at least as much value in year one as used does
+  // between retail and auction (resale-2026-10.md). Condition lives in the
+  // liquidation haircut instead.
+  factors.equipmentLtv = Math.min(100, lerp(metrics.ltv, [
     [0, 95], [0.60, 90], [0.75, 78], [0.85, 65], [1.0, 45], [1.2, 20],
   ] as [number, number][]));
 
@@ -258,7 +271,7 @@ export function describeFactors(
     { key: 'leverage', label: 'Leverage', score: f.leverage ?? null, weight: 0.20, caption: metrics.leverage == null ? 'NM (EBITDA not positive)' : `${metrics.leverage.toFixed(1)}x`, target: `≤ ${FACTOR_TARGETS.maxLeverage.toFixed(1)}x`, passed: metrics.leverage != null && metrics.leverage <= FACTOR_TARGETS.maxLeverage },
     { key: 'industry', label: 'Industry', score: f.industry || 0, weight: 0.15, caption: `${inputs.industrySector || '—'} (${tier} risk)`, target: 'low-risk sector', passed: tier === 'low' },
     { key: 'essentiality', label: 'Essential use', score: f.essentiality || 0, weight: 0.10, caption: inputs.essentialUse ? 'Yes' : 'No', target: 'essential', passed: !!inputs.essentialUse },
-    { key: 'equipmentLtv', label: 'LTV', score: f.equipmentLtv || 0, weight: 0.10, caption: `${((metrics.ltv || 0) * 100).toFixed(0)}% (${inputs.equipmentCondition || '—'})`, target: `≤ ${(FACTOR_TARGETS.maxLtv * 100).toFixed(0)}%`, passed: (metrics.ltv || 0) <= FACTOR_TARGETS.maxLtv },
+    { key: 'equipmentLtv', label: 'LTV', score: f.equipmentLtv || 0, weight: 0.10, caption: `${((metrics.ltv || 0) * 100).toFixed(0)}% on cost, ${((metrics.liquidationLtv || 0) * 100).toFixed(0)}% liquidation (${inputs.equipmentCondition || '—'})`, target: `≤ ${(FACTOR_TARGETS.maxLtv * 100).toFixed(0)}%`, passed: (metrics.ltv || 0) <= FACTOR_TARGETS.maxLtv },
     { key: 'yearsInBusiness', label: 'Years in business', score: f.yearsInBusiness || 0, weight: 0.10, caption: `${inputs.yearsInBusiness || 0} yrs`, target: `≥ ${FACTOR_TARGETS.minYearsInBusiness} yrs`, passed: (inputs.yearsInBusiness || 0) >= FACTOR_TARGETS.minYearsInBusiness },
     { key: 'termCoverage', label: 'Term coverage', score: f.termCoverage || 0, weight: 0.10, caption: `${(metrics.termCoverage || 0).toFixed(0)}% of useful life`, target: `< ${FACTOR_TARGETS.maxTermCoverage}%`, passed: (metrics.termCoverage || 0) < FACTOR_TARGETS.maxTermCoverage },
   ];
@@ -361,13 +374,13 @@ export function generateCommentary(
     );
   }
 
-  if (metrics.ltv > 1.0) {
+  if (metrics.liquidationLtv > 1.0) {
     comments.push(
-      `LTV of ${(metrics.ltv * 100).toFixed(0)}% exceeds equipment value. Additional equity contribution or collateral should be considered.`,
+      `Liquidation LTV of ${(metrics.liquidationLtv * 100).toFixed(0)}% exceeds forced-sale value of the equipment. Additional equity contribution or collateral should be considered.`,
     );
   } else if (metrics.ltv <= 0.75) {
     comments.push(
-      `LTV of ${(metrics.ltv * 100).toFixed(0)}% provides strong collateral cushion, reducing loss-given-default risk.`,
+      `LTV of ${(metrics.ltv * 100).toFixed(0)}% on cost provides strong collateral cushion, reducing loss-given-default risk.`,
     );
   }
 
@@ -542,6 +555,10 @@ export function generateExportSummary(
     criteria && typeof criteria.maxRevenueConcentration === 'number'
       ? criteria.maxRevenueConcentration
       : DEFAULT_CRITERIA.maxRevenueConcentration;
+  const liqLtvLimit =
+    criteria && typeof criteria.maxLiquidationLtv === 'number'
+      ? criteria.maxLiquidationLtv
+      : DEFAULT_CRITERIA.maxLiquidationLtv;
   const ft = inputs.financingType || 'EFA';
   const lines: string[] = [];
   lines.push('EQUIPMENT FINANCE DEAL SCREENING');
@@ -572,6 +589,7 @@ export function generateExportSummary(
   lines.push(`DSCR:             ${formatRatio(metrics.dscr)}  (min ${dscrFloor.toFixed(2)}x)`);
   lines.push(`Leverage:         ${formatRatio(metrics.leverage)}  (target <${FACTOR_TARGETS.maxLeverage.toFixed(1)}x)`);
   lines.push(`LTV:              ${formatPercent(metrics.ltv * 100)}  (target <${(FACTOR_TARGETS.maxLtv * 100).toFixed(0)}%)`);
+  lines.push(`Liq. LTV:         ${formatPercent(metrics.liquidationLtv * 100)}  (forced-sale basis, ${(metrics.liquidationHaircut * 100).toFixed(0)}% haircut${metrics.liquidationHaircutBasis === 'general' ? ', general' : metrics.liquidationHaircutBasis === 'estimated' ? ', estimated' : ''}${liqLtvLimit > 0 ? `; max ${liqLtvLimit}%` : ''})`);
   lines.push(`Term / Life:      ${formatPercent(metrics.termCoverage)}  (target <${termCoverageTarget}%)`);
   lines.push(`Rev. Conc.:       ${formatPercent(metrics.revenueConcentration)}  (target <${revConcTarget}%)`);
   lines.push(`EBITDA Margin:    ${formatPercent(metrics.ebitdaMargin)}`);
@@ -721,8 +739,10 @@ export function getDefaultCovenants(
     seeds.push(financialCovenantSeed('Maximum leverage', 'leverage', 'max', c.maxLeverage, c.maxLeverage * 1.5, 'ratio', 'quarterly'));
   }
 
-  // Maximum LTV — only when the firm enforces a cap (< 100 = enabled in screening).
-  if (c.maxLtv > 0 && c.maxLtv < 100) {
+  // Maximum LTV: only when the firm sets its own cap. The 90% screening
+  // default is not seeded: measured on cost it passes for the life of the
+  // loan as the balance falls (Joel 2026-10-09, keep prior behavior).
+  if (c.maxLtv > 0 && c.maxLtv < 100 && c.maxLtv !== DEFAULT_CRITERIA.maxLtv) {
     seeds.push(financialCovenantSeed('Maximum LTV', 'ltv', 'max', c.maxLtv, null, 'percent', 'annual'));
   }
 

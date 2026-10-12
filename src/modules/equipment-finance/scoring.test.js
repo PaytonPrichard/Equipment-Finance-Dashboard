@@ -266,8 +266,9 @@ describe('Equipment Finance getDefaultCovenants', () => {
     });
   });
 
-  test('omits the LTV covenant when maxLtv is disabled (100)', () => {
+  test('omits the LTV covenant at the screening default and when disabled (100)', () => {
     expect(getDefaultCovenants(inputs, metrics).find((x) => x.metric_key === 'ltv')).toBeUndefined();
+    expect(getDefaultCovenants(inputs, metrics, { maxLtv: 100 }).find((x) => x.metric_key === 'ltv')).toBeUndefined();
   });
 
   test('seeds the LTV covenant only when the firm enforces a cap', () => {
@@ -286,5 +287,79 @@ describe('Equipment Finance getDefaultCovenants', () => {
     const cov = getDefaultCovenants(inputs, metrics, { minDscr: 1.4, maxLeverage: 4 });
     expect(cov.find((x) => x.metric_key === 'dscr').flag_value).toBe(1.4);
     expect(cov.find((x) => x.metric_key === 'leverage').fail_value).toBe(6);
+  });
+});
+
+describe('Equipment Finance liquidation LTV (resale-2026-10.md)', () => {
+  // $1,000,000 cost. Liquidation LTV = net financed / (cost x (1 - haircut)).
+  const base = {
+    ...INITIAL_INPUTS,
+    companyName: 'Hand Check Co',
+    annualRevenue: 20000000,
+    ebitda: 3000000,
+    industrySector: 'Manufacturing',
+    creditRating: 'Adequate',
+    equipmentCost: 1000000,
+    financingType: 'EFA',
+    usefulLife: 10,
+    loanTerm: 60,
+    essentialUse: true,
+  };
+  const m = (over) => calculateMetrics({ ...base, ...over });
+
+  test('new Construction, 15% down: 85% on cost, 850/800 = 106.25% liquidation', () => {
+    const r = m({ equipmentType: 'Construction Equipment', equipmentCondition: 'New', downPayment: 150000 });
+    expect(r.ltv).toBeCloseTo(0.85, 10);
+    expect(r.liquidationValue).toBeCloseTo(800000, 6);
+    expect(r.liquidationLtv).toBeCloseTo(1.0625, 10);
+    expect(r.liquidationHaircutBasis).toBe('estimated');
+  });
+
+  test('used Construction, 15% down: cost LTV no longer carries a haircut, 850/700 = 121.4%', () => {
+    const r = m({ equipmentType: 'Construction Equipment', equipmentCondition: 'Used', downPayment: 150000 });
+    expect(r.ltv).toBeCloseTo(0.85, 10); // was 100% under the old 0.85 divisor
+    expect(r.equipmentValue).toBe(1000000);
+    expect(r.liquidationLtv).toBeCloseTo(850 / 700, 10);
+    expect(r.liquidationHaircutBasis).toBe('data');
+  });
+
+  test('used Other, 30% down: general 30% haircut, exactly 100%', () => {
+    const r = m({ equipmentType: 'Other', equipmentCondition: 'Used', downPayment: 300000 });
+    expect(r.liquidationHaircut).toBe(0.3);
+    expect(r.liquidationHaircutBasis).toBe('general');
+    expect(r.liquidationLtv).toBeCloseTo(1.0, 10);
+  });
+
+  test('new Other, 24% down: general 25% haircut, 760/750 = 101.3%', () => {
+    const r = m({ equipmentType: 'Other', equipmentCondition: 'New', downPayment: 240000 });
+    expect(r.liquidationHaircut).toBe(0.25);
+    expect(r.liquidationLtv).toBeCloseTo(760 / 750, 10);
+  });
+
+  test('new Agricultural Equipment, 20% down: data-backed 25%, 800/750 = 106.7%', () => {
+    const r = m({ equipmentType: 'Agricultural Equipment', equipmentCondition: 'New', downPayment: 200000 });
+    expect(r.liquidationHaircutBasis).toBe('data');
+    expect(r.liquidationLtv).toBeCloseTo(800 / 750, 10);
+  });
+
+  test('TRAC uses full net financed, not principal net of residual: 900/800 = 112.5%', () => {
+    const r = m({ equipmentType: 'Vehicles/Fleet', equipmentCondition: 'New', financingType: 'TRAC', downPayment: 100000 });
+    expect(r.financedPrincipal).toBeLessThan(r.netFinanced);
+    expect(r.liquidationLtv).toBeCloseTo(1.125, 10);
+  });
+
+  test('zero cost gives 0, not NaN', () => {
+    const r = m({ equipmentType: 'Other', equipmentCondition: 'New', equipmentCost: 0, downPayment: 0 });
+    expect(r.liquidationLtv).toBe(0);
+    expect(r.ltv).toBe(0);
+  });
+
+  test('no condition bonus: new and used at the same cost LTV score the same LTV factor', () => {
+    const inputsNew = { ...base, equipmentType: 'Other', equipmentCondition: 'New', downPayment: 150000 };
+    const inputsUsed = { ...inputsNew, equipmentCondition: 'Used' };
+    const fNew = calculateRiskScore(inputsNew, calculateMetrics(inputsNew)).factors.equipmentLtv;
+    const fUsed = calculateRiskScore(inputsUsed, calculateMetrics(inputsUsed)).factors.equipmentLtv;
+    expect(fNew).toBeCloseTo(65, 6); // 85% on the curve point [0.85, 65], no +12
+    expect(fUsed).toBeCloseTo(fNew, 10);
   });
 });

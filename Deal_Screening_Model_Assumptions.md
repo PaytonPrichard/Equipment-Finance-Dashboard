@@ -46,10 +46,23 @@ The model produces a composite risk score (0-100), financial metrics, commentary
 
 ## 3. Equipment Valuation Assumptions
 
-### Used Equipment Discount
-- Used equipment is valued at **85% of stated cost** (15% haircut)
-- New equipment is valued at face cost
-- **Rationale:** Used equipment has uncertain condition, higher maintenance risk, and less predictable residual value. The 15% discount is a conservative screening-level assumption; formal underwriting should use an independent appraisal.
+### Liquidation Haircut (new and used)
+Equipment is valued two ways (see LTV in section 5):
+- **Cost**, new and used alike. LTV on cost is the market convention and carries the firm's LTV limit.
+- **Forced-sale value** = cost x (1 - liquidation haircut). It drives liquidation LTV.
+
+The haircut is the share of cost a lender should not expect back in an auction sale. It is set by equipment type and condition where public resale data exists. Every other type uses the general haircut, and the screening notes, memo and real-deals report say so.
+
+| Equipment Type | New | Used | Basis |
+|---|---|---|---|
+| Vehicles/Fleet | 20% | 30% | Used: Sandhills, sleepers 17-39% below asking across the cycle. New: estimated from BEA market-value curves (17% first-year decline) |
+| Construction Equipment | 20% | 30% | Used: Sandhills, dozers 24-31% below asking. New: estimated from BEA (15-16% first-year decline) |
+| Agricultural Equipment | 25% | 30% | Used: Sandhills 2026, tractors 31-33% and combines 36-38% spread. New: Iowa State A3-29, year-1 auction value 65-69% of list |
+| All other types (general) | 25% | 30% | New: SBA SOP 50 10 8 values new machinery at 75% of price. Used: the farm spread above. No type-specific data |
+
+- **Rationale:** Cost is what the borrower paid, at retail. A lender recovering collateral sells at auction or in an orderly liquidation, and the OCC asks for NOLV, "not cost or retail value." New equipment loses at least as much in year one as used loses between retail and auction, so new gets a haircut too.
+- **Caveats:** These are forced-sale (auction) numbers, conservative against an orderly sale. Sandhills asking prices sit above closed retail, which overstates the gap. Medical and IT have no resale data. IT resale is plausibly worse than the general number. Revisit as data comes in. Formal underwriting should use an independent appraisal.
+- Source: `scripts/real-deals/benchmarks/resale-2026-10.md`. Joel 2026-10-09.
 
 ### Equipment Type Defaults
 
@@ -62,11 +75,13 @@ The model produces a composite risk score (0-100), financial metrics, commentary
 | Aircraft/Helicopters | 12-20 | FMV | 20% |
 | Medical Equipment | 7-12 | FMV | 10% |
 | IT/Data Center | 3-7 | FMV | 10% |
-| Construction Equipment | 8-15 | EFA | 15% |
-| Energy/Power Generation | 15-25 | EFA | 15% |
+| Construction Equipment | 8-12 | EFA | 15% |
+| Agricultural Equipment | 10-15 | EFA | 20% |
+| Energy/Power Generation (turbines, grid) | 20-30 | EFA | 15% |
+| Engines/Generators | 8-12 | EFA | 15% |
 | Other | 5-15 | EFA | 10% |
 
-**Assumption:** Useful life ranges are based on general industry expectations for well-maintained equipment. Actual useful life depends on usage intensity, maintenance, and operating environment.
+**Assumption:** Useful life ranges are based on general industry expectations for well-maintained equipment. Checked 2026-10-09 against BEA service lives (from used-asset prices where available), IRS class lives and 10-K disclosures (`resale-2026-10.md`). Construction narrowed from 8-15 to BEA's 8-10 plus room for maintained fleets. Energy split: turbines and grid equipment (BEA 32-33) vs engines and generators (BEA 8). Agricultural Equipment added (BEA farm tractors 9, ag machinery 14; Iowa State 10-15). The 20% typical down payment is the John Deere Owner Trust seasonal-payment minimum. FMV residuals for the two new types are inherited from the type each was split from, not separately sourced. Actual useful life depends on usage intensity, maintenance, and operating environment.
 
 ---
 
@@ -139,8 +154,10 @@ The model produces a composite risk score (0-100), financial metrics, commentary
 **Zero or negative EBITDA.** Leverage is not meaningful (NM) and is shown as NM, never as 0.0x. This applies to all three asset classes. In the composite, the leverage factor scores at the floor of its curve (5, the same as 10x or worse) and keeps its weight. NM is treated as worst case, not as absent and not as zero, as rating agencies do. Leaving the factor out was rejected because it let a loss-maker outscore a marginally profitable borrower. The screening verdict FAILs with one reason naming EBITDA: earnings cannot cover debt service. That reason replaces the DSCR, leverage and cash-flow coverage reasons, which would restate the same failure. A missing EBITDA is an incomplete input, not this case.
 
 ### LTV (Loan-to-Value)
-- **Formula:** Net Financed Amount / Equipment Value
-- Equipment value = cost (new) or cost * 0.85 (used)
+Two figures, side by side.
+- **LTV on cost** = Net Financed Amount / Equipment Cost, new and used alike. Scored by the factor curve in section 6. The firm limit defaults to **90%** (at least 10% down, the John Deere Owner Trust minimum for construction and monthly-pay ag). Above it, the verdict flags. Net financed can never exceed cost, so the former 100% default could never fire.
+- **Liquidation LTV** = Net Financed Amount / (Equipment Cost x (1 - liquidation haircut)), section 3. Uses full net financed, not the principal net of a TRAC/FMV residual, because day-one exposure is the full amount. Flags above **115%** by default. A fail ceiling exists and is off by default (0). 115% catches thin equity rather than standard 10-20% down structures, which sit near 100-115% on a forced-sale basis.
+- Limits are configurable in the screening criteria. Today these are stored per user, not per firm (AUDIT P1-17).
 
 | LTV | Assessment |
 |-----|-----------|
@@ -149,7 +166,7 @@ The model produces a composite risk score (0-100), financial metrics, commentary
 | 85% - 100% | Adequate |
 | > 100% | Weak -- financed amount exceeds equipment value |
 
-**Assumption:** LTV above 100% means the lender has negative equity from day one. Down payments directly reduce LTV and are a primary structural mitigant.
+**Assumption:** Liquidation LTV above 100% means a forced sale on day one would not repay the loan. Down payments directly reduce both LTVs and are the primary structural mitigant. The assessment bands above are a presentation gradient for LTV on cost, not targets.
 
 ### Term-to-Useful-Life Coverage
 - **Formula:** (Loan Term in Years / Equipment Useful Life in Years) * 100
@@ -161,6 +178,8 @@ The model produces a composite risk score (0-100), financial metrics, commentary
 | > 80% | Weak -- elevated residual value risk |
 
 **Assumption:** If the loan term exceeds 80% of useful life, the equipment may have little remaining value at maturity, increasing loss-given-default risk.
+
+**Tested 2026-10-09** (`resale-2026-10.md`, section 3). On a fully amortizing loan, the collateral shortfall peaks in years 1-2, driven by down payment and the first-year value drop, never near maturity. The 80% limit holds as an outer guard. Liquidation LTV covers the early shortfall. Residual-based structures (TRAC, FMV) carry value-at-maturity risk that this factor does not model separately.
 
 ### Revenue Concentration
 - **Formula:** (Equipment Cost / Annual Revenue) * 100
@@ -210,7 +229,7 @@ The composite score (0-100) is a **weighted average** of seven factor scores. Ea
 | **Leverage** | 20% | Total indebtedness vs. cash flow | Lower is better |
 | **Industry Risk** | 15% | Sector cyclicality & default history | Categorical (Low=100, Moderate=65, High=35) |
 | **Essentiality** | 10% | Whether equipment is critical to operations | Yes=100, No=30 |
-| **Equipment/LTV** | 10% | Collateral coverage + condition bonus | Lower LTV is better; +8 pts for new equipment |
+| **Equipment/LTV** | 10% | LTV on cost | Lower LTV is better. No condition bonus |
 | **Years in Business** | 10% | Operating track record | More years is better |
 | **Term Coverage** | 10% | Loan term vs. equipment useful life | Lower ratio is better |
 
@@ -245,7 +264,7 @@ The composite score (0-100) is a **weighted average** of seven factor scores. Ea
 | 100% | 45 |
 | 120%+ | 20 |
 
-*New equipment adds +8 bonus points (capped at 100).*
+*No bonus for new equipment (removed 2026-10-09, Joel). The code had +12 while this document said +8. Resale data shows new loses at least as much value in year one as used. Condition now lives in the liquidation haircut.*
 
 ### Years in Business Breakpoints (10% weight)
 | Years | Score |
@@ -461,7 +480,7 @@ a memo is the platform's, not the caller's.
 1. SOFR of 4.50% -- must be updated to reflect current market conditions
 2. Base spread of 200 bps represents middle-market equipment finance
 3. 8% blended rate for estimating unknown existing debt service
-4. 15% haircut on used equipment values
+4. Liquidation haircuts by equipment type and condition (section 3), general 25% new / 30% used where no type data exists. Forced-sale basis
 5. Industry risk tiers are static -- do not adjust for current cycle position
 6. Credit ratings are qualitative self-assessments, not formal agency ratings
 7. Residual value percentages are conservative screening estimates

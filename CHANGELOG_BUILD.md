@@ -197,3 +197,47 @@ Step 3 is complete. Step 4 next: memo section "How the numbers were built", serv
 - Recorded his loss ranking before the data: trucks, construction, agriculture (worst first). Data supports trucks worst (4-6x the losses of ag/construction pools at the same vintage). Construction vs agriculture is not separable from public data.
 - Tiers: option 2 (Trucking split out at high) plus option 3 (Agriculture to moderate).
 - Rush reclassified to Trucking under the end-market rule. Rerun: no verdict changes (Rush 85 to 81, still PASS; Titan 44 to 49, still FAIL).
+
+## 2026-10-11: Resale-value benchmarks and liquidation LTV (Workstream B)
+
+**What changed.**
+- Tested the used-equipment haircut, the term-to-useful-life limit and the useful-life ranges against public resale data:
+  - Iowa State A3-29 (ASABE auction curves)
+  - Herc proceeds as % of original cost
+  - Sandhills asking-vs-auction spreads
+  - SBA SOP 50 10 8 and the OCC ABL handbook
+  - BEA service lives and IRS class lives
+  - GATX, Ryder, URI and Air Lease 10-Ks
+  
+  Results in `scripts/real-deals/benchmarks/resale-2026-10.md`. Extracts with citations in `resale-sources/`. Loan-vs-collateral analysis in `resale-analysis.js`.
+- Equipment module:
+  - LTV is now on cost for new and used alike.
+  - New liquidation LTV: net financed / (cost x (1 - haircut)), haircut by equipment type and condition, with a general fallback.
+  - The +12 new-equipment bonus is removed. The spec said +8.
+- Screening:
+  - LTV-on-cost limit 100 -> 90. 100 could never fire.
+  - Liquidation LTV flags above 115%. The fail limit is off by default.
+  - A note names any general or estimated haircut, carried into the verdict, memo and real-deals report.
+  - Two new inputs in the credit box.
+- Equipment types:
+  - Agricultural Equipment added (10-15 yrs, 20% down).
+  - Engines/Generators split from Energy/Power Generation (8-12). Energy is now turbines and grid, 20-30.
+  - Construction 8-15 -> 8-12.
+  - Server validation and extraction accept the new types.
+- Real-deals rerun (`reports/2026-10-11.md`): no verdict changes, 5 match, 2 acceptable, 2 mismatch. Scores down about 1 point from the bonus removal. Granite Ridge (Video A) 80 -> 78, still PASS. Script, runbook and tests updated.
+- Reviewed by the credit-reviewer agent before building. Its fixes are adopted: the dead 100% gate, flag noise at 100%, forced-sale labeling, and TRAC on net financed.
+
+**What Joel decided.**
+- Joel declined numeric expectations (no experience to give numbers he'd trust). He gave one directional view: 0% is not enough for new equipment. Supported: year-1 values run 65-85% of new.
+- 15% used is the tight-market end of every source. Haircuts are set by type wherever data exists. A general number is used otherwise and called out.
+- Two LTVs: the gate stays on cost, and liquidation LTV sits beside it. Drop the condition bonus.
+- LTV on cost 90% (b). Liquidation flag 115% with an optional fail (a).
+- IT/Data Center uses the general number. Revisit as data comes in.
+- Split Energy, add Agricultural Equipment, Construction 8-12.
+- Keep today's covenant behavior: no LTV covenant seeded at the 90% default.
+- Video A not yet recorded, so its numbers move to 78.
+
+**Open.**
+- Users who saved their credit box keep maxLtv 100, which cannot fire (AUDIT P1-17). Joel to decide: migration, notice, or leave.
+- Residual-at-maturity check for TRAC/FMV (backlog).
+- Saved deals keep old scores until rescored (Workstream A's rescore action).

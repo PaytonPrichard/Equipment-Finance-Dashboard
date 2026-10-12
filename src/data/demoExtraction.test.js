@@ -106,10 +106,10 @@ describe('Video A, the Granite Ridge set', () => {
     expect(merged.fieldSources.companyName.fileName).toBe('01_credit-application.pdf');
   });
 
-  test('1:24 twenty fields, and it scores 80 PASS', () => {
+  test('1:24 twenty fields, and it scores 78 PASS', () => {
     expect(Object.keys(merged.inputs)).toHaveLength(20);
     const { riskScore, verdict } = screen(asMerged);
-    expect(riskScore.composite).toBe(80);
+    expect(riskScore.composite).toBe(78);
     expect(verdict.category).toBe('pass');
   });
 
@@ -153,11 +153,12 @@ describe('Video A 1:08, the "Use that" beat', () => {
     expect(screen(afterUseThat).metrics.debtYield).toBeCloseTo(148.1, 1);
   });
 
-  test('the score holds at 80, which is why the edit needs a punch-in', () => {
-    // The script calls this out: the only things that move are two figures
-    // in a thin grey line. If the score ever starts moving here, the shot
-    // direction at 1:08 is wrong and the beat gets easier, not harder.
-    expect(screen(afterUseThat).riskScore.composite).toBe(80);
+  test('the score moves 78 to 79 on the click', () => {
+    // Was 80 to 80 until the new-equipment condition bonus was removed
+    // (2026-10-09, resale-2026-10.md). The 1:08 direction in
+    // VIDEO_SCRIPTS.md now has a visible score change to show.
+    expect(screen(asMerged).riskScore.composite).toBe(78);
+    expect(screen(afterUseThat).riskScore.composite).toBe(79);
   });
 
   test('clicking it again restores the financials', () => {
@@ -168,16 +169,17 @@ describe('Video A 1:08, the "Use that" beat', () => {
 });
 
 describe('Video A 1:24, what the score survives', () => {
-  // The screening rate is live SOFR from FRED, so the 80 the voiceover says
+  // The screening rate is live SOFR from FRED, so the 78 the voiceover says
   // is only true inside a rate band. Worth knowing before a shoot, and worth
-  // knowing that it is the rate, not the deal, that moved it.
+  // knowing that it is the rate, not the deal, that moved it. Since the
+  // condition bonus came out (2026-10-09) the score holds at 78 across 3-6%.
   test.each([
-    [0.03, 80],
-    [0.0387, 80], // live SOFR on 2026-09-22, the rate the shoot will run at
-    [0.0425, 80],
-    [0.045, 80],
-    [0.0475, 79],
-    [0.06, 79],
+    [0.03, 78],
+    [0.0387, 78], // live SOFR on 2026-09-22
+    [0.0425, 78],
+    [0.045, 78],
+    [0.0475, 78],
+    [0.06, 78],
   ])('at SOFR %p the deal scores %p', (sofr, expected) => {
     expect(screen(asMerged, sofr).riskScore.composite).toBe(expected);
   });

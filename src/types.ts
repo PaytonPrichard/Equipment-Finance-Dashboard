@@ -71,7 +71,9 @@ export type EquipmentType =
   | 'Medical Equipment'
   | 'IT/Data Center'
   | 'Construction Equipment'
+  | 'Agricultural Equipment'
   | 'Energy/Power Generation'
+  | 'Engines/Generators'
   | 'Other';
 
 export type FinancingType = 'EFA' | 'FMV' | 'TRAC';
@@ -210,6 +212,12 @@ export interface EquipmentMetrics extends BaseMetrics {
   financedPrincipal: USD;
   residualValue: USD;
   equipmentValue: USD;
+  /** Forced-sale value: cost less the liquidation haircut. */
+  liquidationValue: USD;
+  /** Net financed / liquidation value, fraction. 0 when cost is 0. */
+  liquidationLtv: number;
+  liquidationHaircut: number;       // fraction
+  liquidationHaircutBasis: 'data' | 'estimated' | 'general';
 }
 
 export interface AccountsReceivableMetrics extends BaseMetrics {
@@ -322,6 +330,9 @@ export interface ScreeningCriteria {
   minRevenue: number;
   minYearsInBusiness: number;
   maxLtv: number;
+  // Liquidation LTV limits, percent (0 = disabled)
+  maxLiquidationLtv: number;
+  failLiquidationLtv: number;
   maxTermCoverage: number;
   maxRevenueConcentration: number;
   maxConcentration: number;
