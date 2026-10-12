@@ -271,6 +271,9 @@ describe('judgments on the statement build', () => {
       expect(next.financials.firmRules.floorplan).toBe('in');
       expect(next.financials.judgments['treatment.floorplan']).toBeUndefined();
       expect(next.financials.rulesRebuilt).toMatchObject({ by: 'J. Peter', changed: ['floorplan'] });
+      // The prompt goes on the click, before the parent's rerender lands.
+      expect(screen.queryByTestId('rules-changed')).toBeNull();
+      expect(screen.getByText('Rebuilding with current firm rules...')).toBeInTheDocument();
     });
 
     test('rules unchanged: no notice', () => {

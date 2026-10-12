@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect, startTransition } from 'react';
 import NullableNumberInput from './NullableNumberInput';
 import { LINE_ITEM_LABELS } from '../lib/borrowerBuild';
 import { BUILT_FIELDS } from '../lib/statementBuild';
@@ -109,6 +109,17 @@ function LineRow({ line, item, onChange }) {
 }
 
 export default function StatementsPanel({ financials, state, inputs, onChange, onClear, firmRules, rulesChanged, onRebuild, onConfirm, onTreatment }) {
+  // The rebuild reruns the build and the whole results view, which can take
+  // a moment. Hide the prompt on the click itself, then rebuild, so the
+  // button never sits there looking unclicked.
+  const [rebuilding, setRebuilding] = useState(false);
+  const changesKey = rulesChanged ? rulesChanged.join('|') : '';
+  useEffect(() => { setRebuilding(false); }, [changesKey]);
+  const rebuild = () => {
+    setRebuilding(true);
+    startTransition(() => onRebuild());
+  };
+
   if (!financials) {
     return (
       <div className="rounded-xl border border-dashed border-gray-300 p-4 flex items-center justify-between gap-4">
@@ -254,7 +265,10 @@ export default function StatementsPanel({ financials, state, inputs, onChange, o
         />
       )}
 
-      {rulesChanged && (
+      {rulesChanged && rebuilding && (
+        <p className="text-[11px] text-gray-500 border-t border-gray-200 pt-4">Rebuilding with current firm rules...</p>
+      )}
+      {rulesChanged && !rebuilding && (
         <div className="border-t border-gray-200 pt-4 space-y-2" data-testid="rules-changed">
           <p className="text-[11px] text-gray-500">
             This deal keeps the treatment rules it was saved with. Your firm's rules have changed since.
@@ -264,7 +278,7 @@ export default function StatementsPanel({ financials, state, inputs, onChange, o
           </ul>
           <button
             type="button"
-            onClick={onRebuild}
+            onClick={rebuild}
             className="px-3 py-1.5 rounded-lg bg-gray-100 text-gray-900 text-[11px] font-semibold hover:bg-gray-200 transition-all"
           >
             Rebuild with current firm rules
@@ -276,6 +290,7 @@ export default function StatementsPanel({ financials, state, inputs, onChange, o
         <p className="text-[11px] text-gray-500">
           Rebuilt with firm rules on {String(financials.rulesRebuilt.at || '').slice(0, 10)}
           {financials.rulesRebuilt.by ? ` by ${financials.rulesRebuilt.by}` : ''}.
+          {state?.build?.judgments?.some((j) => j.id.startsWith('treatment.') && !j.confirmed) ? ' Confirm the changed treatment rows above, then update the deal.' : ''}
         </p>
       )}
     </div>
