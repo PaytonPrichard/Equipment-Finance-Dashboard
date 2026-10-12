@@ -24,6 +24,7 @@ import { fetchMemosForDeal } from '../lib/memos';
 import DealAttachments from './DealAttachments';
 import { fetchAuditLog } from '../lib/audit';
 import { STAGE_ORDER as STAGES, blockedReason, canTransition } from '../lib/pipelineStages';
+import { describeRuleChanges } from '../utils/statementFormat';
 
 const ASSET_CLASS_LABELS = {
   equipment_finance: 'Equipment finance',
@@ -468,6 +469,15 @@ function describeAudit(entry) {
       if (newV.removed) return `Override removed: ${what}`;
       const rule = newV.kind === 'treatment' && newV.rule ? ` set to "${newV.rule}"` : ' typed over';
       return `Override: ${what}${rule}. Reason: ${newV.reason || 'none given'}`;
+    }
+    case 'rebuild_rules': {
+      // A move onto the firm's current treatment rules (api/score-deal.js).
+      const c = newV.rulesChange || {};
+      const what = describeRuleChanges(c.from, c.to, c.changed).join('. ');
+      const who = newV.bulk ? `by ${newV.by || 'an admin'}, with the firm's open deals` : 'for this deal';
+      const score = oldV.score != null && newV.score != null && Math.round(oldV.score) !== Math.round(newV.score)
+        ? ` Rescored ${Math.round(oldV.score)} to ${Math.round(newV.score)}.` : '';
+      return `Rebuilt with current firm rules ${who}.${what ? ` ${what}.` : ''}${score}`;
     }
     case 'delete':
       return 'Deleted';

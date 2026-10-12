@@ -1,22 +1,30 @@
 # Tranche — where things stand
 
-## Current state, 2026-10-09 (read this first)
+## Current state, 2026-10-09 evening (read this first)
 
-**Production:** `main` @ `eed02c1`, deployed 2026-10-08 to gettranche.app. 416 client tests, 49 server tests, build clean. The isolation workflow passes in CI on every production deploy and nightly (first real runs ever: its secrets were set 2026-10-07, Node 24 since 2026-10-08).
+**Production:** `main` @ `ae5dd00`, pushed 2026-10-09 with Joel's OK. 650 client, 49 server and 15 harness tests pass, the CI build is clean (only the old html2pdf source-map warning), tsc is clean. Work continues on branch `ebitda-build-p1` (same commit as main). Isolation workflow for ae5dd00: pending at handoff, check with `gh run list --limit 3`.
 
-**Shipped 2026-10-07/08 (Workstream A, see `CHANGELOG_BUILD.md`):**
-- Cash-flow DSCR, FCCR (EBITDAR form) and a cash-flow stress table across all three asset classes. `src/utils/cashFlowMetrics.ts`. Floors 1.15x / 1.10x, scenarios configurable in Screening Policy. Missing inputs read "not provided", never estimated.
-- Recommendation follows the verdict (`src/lib/recommendation.ts`, AUDIT P0-8). FLAG = "Advance with Conditions" with numbered conditions.
-- Fixed: 3%-of-revenue capex imputation removed; FCCR and liquidity months now include the new loan's debt service when actual debt service is entered.
+**Shipped in ae5dd00 (Workstream A, details in `CHANGELOG_BUILD.md`):**
+- EBITDA build, steps 1 to 4 (all but the rescore action). Design: `EBITDA_Build_Design.md` (section 16 decisions, "Step 1 build decisions", "Step 3 form design").
+  - `src/lib/borrowerBuild.ts`: `buildBorrowerInputs(financials, rules)`. Pure. Treatment rules (finance leases, operating leases, floorplan, captive fleet), judgments, caveats, errors, 3 EBITDA sources, gap check.
+  - `src/lib/statementBuild.ts`: the form layer. `statementState`, `applyStatementBuild` (App writes built values over any input), field overrides with a reason, `confirmJudgment`, `setDealTreatment`, `withRulesSnapshot` (a saved deal keeps the firm rules it was first saved with), `prepareForSave` (what the server runs).
+  - Settings > Screening Policy: Treatment Rules card (`TreatmentRulesCard.js`). Admin edits, others read. Stored in `org_settings.treatmentRules`, audited.
+  - New Deal: "Financial statements" panel inside Borrower Profile (`StatementsPanel.js`, `StatementJudgments.js`, `EbitdaSourceSection.js`). One form, no mode toggle: statements fill the typed fields, built fields show a Built badge and formula, Override needs a reason. Save/Update blocked until every judgment is confirmed.
+  - Server: `api/score-deal.js` rebuilds statement-built fields via `prepareStatementInputs` in `_scoring.cjs`, refuses unconfirmed judgments, writes one `override` audit row per new/removed override.
+  - Memo: "How the Numbers Were Built" (`src/utils/statementMemo.js`). Preview: `node scripts/preview-memo.js --statements`.
+  - Regression: `src/lib/borrowerBuild.realDeals.test.ts` reproduces the harness `derive()` on all 9 real filings, all 8 inputs.
+- Cash-flow stress: maintenance capex scales with revenue in revenue and combined scenarios, and in the module stress tables (Joel). Spec section 7 updated.
+- Debt service is scheduled principal only (Joel): no revolver-maturity question; optional "Renewing facilities inside current maturities" line is taken back out with a refinancing-risk caveat.
+- Demo: "Try a deal built from statements" (Prairie Equipment Dealers, fictional dealer, judgments pending, Adjusted EBITDA bridge). Heartland Foods (Funded) in the demo pipeline is statement-built and fully confirmed. `src/data/demoStatements.js`, tested.
+- From Workstream B (merged and shipped): 9 real-deals fixtures, P0-7 negative EBITDA, industry tiers from public ABS data (Trucking split out at high, Agriculture to moderate), Ridgeline Freight trucking extraction scenario.
 
-**Security, done 2026-10-07/08:** Anthropic, FRED and Supabase keys rotated after the offboarding. Supabase moved to publishable/secret keys, legacy JWT keys disabled, legacy JWT secret revoked. `PaytonPrichard` is Joel's own GitHub account.
+**Built 2026-10-09 late, branch `rescore-rules`, not pushed:** rescore with current firm rules, per deal and bulk (details in `CHANGELOG_BUILD.md`). Also closes a server gap: the client could send any rules copy. Joel approves the push. Verify in the browser before pushing: per-deal rebuild on a saved dealer deal, bulk from Settings as admin, and a 409 if the rules copy is tampered with.
 
-**Next: EBITDA build, Phase 1.** Design approved: `EBITDA_Build_Design.md` on branch `ebitda-build-design` (all section 16 decisions settled, exact formulas in section 8 confirmed by Joel 2026-10-09). Phase 1, in order:
-1. `buildBorrowerInputs` (shared pre-scoring layer) + treatment rules + hand-checked unit tests. No UI.
-2. Treatment rules in firm Settings (`organizations.org_settings.treatmentRules`), admin-only, per-deal override with reason + audit entry.
-3. "Build from statements" mode on the form: line items, treatment, EBITDA source + add-backs, judgment calls; Save blocked until every judgment is confirmed.
-4. Memo "How the numbers were built" + server reruns the build (`api/score-deal.js`, `_scoring.cjs`).
-Then Phase 2 (extraction of line items, statement pages only, token limit 4096, measure cost) and Phase 3 (AUDIT P1-16 "what would change this" panel, on `real-deals`).
+**Was next: rescore with current firm rules (last piece of step 4).** Joel decided 2026-10-09:
+1. Bulk rescore touches only Screening and Under Review deals. Approved and Funded keep the rules they were decided under (they can still be rebuilt one at a time).
+2. Per deal: "Rebuild with current firm rules" in the statements panel (where it already says the firm's rules changed). It replaces `financials.firmRules`, and treatment rows whose rule changed go back to pending, so the analyst re-confirms before Update.
+3. Bulk, admin only, from the Treatment Rules card: the admin's action counts as the confirmation for the changed rows, one audit row per deal naming the admin. Confirmation dialog shows how many deals it touches.
+Watch-out: a treatment judgment's stored confirmation is the old rule, while the applied treatment comes from `firmRules`. Rebuild must clear the stale treatment confirmations.
 
 **Workstream B (real-deals), status 2026-10-09.** Branch `real-deals`, worktree `../tranche-real-deals`. Everything B owed A is done and merged into A's `ebitda-build-p1`; B's latest commits ship with A's step 4 push (Joel's call). Done on B:
 - P0-7: negative EBITDA makes leverage NM (scored at the curve floor), the verdict FAILs on one reason, display shows NM.
@@ -24,7 +32,20 @@ Then Phase 2 (extraction of line items, statement pages only, token limit 4096, 
 - Public equipment ABS benchmarks (`scripts/real-deals/benchmarks/abs-2026-10.md`): truck pools lose 4-6x ag/construction. New Trucking sector (high), Agriculture to moderate. Extraction verified on a new trucking corpus case.
 - **Next for B: resale-value data** to test the two assumptions public ABS could not: the 15% used-equipment haircut and the term-to-useful-life limit (80%). Joel approved adding it.
 
-**Open AUDIT items from this cycle:** P0-8 done. P1-17 criteria are per user, not per firm. P1-18 extraction does arithmetic (fixed by Phase 2's copy-never-compute). P1-19 hardcoded fallback encryption key. P2-10/P2-11 (renumbered on merge) Copy Summary and extraction lack cash-flow fields; New Deal form status chip. Pipeline/monitoring/dashboard/audit-log overhaul requirements are in Claude memory (`lifecycle_overhaul_requirements`).
+**Then:** Phase 2 (extraction fills statement line items: statement pages only, 15-page limit, copy never compute which also closes AUDIT P1-18, `MAX_OUTPUT_TOKENS` 4096, measure cost before shipping). Phase 3 (AUDIT P1-16 "what would change this" panel, maturity wall, undrawn availability). AUDIT P1-21 (debt maturing inside the loan term) needs the maturity schedule.
+
+**Backlog found this cycle:**
+- Rush case: the form cannot say "floorplan counts as debt, interest amount not disclosed". Marking floorplan present demands the interest line.
+- AUDIT P1-20: the form requires EBITDA > 0, so a negative built EBITDA (Wabash) shows but does not score.
+- AUDIT P2-13: stress multiplies EBITDA, which shrinks a loss.
+- Batch screening: no filter by pass/flag/fail, distribution counts score buckets not verdicts, no per-row save, no search (Joel asked, not yet logged as an AUDIT item).
+- Judgment count on a dealer is about 10 to 13. Joel: no "confirm all" button; revisit if it feels heavy.
+
+**Workstream B** (session `tranche-real-deals`, branch `real-deals`, worktree `../tranche-real-deals`) syncs from main after this push. The harness `derive()` and the app build agree on all 9 fixtures; long term the harness should import `buildBorrowerInputs`.
+
+**Process notes:** stop dev servers by port or project path, never by killing every node process (done once this session by mistake, nothing lost). Joel approves every push to main in person; a relayed approval from another session is not enough.
+
+**Open AUDIT items:** P1-17 criteria per user, not per firm. P1-18 extraction does arithmetic. P1-19 hardcoded fallback encryption key. P2 items per AUDIT.md. Pipeline/monitoring/dashboard/audit-log overhaul requirements are in Claude memory (`lifecycle_overhaul_requirements`).
 
 Last updated 2026-09-23. Production is `main` @ `6a8862c`, deployed to
 gettranche.app. `FRED_API_KEY` is set and `/api/sofr` is live.

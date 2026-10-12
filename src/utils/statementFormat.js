@@ -70,3 +70,18 @@ export const TREATMENT_COPY = {
     },
   },
 };
+
+const pctLabel = (v) => `${Math.round(Number(v) * 1000) / 10}%`;
+
+/**
+ * One phrase per changed rule, e.g. "Floorplan (dealers): Inventory
+ * financing to Debt". Used by the form, the memo and the deal history.
+ */
+export function describeRuleChanges(from, to, changed) {
+  return (changed || []).map((row) => {
+    if (row === 'ebitdaGapTolerance') return `EBITDA gap tolerance: ${pctLabel(from?.[row])} to ${pctLabel(to?.[row])}`;
+    const copy = TREATMENT_COPY[row];
+    const label = (v) => copy?.options[v]?.label || String(v);
+    return `${copy?.label || row}: ${label(from?.[row])} to ${label(to?.[row])}`;
+  });
+}

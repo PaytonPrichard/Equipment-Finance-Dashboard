@@ -108,7 +108,7 @@ function LineRow({ line, item, onChange }) {
   );
 }
 
-export default function StatementsPanel({ financials, state, inputs, onChange, onClear, firmRules, rulesChanged, onConfirm, onTreatment }) {
+export default function StatementsPanel({ financials, state, inputs, onChange, onClear, firmRules, rulesChanged, onRebuild, onConfirm, onTreatment }) {
   if (!financials) {
     return (
       <div className="rounded-xl border border-dashed border-gray-300 p-4 flex items-center justify-between gap-4">
@@ -255,8 +255,27 @@ export default function StatementsPanel({ financials, state, inputs, onChange, o
       )}
 
       {rulesChanged && (
+        <div className="border-t border-gray-200 pt-4 space-y-2" data-testid="rules-changed">
+          <p className="text-[11px] text-gray-500">
+            This deal keeps the treatment rules it was saved with. Your firm's rules have changed since.
+          </p>
+          <ul className="space-y-0.5">
+            {rulesChanged.map((c) => <li key={c} className="text-[11px] text-gray-600">{c}</li>)}
+          </ul>
+          <button
+            type="button"
+            onClick={onRebuild}
+            className="px-3 py-1.5 rounded-lg bg-gray-100 text-gray-900 text-[11px] font-semibold hover:bg-gray-200 transition-all"
+          >
+            Rebuild with current firm rules
+          </button>
+          <p className="text-[10px] text-gray-400">Changed treatment rows go back to pending. Confirm them, then update the deal.</p>
+        </div>
+      )}
+      {!rulesChanged && financials.rulesRebuilt && (
         <p className="text-[11px] text-gray-500">
-          This deal keeps the treatment rules it was saved with. Your firm's rules have changed since.
+          Rebuilt with firm rules on {String(financials.rulesRebuilt.at || '').slice(0, 10)}
+          {financials.rulesRebuilt.by ? ` by ${financials.rulesRebuilt.by}` : ''}.
         </p>
       )}
     </div>

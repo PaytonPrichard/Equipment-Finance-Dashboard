@@ -6,6 +6,7 @@ import LandingPage from './components/LandingPage';
 import RequestAccessPage from './components/RequestAccessPage';
 import OrgSetup from './components/OrgSetup';
 import useSofrRate from './hooks/useSofrRate';
+import { sofrMoveSinceLastSession } from './utils/sofrAlert';
 import { useIdleTimeout } from './hooks/useIdleTimeout';
 import { isDemoMode } from './lib/demoMode';
 import DemoBanner from './components/DemoBanner';
@@ -41,7 +42,7 @@ import ScreeningCriteria from './components/ScreeningCriteria';
 import { DEFAULT_CRITERIA, dscrFloorFor, evaluateScreening, validateCriteria } from './lib/screeningCriteria';
 import { validateWeights } from './lib/scoringWeights';
 import { computeDealMetrics } from './utils/dealMetrics';
-import { applyStatementBuild, statementState, pendingJudgments, withRulesSnapshot } from './lib/statementBuild';
+import { applyStatementBuild, statementState, pendingJudgments, withRulesSnapshot, rulesOutOfDate } from './lib/statementBuild';
 import StressTestPanel from './components/StressTestPanel';
 import CashFlowStressPanel from './components/CashFlowStressPanel';
 import ExportPanel from './components/ExportPanel';
@@ -500,30 +501,23 @@ function AuthenticatedApp({ profile, user }) {
     return () => { if (draftSaveTimer.current) clearTimeout(draftSaveTimer.current); };
   }, [inputs, activeDeal, activePipelineDealId, recentDeals, activeModule, userId]);
 
-  // SOFR change notification — compare current rate against last acknowledged rate
+  // SOFR change notification. Compares the live rate with the rate seen in
+  // the previous session, then records today's rate, so the banner shows
+  // once per real move rather than on every visit. Only a FRED rate counts:
+  // the placeholder shown before the live rate loads is never stored.
   useEffect(() => {
-    if (!sofr) return;
+    if (!sofr || !String(sofrSource).startsWith('FRED')) return;
     try {
-      const stored = localStorage.getItem('efd_last_sofr');
-      if (stored !== null) {
-        const lastSofr = parseFloat(stored);
-        if (!isNaN(lastSofr) && Math.abs(sofr - lastSofr) > 0.0025) {
-          setLastAcknowledgedSofr(lastSofr);
-          setSofrAlert(true);
-        }
-      } else {
-        // First visit — seed localStorage so future sessions can compare
-        localStorage.setItem('efd_last_sofr', String(sofr));
+      const last = sofrMoveSinceLastSession(localStorage.getItem('efd_last_sofr'), sofr);
+      if (last !== null) {
+        setLastAcknowledgedSofr(last);
+        setSofrAlert(true);
       }
-    } catch { /* ignore localStorage errors */ }
-  }, [sofr]);
-
-  const dismissSofrAlert = () => {
-    setSofrAlert(false);
-    try {
       localStorage.setItem('efd_last_sofr', String(sofr));
-    } catch { /* ignore */ }
-  };
+    } catch { /* ignore localStorage errors */ }
+  }, [sofr, sofrSource]);
+
+  const dismissSofrAlert = () => setSofrAlert(false);
 
   const valid = mod.isInputValid(inputs);
   const partialValid = (inputs.annualRevenue || 0) > 0 && (inputs.ebitda || 0) > 0;
@@ -543,9 +537,14 @@ function AuthenticatedApp({ profile, user }) {
     () => pendingJudgments(statementState(inputs, orgSettings.treatmentRules)),
     [inputs, orgSettings],
   );
-  const saveBlockedNote = judgmentsPending > 0
-    ? `${judgmentsPending} judgment${judgmentsPending === 1 ? '' : 's'} to confirm in Financial statements before saving.`
-    : null;
+  // A new deal is built under the firm's rules today. One that carries an
+  // older copy (a loaded draft, a copied deal) is rebuilt first.
+  const staleRulesOnNewDeal = !activePipelineDealId && rulesOutOfDate(inputs, orgSettings.treatmentRules);
+  const saveBlockedNote = staleRulesOnNewDeal
+    ? 'Built under older firm rules. Rebuild with current firm rules in Financial statements before saving.'
+    : judgmentsPending > 0
+      ? `${judgmentsPending} judgment${judgmentsPending === 1 ? '' : 's'} to confirm in Financial statements before saving.`
+      : null;
 
   // Dynamic module calculations, at the live rate and under the firm's
   // spreads. Shared with the pipeline drawer through utils/dealMetrics, which
@@ -1029,7 +1028,7 @@ function AuthenticatedApp({ profile, user }) {
                         if (toSave !== inputs) setInputs(toSave);
                         const { error } = await updatePipelineDeal(activePipelineDealId, toSave, riskScore.composite);
                         if (error) {
-                          addToast('Failed to update deal', 'error');
+                          addToast(error.message || 'Failed to update deal', 'error');
                         } else {
                           addToast('Pipeline deal updated', 'success');
                           setPipelineDealsList((prev) =>
@@ -1067,7 +1066,7 @@ function AuthenticatedApp({ profile, user }) {
                         );
                         setSavingToPipeline(false);
                         if (error) {
-                          addToast('Failed to save to pipeline.', 'error');
+                          addToast(error.message || 'Failed to save to pipeline.', 'error');
                         } else if (data) {
                           addToast(`Saved "${dealName}" to pipeline`, 'success');
                           setPipelineDealsList((prev) => [data, ...prev]);

@@ -13,7 +13,7 @@
 // Design: EBITDA_Build_Design.md, "Step 3 form design".
 // ============================================================
 
-import { buildBorrowerInputs, validateTreatmentRules, setTreatmentOverride, allJudgmentsConfirmed } from './borrowerBuild';
+import { buildBorrowerInputs, validateTreatmentRules, setTreatmentOverride, allJudgmentsConfirmed, TREATMENT_ROWS } from './borrowerBuild';
 import type { BorrowerFinancials, BuildResult, BuiltField, TreatmentRules, TreatmentRow } from './borrowerBuild';
 
 export interface FieldOverride {
@@ -33,6 +33,19 @@ export interface StatementFinancials extends BorrowerFinancials {
    * keeps the rules it was built with, even after the firm changes them.
    */
   firmRules?: TreatmentRules;
+  /** The last time the deal was moved onto newer firm rules. Shown in the memo. */
+  rulesRebuilt?: RulesRebuild;
+}
+
+export interface RulesRebuild {
+  at: string;
+  by?: string;
+  /** True when an admin rebuilt it with the firm's other open deals. */
+  bulk?: boolean;
+  from: TreatmentRules;
+  to: TreatmentRules;
+  /** Rules that differ between from and to, gap tolerance included. */
+  changed: (TreatmentRow | 'ebitdaGapTolerance')[];
 }
 
 export const BUILT_FIELDS: BuiltField[] = [
@@ -126,6 +139,59 @@ export function withRulesSnapshot<T extends Inputs>(inputs: T, rules: unknown): 
   return { ...inputs, financials: { ...f, firmRules: validateTreatmentRules(rules) } };
 }
 
+/** Which rules differ between two sets, gap tolerance included. */
+export function changedRules(from: unknown, to: unknown): RulesRebuild['changed'] {
+  const a = validateTreatmentRules(from);
+  const b = validateTreatmentRules(to);
+  const rows: RulesRebuild['changed'] = TREATMENT_ROWS.filter((row) => a[row] !== b[row]);
+  if (a.ebitdaGapTolerance !== b.ebitdaGapTolerance) rows.push('ebitdaGapTolerance');
+  return rows;
+}
+
+/** True when the deal's saved rules differ from the firm's rules today. */
+export function rulesOutOfDate(inputs: Inputs | null | undefined, rules: unknown): boolean {
+  const saved = inputs?.financials?.firmRules;
+  return !!saved && changedRules(saved, rules).length > 0;
+}
+
+/**
+ * Move a deal onto the firm's current rules. A treatment row whose rule
+ * changed goes back to pending, so the analyst confirms it under the new
+ * rule. A row the deal overrides is left alone: the firm rule never applied
+ * to it. In a bulk rebuild the admin's action is the confirmation, so the
+ * changed rows are confirmed in the admin's name instead.
+ * Returns the same object when the rules have not changed.
+ */
+export function rebuildWithCurrentRules<T extends Inputs>(
+  inputs: T,
+  rules: unknown,
+  opts: { by?: string; at?: string; bulk?: boolean } = {},
+): { inputs: T; changed: RulesRebuild['changed'] } {
+  const f = inputs.financials;
+  if (!f) return { inputs, changed: [] };
+  const from = firmRulesFor(inputs, rules);
+  const to = validateTreatmentRules(rules);
+  const changed = changedRules(from, to);
+  if (!changed.length) return { inputs, changed };
+  const at = opts.at || new Date().toISOString();
+  const judgments = { ...(f.judgments || {}) };
+  const overrides = f.treatmentOverrides || {};
+  const rows = (changed.filter((c) => c !== 'ebitdaGapTolerance') as TreatmentRow[]).filter((row) => !overrides[row]);
+  rows.forEach((row) => { delete judgments[`treatment.${row}`]; });
+  if (opts.bulk) {
+    // Confirm the rows the build asks about under the new rules. That
+    // includes a row the new rule brings in (operating leases "in" with no
+    // rent line), and skips an item the borrower does not have.
+    const asked = buildBorrowerInputs({ ...f, judgments }, to).judgments;
+    rows.forEach((row) => {
+      const id = `treatment.${row}`;
+      if (asked.some((j) => j.id === id)) judgments[id] = { proposed: to[row], confirmed: to[row], by: opts.by, at };
+    });
+  }
+  const rulesRebuilt: RulesRebuild = { at, by: opts.by, from, to, changed, ...(opts.bulk ? { bulk: true } : {}) };
+  return { inputs: { ...inputs, financials: { ...f, firmRules: to, judgments, rulesRebuilt } }, changed };
+}
+
 /**
  * Write the built values into the flat fields. Returns the same object when
  * nothing changes, so it is safe to run on every inputs change.
@@ -205,16 +271,60 @@ function overrideChanges(prev: StatementFinancials | null | undefined, next: Sta
  * Every judgment has to be confirmed, and each override that is new since
  * the last save is returned for its own audit entry.
  */
+export interface PreparedSave<T> {
+  inputs: T;
+  pending: number;
+  overrides: OverrideChange[];
+  /** Set when the rules on the deal are neither its saved rules nor the firm's current ones. */
+  rulesError: string | null;
+  /** Set when the deal moved onto the firm's current rules in this save. */
+  rulesChange: RulesRebuild | null;
+}
+
+const RULES_ERROR = "The treatment rules on this deal are not your firm's rules. Rebuild with current firm rules, then save.";
+
 export function prepareForSave<T extends Inputs>(
   inputs: T,
   orgRules: unknown,
   previous?: Inputs | null,
-): { inputs: T; pending: number; overrides: OverrideChange[] } {
+  opts: { at?: string; by?: string; bulk?: boolean } = {},
+): PreparedSave<T> {
   if (!inputs?.financials) {
-    return { inputs, pending: 0, overrides: overrideChanges(previous?.financials, null) };
+    return { inputs, pending: 0, overrides: overrideChanges(previous?.financials, null), rulesError: null, rulesChange: null };
   }
-  const withRules = withRulesSnapshot(inputs, orgRules);
-  const built = applyStatementBuild(withRules, orgRules);
-  const pending = pendingJudgments(statementState(built, orgRules));
-  return { inputs: built, pending, overrides: overrideChanges(previous?.financials, built.financials) };
+  // The rules a deal builds under are never the client's to choose. They
+  // are the rules it was saved with, or the firm's rules today.
+  const current = validateTreatmentRules(orgRules);
+  const prevRules = previous?.financials?.firmRules ? validateTreatmentRules(previous.financials.firmRules) : null;
+  const sent = inputs.financials.firmRules ? validateTreatmentRules(inputs.financials.firmRules) : null;
+  const same = (a: unknown, b: unknown) => changedRules(a, b).length === 0;
+  let rules: TreatmentRules;
+  if (!sent) rules = prevRules || current;
+  else if (prevRules && same(sent, prevRules)) rules = prevRules;
+  else if (same(sent, current)) rules = current;
+  else return { inputs, pending: 0, overrides: [], rulesError: RULES_ERROR, rulesChange: null };
+
+  // The rebuild record is stamped here, not taken from the client. On a
+  // per-deal save the name comes from the client, as with judgments. A bulk
+  // rebuild passes the admin's name from the server.
+  let rulesChange: RulesRebuild | null = null;
+  let rulesRebuilt = previous?.financials?.rulesRebuilt;
+  if (prevRules && !same(prevRules, rules)) {
+    rulesChange = {
+      at: opts.at || new Date().toISOString(),
+      by: opts.bulk ? opts.by : inputs.financials.rulesRebuilt?.by,
+      ...(opts.bulk ? { bulk: true } : {}),
+      from: prevRules,
+      to: rules,
+      changed: changedRules(prevRules, rules),
+    };
+    rulesRebuilt = rulesChange;
+  }
+  const financials: StatementFinancials = { ...inputs.financials, firmRules: rules };
+  if (rulesRebuilt) financials.rulesRebuilt = rulesRebuilt;
+  else delete financials.rulesRebuilt;
+
+  const built = applyStatementBuild({ ...inputs, financials }, rules);
+  const pending = pendingJudgments(statementState(built, rules));
+  return { inputs: built, pending, overrides: overrideChanges(previous?.financials, built.financials), rulesError: null, rulesChange };
 }

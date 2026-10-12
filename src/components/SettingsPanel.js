@@ -160,6 +160,15 @@ export default function SettingsPanel({ isOpen, onClose, onCriteriaChange, activ
     return true;
   }, [orgId, userId, saveToOrg, addToast]);
 
+  const previewRulesRebuild = useCallback(async () => {
+    const { rebuildDealsWithFirmRules } = await import('../lib/pipeline');
+    return rebuildDealsWithFirmRules(true);
+  }, []);
+  const runRulesRebuild = useCallback(async () => {
+    const { rebuildDealsWithFirmRules } = await import('../lib/pipeline');
+    return rebuildDealsWithFirmRules(false);
+  }, []);
+
   const saveCriteria = useCallback(async (newCriteria) => {
     setCriteria(newCriteria);
     if (onCriteriaChange) onCriteriaChange(newCriteria);
@@ -388,6 +397,9 @@ export default function SettingsPanel({ isOpen, onClose, onCriteriaChange, activ
                     rules={(isAdmin ? orgSettings : profile?.organizations?.org_settings)?.treatmentRules}
                     editable={isAdmin}
                     onSave={saveTreatmentRules}
+                    // The server allows the bulk rebuild for the admin role only.
+                    onPreviewRebuild={profile?.role === 'admin' ? previewRulesRebuild : undefined}
+                    onRebuild={profile?.role === 'admin' ? runRulesRebuild : undefined}
                   />
                   {isAdmin && (
                     <div>

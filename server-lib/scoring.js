@@ -42,8 +42,33 @@ async function prepareStatementInputs(inputs, orgRules, previous) {
     return { ...r, error: null };
   } catch (err) {
     console.error('[scoring] prepareStatementInputs error:', err);
-    return { inputs, pending: 0, overrides: [], error: 'Statement build failed' };
+    return { inputs, pending: 0, overrides: [], rulesError: null, rulesChange: null, error: 'Statement build failed' };
   }
+}
+
+/**
+ * Bulk rebuild of one deal onto the firm's current rules. The admin's action
+ * confirms the changed treatment rows. Returns the prepared inputs (as a
+ * save would store them), the rules that changed, and pending judgments.
+ */
+async function rebuildDealRules(inputs, orgRules, adminName, at) {
+  try {
+    const { rebuildWithCurrentRules, prepareForSave } = await loadStatements();
+    const { inputs: rebuilt, changed } = rebuildWithCurrentRules(inputs, orgRules, { by: adminName, at, bulk: true });
+    if (!changed.length) return { inputs, changed, pending: 0, rulesChange: null, error: null };
+    const r = prepareForSave(rebuilt, orgRules, inputs, { at, by: adminName, bulk: true });
+    if (r.rulesError) return { inputs, changed, pending: 0, rulesChange: null, error: r.rulesError };
+    return { inputs: r.inputs, changed, pending: r.pending, rulesChange: r.rulesChange, error: null };
+  } catch (err) {
+    console.error('[scoring] rebuildDealRules error:', err);
+    return { inputs, changed: [], pending: 0, rulesChange: null, error: 'Statement build failed' };
+  }
+}
+
+/** True when the deal's saved firm rules differ from the firm's rules today. */
+async function dealRulesOutOfDate(inputs, orgRules) {
+  const { rulesOutOfDate } = await loadStatements();
+  return rulesOutOfDate(inputs, orgRules);
 }
 
 async function recomputeScore(assetClass, inputs) {
@@ -81,4 +106,4 @@ async function recomputeScore(assetClass, inputs) {
   }
 }
 
-module.exports = { recomputeScore, prepareStatementInputs, VALID_ASSET_CLASSES };
+module.exports = { recomputeScore, prepareStatementInputs, rebuildDealRules, dealRulesOutOfDate, VALID_ASSET_CLASSES };

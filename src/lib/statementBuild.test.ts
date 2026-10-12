@@ -217,3 +217,143 @@ describe('prepareForSave (the server rerun)', () => {
     expect(prepareForSave(cleared, undefined, first.inputs).overrides).toEqual([{ kind: 'field', key: 'ebitda', removed: true }]);
   });
 });
+
+describe('rebuild with current firm rules', () => {
+  const { confirmJudgment, pendingJudgments, setDealTreatment, withRulesSnapshot, rebuildWithCurrentRules, rulesOutOfDate, prepareForSave } = require('./statementBuild');
+  const AT = '2026-10-09T12:00:00Z';
+  // Dealer with floorplan and finance leases, saved under floorplan "out",
+  // every judgment confirmed.
+  const dealer = {
+    ...incomeOnly,
+    financials: {
+      ...incomeOnly.financials,
+      lineItems: {
+        ...incomeOnly.financials.lineItems,
+        floorplanInterest: li(2 * M), floorplanPayable: li(30 * M), financeLeaseLiabilities: li(4 * M),
+      },
+    },
+  };
+  const confirmAll = (inputs: any, rules: any) => {
+    let next = inputs;
+    statementState(next, rules).build!.judgments.forEach((j) => { next = confirmJudgment(next, j.id, j.value, j.proposed, 'Analyst', AT); });
+    return next;
+  };
+  const saved = confirmAll(withRulesSnapshot(dealer, { floorplan: 'out' }), undefined);
+  const newRules = { floorplan: 'in' };
+
+  test('a saved, fully confirmed deal starts with nothing pending', () => {
+    expect(pendingJudgments(statementState(saved, newRules))).toBe(0);
+    expect(rulesOutOfDate(saved, newRules)).toBe(true);
+    expect(rulesOutOfDate(saved, { floorplan: 'out' })).toBe(false);
+  });
+
+  test('a confirmation given under an older rule is stale, never confirmed', () => {
+    // The deal's confirmation says "out". Swap the snapshot to "in" by hand:
+    // the applied rule is "in", so the row must be pending again.
+    const swapped = { ...saved, financials: { ...saved.financials, firmRules: { ...saved.financials.firmRules, floorplan: 'in' } } };
+    const j = statementState(swapped, undefined).build!.judgments.find((x) => x.id === 'treatment.floorplan')!;
+    expect(j.confirmed).toBe(false);
+    expect(j.value).toBe('in');
+  });
+
+  test('per deal: changed rows go back to pending, the rest stay confirmed', () => {
+    const { inputs, changed } = rebuildWithCurrentRules(saved, newRules, { by: 'Analyst', at: AT });
+    expect(changed).toEqual(['floorplan']);
+    expect(inputs.financials.firmRules.floorplan).toBe('in');
+    expect(inputs.financials.judgments['treatment.floorplan']).toBeUndefined();
+    expect(inputs.financials.judgments['treatment.financeLeases']).toBeDefined();
+    const state = statementState(inputs, newRules);
+    expect(pendingJudgments(state)).toBe(1);
+    expect(state.build!.treatment.floorplan).toBe('in');
+    // Floorplan "in": interest stays in, so EBITDA is 10 + 5 = 15, not 13.
+    expect(state.build!.inputs.ebitda).toBe(15 * M);
+    expect(inputs.financials.rulesRebuilt).toEqual({
+      at: AT, by: 'Analyst', from: expect.objectContaining({ floorplan: 'out' }), to: expect.objectContaining({ floorplan: 'in' }), changed: ['floorplan'],
+    });
+  });
+
+  test('bulk: the admin confirms the changed rows, nothing left pending', () => {
+    const { inputs } = rebuildWithCurrentRules(saved, newRules, { by: 'Admin', at: AT, bulk: true });
+    expect(inputs.financials.judgments['treatment.floorplan']).toEqual({ proposed: 'in', confirmed: 'in', by: 'Admin', at: AT });
+    expect(pendingJudgments(statementState(inputs, newRules))).toBe(0);
+    expect(inputs.financials.rulesRebuilt.bulk).toBe(true);
+  });
+
+  test('bulk: a row the new rule brings in is confirmed too; an absent item is not', () => {
+    const { inputs } = rebuildWithCurrentRules(saved, { floorplan: 'out', operatingLeases: 'in', captiveFleet: 'consolidated' }, { by: 'Admin', at: AT, bulk: true });
+    // No rent line, but operating leases "in" asks the question.
+    expect(inputs.financials.judgments['treatment.operatingLeases']).toEqual({ proposed: 'in', confirmed: 'in', by: 'Admin', at: AT });
+    // No captive fleet on this borrower: nothing to confirm.
+    expect(inputs.financials.judgments['treatment.captiveFleet']).toBeUndefined();
+    const state = statementState(inputs, undefined);
+    expect(state.build!.judgments.filter((j) => j.id.startsWith('treatment.') && !j.confirmed)).toEqual([]);
+  });
+
+  test('a row the deal overrides is left alone', () => {
+    const over = confirmAll(setDealTreatment(saved, 'floorplan', 'in', 'Credit agreement', undefined, 'Analyst').inputs, undefined);
+    const { inputs, changed } = rebuildWithCurrentRules(over, newRules, { by: 'Analyst', at: AT });
+    expect(changed).toEqual(['floorplan']);
+    // The override stays, with its reason. Nothing to re-confirm.
+    expect(inputs.financials.treatmentOverrides.floorplan.reason).toBe('Credit agreement');
+    expect(pendingJudgments(statementState(inputs, newRules))).toBe(0);
+  });
+
+  test('a gap tolerance change alone changes no judgment', () => {
+    const { inputs, changed } = rebuildWithCurrentRules(saved, { floorplan: 'out', ebitdaGapTolerance: 0.1 }, { at: AT });
+    expect(changed).toEqual(['ebitdaGapTolerance']);
+    expect(inputs.financials.firmRules.ebitdaGapTolerance).toBe(0.1);
+    expect(pendingJudgments(statementState(inputs, undefined))).toBe(0);
+  });
+
+  test('rules unchanged: same object back', () => {
+    expect(rebuildWithCurrentRules(saved, { floorplan: 'out' }).inputs).toBe(saved);
+  });
+
+  describe('server check on save', () => {
+    const previous = saved;
+
+    test('keeps the saved rules when the client sends them', () => {
+      const r = prepareForSave(saved, newRules, previous);
+      expect(r.rulesError).toBeNull();
+      expect(r.rulesChange).toBeNull();
+      expect(r.inputs.financials.firmRules.floorplan).toBe('out');
+    });
+
+    test('a client that drops the rules does not get moved onto new ones', () => {
+      const dropped = { ...saved, financials: { ...saved.financials } };
+      delete dropped.financials.firmRules;
+      expect(prepareForSave(dropped, newRules, previous).inputs.financials.firmRules.floorplan).toBe('out');
+    });
+
+    test('refuses rules that are neither the saved ones nor the firm\'s', () => {
+      const forged = { ...saved, financials: { ...saved.financials, firmRules: { ...saved.financials.firmRules, financeLeases: 'out' } } };
+      expect(prepareForSave(forged, newRules, previous).rulesError).toMatch(/Rebuild with current firm rules/);
+    });
+
+    test('a first save must use the firm\'s current rules', () => {
+      expect(prepareForSave(saved, newRules, null).rulesError).toMatch(/not your firm's rules/);
+    });
+
+    test('a rebuild is accepted, and the server stamps the record', () => {
+      const rebuilt = confirmAll(rebuildWithCurrentRules(saved, newRules, { by: 'Analyst', at: '1999-01-01T00:00:00Z' }).inputs, newRules);
+      const r = prepareForSave(rebuilt, newRules, previous, { at: AT });
+      expect(r.rulesError).toBeNull();
+      expect(r.pending).toBe(0);
+      expect(r.rulesChange).toMatchObject({ at: AT, by: 'Analyst', changed: ['floorplan'] });
+      expect(r.inputs.financials.rulesRebuilt.at).toBe(AT);
+      expect(r.inputs.ebitda).toBe(15 * M);
+    });
+
+    test('a client cannot invent a rebuild record', () => {
+      const fake = { ...saved, financials: { ...saved.financials, rulesRebuilt: { at: AT, by: 'Someone', bulk: true } } };
+      expect(prepareForSave(fake, newRules, previous).inputs.financials.rulesRebuilt).toBeUndefined();
+    });
+
+    test('bulk: the server names the admin and marks it bulk', () => {
+      const rebuilt = rebuildWithCurrentRules(saved, newRules, { by: 'ignored', at: AT, bulk: true }).inputs;
+      const r = prepareForSave(rebuilt, newRules, previous, { at: AT, by: 'Admin', bulk: true });
+      expect(r.rulesChange).toMatchObject({ by: 'Admin', bulk: true });
+      expect(r.pending).toBe(0);
+    });
+  });
+});

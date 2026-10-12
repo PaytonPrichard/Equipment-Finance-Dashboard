@@ -6,7 +6,7 @@
 // Empty for a deal without statements.
 
 import { statementState, BUILT_FIELDS } from '../lib/statementBuild';
-import { BUILT_FIELD_LABELS, TREATMENT_COPY, money, formulaWithValues } from './statementFormat';
+import { BUILT_FIELD_LABELS, TREATMENT_COPY, money, formulaWithValues, describeRuleChanges } from './statementFormat';
 
 function esc(str) {
   if (str === null || str === undefined) return '';
@@ -65,6 +65,17 @@ export function buildStatementsMemoHtml(inputs, treatmentRules) {
 
   const notes = [...build.caveats.filter((c) => !c.startsWith('Proposed, not confirmed')), ...state.pairingCaveats];
 
+  // Committee sees when the deal moved onto newer firm rules, and whether
+  // that was the analyst on this deal or an admin across the open deals.
+  const rr = f.rulesRebuilt;
+  const rebuildLine = rr ? (() => {
+    const date = String(rr.at || '').slice(0, 10);
+    const who = rr.by ? ` by ${esc(rr.by)}` : '';
+    const how = rr.bulk ? ", with the firm's open deals" : '';
+    const what = describeRuleChanges(rr.from, rr.to, rr.changed).map(esc).join('. ');
+    return `<div style="font-size:11.5px;color:#334155;margin-top:4px">Rebuilt with firm rules on ${esc(date)}${who}${how}.${what ? ` ${what}.` : ''}</div>`;
+  })() : '';
+
   return `<div class="section">
     <div class="section-title">How the Numbers Were Built</div>
     <div style="font-size:12px;color:#334155;margin-bottom:6px">
@@ -72,6 +83,7 @@ export function buildStatementsMemoHtml(inputs, treatmentRules) {
     </div>
     <table><tbody>${rows}</tbody></table>
     ${treatments ? `<div style="font-size:12px;color:#1f2937;margin-top:8px"><strong>Treatment</strong></div><ul style="margin:2px 0 0;padding-left:18px;font-size:11.5px;color:#334155">${treatments}</ul>` : ''}
+    ${rebuildLine}
     ${addBackHtml}
     ${comparisons ? `<ul style="margin:6px 0 0;padding-left:18px;font-size:11.5px;color:#334155">${comparisons}</ul>` : ''}
     ${notes.length ? `<div style="font-size:12px;color:#1f2937;margin-top:8px"><strong>Notes</strong></div><ul style="margin:2px 0 0;padding-left:18px;font-size:11.5px;color:#475569">${notes.map((n) => `<li>${esc(n)}</li>`).join('')}</ul>` : ''}

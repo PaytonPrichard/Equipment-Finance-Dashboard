@@ -259,9 +259,9 @@ export function buildBorrowerInputs(
   });
 
   /** Register a judgment and return the value the build uses. */
-  function judge<T>(id: string, label: string, proposed: T, options: T[], describe: (v: T) => string): T {
+  function judge<T>(id: string, label: string, proposed: T, options: T[], describe: (v: T) => string, accept: (v: T) => boolean = () => true): T {
     const s = stored[id];
-    const isConfirmed = s?.confirmed !== undefined && s?.confirmed !== null && options.includes(s.confirmed as T);
+    const isConfirmed = s?.confirmed !== undefined && s?.confirmed !== null && options.includes(s.confirmed as T) && accept(s.confirmed as T);
     const value = isConfirmed ? (s!.confirmed as T) : proposed;
     judgments.push({ id, label, proposed, value, options, confirmed: isConfirmed });
     if (!isConfirmed) caveats.push(`Proposed, not confirmed: ${describe(value)}.`);
@@ -310,7 +310,10 @@ export function buildBorrowerInputs(
       judgments.push({ id: `treatment.${row}`, label, proposed: firm[row], value: o.rule, options, confirmed: true });
       return;
     }
-    judge(`treatment.${row}`, label, firm[row] as string, options, (v) => `${label.toLowerCase()} treated as "${v}", the firm default`);
+    // A confirmation counts only for the rule that applies now. One given
+    // under an older firm rule is stale: the row goes back to pending.
+    judge(`treatment.${row}`, label, firm[row] as string, options, (v) => `${label.toLowerCase()} treated as "${v}", the firm default`,
+      (v) => v === firm[row]);
   };
   if (floorplanPresent) treatmentJudgment('floorplan', 'Floorplan treatment', ['out', 'in']);
   if (fleetPresent) treatmentJudgment('captiveFleet', 'Captive fleet treatment', ['corporate', 'consolidated']);
