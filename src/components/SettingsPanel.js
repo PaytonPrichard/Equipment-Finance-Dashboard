@@ -525,7 +525,7 @@ export default function SettingsPanel({ isOpen, onClose, onCriteriaChange, activ
 }
 
 // ── Integrations Section (API Keys + Webhooks) ──────────────
-function IntegrationsSection({ addToast }) {
+export function IntegrationsSection({ addToast }) {
   const confirm = useConfirm();
   const { session } = useAuth();
   const [apiKeys, setApiKeys] = useState([]);
@@ -567,8 +567,23 @@ function IntegrationsSection({ addToast }) {
       danger: true,
     });
     if (!ok) return;
-    const res = await fetch(`/api/v1?resource=keys&id=${id}`, { method: 'DELETE', headers: getAuthHeaders() });
-    if (res.ok) { setApiKeys(prev => prev.map(k => k.id === id ? { ...k, revoked_at: new Date().toISOString() } : k)); addToast('Key revoked', 'success'); }
+    // Show it revoked on the click. The server call takes a moment (it
+    // checks the session and the admin role first), and a key that still
+    // looked live read as a revoke that had not worked. A failure puts it
+    // back and says so.
+    const before = apiKeys.find(k => k.id === id);
+    setApiKeys(prev => prev.map(k => k.id === id ? { ...k, revoked_at: new Date().toISOString() } : k));
+    let failed = false;
+    try {
+      const res = await fetch(`/api/v1?resource=keys&id=${id}`, { method: 'DELETE', headers: getAuthHeaders() });
+      failed = !res.ok;
+    } catch { failed = true; }
+    if (failed) {
+      setApiKeys(prev => prev.map(k => k.id === id ? before : k));
+      addToast('Could not revoke the key. It still works. Try again.', 'error');
+    } else {
+      addToast('Key revoked. It no longer works.', 'success');
+    }
   };
 
   const createWebhook = async () => {
@@ -591,13 +606,34 @@ function IntegrationsSection({ addToast }) {
       danger: true,
     });
     if (!ok) return;
-    const res = await fetch(`/api/v1?resource=webhooks&id=${id}`, { method: 'DELETE', headers: getAuthHeaders() });
-    if (res.ok) { setWebhooksList(prev => prev.filter(w => w.id !== id)); addToast('Webhook deleted', 'success'); }
+    // Same as revoking a key: gone on the click, back with an error if the
+    // server refuses.
+    const prevList = webhooksList;
+    setWebhooksList(prev => prev.filter(w => w.id !== id));
+    let failed = false;
+    try {
+      const res = await fetch(`/api/v1?resource=webhooks&id=${id}`, { method: 'DELETE', headers: getAuthHeaders() });
+      failed = !res.ok;
+    } catch { failed = true; }
+    if (failed) {
+      setWebhooksList(prevList);
+      addToast('Could not delete the webhook. It is still active.', 'error');
+    } else {
+      addToast('Webhook deleted', 'success');
+    }
   };
 
   const toggleWebhook = async (id, active) => {
-    const res = await fetch(`/api/v1?resource=webhooks&id=${id}`, { method: 'PATCH', headers: getAuthHeaders(), body: JSON.stringify({ active: !active }) });
-    if (res.ok) { setWebhooksList(prev => prev.map(w => w.id === id ? { ...w, active: !active } : w)); }
+    setWebhooksList(prev => prev.map(w => w.id === id ? { ...w, active: !active } : w));
+    let failed = false;
+    try {
+      const res = await fetch(`/api/v1?resource=webhooks&id=${id}`, { method: 'PATCH', headers: getAuthHeaders(), body: JSON.stringify({ active: !active }) });
+      failed = !res.ok;
+    } catch { failed = true; }
+    if (failed) {
+      setWebhooksList(prev => prev.map(w => w.id === id ? { ...w, active } : w));
+      addToast(`Could not ${active ? 'pause' : 'resume'} the webhook.`, 'error');
+    }
   };
 
   const copyText = (text) => { navigator.clipboard.writeText(text); addToast('Copied to clipboard', 'success'); };
