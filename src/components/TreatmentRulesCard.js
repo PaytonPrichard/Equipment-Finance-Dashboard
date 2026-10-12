@@ -185,10 +185,15 @@ export default function TreatmentRulesCard({ rules: savedRaw, editable, onSave, 
           <button
             onClick={save}
             disabled={!dirty || saving}
-            className="px-4 py-2 rounded-lg bg-gray-100 text-gray-900 text-[12px] font-semibold hover:bg-gray-200 transition-all disabled:opacity-50"
+            className={`px-4 py-2 rounded-lg text-[12px] font-semibold transition-all disabled:opacity-50 ${
+              dirty ? 'bg-gold-500 text-white hover:bg-gold-600' : 'bg-gray-100 text-gray-900'
+            }`}
           >
             {saving ? 'Saving...' : 'Save treatment rules'}
           </button>
+          {dirty && !saving && (
+            <span className="ml-3 text-[11px] text-amber-700">Unsaved changes. Other save buttons do not save these.</span>
+          )}
           {notice && <p role="status" className="mt-2 text-[11px] text-gray-600">{notice}</p>}
         </div>
       ) : (

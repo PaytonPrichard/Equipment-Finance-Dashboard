@@ -160,6 +160,34 @@ export default function SettingsPanel({ isOpen, onClose, onCriteriaChange, activ
     return true;
   }, [orgId, userId, saveToOrg, addToast]);
 
+  // Firm credit assumptions: same pattern as treatment rules. Re-read the
+  // stored settings and change only these keys, so this button can never
+  // write back a stale copy of the treatment rules or anything else.
+  const FIRM_ASSUMPTION_KEYS = ['baseSpreadBps', 'creditSpreadStrong', 'creditSpreadWeak', 'maxAdvanceRateAR'];
+  const [firmStatus, setFirmStatus] = useState(null); // null | 'dirty' | 'saving' | 'saved'
+  const setFirmAssumption = (key, v) => {
+    setOrgSettings((s) => ({ ...s, [key]: v }));
+    setFirmStatus('dirty');
+  };
+  const saveFirmAssumptions = useCallback(async () => {
+    if (!supabase || !orgId) return;
+    setFirmStatus('saving');
+    const { data: current, error } = await supabase.from('organizations').select('org_settings').eq('id', orgId).single();
+    if (error) {
+      addToast('Failed to save: could not read current settings', 'error');
+      setFirmStatus('dirty');
+      return;
+    }
+    const stored = current?.org_settings || {};
+    const before = Object.fromEntries(FIRM_ASSUMPTION_KEYS.map((k) => [k, stored[k] ?? null]));
+    const after = Object.fromEntries(FIRM_ASSUMPTION_KEYS.map((k) => [k, orgSettings[k] ?? null]));
+    const ok = await saveToOrg({ org_settings: { ...stored, ...after } });
+    if (!ok) { setFirmStatus('dirty'); return; }
+    logAudit(userId, orgId, 'update', 'org', orgId, before, after, { setting: 'firmAssumptions' });
+    setFirmStatus('saved');
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [orgId, userId, orgSettings, saveToOrg, addToast]);
+
   const previewRulesRebuild = useCallback(async () => {
     const { rebuildDealsWithFirmRules } = await import('../lib/pipeline');
     return rebuildDealsWithFirmRules(true);
@@ -405,14 +433,24 @@ export default function SettingsPanel({ isOpen, onClose, onCriteriaChange, activ
                     <div>
                       <h4 className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-3">Firm Credit Assumptions</h4>
                       <div className="grid grid-cols-2 gap-3 mb-3">
-                        <SettingsInput label="Base Spread" value={orgSettings.baseSpreadBps ?? 200} onChange={(v) => setOrgSettings(s => ({ ...s, baseSpreadBps: v }))} type="number" suffix="bps" hint="Default: 200" />
-                        <SettingsInput label="Strong Credit Adj" value={orgSettings.creditSpreadStrong ?? -75} onChange={(v) => setOrgSettings(s => ({ ...s, creditSpreadStrong: v }))} type="number" suffix="bps" />
-                        <SettingsInput label="Weak Credit Adj" value={orgSettings.creditSpreadWeak ?? 200} onChange={(v) => setOrgSettings(s => ({ ...s, creditSpreadWeak: v }))} type="number" suffix="bps" />
-                        <SettingsInput label="Max AR Advance" value={orgSettings.maxAdvanceRateAR ?? 85} onChange={(v) => setOrgSettings(s => ({ ...s, maxAdvanceRateAR: v }))} type="number" suffix="%" />
+                        <SettingsInput label="Base Spread" value={orgSettings.baseSpreadBps ?? 200} onChange={(v) => setFirmAssumption('baseSpreadBps', v)} type="number" suffix="bps" hint="Default: 200" />
+                        <SettingsInput label="Strong Credit Adj" value={orgSettings.creditSpreadStrong ?? -75} onChange={(v) => setFirmAssumption('creditSpreadStrong', v)} type="number" suffix="bps" />
+                        <SettingsInput label="Weak Credit Adj" value={orgSettings.creditSpreadWeak ?? 200} onChange={(v) => setFirmAssumption('creditSpreadWeak', v)} type="number" suffix="bps" />
+                        <SettingsInput label="Max AR Advance" value={orgSettings.maxAdvanceRateAR ?? 85} onChange={(v) => setFirmAssumption('maxAdvanceRateAR', v)} type="number" suffix="%" />
                       </div>
-                      <button onClick={() => saveToOrg({ org_settings: orgSettings })} className="px-4 py-2 rounded-lg bg-gray-100 text-gray-900 text-[12px] font-semibold hover:bg-gray-100 transition-all">
-                        Save Firm Assumptions
+                      <button
+                        onClick={saveFirmAssumptions}
+                        disabled={firmStatus !== 'dirty'}
+                        className={`px-4 py-2 rounded-lg text-[12px] font-semibold transition-all disabled:opacity-50 ${
+                          firmStatus === 'dirty' ? 'bg-gold-500 text-white hover:bg-gold-600' : 'bg-gray-100 text-gray-900'
+                        }`}
+                      >
+                        {firmStatus === 'saving' ? 'Saving...' : 'Save firm assumptions'}
                       </button>
+                      {firmStatus === 'dirty' && <span className="ml-3 text-[11px] text-amber-700">Unsaved changes</span>}
+                      {firmStatus === 'saved' && (
+                        <p role="status" className="mt-2 text-[11px] text-gray-600">Saved. New screens use these spreads and limits.</p>
+                      )}
                     </div>
                   )}
                 </div>

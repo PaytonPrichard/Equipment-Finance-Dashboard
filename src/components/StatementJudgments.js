@@ -46,7 +46,8 @@ function JudgmentRow({ j, start, onConfirm }) {
   return (
     <div className="flex flex-wrap items-center justify-between gap-2" data-testid={`judgment-${j.id}`}>
       <span className="text-[12px] text-gray-700">{j.label}</span>
-      <div className="flex flex-wrap items-center gap-1.5">
+      {/* ml-auto keeps the controls at the right when a long label wraps them. */}
+      <div className="ml-auto flex flex-wrap items-center justify-end gap-1.5">
         {j.options.map((opt) => (
           <Pill key={String(opt)} selected={j.value === opt} confirmed={j.confirmed} onClick={() => onConfirm(j.id, opt, j.proposed)}>
             {optionLabel(j.id, opt, start)}
@@ -79,7 +80,7 @@ function TreatmentRow({ j, firmRules, override, onConfirm, onTreatment }) {
           {copy?.label}: <span className="font-semibold text-gray-900">{copy?.options[j.value]?.label || j.value}</span>
           <span className="text-gray-400">{override ? ', overridden for this deal' : ', firm rule'}</span>
         </span>
-        <div className="flex items-center gap-2">
+        <div className="ml-auto flex items-center gap-2">
           {override ? (
             <button type="button" onClick={() => onTreatment(row, firm, '')} className="text-[11px] text-gray-500 underline">Use firm rule</button>
           ) : (

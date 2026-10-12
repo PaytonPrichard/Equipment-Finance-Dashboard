@@ -98,3 +98,15 @@ describe('TreatmentRulesCard', () => {
     });
   });
 });
+
+// Two save buttons share the Screening Policy page. A rule change saved with
+// the wrong one was lost without a word.
+test('an unsaved rule change says so until it is saved', async () => {
+  const onSave = jest.fn().mockResolvedValue(true);
+  render(<TreatmentRulesCard rules={undefined} editable onSave={onSave} />);
+  expect(screen.queryByText(/Unsaved changes/)).toBeNull();
+  fireEvent.click(screen.getAllByRole('radio').find((r) => r.name === 'treatment-floorplan' && r.value === 'in'));
+  expect(screen.getByText(/Unsaved changes. Other save buttons do not save these./)).toBeInTheDocument();
+  fireEvent.click(screen.getByText('Save treatment rules'));
+  await waitFor(() => expect(onSave).toHaveBeenCalled());
+});
