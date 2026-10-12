@@ -11,9 +11,11 @@ const { handlePreflight } = require('../server-lib/cors');
 const { checkRateLimit } = require('../server-lib/rateLimit');
 const { checkPlanStatus } = require('../server-lib/planCheck');
 const { dispatchWebhooks } = require('../server-lib/webhookDispatch');
-const { recomputeScore, prepareStatementInputs, rebuildDealRules, dealRulesOutOfDate, VALID_ASSET_CLASSES } = require('./_scoring.cjs');
+const { recomputeScore, prepareStatementInputs, rebuildDealRules, dealRulesOutOfDate, stageMovePermitted, VALID_ASSET_CLASSES } = require('./_scoring.cjs');
 const { runRulesRebuild } = require('../server-lib/rulesRebuild');
 const { validateDealInputs, validateARInputs, validateInventoryInputs } = require('../server-lib/validate');
+
+const PIPELINE_STAGES = ['Screening', 'Under Review', 'Approved', 'Funded', 'Declined'];
 
 function validateInputs(assetClass, inputs) {
   if (assetClass === 'accounts_receivable') return validateARInputs(inputs);
@@ -221,6 +223,50 @@ module.exports = async function handler(req, res) {
     ]);
 
     return res.status(201).json({ deal: data });
+  }
+
+  // ============ PATCH ?action=stage — Move a deal between stages ============
+  // Stage moves used to be written straight from the browser, so the
+  // pipeline.stage_changed webhook only fired for moves made through the
+  // public API, and the stage permissions were checked in the browser only.
+  if (req.method === 'PATCH' && req.query?.action === 'stage') {
+    const { id } = req.query || {};
+    const { stage } = req.body || {};
+    if (!id) return res.status(400).json({ error: 'id query parameter is required' });
+    if (!PIPELINE_STAGES.includes(stage)) {
+      return res.status(400).json({ error: `Invalid stage. Valid: ${PIPELINE_STAGES.join(', ')}` });
+    }
+    const { data: existing, error: fetchErr } = await supabaseAdmin
+      .from('pipeline_deals')
+      .select('id, org_id, name, stage')
+      .eq('id', id)
+      .single();
+    if (fetchErr || !existing || existing.org_id !== orgId) return res.status(404).json({ error: 'Deal not found' });
+
+    const { data: overrides } = await supabaseAdmin.from('org_permissions').select('role, permission_key, allowed').eq('org_id', orgId);
+    if (!(await stageMovePermitted(profile.role || 'analyst', overrides || [], stage))) {
+      return res.status(403).json({ error: `Your role cannot move deals to ${stage}.` });
+    }
+    if (stage === existing.stage) {
+      const { data: same } = await supabaseAdmin.from('pipeline_deals').select('*').eq('id', id).single();
+      return res.status(200).json({ deal: same });
+    }
+
+    const now = new Date().toISOString();
+    const { data: updated, error: updErr } = await supabaseAdmin
+      .from('pipeline_deals')
+      .update({ stage, updated_at: now, stage_entered_at: now })
+      .eq('id', id)
+      .eq('org_id', orgId)
+      .select()
+      .single();
+    if (updErr || !updated) {
+      console.error('[score-deal] stage update error:', updErr?.message);
+      return res.status(500).json({ error: 'Failed to move deal' });
+    }
+    await writeAuditLog({ userId: user.id, orgId, action: 'update_stage', dealId: id, oldValues: { stage: existing.stage }, newValues: { stage } });
+    await dispatchWebhooks(orgId, 'pipeline.stage_changed', { id: updated.id, name: existing.name, previous_stage: existing.stage, new_stage: stage });
+    return res.status(200).json({ deal: updated });
   }
 
   // ===================== PATCH — Re-score an existing deal =====================

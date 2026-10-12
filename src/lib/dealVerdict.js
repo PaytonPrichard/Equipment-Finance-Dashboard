@@ -15,7 +15,7 @@ import { computeDealMetrics } from '../utils/dealMetrics';
 // Returns a semantic category, never Tailwind classes. Presentation maps the
 // category in the component layer (CLAUDE.md).
 
-/** @typedef {'pass'|'flag'|'fail'|'none'} VerdictCategory */
+/** @typedef {'pass'|'flag'|'fail'|'none'|'draft'} VerdictCategory */
 
 /**
  * Score-only fallback, for a deal whose inputs cannot be evaluated.
@@ -44,6 +44,24 @@ function categoryFromScore(score) {
 export function verdictForDeal(deal, { criteria, sofr, orgSettings } = {}) {
   const score = deal?.score != null ? Math.round(deal.score) : null;
   const moduleKey = deal?.asset_class || 'equipment_finance';
+
+  // A draft (created through the API from what a CRM knows) has no score
+  // and is missing required inputs. Metrics on half the inputs would be
+  // noise, and a verdict on them would read as a real FAIL.
+  if (score === null) {
+    let complete = false;
+    try { complete = getModule(moduleKey).isInputValid(deal?.inputs || {}); } catch { /* treat as incomplete */ }
+    if (!complete) {
+      return {
+        category: 'draft',
+        label: 'DRAFT',
+        reasons: [{ level: 'info', text: 'Not scored yet. Open it in New Deal and fill in the required fields.' }],
+        gated: false,
+        metrics: null,
+        riskScore: null,
+      };
+    }
+  }
 
   let metrics = null;
   let riskScore = null;

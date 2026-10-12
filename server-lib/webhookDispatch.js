@@ -6,13 +6,45 @@ const crypto = require('crypto');
 const { supabaseAdmin } = require('./supabaseAdmin');
 
 /**
- * Sign a payload with HMAC-SHA256.
+ * Sign a delivery with HMAC-SHA256 over "<timestamp>.<raw body>".
+ *
+ * The timestamp travels in X-Tranche-Timestamp. Signing it with the body
+ * lets a receiver reject an old delivery replayed later (Stripe's scheme).
+ * Receivers should check the signature against the raw body as received,
+ * and refuse a timestamp more than five minutes old.
  */
-function signPayload(payload, secret) {
+function signPayload(rawBody, secret, timestamp) {
   return crypto
     .createHmac('sha256', secret)
-    .update(JSON.stringify(payload))
+    .update(`${timestamp}.${rawBody}`)
     .digest('hex');
+}
+
+// Webhook addresses must be https and must not name this network or a
+// private one. This blocks the obvious cases (localhost, private and
+// link-local IP literals such as the cloud metadata address). A public name
+// that resolves to a private address is not caught: admins set these, and
+// Vercel functions do not sit on a private network with anything to reach.
+function isPrivateIPv4(host) {
+  const m = host.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
+  if (!m) return false;
+  const [a, b] = [Number(m[1]), Number(m[2])];
+  return a === 0 || a === 10 || a === 127 || (a === 169 && b === 254)
+    || (a === 172 && b >= 16 && b <= 31) || (a === 192 && b === 168) || (a === 100 && b >= 64 && b <= 127);
+}
+
+/** Returns an error message, or null when the URL is acceptable. */
+function checkWebhookUrl(raw) {
+  let u;
+  try { u = new URL(raw); } catch { return 'Invalid URL format'; }
+  if (u.protocol !== 'https:') return 'Webhook URL must use https';
+  const host = u.hostname.toLowerCase();
+  if (host === 'localhost' || host.endsWith('.localhost') || host.endsWith('.local') || host.endsWith('.internal')) {
+    return 'Webhook URL must be a public address';
+  }
+  if (isPrivateIPv4(host)) return 'Webhook URL must be a public address';
+  if (host.startsWith('[')) return 'Webhook URL must use a host name, not an IPv6 address';
+  return null;
 }
 
 /**
@@ -53,10 +85,12 @@ async function dispatchWebhooks(orgId, event, payload) {
       timestamp: new Date().toISOString(),
       data: payload,
     };
+    const rawBody = JSON.stringify(body);
+    const unixTs = Math.floor(Date.now() / 1000);
 
     const results = await Promise.allSettled(
       matching.map(async (hook) => {
-        const signature = signPayload(body, hook.secret);
+        const signature = signPayload(rawBody, hook.secret, unixTs);
         let statusCode = 0;
         let errMsg = null;
 
@@ -66,9 +100,10 @@ async function dispatchWebhooks(orgId, event, payload) {
             headers: {
               'Content-Type': 'application/json',
               'X-Tranche-Signature': signature,
+              'X-Tranche-Timestamp': String(unixTs),
               'X-Tranche-Event': event,
             },
-            body: JSON.stringify(body),
+            body: rawBody,
             signal: AbortSignal.timeout(10000),
           });
           statusCode = res.status;
@@ -95,4 +130,4 @@ async function dispatchWebhooks(orgId, event, payload) {
   }
 }
 
-module.exports = { dispatchWebhooks, signPayload };
+module.exports = { dispatchWebhooks, signPayload, checkWebhookUrl };

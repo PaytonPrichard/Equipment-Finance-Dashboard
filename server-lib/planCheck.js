@@ -21,26 +21,35 @@ async function checkPlanStatus(userId) {
     return { expired: false, orgId: null }; // No org = no plan to check
   }
 
+  return checkOrgPlanStatus(profile.org_id);
+}
+
+/**
+ * Same check by organization, for callers that hold an org rather than a
+ * user (the public API authenticates a key, not a person).
+ */
+async function checkOrgPlanStatus(orgId) {
   const { data: org, error: orgError } = await supabaseAdmin
     .from('organizations')
     .select('plan, plan_expires_at')
-    .eq('id', profile.org_id)
+    .eq('id', orgId)
     .single();
 
   if (orgError || !org) {
-    return { expired: false, orgId: profile.org_id };
+    return { expired: false, orgId: orgId };
   }
 
   // Check expiry
   if (org.plan_expires_at && new Date(org.plan_expires_at) < new Date()) {
     return {
       expired: true,
-      orgId: profile.org_id,
+      orgId: orgId,
       message: `Your ${org.plan} plan has expired. Upgrade to continue saving and managing deals.`,
     };
   }
 
-  return { expired: false, orgId: profile.org_id };
+  return { expired: false, orgId };
 }
 
-module.exports = { checkPlanStatus };
+
+module.exports = { checkPlanStatus, checkOrgPlanStatus };

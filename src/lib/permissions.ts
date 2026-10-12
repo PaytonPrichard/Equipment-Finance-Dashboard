@@ -112,3 +112,17 @@ export function resolvePermissions(role: string, orgOverrides: OrgPermissionOver
 export function hasPermission(permissions: PermissionsMap | null | undefined, key: PermissionKey): boolean {
   return permissions?.[key] === true;
 }
+
+// Permission needed to move a deal into each stage. Screening has no gate.
+// Shared by the pipeline board and the server, which enforces it.
+export const STAGE_PERMISSION: Record<string, PermissionKey> = {
+  'Under Review': 'pipeline.move_review',
+  Approved: 'pipeline.move_approved',
+  Funded: 'pipeline.move_funded',
+  Declined: 'pipeline.move_declined',
+};
+
+export function canMoveToStage(permissions: PermissionsMap | null | undefined, stage: string): boolean {
+  const perm = STAGE_PERMISSION[stage];
+  return !perm || hasPermission(permissions, perm);
+}

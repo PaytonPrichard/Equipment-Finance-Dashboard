@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import { STAGE_PERMISSION } from '../lib/permissions';
 import { useAuth } from '../contexts/AuthContext';
 import { useRole } from '../hooks/useRole';
 import { useToast } from '../contexts/ToastContext';
@@ -75,6 +76,7 @@ const VERDICT_CLASSES = {
   pass: 'bg-emerald-50 text-emerald-800 border-emerald-200',
   flag: 'bg-amber-50 text-amber-800 border-amber-200',
   fail: 'bg-rose-50 text-rose-800 border-rose-200',
+  draft: 'bg-gray-50 text-gray-600 border-gray-200',
 };
 
 export default function DealPipeline({ onLoadDeal, currentInputs, currentScore, activeModule = 'equipment_finance', readOnly, criteria, sofr, orgSettings }) {
@@ -205,14 +207,8 @@ export default function DealPipeline({ onLoadDeal, currentInputs, currentScore, 
     }
   };
 
-  // Permission key for each target stage
-  const STAGE_PERMISSION = {
-    'Under Review': 'pipeline.move_review',
-    Approved: 'pipeline.move_approved',
-    Funded: 'pipeline.move_funded',
-    Declined: 'pipeline.move_declined',
-  };
-
+  // Permission key for each target stage: STAGE_PERMISSION in
+  // lib/permissions, which the server enforces too.
   const canMoveToStage = (stageName) => {
     const perm = STAGE_PERMISSION[stageName];
     return !perm || can(perm); // Screening has no gate
@@ -252,7 +248,7 @@ export default function DealPipeline({ onLoadDeal, currentInputs, currentScore, 
 
     const { error } = await updatePipelineStage(id, newStage, userId, orgId);
     if (error) {
-      addToast('Failed to move deal', 'error');
+      addToast(error.message ? `Could not move deal: ${error.message}` : 'Failed to move deal', 'error');
       setDeals((prev) =>
         prev.map((d) =>
           d.id === id ? { ...d, stage: deal.stage, updated_at: deal.updated_at } : d

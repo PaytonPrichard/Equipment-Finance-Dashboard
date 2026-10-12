@@ -106,4 +106,12 @@ async function recomputeScore(assetClass, inputs) {
   }
 }
 
-module.exports = { recomputeScore, prepareStatementInputs, rebuildDealRules, dealRulesOutOfDate, VALID_ASSET_CLASSES };
+// Stage moves: the same permission map the pipeline board uses, with the
+// firm's overrides, so the server enforces what the board shows.
+const loadPermissions = () => import('../src/lib/permissions.ts');
+async function stageMovePermitted(role, orgOverrides, stage) {
+  const { resolvePermissions, canMoveToStage } = await loadPermissions();
+  return canMoveToStage(resolvePermissions(role, orgOverrides || []), stage);
+}
+
+module.exports = { recomputeScore, prepareStatementInputs, rebuildDealRules, dealRulesOutOfDate, stageMovePermitted, VALID_ASSET_CLASSES };
