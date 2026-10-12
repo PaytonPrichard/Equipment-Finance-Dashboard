@@ -324,16 +324,20 @@ function getInputWarnings(inputs, pipelineDeals) {
 
 // ============ FIELD RENDERER ============
 
+// The wrapper div renders whether or not the field is missing. Returning the
+// bare field when it fills in changed the tree, so React remounted the input
+// and the cursor left the box on the first keystroke.
 function MissingFieldWrapper({ isMissing, label, children }) {
-  if (!isMissing) return children;
   return (
     <div className="relative">
       {children}
-      <div className="mt-1 flex items-center gap-1">
-        <span className="text-[9px] font-semibold text-amber-600 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded">
-          Missing, required for screening
-        </span>
-      </div>
+      {isMissing && (
+        <div className="mt-1 flex items-center gap-1">
+          <span className="text-[9px] font-semibold text-amber-600 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded">
+            Missing, required for screening
+          </span>
+        </div>
+      )}
     </div>
   );
 }

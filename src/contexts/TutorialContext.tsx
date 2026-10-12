@@ -55,10 +55,20 @@ export function TutorialProvider({ children, userId }: { children: React.ReactNo
       setState(cached);
       setLoaded(true);
     }
-    fetchPreferences(userId).then(({ data }) => {
-      if (data?.tutorial_state) {
-        setState(data.tutorial_state as TutorialState);
-        saveCachedState(data.tutorial_state as TutorialState);
+    fetchPreferences(userId).then(({ data, error }) => {
+      if (error) console.error('Tutorial state: could not load preferences.', error.message);
+      const server = data?.tutorial_state as TutorialState | undefined;
+      if (server) {
+        // Finishing the welcome is one-way, short of "Replay tour". A server
+        // copy that missed the write must not bring the welcome back.
+        setState((prev) => {
+          const merged: TutorialState = {
+            welcome_completed: !!(server.welcome_completed || prev.welcome_completed),
+            beacons_dismissed: Array.from(new Set([...(server.beacons_dismissed || []), ...prev.beacons_dismissed])),
+          };
+          saveCachedState(merged);
+          return merged;
+        });
       }
       setLoaded(true);
     }).catch(() => setLoaded(true));
@@ -67,7 +77,9 @@ export function TutorialProvider({ children, userId }: { children: React.ReactNo
   const persistState = useCallback((newState: TutorialState) => {
     saveCachedState(newState);
     if (userId) {
-      upsertPreferences(userId, { tutorial_state: newState }).catch(console.error);
+      upsertPreferences(userId, { tutorial_state: newState })
+        .then(({ error }) => { if (error) console.error('Tutorial state: could not save.', error.message); })
+        .catch(console.error);
     }
   }, [userId]);
 

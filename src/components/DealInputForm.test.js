@@ -327,3 +327,32 @@ describe('company EBITDA and the add-back bridge', () => {
     expect(onChange.mock.calls[0][0].financials.adjustedEbitda.addBacks[2]).toEqual({ label: '', amount: null, decision: null });
   });
 });
+
+// A required field went from "missing" (wrapped, with a badge) to filled
+// (bare) on the first keystroke. The tree changed, React remounted the input,
+// and the cursor left the box.
+test('typing the first digit of a required field keeps the same input', () => {
+  mockDemo = false;
+  const Harness = () => {
+    const [inputs, setInputs] = require('react').useState({ ...mod.INITIAL_INPUTS, annualRevenue: 0 });
+    return (
+      <TutorialProvider userId={null}>
+        <DealInputForm
+          inputs={inputs}
+          onChange={setInputs}
+          schema={mod.FORM_SCHEMA}
+          modules={getAvailableModules()}
+          activeModule="equipment_finance"
+          onModuleChange={() => {}}
+          pipelineDeals={[]}
+          sofr={0.0389}
+        />
+      </TutorialProvider>
+    );
+  };
+  render(<Harness />);
+  const before = screen.getByPlaceholderText('50,000,000');
+  fireEvent.change(before, { target: { value: '1' } });
+  const after = screen.getByPlaceholderText('50,000,000');
+  expect(after).toBe(before);
+});
