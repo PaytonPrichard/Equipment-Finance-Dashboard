@@ -8,7 +8,7 @@ import NullableNumberInput from './NullableNumberInput';
 import StatementsPanel from './StatementsPanel';
 import { formulaWithValues, describeRuleChanges } from '../utils/statementFormat';
 import { useConfirm } from '../contexts/ConfirmContext';
-import { statementState, overrideField, clearFieldOverride, clearStatements, confirmJudgment, setDealTreatment, firmRulesFor, rulesOutOfDate, changedRules, rebuildWithCurrentRules } from '../lib/statementBuild';
+import { BUILT_FIELDS, statementState, overrideField, clearFieldOverride, clearStatements, confirmJudgment, setDealTreatment, firmRulesFor, rulesOutOfDate, changedRules, rebuildWithCurrentRules } from '../lib/statementBuild';
 import { validateTreatmentRules } from '../lib/borrowerBuild';
 
 const DS_ESTIMATE_RATE = 0.08;
@@ -624,6 +624,20 @@ function renderFieldWithStatements(field, inputs, onChange, schema, pipelineDeal
   }
   const override = inputs.financials?.fieldOverrides?.[field.key];
   const el = renderField(field, inputs, onChange, schema, pipelineDeals, missingKeys);
+  // A required field the statements can build says so while it is empty.
+  // The wrapper does not depend on the value, so typing never remounts the
+  // input (see MissingFieldWrapper).
+  if (!inputs.financials && field.required && BUILT_FIELDS.includes(field.key)) {
+    const v = inputs[field.key];
+    return (
+      <div>
+        {el}
+        {(v === undefined || v === null || v === '' || v === 0) && (
+          <p className="text-[10px] text-gray-400 mt-1 pl-1">Type it, or build it from statements above.</p>
+        )}
+      </div>
+    );
+  }
   if (!override) return el;
   return (
     <div>

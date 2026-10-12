@@ -419,3 +419,22 @@ test('a missing badge waits until the analyst leaves the field empty', () => {
   fireEvent.blur(screen.getByPlaceholderText('50,000,000'));
   expect(screen.getAllByText('Missing, required for screening')).toHaveLength(1);
 });
+
+test('an empty EBITDA says it can be built from statements, and the hint goes once typed', () => {
+  mockDemo = false;
+  const Harness = () => {
+    const [inputs, setInputs] = require('react').useState({ ...mod.INITIAL_INPUTS, ebitda: 0 });
+    return (
+      <TutorialProvider userId={null}>
+        <DealInputForm inputs={inputs} onChange={setInputs} schema={mod.FORM_SCHEMA} modules={getAvailableModules()}
+          activeModule="equipment_finance" onModuleChange={() => {}} pipelineDeals={[]} sofr={0.0389} />
+      </TutorialProvider>
+    );
+  };
+  render(<Harness />);
+  const ebitda = screen.getByPlaceholderText('8,000,000');
+  expect(ebitda.parentElement.closest('[data-field="ebitda"]')).toHaveTextContent('Type it, or build it from statements above.');
+  fireEvent.change(ebitda, { target: { value: '5' } });
+  expect(screen.getByPlaceholderText('8,000,000')).toBe(ebitda);
+  expect(ebitda.closest('[data-field="ebitda"]')).not.toHaveTextContent('build it from statements');
+});
