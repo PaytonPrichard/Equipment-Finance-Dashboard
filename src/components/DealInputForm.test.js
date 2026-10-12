@@ -157,6 +157,18 @@ describe('fields built from statements', () => {
     expect(onChange.mock.calls[0][0].financials).toEqual({ fiscalYearEnd: '', lineItems: {} });
   });
 
+  test('Add statements also opens the full view', () => {
+    const onOpen = jest.fn();
+    render(
+      <TutorialProvider userId={null}>
+      <DealInputForm inputs={mod.INITIAL_INPUTS} onChange={() => {}} schema={mod.FORM_SCHEMA} modules={getAvailableModules()}
+        activeModule="equipment_finance" onModuleChange={() => {}} pipelineDeals={[]} sofr={0.0389} onOpenStatements={onOpen} />
+      </TutorialProvider>,
+    );
+    fireEvent.click(screen.getByText('Add statements'));
+    expect(onOpen).toHaveBeenCalled();
+  });
+
   test('built fields show the value, a Built badge and the formula with its source', () => {
     setup(withStatements);
     expect(screen.getAllByTestId('built-badge').length).toBe(3);   // revenue, EBITDA, maintenance capex
@@ -176,161 +188,19 @@ describe('fields built from statements', () => {
     expect(next.financials.fieldOverrides.ebitda).toMatchObject({ reason: 'Run-rate after closure', by: 'J. Peter' });
   });
 
-  test('typing a line item updates the statements', () => {
-    const { onChange } = setup(withStatements);
-    fireEvent.change(screen.getByLabelText('Cash interest paid'), { target: { value: '2000000' } });
-    expect(onChange.mock.calls[0][0].financials.lineItems.interestPaid).toEqual({ value: 2 * M, origin: 'typed' });
-  });
-});
-
-describe('judgments on the statement build', () => {
-  const M = 1_000_000;
-  const dealer = {
-    ...mod.INITIAL_INPUTS,
-    financials: {
-      fiscalYearEnd: '2025-12-31',
-      lineItems: {
-        revenue: { value: 100 * M },
-        operatingIncome: { value: 10 * M },
-        depreciationAmortization: { value: 5 * M },
-        floorplanInterest: { value: 2 * M },
-        floorplanPayable: { value: 30 * M },
-      },
-    },
-  };
-  function setup(inputs) {
-    const onChange = jest.fn();
+  test('Borrower Profile shows one line on the statements and opens the full view', () => {
+    const onOpen = jest.fn();
     render(
       <TutorialProvider userId={null}>
-      <DealInputForm inputs={inputs} onChange={onChange} schema={mod.FORM_SCHEMA} modules={getAvailableModules()}
-        activeModule="equipment_finance" onModuleChange={() => {}} pipelineDeals={[]} sofr={0.0389} analystName="J. Peter" />
+      <DealInputForm inputs={withStatements} onChange={() => {}} schema={mod.FORM_SCHEMA} modules={getAvailableModules()}
+        activeModule="equipment_finance" onModuleChange={() => {}} pipelineDeals={[]} sofr={0.0389} onOpenStatements={onOpen} />
       </TutorialProvider>,
     );
-    return { onChange };
-  }
-  const row = (id) => within(screen.getByTestId(`judgment-${id}`));
-
-  test('lists proposals, none confirmed yet', () => {
-    setup(dealer);
-    expect(screen.getByText(/^0 of \d+ confirmed$/)).toBeInTheDocument();
-    expect(screen.getByTestId('judgment-floorplanPresent')).toHaveTextContent('Floorplan financing present');
-  });
-
-  test('Confirm accepts the proposal, with who', () => {
-    const { onChange } = setup(dealer);
-    fireEvent.click(row('fiscalYear').getByRole('button', { name: 'Confirm' }));
-    expect(onChange.mock.calls[0][0].financials.judgments.fiscalYear).toMatchObject({ confirmed: '2025-12-31', by: 'J. Peter' });
-  });
-
-  test('picking another option confirms that one', () => {
-    const { onChange } = setup(dealer);
-    fireEvent.click(row('floorplanInterestPlacement').getByRole('button', { name: 'Inside operating expenses' }));
-    expect(onChange.mock.calls[0][0].financials.judgments.floorplanInterestPlacement.confirmed).toBe('operatingExpenses');
-  });
-
-  test('a treatment override needs a reason and is recorded', () => {
-    const { onChange } = setup(dealer);
-    fireEvent.click(screen.getByText('Override for this deal'));
-    fireEvent.change(screen.getByLabelText('Reason to override Floorplan (dealers)'), { target: { value: 'Credit agreement counts it as debt' } });
-    fireEvent.click(row('treatment.floorplan').getByRole('button', { name: 'Override' }));
-    expect(onChange.mock.calls[0][0].financials.treatmentOverrides.floorplan).toMatchObject({ rule: 'in', reason: 'Credit agreement counts it as debt', by: 'J. Peter' });
-  });
-
-  describe('firm rules changed since the deal was saved', () => {
-    const saved = {
-      ...dealer,
-      financials: {
-        ...dealer.financials,
-        firmRules: { financeLeases: 'in', operatingLeases: 'out', floorplan: 'out', captiveFleet: 'corporate', ebitdaGapTolerance: 0.05 },
-        judgments: { 'treatment.floorplan': { proposed: 'out', confirmed: 'out', by: 'J. Peter', at: '2026-10-01' } },
-      },
-    };
-    function setupWith(inputs, treatmentRules) {
-      const onChange = jest.fn();
-      render(
-        <TutorialProvider userId={null}>
-        <DealInputForm inputs={inputs} onChange={onChange} schema={mod.FORM_SCHEMA} modules={getAvailableModules()}
-          activeModule="equipment_finance" onModuleChange={() => {}} pipelineDeals={[]} sofr={0.0389} analystName="J. Peter"
-          treatmentRules={treatmentRules} />
-        </TutorialProvider>,
-      );
-      return { onChange };
-    }
-
-    test('names what changed and offers the rebuild', () => {
-      setupWith(saved, { floorplan: 'in' });
-      const box = within(screen.getByTestId('rules-changed'));
-      expect(box.getByText('Floorplan (dealers): Inventory financing to Debt')).toBeInTheDocument();
-      expect(box.getByRole('button', { name: 'Rebuild with current firm rules' })).toBeInTheDocument();
-    });
-
-    test('rebuild takes the new rules and puts the changed row back to pending', () => {
-      const { onChange } = setupWith(saved, { floorplan: 'in' });
-      fireEvent.click(screen.getByRole('button', { name: 'Rebuild with current firm rules' }));
-      const next = onChange.mock.calls[0][0];
-      expect(next.financials.firmRules.floorplan).toBe('in');
-      expect(next.financials.judgments['treatment.floorplan']).toBeUndefined();
-      expect(next.financials.rulesRebuilt).toMatchObject({ by: 'J. Peter', changed: ['floorplan'] });
-      // The prompt goes on the click, before the parent's rerender lands.
-      expect(screen.queryByTestId('rules-changed')).toBeNull();
-      expect(screen.getByText('Rebuilding with current firm rules...')).toBeInTheDocument();
-    });
-
-    test('rules unchanged: no notice', () => {
-      setupWith(saved, { floorplan: 'out' });
-      expect(screen.queryByTestId('rules-changed')).toBeNull();
-    });
-  });
-});
-
-describe('company EBITDA and the add-back bridge', () => {
-  const M = 1_000_000;
-  const base = {
-    ...mod.INITIAL_INPUTS,
-    financials: {
-      fiscalYearEnd: '2025-12-31',
-      lineItems: { revenue: { value: 100 * M }, operatingIncome: { value: 10 * M }, depreciationAmortization: { value: 5 * M } },
-      adjustedEbitda: {
-        value: 19 * M,
-        label: 'Adjusted EBITDA',
-        addBacks: [
-          { label: 'Stock comp', amount: 1.5 * M, decision: 'accepted' },
-          { label: 'Restructuring', amount: 1.5 * M, decision: null },
-        ],
-      },
-    },
-  };
-  function setup(inputs) {
-    const onChange = jest.fn();
-    render(
-      <TutorialProvider userId={null}>
-      <DealInputForm inputs={inputs} onChange={onChange} schema={mod.FORM_SCHEMA} modules={getAvailableModules()}
-        activeModule="equipment_finance" onModuleChange={() => {}} pipelineDeals={[]} sofr={0.0389} />
-      </TutorialProvider>,
-    );
-    return { onChange };
-  }
-
-  test('the comparison splits the gap and prints the policy', () => {
-    setup(base);
-    const c = within(screen.getByTestId('comparison-adjusted'));
-    expect(c.getByText('Built EBITDA')).toBeInTheDocument();
-    expect(c.getByText('$4.0M')).toBeInTheDocument();                 // gap 19 - 15
-    expect(c.getByText('$1.0M, 6.7% of built')).toBeInTheDocument();  // unexplained 4 - 3 listed
-    expect(c.getByText('Caveat above 5%, your policy. Over it.')).toBeInTheDocument();
-    expect(screen.getByText('1 of 2 reviewed')).toBeInTheDocument();
-  });
-
-  test('accepting an add-back records the decision', () => {
-    const { onChange } = setup(base);
-    fireEvent.click(within(screen.getByTestId('addback-1')).getByRole('button', { name: 'Accept' }));
-    expect(onChange.mock.calls[0][0].financials.adjustedEbitda.addBacks[1].decision).toBe('accepted');
-  });
-
-  test('adding a bridge line starts it blank and undecided', () => {
-    const { onChange } = setup(base);
-    fireEvent.click(screen.getByText('Add a line'));
-    expect(onChange.mock.calls[0][0].financials.adjustedEbitda.addBacks[2]).toEqual({ label: '', amount: null, decision: null });
+    const summary = within(screen.getByTestId('statements-summary'));
+    expect(summary.getByText(/Builds Revenue, EBITDA/)).toBeInTheDocument();
+    expect(screen.queryByLabelText('Cash interest paid')).toBeNull();
+    fireEvent.click(summary.getByRole('button', { name: 'Edit statements' }));
+    expect(onOpen).toHaveBeenCalled();
   });
 });
 

@@ -5,11 +5,9 @@ import { formatCurrencyFull } from '../utils/format';
 import TutorialBeacon from './TutorialBeacon';
 import { getMissingFields, generateRequestInfoEmail } from '../lib/incompleteFields';
 import NullableNumberInput from './NullableNumberInput';
-import StatementsPanel from './StatementsPanel';
-import { formulaWithValues, describeRuleChanges } from '../utils/statementFormat';
-import { useConfirm } from '../contexts/ConfirmContext';
-import { BUILT_FIELDS, debtGap, statementState, overrideField, clearFieldOverride, clearStatements, confirmJudgment, setDealTreatment, firmRulesFor, rulesOutOfDate, changedRules, rebuildWithCurrentRules } from '../lib/statementBuild';
-import { validateTreatmentRules } from '../lib/borrowerBuild';
+import StatementsSummary from './StatementsSummary';
+import { formulaWithValues } from '../utils/statementFormat';
+import { BUILT_FIELDS, statementState, overrideField, clearFieldOverride } from '../lib/statementBuild';
 
 const DS_ESTIMATE_RATE = 0.08;
 
@@ -721,22 +719,11 @@ const MORE_PURPOSE = {
 
 // ============ MAIN FORM ============
 
-export default function DealInputForm({ inputs, onChange, schema, modules, activeModule, onModuleChange, pipelineDeals, sofr, sofrSource, analystName, analystEmail, draftStatus, treatmentRules }) {
-  const confirm = useConfirm();
+export default function DealInputForm({ inputs, onChange, schema, modules, activeModule, onModuleChange, pipelineDeals, sofr, sofrSource, analystName, analystEmail, draftStatus, treatmentRules, onOpenStatements }) {
   // Missing badges show only for a required field the analyst has been in
   // and left empty. Showing every one from the first keystroke was noise.
   const [touched, setTouched] = useState(() => new Set());
   const [moreOpen, setMoreOpen] = useState({});
-  const statementsRef = useRef(null);
-  const hadStatements = useRef(!!inputs.financials);
-  useEffect(() => {
-    // "Add statements" sits at the top of Borrower Profile; the open panel
-    // sits below the fields it fills. Follow it there.
-    if (inputs.financials && !hadStatements.current) {
-      statementsRef.current?.scrollIntoView?.({ behavior: 'smooth', block: 'start' });
-    }
-    hadStatements.current = !!inputs.financials;
-  }, [inputs.financials]);
   const markTouched = (e) => {
     const key = e.target.closest?.('[data-field]')?.getAttribute('data-field');
     if (key && !touched.has(key)) setTouched((prev) => new Set(prev).add(key));
@@ -751,18 +738,6 @@ export default function DealInputForm({ inputs, onChange, schema, modules, activ
       if (!r.error) onChange(r.inputs);
     },
     onClearOverride: (key) => onChange(clearFieldOverride(inputs, key)),
-  };
-  const firmRules = firmRulesFor(inputs, treatmentRules);
-  const rulesChanged = rulesOutOfDate(inputs, treatmentRules)
-    ? describeRuleChanges(inputs.financials.firmRules, validateTreatmentRules(treatmentRules), changedRules(inputs.financials.firmRules, treatmentRules))
-    : null;
-  const clearAllStatements = async () => {
-    const ok = await confirm({
-      title: 'Clear the statements?',
-      body: 'Built fields keep their current values and become typed.',
-      confirmLabel: 'Clear',
-    });
-    if (ok) onChange(clearStatements(inputs));
   };
 
   // Guard: if equipment module has TRAC selected but equipment type doesn't support it
@@ -792,23 +767,15 @@ export default function DealInputForm({ inputs, onChange, schema, modules, activ
       ? { text: 'cached', className: 'text-gray-300', title: 'Last FRED reading, fetched within the past four hours.' }
       : { text: 'default', className: 'text-amber-600', title: 'Live SOFR is unavailable, so screening is using the built-in default rate.' };
 
+  // The statements themselves open full width (StatementsWorkspace, in App).
+  // Borrower Profile carries one line: what they build and what is left.
   const statementsPanel = (
-    <StatementsPanel
-      financials={inputs.financials || null}
-      state={statements}
+    <StatementsSummary
       inputs={inputs}
-      onChange={(financials) => onChange({ ...inputs, financials })}
-      onClear={clearAllStatements}
-      firmRules={firmRules}
-      debtGap={debtGap(statements, inputs)}
-      rulesChanged={rulesChanged}
-      onRebuild={() => onChange(rebuildWithCurrentRules(inputs, treatmentRules, { by: analystName || undefined }).inputs)}
-      onConfirm={(id, value, proposed) => onChange(confirmJudgment(inputs, id, value, proposed, analystName || undefined))}
-      onTreatment={(row, rule, reason) => {
-        const r = setDealTreatment(inputs, row, rule, reason, treatmentRules, analystName || undefined);
-        if (!r.error) onChange(r.inputs);
-        return r.error;
-      }}
+      state={statements}
+      treatmentRules={treatmentRules}
+      onAdd={() => { onChange({ ...inputs, financials: { fiscalYearEnd: '', lineItems: {} } }); onOpenStatements?.(); }}
+      onOpen={() => onOpenStatements?.()}
     />
   );
 
@@ -889,7 +856,7 @@ export default function DealInputForm({ inputs, onChange, schema, modules, activ
           </div>
 
           <div className="space-y-4" onBlurCapture={markTouched}>
-            {section.key === 'borrower' && !inputs.financials && statementsPanel}
+            {section.key === 'borrower' && statementsPanel}
             {(() => {
               const main = section.fields.filter((f) => !f.more);
               const more = section.fields.filter((f) => f.more);
@@ -928,9 +895,6 @@ export default function DealInputForm({ inputs, onChange, schema, modules, activ
                 </>
               );
             })()}
-            {section.key === 'borrower' && inputs.financials && (
-              <div ref={statementsRef} className="scroll-mt-24">{statementsPanel}</div>
-            )}
           </div>
         </div>
       ))}

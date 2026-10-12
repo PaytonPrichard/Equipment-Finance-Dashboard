@@ -1,21 +1,10 @@
 import React, { useState } from 'react';
 import { TREATMENT_COPY } from './TreatmentRulesCard';
 
-// The calls a person has to make on a statement build: Tranche proposes,
-// the analyst confirms or picks another option. One click each, never all
-// at once. Save to Pipeline waits until every one is confirmed.
-
-const GROUPS = [
-  { title: 'Statements', match: (id) => ['fiscalYear', 'ebitdaStart', 'ebitdaSource'].includes(id) },
-  { title: 'What the borrower has', match: (id) => id.endsWith('Present') },
-  { title: 'Treatment', match: (id) => id.startsWith('treatment.') },
-  {
-    title: 'Where items sit',
-    match: (id) => id.endsWith('Placement') || id.endsWith('InInterestPaid') || id.startsWith('currentMaturitiesInclude.'),
-  },
-  { title: 'Company EBITDA', match: (id) => id.startsWith('companyBasis.') },
-  { title: 'Maintenance capex', match: (id) => id === 'maintenanceCapex' },
-];
+// One judgment on a statement build: Tranche proposes, the analyst confirms
+// or picks another option. Save to Pipeline waits until every one is
+// confirmed. StatementsWorkspace places each row next to the line it is
+// about.
 
 function optionLabel(id, v, start) {
   if (id.endsWith('Present') || id.startsWith('currentMaturitiesInclude.')) return v ? 'Yes' : 'No';
@@ -42,7 +31,7 @@ function Pill({ selected, confirmed, onClick, children }) {
   );
 }
 
-function JudgmentRow({ j, start, onConfirm }) {
+export function JudgmentRow({ j, start, onConfirm }) {
   return (
     <div className="flex flex-wrap items-center justify-between gap-2" data-testid={`judgment-${j.id}`}>
       <span className="text-[12px] text-gray-700">{j.label}</span>
@@ -65,7 +54,7 @@ function JudgmentRow({ j, start, onConfirm }) {
   );
 }
 
-function TreatmentRow({ j, firmRules, override, onConfirm, onTreatment }) {
+export function TreatmentRow({ j, firmRules, override, onConfirm, onTreatment }) {
   const row = j.id.slice('treatment.'.length);
   const copy = TREATMENT_COPY[row];
   const firm = firmRules[row];
@@ -128,37 +117,6 @@ function TreatmentRow({ j, firmRules, override, onConfirm, onTreatment }) {
           </div>
         </div>
       )}
-    </div>
-  );
-}
-
-export default function StatementJudgments({ build, firmRules, overrides, onConfirm, onTreatment }) {
-  // Add-backs are confirmed in the EBITDA source section, not here.
-  const judgments = build.judgments.filter((j) => !j.id.startsWith('addBack.'));
-  if (!judgments.length) return null;
-  const start = build.judgments.find((j) => j.id === 'ebitdaStart')?.value;
-  const done = judgments.filter((j) => j.confirmed).length;
-  return (
-    <div className="border-t border-gray-200 pt-4 space-y-4" aria-label="Judgments to confirm">
-      <div className="flex items-baseline justify-between">
-        <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Judgments</p>
-        <p className={`text-[11px] ${done === judgments.length ? 'text-gray-500' : 'text-amber-700'}`}>
-          {done} of {judgments.length} confirmed
-        </p>
-      </div>
-      <p className="text-[11px] text-gray-500">Tranche proposes each call. Confirm it or pick another. Saving needs every one confirmed.</p>
-      {GROUPS.map((g) => {
-        const rows = judgments.filter((j) => g.match(j.id));
-        if (!rows.length) return null;
-        return (
-          <div key={g.title} className="space-y-2">
-            <p className="text-[11px] font-semibold text-gray-700">{g.title}</p>
-            {rows.map((j) => (g.title === 'Treatment'
-              ? <TreatmentRow key={j.id} j={j} firmRules={firmRules} override={overrides?.[j.id.slice('treatment.'.length)]} onConfirm={onConfirm} onTreatment={onTreatment} />
-              : <JudgmentRow key={j.id} j={j} start={start} onConfirm={onConfirm} />))}
-          </div>
-        );
-      })}
     </div>
   );
 }

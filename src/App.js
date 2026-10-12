@@ -14,6 +14,7 @@ import { useToast } from './contexts/ToastContext';
 import { TutorialProvider, useTutorial } from './contexts/TutorialContext';
 import { useConfirm, useChoice } from './contexts/ConfirmContext';
 import WelcomeTutorial from './components/WelcomeTutorial';
+import StatementsWorkspace from './components/StatementsWorkspace';
 import TutorialBeacon from './components/TutorialBeacon';
 import { useSessionGuard } from './hooks/useSessionGuard';
 import { useOrgPlan } from './hooks/useOrgPlan';
@@ -407,6 +408,9 @@ function AuthenticatedApp({ profile, user }) {
   // paneMode: 'split' (both panes), 'form' (results collapsed to a rail),
   //           'results' (deal inputs collapsed to a rail).
   // paneLabelsHidden: hide the "Deal Inputs" / "Screening Results" pane labels.
+  // The statements open full width over the New Deal page and close back
+  // to it (StatementsWorkspace).
+  const [statementsView, setStatementsView] = useState(false);
   const [paneMode, setPaneMode] = useState(() => {
     try {
       const v = localStorage.getItem('efd_new_deal_pane_mode');
@@ -801,6 +805,7 @@ function AuthenticatedApp({ profile, user }) {
     // A draft from the API carries only the fields the CRM knew. The
     // module's blanks fill the rest; saved fields always win.
     setInputs({ ...getModule(assetClass || activeModule).INITIAL_INPUTS, ...dealInputs });
+    setStatementsView(false);
     setActiveDeal(null);
     setActivePipelineDealId(dealId || null);
     clearExtraction();
@@ -1138,6 +1143,14 @@ function AuthenticatedApp({ profile, user }) {
               onLoadDeal={loadDealIntoScreening}
             />
           </Suspense></ErrorBoundary>
+        ) : activeTab === 'screening' && statementsView && inputs.financials ? (
+          <StatementsWorkspace
+            inputs={inputs}
+            onChange={setInputs}
+            treatmentRules={orgSettings.treatmentRules}
+            analystName={profile?.full_name || user?.user_metadata?.full_name || ''}
+            onClose={() => { setStatementsView(false); window.scrollTo?.(0, 0); }}
+          />
         ) : activeTab === 'screening' ? (
           <div className="flex flex-col lg:flex-row gap-6">
             {/* FORM PANE — a thin rail when collapsed (paneMode 'results') */}
@@ -1238,6 +1251,7 @@ function AuthenticatedApp({ profile, user }) {
                     analystEmail={user?.email || ''}
                     draftStatus={draftStatus}
                     treatmentRules={orgSettings.treatmentRules}
+                    onOpenStatements={() => { setStatementsView(true); window.scrollTo?.(0, 0); }}
                   />
                 </div>
               </div>
