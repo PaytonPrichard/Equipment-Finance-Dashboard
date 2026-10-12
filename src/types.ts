@@ -218,6 +218,12 @@ export interface EquipmentMetrics extends BaseMetrics {
   liquidationLtv: number;
   liquidationHaircut: number;       // fraction
   liquidationHaircutBasis: 'data' | 'estimated' | 'general';
+  /** Projected forced-sale value at lease maturity. Null for EFA or when the type has no value curve. */
+  residualMaturityValue: USD | null;
+  /** Maturity value / residual. Null when not checked. */
+  residualCoverage: number | null;
+  residualCoverageBasis: 'data' | 'estimated' | null;
+  residualCoverageSource: string | null;
 }
 
 export interface AccountsReceivableMetrics extends BaseMetrics {
@@ -333,6 +339,8 @@ export interface ScreeningCriteria {
   // Liquidation LTV limits, percent (0 = disabled)
   maxLiquidationLtv: number;
   failLiquidationLtv: number;
+  // FMV residual coverage floor, x (0 = disabled)
+  minResidualCoverage: number;
   maxTermCoverage: number;
   maxRevenueConcentration: number;
   maxConcentration: number;

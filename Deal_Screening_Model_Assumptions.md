@@ -107,18 +107,41 @@ The haircut is the share of cost a lender should not expect back in an auction s
 | Heavy Machinery | 15% |
 | Marine Vessels | 15% |
 | Construction Equipment | 15% |
+| Agricultural Equipment | 15% |
 | Energy/Power Generation | 12% |
+| Engines/Generators | 12% |
 | Medical Equipment | 10% |
 | IT/Data Center | 5% |
 | Other | 10% |
 
-**Assumption:** Residual values reflect general remarketing expectations. IT/Data Center equipment depreciates fastest due to technological obsolescence. Vehicles retain value relatively well due to active secondary markets.
+**Assumption:** Residual values reflect general remarketing expectations. IT/Data Center equipment depreciates fastest due to technological obsolescence. Vehicles retain value relatively well due to active secondary markets. Agricultural Equipment and Engines/Generators inherit the residual of the type each was split from. Not separately sourced. The residual is a flat share of cost at any term.
+
+**Open discrepancy.** The code (`FMV_RESIDUAL_PCT`) uses 17% for Aircraft/Helicopters, and has since the platform build. This table says 20%. Residual coverage below is computed on the code's 17%. Joel to decide which is right.
+
+**Residual coverage at maturity.** Tested 2026-10-12 (`residual-2026-10.md`).
+- **Formula:** projected forced-sale value at lease maturity / residual value.
+- **Projected value** comes from a public curve for the type, run to the end of the term:
+
+| Equipment Type | Curve | Basis |
+|----------------|-------|-------|
+| Vehicles/Fleet | BEA trucks, 17.25%/yr geometric, then the used liquidation haircut (30%) | Estimated |
+| Construction Equipment | BEA construction machinery, 15.50%/yr, then 30% | Estimated |
+| Heavy Machinery | BEA construction machinery as a proxy, then the general used haircut (30%) | Estimated |
+| Agricultural Equipment | Iowa State A3-29 combine auction values (lowest of its four curves), straight line between ages, no extra haircut. Ages past 20 years unchecked | Data |
+| Aircraft/Helicopters | Air Lease policy, straight line to 15% at 25 years, then the general used haircut (30%) | Estimated |
+| All other types | None. Not checked | n/a |
+
+- **FMV:** coverage below **1.0x** flags. The forced-sale haircut already makes the value conservative, so there is no buffer on top. Configurable as `minResidualCoverage`. 0 disables.
+- **TRAC:** coverage is shown for information only and never flags. The lessee guarantees the residual, so the asset shortfall only bites if the lessee also fails.
+- **Not checked** (no curve for the type, or the term runs past the curve): a note says so. An estimated curve is also named in the notes. Both reach the screening view, the memo and the real-deals report.
+- **What the test found.** At typical terms, Tranche's flat residuals sit well below what lessors book: PACCAR 30-70% of cost at 3-5 year truck leases, Cat Financial about 36% at 1-7 years, John Deere Capital about 56% at a 47-month average term. A low residual is conservative on collateral, but it raises FMV payments, so DSCR on FMV deals is understated. The check catches the opposite case: long terms, where a flat residual exceeds the projected value. Vehicles at a 25% residual drop below 1.0x past 6 years. Term-dependent residuals are backlogged, not changed here.
 
 ### TRAC (Terminal Rental Adjustment Clause) Lease
 - Only available for **Vehicles/Fleet** and **Rail Cars**
 - Lessee guarantees a terminal residual value
 - If disposition proceeds differ from guarantee, a rental adjustment applies
 - Residual: 20% for Vehicles/Fleet, 15% for Rail Cars
+- Residual coverage at maturity is shown for information, never flagged (see FMV above)
 
 ---
 
@@ -179,7 +202,7 @@ Two figures, side by side.
 
 **Assumption:** If the loan term exceeds 80% of useful life, the equipment may have little remaining value at maturity, increasing loss-given-default risk.
 
-**Tested 2026-10-09** (`resale-2026-10.md`, section 3). On a fully amortizing loan, the collateral shortfall peaks in years 1-2, driven by down payment and the first-year value drop, never near maturity. The 80% limit holds as an outer guard. Liquidation LTV covers the early shortfall. Residual-based structures (TRAC, FMV) carry value-at-maturity risk that this factor does not model separately.
+**Tested 2026-10-09** (`resale-2026-10.md`, section 3). On a fully amortizing loan, the collateral shortfall peaks in years 1-2, driven by down payment and the first-year value drop, never near maturity. The 80% limit holds as an outer guard. Liquidation LTV covers the early shortfall. Residual-based structures (TRAC, FMV) carry value-at-maturity risk, which residual coverage (section 4, FMV) checks separately.
 
 ### Revenue Concentration
 - **Formula:** (Equipment Cost / Annual Revenue) * 100
@@ -483,7 +506,7 @@ a memo is the platform's, not the caller's.
 4. Liquidation haircuts by equipment type and condition (section 3), general 25% new / 30% used where no type data exists. Forced-sale basis
 5. Industry risk tiers are static -- do not adjust for current cycle position
 6. Credit ratings are qualitative self-assessments, not formal agency ratings
-7. Residual value percentages are conservative screening estimates
+7. Residual value percentages are flat screening estimates, the same at any term. Below lessor-booked residuals at typical terms (conservative on collateral, understates FMV DSCR). Checked against projected forced-sale value at maturity where a public curve exists
 8. DSCR is the single most important factor (25% weight)
 9. EBITDA stress holds all else constant. Cash-flow stress also moves margin, floating rates and working capital, and holds taxes, capex and rent at base-case levels
 10. The 0-100 scoring scale uses linear interpolation between expert-set breakpoints, not statistically calibrated curves

@@ -219,6 +219,13 @@ export function generateBrandedPdfHtml({ summaryText, inputs, metrics, riskScore
     const note = years > 0 && life > 0 ? `${years.toFixed(1)}yr / ${life}yr` : '';
     metricRows.push(['Term Coverage', metrics.termCoverage.toFixed(0) + '%', metrics.termCoverage <= c.maxTermCoverage ? '#16a34a' : '#dc2626', note]);
   }
+  // FMV/TRAC residual coverage, when the type has a value curve. TRAC is
+  // lessee-guaranteed, so it prints without a pass/fail color.
+  if (metrics?.residualCoverage != null) {
+    const rc = metrics.residualCoverage;
+    const color = inputs?.financingType === 'TRAC' ? '#334155' : c.minResidualCoverage > 0 && rc < c.minResidualCoverage ? '#dc2626' : '#16a34a';
+    metricRows.push(['Residual Coverage', fmtRatio(rc), color, 'forced-sale value at maturity / residual']);
+  }
   if (metrics?.borrowingBase !== undefined) metricRows.push(['Borrowing Base', fmtCurrency(metrics.borrowingBase), '#334155']);
   if (metrics?.dso !== undefined) metricRows.push(['DSO', Math.round(metrics.dso) + ' days', metrics.dso <= 60 ? '#16a34a' : '#ca8a04']);
   if (metrics?.concentrationRisk !== undefined) metricRows.push(['Concentration', fmtPct(metrics.concentrationRisk), metrics.concentrationRisk * 100 <= c.maxConcentration ? '#16a34a' : '#dc2626']);

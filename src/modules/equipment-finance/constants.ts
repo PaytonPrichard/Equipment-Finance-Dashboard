@@ -123,6 +123,79 @@ export function getLiquidationHaircut(
   return byType ? byType[cond] : { rate: GENERAL_LIQUIDATION_HAIRCUT[cond], basis: 'general' };
 }
 
+// ------- Value at lease maturity -------
+// Projected forced-sale value of the equipment when an FMV or TRAC lease
+// ends, as a share of cost. Compared with the residual to give residual
+// coverage. Only types with a public value curve are checked; every other
+// type is left unchecked and the screening notes say so. Evidence:
+// scripts/real-deals/benchmarks/residual-2026-10.md. Joel 2026-10-12.
+//
+// `basis`:
+//   'data'      auction values for the type (already a forced-sale basis)
+//   'estimated' a market-value or book-value curve, with the used
+//               liquidation haircut applied to reach forced-sale value
+export type MaturityValueBasis = 'data' | 'estimated';
+
+type MaturityCurve =
+  // Geometric decline, value after t years = (1 - rate)^t. BEA.
+  | { kind: 'geometric'; rate: number; basis: 'estimated'; source: string }
+  // Straight line from cost to `endPct` at `years`.
+  | { kind: 'linear'; endPct: number; years: number; basis: 'estimated'; source: string }
+  // Auction value as % of new list, by age in years (index 0 = age 1).
+  | { kind: 'table'; pctByYear: number[]; basis: 'data'; source: string };
+
+export const MATURITY_VALUE_CURVES: Partial<Record<EquipmentType, MaturityCurve>> = {
+  // BEA Depreciation Estimates, trucks (trucking and other services), PDF p.9.
+  'Vehicles/Fleet': { kind: 'geometric', rate: 0.1725, basis: 'estimated', source: 'BEA trucks' },
+  // BEA construction machinery except tractors, PDF p.10.
+  'Construction Equipment': { kind: 'geometric', rate: 0.1550, basis: 'estimated', source: 'BEA construction machinery' },
+  // No curve of its own. BEA construction machinery as the nearest proxy.
+  'Heavy Machinery': { kind: 'geometric', rate: 0.1550, basis: 'estimated', source: 'BEA construction machinery, as a proxy' },
+  // Iowa State A3-29 (March 2026), Table 1b, combine at 300 hrs/yr: the
+  // lowest of its four curves at every age. Auction value, so no haircut.
+  'Agricultural Equipment': {
+    kind: 'table',
+    pctByYear: [69, 58, 50, 44, 39, 35, 31, 28, 25, 23, 20, 18, 16, 14, 13, 11, 10, 9, 8, 7],
+    basis: 'data',
+    source: 'Iowa State A3-29 combine auction values',
+  },
+  // Air Lease FY2025 10-K: passenger aircraft depreciated straight line over
+  // 25 years to a 15% residual. A lessor's book policy, not sale data, and
+  // faster than AerCap's helicopters (20% at 30 years).
+  'Aircraft/Helicopters': { kind: 'linear', endPct: 0.15, years: 25, basis: 'estimated', source: 'Air Lease depreciation policy' },
+};
+
+export interface MaturityValue {
+  /** Forced-sale value at maturity, fraction of cost. */
+  pct: number;
+  basis: MaturityValueBasis;
+  source: string;
+}
+
+export function getMaturityValue(
+  equipmentType: EquipmentType | string | undefined,
+  termMonths: number,
+): MaturityValue | null {
+  const curve = MATURITY_VALUE_CURVES[equipmentType as EquipmentType];
+  if (!curve || !(termMonths > 0)) return null;
+  const years = termMonths / 12;
+  if (curve.kind === 'table') {
+    // Linear between ages, from 100% at age 0. Past the table, unchecked.
+    if (years > curve.pctByYear.length) return null;
+    const lo = Math.floor(years);
+    const loPct = lo === 0 ? 100 : curve.pctByYear[lo - 1];
+    const hiPct = lo >= curve.pctByYear.length ? loPct : curve.pctByYear[lo];
+    const pct = (loPct + (hiPct - loPct) * (years - lo)) / 100;
+    return { pct, basis: curve.basis, source: curve.source };
+  }
+  const market = curve.kind === 'geometric'
+    ? Math.pow(1 - curve.rate, years)
+    : Math.max(1 - ((1 - curve.endPct) * years) / curve.years, curve.endPct);
+  // Returned equipment is used equipment: apply the used liquidation haircut.
+  const haircut = getLiquidationHaircut(equipmentType, 'Used').rate;
+  return { pct: market * (1 - haircut), basis: curve.basis, source: curve.source };
+}
+
 interface FinancingTypeInfo {
   label: string;
   fullName: string;

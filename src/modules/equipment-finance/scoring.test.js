@@ -363,3 +363,93 @@ describe('Equipment Finance liquidation LTV (resale-2026-10.md)', () => {
     expect(fUsed).toBeCloseTo(fNew, 10);
   });
 });
+
+describe('Equipment Finance residual coverage at maturity (residual-2026-10.md)', () => {
+  // $1,000,000 cost, so every % of cost reads as dollars / 10,000.
+  // Coverage = projected forced-sale value at maturity / residual.
+  const base = {
+    ...INITIAL_INPUTS,
+    companyName: 'Residual Check Co',
+    annualRevenue: 20000000,
+    ebitda: 3000000,
+    industrySector: 'Manufacturing',
+    creditRating: 'Adequate',
+    equipmentCost: 1000000,
+    downPayment: 100000,
+    equipmentCondition: 'New',
+    usefulLife: 10,
+    essentialUse: true,
+  };
+  const m = (over) => calculateMetrics({ ...base, ...over });
+
+  test('FMV Vehicles, 60 months: 0.8275^5 x 0.70 = 27.16% vs 25% residual, 1.09x', () => {
+    const r = m({ equipmentType: 'Vehicles/Fleet', financingType: 'FMV', loanTerm: 60 });
+    expect(r.residualValue).toBeCloseTo(250000, 6);
+    expect(r.residualMaturityValue).toBeCloseTo(1000000 * Math.pow(0.8275, 5) * 0.7, 4);
+    expect(Math.round(r.residualMaturityValue)).toBe(271605);
+    expect(r.residualCoverage).toBeCloseTo(1.0864, 4);
+    expect(r.residualCoverageBasis).toBe('estimated');
+  });
+
+  test('FMV Vehicles, 84 months: 18.60% vs 25%, 0.74x, under water', () => {
+    const r = m({ equipmentType: 'Vehicles/Fleet', financingType: 'FMV', loanTerm: 84 });
+    expect(r.residualCoverage).toBeCloseTo((Math.pow(0.8275, 7) * 0.7) / 0.25, 10);
+    expect(r.residualCoverage).toBeCloseTo(0.744, 3);
+  });
+
+  test('FMV Agricultural, 60 months: Iowa State combine age 5 is 39% auction value, no haircut, 2.60x', () => {
+    const r = m({ equipmentType: 'Agricultural Equipment', financingType: 'FMV', loanTerm: 60 });
+    expect(r.residualMaturityValue).toBeCloseTo(390000, 6);
+    expect(r.residualCoverage).toBeCloseTo(2.6, 10);
+    expect(r.residualCoverageBasis).toBe('data');
+  });
+
+  test('FMV Agricultural, 54 months: halfway between age 4 (44%) and age 5 (39%), 41.5 / 15 = 2.77x', () => {
+    const r = m({ equipmentType: 'Agricultural Equipment', financingType: 'FMV', loanTerm: 54 });
+    expect(r.residualCoverage).toBeCloseTo(41.5 / 15, 10);
+  });
+
+  test('FMV Aircraft, 120 months: straight line to 15% at 25 yrs is 66%, x 0.70 = 46.2% vs 17%, 2.72x', () => {
+    const r = m({ equipmentType: 'Aircraft/Helicopters', financingType: 'FMV', loanTerm: 120 });
+    expect(r.residualMaturityValue).toBeCloseTo(462000, 6);
+    expect(r.residualCoverage).toBeCloseTo(0.462 / 0.17, 10);
+  });
+
+  test('types with no public curve are not checked', () => {
+    const r = m({ equipmentType: 'Medical Equipment', financingType: 'FMV', loanTerm: 60 });
+    expect(r.residualValue).toBeCloseTo(100000, 6);
+    expect(r.residualCoverage).toBeNull();
+    expect(r.residualMaturityValue).toBeNull();
+    expect(r.residualCoverageBasis).toBeNull();
+  });
+
+  test('Agricultural past the 20-year table is not checked', () => {
+    expect(m({ equipmentType: 'Agricultural Equipment', financingType: 'FMV', loanTerm: 252 }).residualCoverage).toBeNull();
+  });
+
+  test('EFA has no residual and no coverage', () => {
+    const r = m({ equipmentType: 'Vehicles/Fleet', financingType: 'EFA', loanTerm: 60 });
+    expect(r.residualValue).toBe(0);
+    expect(r.residualCoverage).toBeNull();
+  });
+
+  test('TRAC Vehicles, 84 months: computed against the 20% TRAC residual, 0.93x', () => {
+    const r = m({ equipmentType: 'Vehicles/Fleet', financingType: 'TRAC', loanTerm: 84 });
+    expect(r.residualCoverage).toBeCloseTo((Math.pow(0.8275, 7) * 0.7) / 0.2, 10);
+  });
+
+  test('the export summary prints coverage, or says it was not checked', () => {
+    const summary = (inputs) => {
+      const met = calculateMetrics(inputs);
+      const score = calculateRiskScore(inputs, met);
+      const commentary = generateCommentary(inputs, met, score, null);
+      const structure = getSuggestedStructure(inputs, met, score.composite);
+      return generateExportSummary(inputs, met, score, getRecommendation(score.composite), commentary, structure);
+    };
+    const inputs = { ...base, equipmentType: 'Vehicles/Fleet', financingType: 'FMV', loanTerm: 84 };
+    expect(summary(inputs)).toMatch(/Residual Cover: {3}0\.74x {2}\(forced-sale value at maturity, estimated; min 1\.00x\)/);
+    expect(summary({ ...inputs, equipmentType: 'Medical Equipment' }))
+      .toMatch(/Residual Cover: {3}not checked \(no public value data for Medical Equipment\)/);
+  });
+});
+

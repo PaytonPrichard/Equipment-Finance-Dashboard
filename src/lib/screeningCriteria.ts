@@ -23,6 +23,10 @@ type ModuleMetrics = BaseMetrics & {
   liquidationLtv?: number;
   liquidationHaircut?: number;
   liquidationHaircutBasis?: 'data' | 'estimated' | 'general';
+  residualValue?: number;
+  residualCoverage?: number | null;
+  residualCoverageBasis?: 'data' | 'estimated' | null;
+  residualCoverageSource?: string | null;
   termCoverage?: number;
   concentrationRisk?: number;
   dilutionRate?: number;
@@ -57,6 +61,12 @@ export const DEFAULT_CRITERIA: ScreeningCriteria = {
   // Joel 2026-10-09.
   maxLiquidationLtv: 115,
   failLiquidationLtv: 0,
+  // FMV residual coverage: projected forced-sale value at maturity over the
+  // residual. Flags below 1.0x. The haircut already makes the value
+  // conservative, so no buffer on top. FMV only: a TRAC residual is
+  // lessee-guaranteed and shown for information. residual-2026-10.md, Joel
+  // 2026-10-12.
+  minResidualCoverage: 1.0,
   maxTermCoverage: 80,
   maxRevenueConcentration: 25,
 
@@ -175,8 +185,7 @@ export function evaluateScreening(
     // 85%. Only the verdict stayed silent.
     //
     // The convention in this file is 0 = disabled, per the note on the
-    // shared limits above. maxLtv keeps its default of 100; it is now
-    // actually applied.
+    // shared limits above. The default is now 90 (see DEFAULT_CRITERIA).
     if (c.maxLtv > 0 && metrics.ltv && metrics.ltv * 100 > c.maxLtv) {
       reasons.push({ level: 'flag', text: `LTV ${(metrics.ltv * 100).toFixed(0)}% exceeds maximum (${c.maxLtv}%)` });
     }
@@ -185,6 +194,11 @@ export function evaluateScreening(
       reasons.push({ level: 'fail', text: `Liquidation LTV ${(liq * 100).toFixed(0)}% exceeds limit (${c.failLiquidationLtv}%)` });
     } else if (liq && c.maxLiquidationLtv > 0 && liq * 100 > c.maxLiquidationLtv) {
       reasons.push({ level: 'flag', text: `Liquidation LTV ${(liq * 100).toFixed(0)}% exceeds maximum (${c.maxLiquidationLtv}%)` });
+    }
+    const financingType = (inputs as { financingType?: string }).financingType;
+    const cover = metrics.residualCoverage;
+    if (financingType === 'FMV' && cover != null && c.minResidualCoverage > 0 && cover < c.minResidualCoverage) {
+      reasons.push({ level: 'flag', text: `Residual coverage ${cover.toFixed(2)}x is below minimum (${c.minResidualCoverage.toFixed(2)}x). Forced-sale value at maturity is under the residual` });
     }
     if (c.maxTermCoverage > 0 && metrics.termCoverage && metrics.termCoverage > c.maxTermCoverage) {
       reasons.push({ level: 'flag', text: `Term coverage ${metrics.termCoverage.toFixed(0)}% exceeds maximum (${c.maxTermCoverage}%)` });
@@ -250,6 +264,23 @@ export function evaluateScreening(
     notes.push(metrics.liquidationHaircutBasis === 'general'
       ? `Liquidation LTV uses the general ${pct}% ${cond}-equipment haircut. No type-specific resale data.`
       : `Liquidation LTV uses an estimated ${pct}% ${cond}-equipment haircut, from market-value curves, not sale data.`);
+  }
+
+  // Residual coverage on lease structures. Unchecked types and estimated
+  // curves are said out loud. TRAC coverage is information only.
+  if (moduleKey === 'equipment_finance' && (metrics.residualValue || 0) > 0) {
+    const ft = (inputs as { financingType?: string }).financingType;
+    const type = (inputs as { equipmentType?: string }).equipmentType || 'this type';
+    if (metrics.residualCoverage == null) {
+      notes.push(`Residual not checked: no public value data for ${type} at this term.`);
+    } else {
+      if (ft === 'TRAC') {
+        notes.push(`TRAC residual coverage ${metrics.residualCoverage.toFixed(2)}x at maturity. Lessee-guaranteed, information only.`);
+      }
+      if (metrics.residualCoverageBasis === 'estimated') {
+        notes.push(`Residual coverage uses an estimated value curve (${metrics.residualCoverageSource}), not sale data.`);
+      }
+    }
   }
 
   if (cf.missing.cashFlowDscr.length > 0) {
