@@ -42,7 +42,7 @@ import ScreeningCriteria from './components/ScreeningCriteria';
 import { DEFAULT_CRITERIA, dscrFloorFor, evaluateScreening, validateCriteria } from './lib/screeningCriteria';
 import { validateWeights } from './lib/scoringWeights';
 import { computeDealMetrics } from './utils/dealMetrics';
-import { applyStatementBuild, statementState, pendingJudgments, withRulesSnapshot, rulesOutOfDate } from './lib/statementBuild';
+import { applyStatementBuild, statementState, pendingJudgments, withRulesSnapshot, rulesOutOfDate, debtGap } from './lib/statementBuild';
 import StressTestPanel from './components/StressTestPanel';
 import CashFlowStressPanel from './components/CashFlowStressPanel';
 import ExportPanel from './components/ExportPanel';
@@ -540,11 +540,15 @@ function AuthenticatedApp({ profile, user }) {
   // A new deal is built under the firm's rules today. One that carries an
   // older copy (a loaded draft, a copied deal) is rebuilt first.
   const staleRulesOnNewDeal = !activePipelineDealId && rulesOutOfDate(inputs, orgSettings.treatmentRules);
+  const statementDebtGap = useMemo(
+    () => debtGap(statementState(inputs, orgSettings.treatmentRules), inputs),
+    [inputs, orgSettings],
+  );
   const saveBlockedNote = staleRulesOnNewDeal
     ? 'Built under older firm rules. Rebuild with current firm rules in Financial statements before saving.'
     : judgmentsPending > 0
       ? `${judgmentsPending} judgment${judgmentsPending === 1 ? '' : 's'} to confirm in Financial statements before saving.`
-      : null;
+      : statementDebtGap;
 
   // Dynamic module calculations, at the live rate and under the firm's
   // spreads. Shared with the pipeline drawer through utils/dealMetrics, which

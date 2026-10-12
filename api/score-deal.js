@@ -61,6 +61,7 @@ async function prepareDealInputs(orgId, inputs, previous) {
       body: { error: `${prep.pending} judgment${prep.pending === 1 ? '' : 's'} on the statement build not confirmed. Confirm them before saving.` },
     };
   }
+  if (prep.debtGap) return { status: 400, body: { error: prep.debtGap } };
   return { inputs: prep.inputs, overrides: prep.overrides, rulesChange: prep.rulesChange };
 }
 

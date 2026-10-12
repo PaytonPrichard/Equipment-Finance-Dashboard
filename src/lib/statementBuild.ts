@@ -111,6 +111,39 @@ export function firmRulesFor(inputs: Inputs | null | undefined, rules: unknown):
 }
 
 /** Judgments still waiting for the analyst. Save to Pipeline needs zero. */
+/**
+ * A rule that puts an item into debt changes both sides of DSCR: EBITDA
+ * rises (its interest is no longer an operating cost), and debt and debt
+ * service rise. When the statements build EBITDA but not debt or debt
+ * service, only the first half applies and DSCR comes out too high. Saving
+ * waits until both sides are built (Joel, 2026-10-12). A typed debt figure
+ * with an override reason counts as deliberate and is let through.
+ * Returns the message to show, or null.
+ */
+export function debtGap(state: StatementState, inputs: Inputs | null | undefined): string | null {
+  const build = state.build;
+  if (!build || build.derivations.ebitda.value === null) return null;
+  const present = (id: string) => build.judgments.find((j) => j.id === id)?.value === true;
+  const t = build.treatment;
+  const items: string[] = [];
+  if (present('floorplanPresent') && t.floorplan === 'in') items.push('Floorplan');
+  if (present('captiveFleetPresent') && t.captiveFleet === 'consolidated') items.push('Vehicle debt');
+  if (present('financeLeasesPresent') && t.financeLeases === 'in') items.push('Finance leases');
+  if (t.operatingLeases === 'in') items.push('Operating leases');
+  if (!items.length) return null;
+  const overrides = inputs?.financials?.fieldOverrides || {};
+  const open = (['totalExistingDebt', 'actualAnnualDebtService'] as BuiltField[])
+    .filter((f) => build.derivations[f].value === null && !overrides[f]);
+  if (!open.length) return null;
+  const missing = Array.from(new Set(build.errors
+    .filter((e) => / is missing\. Needed for (total debt|debt service)/.test(e))
+    .map((e) => e.split(' is missing.')[0])));
+  const what = items.join(' and ');
+  const verb = items.length === 1 ? 'counts' : 'count';
+  const lines = missing.length ? `Enter ${missing.join(', ')} (0 if none)` : 'Complete total debt and debt service';
+  return `${what} ${verb} as debt under your rules. ${lines} so leverage and DSCR include ${items.length === 1 ? 'it' : 'them'}.`;
+}
+
 export function pendingJudgments(state: StatementState): number {
   if (!state.build) return 0;
   return allJudgmentsConfirmed(state.build) ? 0 : state.build.judgments.filter((j) => !j.confirmed).length;
@@ -279,6 +312,8 @@ export interface PreparedSave<T> {
   rulesError: string | null;
   /** Set when the deal moved onto the firm's current rules in this save. */
   rulesChange: RulesRebuild | null;
+  /** Set when a rule puts an item into debt but debt or debt service is not built. */
+  debtGap?: string | null;
 }
 
 const RULES_ERROR = "The treatment rules on this deal are not your firm's rules. Rebuild with current firm rules, then save.";
@@ -325,6 +360,7 @@ export function prepareForSave<T extends Inputs>(
   else delete financials.rulesRebuilt;
 
   const built = applyStatementBuild({ ...inputs, financials }, rules);
-  const pending = pendingJudgments(statementState(built, rules));
-  return { inputs: built, pending, overrides: overrideChanges(previous?.financials, built.financials), rulesError: null, rulesChange };
+  const state = statementState(built, rules);
+  const pending = pendingJudgments(state);
+  return { inputs: built, pending, overrides: overrideChanges(previous?.financials, built.financials), rulesError: null, rulesChange, debtGap: debtGap(state, built) };
 }

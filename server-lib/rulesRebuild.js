@@ -60,6 +60,8 @@ async function runRulesRebuild({ db, orgId, userId, adminName, dryRun, now, deps
       skip(d, `${r.pending} judgment${r.pending === 1 ? '' : 's'} still to confirm. Rebuild it from the deal.`);
       continue;
     }
+    // The new rules put an item into debt the statements cannot total yet.
+    if (r.debtGap) { skip(d, `${r.debtGap} Rebuild it from the deal.`); continue; }
 
     const assetClass = d.asset_class || 'equipment_finance';
     const validation = validateInputs(assetClass, r.inputs);

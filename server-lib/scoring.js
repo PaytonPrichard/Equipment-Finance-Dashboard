@@ -58,7 +58,7 @@ async function rebuildDealRules(inputs, orgRules, adminName, at) {
     if (!changed.length) return { inputs, changed, pending: 0, rulesChange: null, error: null };
     const r = prepareForSave(rebuilt, orgRules, inputs, { at, by: adminName, bulk: true });
     if (r.rulesError) return { inputs, changed, pending: 0, rulesChange: null, error: r.rulesError };
-    return { inputs: r.inputs, changed, pending: r.pending, rulesChange: r.rulesChange, error: null };
+    return { inputs: r.inputs, changed, pending: r.pending, debtGap: r.debtGap || null, rulesChange: r.rulesChange, error: null };
   } catch (err) {
     console.error('[scoring] rebuildDealRules error:', err);
     return { inputs, changed: [], pending: 0, rulesChange: null, error: 'Statement build failed' };

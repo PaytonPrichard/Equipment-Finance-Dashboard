@@ -263,3 +263,16 @@ Step 3 is complete. Step 4 next: memo section "How the numbers were built", serv
 - The memo carries one line on the rebuild.
 
 **Tests:** 676 client, 56 server, 15 harness. tsc clean, CI build clean apart from the old html2pdf source-map warning.
+
+## 2026-10-12: Test-round fixes before the release push (Workstream A)
+
+**What changed**
+- Debt gap (Joel's call, option 1 of 3): when a treatment rule puts an item the borrower has into debt (floorplan in, captive fleet consolidated, finance or operating leases in) and the statements build EBITDA but not total debt or debt service, saving waits. The message names the lines to enter (0 if none). A typed debt figure with an override reason is let through. Enforced on the server (400), in the bulk rebuild (skipped and listed), and on the Save button. Found in Joel's test: floorplan to Debt raised DSCR from 7.51x to 8.66x because only the EBITDA side applied. With the debt lines in, it fell to 3.63x.
+- New Deal form: optional borrower inputs collapse under "More inputs (optional)"; "Add statements" moves to the top of Borrower Profile; missing badges wait until a required field is left empty; empty Revenue and EBITDA say they can be built from statements; the cursor no longer leaves a required field on the first keystroke.
+- Settings: Treatment Rules and Firm Assumptions each flag unsaved changes. Firm Assumptions saves only its own keys and is audited.
+- Rebuild prompt hides on the click. Judgment controls stay right-aligned.
+- Welcome screen came back every sign-in: `user_preferences` lacked `tutorial_state` (and `screening_criteria`, `deal_templates`). Migration `supabase_user_preferences_columns.sql`, run by Joel 2026-10-12. Failed preference writes are now logged.
+
+**What Joel decided**
+- Debt gap blocks the save rather than warning.
+- Statements get a full-width view next (after the push). Guide update after that.

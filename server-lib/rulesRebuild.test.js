@@ -27,7 +27,10 @@ const ASKED = [
   ['floorplanInterestPlacement', 'belowOperatingIncome'], ['floorplanInterestInInterestPaid', true],
   ['currentMaturitiesInclude.floorplan', false], ['maintenanceCapex', 'depreciation'],
 ];
-function dealerInputs() {
+// The debt lines are in so a floorplan "in" rule can total debt and debt
+// service. Without them the rebuild is skipped (see the debt gap test).
+const DEBT_LINES = { revolver: li(0), termLoansAndNotes: li(0), interestPaid: li(2 * M), currentMaturities: li(0) };
+function dealerInputs({ debtLines = true } = {}) {
   const judgments = Object.fromEntries(ASKED.map(([id, v]) => [id, { proposed: v, confirmed: v, by: 'Analyst', at: AT }]));
   return {
     companyName: 'Dealer',
@@ -36,6 +39,7 @@ function dealerInputs() {
       lineItems: {
         revenue: li(100 * M), operatingIncome: li(10 * M), depreciationAmortization: li(5 * M),
         floorplanInterest: li(2 * M), floorplanPayable: li(30 * M),
+        ...(debtLines ? DEBT_LINES : {}),
       },
       firmRules: OLD,
       judgments,
@@ -172,4 +176,14 @@ test('no webhook when the score does not move', async () => {
   const d = deps({ recomputeScore: jest.fn(async () => ({ score: 64, error: null })) });
   await run(fakeDb([deal('a', 'Screening')]), d);
   expect(d.dispatchWebhooks).not.toHaveBeenCalled();
+});
+
+test('a deal the new rules put debt into, without the debt lines, is skipped with the lines to enter', async () => {
+  const db = fakeDb([deal('a', 'Screening', { inputs: dealerInputs({ debtLines: false }) })]);
+  const d = deps();
+  const r = await run(db, d);
+  expect(r.body.rebuilt).toEqual([]);
+  expect(r.body.skipped[0].reason).toMatch(/^Floorplan counts as debt under your rules\. Enter Revolver, .* Rebuild it from the deal\.$/);
+  expect(db.updates).toEqual([]);
+  expect(d.writeAuditLog).not.toHaveBeenCalled();
 });

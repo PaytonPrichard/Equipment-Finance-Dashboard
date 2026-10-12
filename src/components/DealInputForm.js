@@ -8,7 +8,7 @@ import NullableNumberInput from './NullableNumberInput';
 import StatementsPanel from './StatementsPanel';
 import { formulaWithValues, describeRuleChanges } from '../utils/statementFormat';
 import { useConfirm } from '../contexts/ConfirmContext';
-import { BUILT_FIELDS, statementState, overrideField, clearFieldOverride, clearStatements, confirmJudgment, setDealTreatment, firmRulesFor, rulesOutOfDate, changedRules, rebuildWithCurrentRules } from '../lib/statementBuild';
+import { BUILT_FIELDS, debtGap, statementState, overrideField, clearFieldOverride, clearStatements, confirmJudgment, setDealTreatment, firmRulesFor, rulesOutOfDate, changedRules, rebuildWithCurrentRules } from '../lib/statementBuild';
 import { validateTreatmentRules } from '../lib/borrowerBuild';
 
 const DS_ESTIMATE_RATE = 0.08;
@@ -800,6 +800,7 @@ export default function DealInputForm({ inputs, onChange, schema, modules, activ
       onChange={(financials) => onChange({ ...inputs, financials })}
       onClear={clearAllStatements}
       firmRules={firmRules}
+      debtGap={debtGap(statements, inputs)}
       rulesChanged={rulesChanged}
       onRebuild={() => onChange(rebuildWithCurrentRules(inputs, treatmentRules, { by: analystName || undefined }).inputs)}
       onConfirm={(id, value, proposed) => onChange(confirmJudgment(inputs, id, value, proposed, analystName || undefined))}

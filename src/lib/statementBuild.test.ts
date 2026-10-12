@@ -357,3 +357,55 @@ describe('rebuild with current firm rules', () => {
     });
   });
 });
+
+// Joel's test, 2026-10-12: floorplan switched to Debt on a deal with only
+// the EBITDA lines. EBITDA rose from $13M to $15M, debt stayed at the typed
+// figure, and DSCR went up (7.51x to 8.66x). Saving now waits for the debt side.
+describe('debt gap: a rule puts an item into debt the statements cannot total', () => {
+  const { debtGap, prepareForSave } = require('./statementBuild');
+  const { DEFAULT_TREATMENT_RULES } = require('./borrowerBuild');
+  const IN = { ...DEFAULT_TREATMENT_RULES, floorplan: 'in' };
+  const dealer = (extra = {}): any => ({
+    ...typed,
+    financials: {
+      fiscalYearEnd: '2025-12-31',
+      lineItems: {
+        revenue: li(100 * M), operatingIncome: li(10 * M), depreciationAmortization: li(5 * M),
+        floorplanInterest: li(2 * M), floorplanPayable: li(30 * M), ...extra,
+      },
+      judgments: { floorplanPresent: { proposed: true, confirmed: true } },
+    },
+  });
+
+  test('floorplan in, debt lines missing: names the lines to enter', () => {
+    const d = dealer();
+    expect(debtGap(statementState(d, IN), d)).toBe(
+      'Floorplan counts as debt under your rules. Enter Revolver, Term loans and notes, including current portion, Cash interest paid, '
+      + 'Current maturities of long-term debt (0 if none) so leverage and DSCR include it.',
+    );
+  });
+
+  test('floorplan out: no gap, the floorplan is not debt', () => {
+    const d = dealer();
+    expect(debtGap(statementState(d, DEFAULT_TREATMENT_RULES), d)).toBeNull();
+  });
+
+  test('debt lines entered: no gap', () => {
+    const d = dealer({ revolver: li(0), termLoansAndNotes: li(0), interestPaid: li(2 * M), currentMaturities: li(0) });
+    expect(debtGap(statementState(d, IN), d)).toBeNull();
+  });
+
+  test('typed debt and debt service with an override reason: let through', () => {
+    const d = dealer();
+    d.financials.fieldOverrides = {
+      totalExistingDebt: { reason: 'From the credit agreement' },
+      actualAnnualDebtService: { reason: 'From the credit agreement' },
+    };
+    expect(debtGap(statementState(d, IN), d)).toBeNull();
+  });
+
+  test('the server save reports it', () => {
+    const d = dealer();
+    expect(prepareForSave(d, IN, null).debtGap).toMatch(/^Floorplan counts as debt under your rules\./);
+  });
+});

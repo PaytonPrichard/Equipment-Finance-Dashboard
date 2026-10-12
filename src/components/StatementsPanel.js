@@ -108,7 +108,7 @@ function LineRow({ line, item, onChange }) {
   );
 }
 
-export default function StatementsPanel({ financials, state, inputs, onChange, onClear, firmRules, rulesChanged, onRebuild, onConfirm, onTreatment }) {
+export default function StatementsPanel({ financials, state, inputs, onChange, onClear, firmRules, debtGap, rulesChanged, onRebuild, onConfirm, onTreatment }) {
   // The rebuild reruns the build and the whole results view, which can take
   // a moment. Hide the prompt on the click itself, then rebuild, so the
   // button never sits there looking unclicked.
@@ -236,6 +236,11 @@ export default function StatementsPanel({ financials, state, inputs, onChange, o
               );
             })}
           </ul>
+          {debtGap && (
+            <p className="mt-3 text-[11px] text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2" data-testid="debt-gap">
+              {debtGap} Saving waits for this.
+            </p>
+          )}
           {build.errors.length > 0 && (
             <div className="mt-3">
               <p className="text-[11px] font-semibold text-gray-700">To build the rest</p>
