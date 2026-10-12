@@ -43,5 +43,7 @@ export async function upsertPreferences(userId: string, prefs: Partial<Omit<User
     .select()
     .single();
 
+  // Callers mostly fire and forget, so a failed write used to vanish.
+  if (error) console.error(`Preferences: could not save ${Object.keys(prefs).join(', ')}.`, error.message);
   return { data: result as UserPreferencesRow | null, error };
 }

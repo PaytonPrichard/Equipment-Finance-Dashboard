@@ -327,9 +327,9 @@ function getInputWarnings(inputs, pipelineDeals) {
 // The wrapper div renders whether or not the field is missing. Returning the
 // bare field when it fills in changed the tree, so React remounted the input
 // and the cursor left the box on the first keystroke.
-function MissingFieldWrapper({ isMissing, label, children }) {
+function MissingFieldWrapper({ isMissing, fieldKey, children }) {
   return (
-    <div className="relative">
+    <div className="relative" data-field={fieldKey}>
       {children}
       {isMissing && (
         <div className="mt-1 flex items-center gap-1">
@@ -670,7 +670,7 @@ function renderFieldsLayout(fields, inputs, onChange, schema, pipelineDeals, mis
         <div key={i} className="grid grid-cols-2 gap-3">
           {group.fields.map((f) => (
             <React.Fragment key={f.key}>
-              <MissingFieldWrapper isMissing={missingKeys?.has(f.key)} label={f.label}>
+              <MissingFieldWrapper isMissing={missingKeys?.has(f.key)} fieldKey={f.key}>
                 {renderFieldWithStatements(f, inputs, onChange, schema, pipelineDeals, missingKeys, stmt)}
               </MissingFieldWrapper>
             </React.Fragment>
@@ -680,7 +680,7 @@ function renderFieldsLayout(fields, inputs, onChange, schema, pipelineDeals, mis
     }
     return (
       <React.Fragment key={group.field.key}>
-        <MissingFieldWrapper isMissing={missingKeys?.has(group.field.key)} label={group.field.label}>
+        <MissingFieldWrapper isMissing={missingKeys?.has(group.field.key)} fieldKey={group.field.key}>
           {renderFieldWithStatements(group.field, inputs, onChange, schema, pipelineDeals, missingKeys, stmt)}
         </MissingFieldWrapper>
       </React.Fragment>
@@ -688,10 +688,45 @@ function renderFieldsLayout(fields, inputs, onChange, schema, pipelineDeals, mis
   });
 }
 
+// A "more" field counts as in use when it holds a value or the statements
+// built it. Either way the group opens, so no number sits out of sight.
+function fieldInUse(field, inputs, built) {
+  if (built[field.key] !== undefined) return true;
+  const v = inputs[field.key];
+  return v !== undefined && v !== null && v !== '' && v !== 0;
+}
+
+// What the optional group adds, by field. Shown on the toggle so the analyst
+// knows what is there before opening it.
+const MORE_PURPOSE = {
+  priorYearRevenue: 'trend', priorYearEbitda: 'trend',
+  maintenanceCapex: 'cash-flow coverage', cashTaxes: 'cash-flow coverage', workingCapitalIncrease: 'cash-flow coverage',
+  leasePayments: 'cash-flow coverage', floatingRateDebtPct: 'rate shock',
+  cashOnHand: 'liquidity', availableLiquidity: 'liquidity',
+};
+
 // ============ MAIN FORM ============
 
 export default function DealInputForm({ inputs, onChange, schema, modules, activeModule, onModuleChange, pipelineDeals, sofr, sofrSource, analystName, analystEmail, draftStatus, treatmentRules }) {
   const confirm = useConfirm();
+  // Missing badges show only for a required field the analyst has been in
+  // and left empty. Showing every one from the first keystroke was noise.
+  const [touched, setTouched] = useState(() => new Set());
+  const [moreOpen, setMoreOpen] = useState({});
+  const statementsRef = useRef(null);
+  const hadStatements = useRef(!!inputs.financials);
+  useEffect(() => {
+    // "Add statements" sits at the top of Borrower Profile; the open panel
+    // sits below the fields it fills. Follow it there.
+    if (inputs.financials && !hadStatements.current) {
+      statementsRef.current?.scrollIntoView?.({ behavior: 'smooth', block: 'start' });
+    }
+    hadStatements.current = !!inputs.financials;
+  }, [inputs.financials]);
+  const markTouched = (e) => {
+    const key = e.target.closest?.('[data-field]')?.getAttribute('data-field');
+    if (key && !touched.has(key)) setTouched((prev) => new Set(prev).add(key));
+  };
   // What the statements build. App writes the built values into the flat
   // fields (applyStatementBuild); this only decides how each field shows.
   const statements = statementState(inputs, treatmentRules);
@@ -726,6 +761,7 @@ export default function DealInputForm({ inputs, onChange, schema, modules, activ
 
   const missingFields = getMissingFields(inputs, schema);
   const missingKeys = new Set(missingFields.map(f => f.key));
+  const shownMissing = new Set([...missingKeys].filter((k) => touched.has(k)));
   const hasIncomplete = missingFields.length > 0;
 
   // Where the screening rate actually came from.
@@ -741,6 +777,25 @@ export default function DealInputForm({ inputs, onChange, schema, modules, activ
     : sofrSource?.includes('cached')
       ? { text: 'cached', className: 'text-gray-300', title: 'Last FRED reading, fetched within the past four hours.' }
       : { text: 'default', className: 'text-amber-600', title: 'Live SOFR is unavailable, so screening is using the built-in default rate.' };
+
+  const statementsPanel = (
+    <StatementsPanel
+      financials={inputs.financials || null}
+      state={statements}
+      inputs={inputs}
+      onChange={(financials) => onChange({ ...inputs, financials })}
+      onClear={clearAllStatements}
+      firmRules={firmRules}
+      rulesChanged={rulesChanged}
+      onRebuild={() => onChange(rebuildWithCurrentRules(inputs, treatmentRules, { by: analystName || undefined }).inputs)}
+      onConfirm={(id, value, proposed) => onChange(confirmJudgment(inputs, id, value, proposed, analystName || undefined))}
+      onTreatment={(row, rule, reason) => {
+        const r = setDealTreatment(inputs, row, rule, reason, treatmentRules, analystName || undefined);
+        if (!r.error) onChange(r.inputs);
+        return r.error;
+      }}
+    />
+  );
 
   return (
     <div className="space-y-5">
@@ -818,25 +873,48 @@ export default function DealInputForm({ inputs, onChange, schema, modules, activ
             )}
           </div>
 
-          <div className="space-y-4">
-            {renderFieldsLayout(section.fields, inputs, onChange, schema, pipelineDeals, missingKeys, stmt)}
-            {section.key === 'borrower' && (
-              <StatementsPanel
-                financials={inputs.financials || null}
-                state={statements}
-                inputs={inputs}
-                onChange={(financials) => onChange({ ...inputs, financials })}
-                onClear={clearAllStatements}
-                firmRules={firmRules}
-                rulesChanged={rulesChanged}
-                onRebuild={() => onChange(rebuildWithCurrentRules(inputs, treatmentRules, { by: analystName || undefined }).inputs)}
-                onConfirm={(id, value, proposed) => onChange(confirmJudgment(inputs, id, value, proposed, analystName || undefined))}
-                onTreatment={(row, rule, reason) => {
-                  const r = setDealTreatment(inputs, row, rule, reason, treatmentRules, analystName || undefined);
-                  if (!r.error) onChange(r.inputs);
-                  return r.error;
-                }}
-              />
+          <div className="space-y-4" onBlurCapture={markTouched}>
+            {section.key === 'borrower' && !inputs.financials && statementsPanel}
+            {(() => {
+              const main = section.fields.filter((f) => !f.more);
+              const more = section.fields.filter((f) => f.more);
+              const built = statements?.built || {};
+              const inUse = more.filter((f) => fieldInUse(f, inputs, built)).length;
+              const open = moreOpen[section.key] ?? inUse > 0;
+              const purposes = [...new Set(more.map((f) => MORE_PURPOSE[f.key]).filter(Boolean))];
+              return (
+                <>
+                  {renderFieldsLayout(main, inputs, onChange, schema, pipelineDeals, shownMissing, stmt)}
+                  {more.length > 0 && (
+                    <div className="border-t border-gray-100 pt-3">
+                      <button
+                        type="button"
+                        aria-expanded={open}
+                        onClick={() => setMoreOpen((prev) => ({ ...prev, [section.key]: !open }))}
+                        className="w-full flex items-center justify-between text-left"
+                      >
+                        <span>
+                          <span className="text-[12px] font-semibold text-gray-700">More inputs (optional)</span>
+                          {purposes.length > 0 && (
+                            <span className="block text-[10px] text-gray-400">Sharpens {purposes.join(', ')}. Blank shows as not provided.</span>
+                          )}
+                        </span>
+                        <span className="text-[11px] text-gray-400 flex-shrink-0 ml-3">
+                          {inUse > 0 ? `${inUse} of ${more.length} filled` : `${more.length} fields`} {open ? '▴' : '▾'}
+                        </span>
+                      </button>
+                      {open && (
+                        <div className="space-y-4 mt-4">
+                          {renderFieldsLayout(more, inputs, onChange, schema, pipelineDeals, shownMissing, stmt)}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </>
+              );
+            })()}
+            {section.key === 'borrower' && inputs.financials && (
+              <div ref={statementsRef} className="scroll-mt-24">{statementsPanel}</div>
             )}
           </div>
         </div>

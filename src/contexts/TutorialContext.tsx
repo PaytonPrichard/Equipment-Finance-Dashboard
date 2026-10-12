@@ -77,9 +77,7 @@ export function TutorialProvider({ children, userId }: { children: React.ReactNo
   const persistState = useCallback((newState: TutorialState) => {
     saveCachedState(newState);
     if (userId) {
-      upsertPreferences(userId, { tutorial_state: newState })
-        .then(({ error }) => { if (error) console.error('Tutorial state: could not save.', error.message); })
-        .catch(console.error);
+      upsertPreferences(userId, { tutorial_state: newState }).catch(console.error);
     }
   }, [userId]);
 

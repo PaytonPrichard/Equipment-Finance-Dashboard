@@ -71,6 +71,9 @@ describe('cash-flow inputs keep blank as blank', () => {
       />
       </TutorialProvider>,
     );
+    // Cash-flow inputs sit in the optional group, closed on a blank deal.
+    const toggle = screen.getByRole('button', { name: /More inputs/ });
+    if (toggle.getAttribute('aria-expanded') !== 'true') fireEvent.click(toggle);
     const inputFor = (label) => {
       let el = screen.getByText(label);
       while (el && !el.querySelector('input')) el = el.parentElement;
@@ -355,4 +358,64 @@ test('typing the first digit of a required field keeps the same input', () => {
   fireEvent.change(before, { target: { value: '1' } });
   const after = screen.getByPlaceholderText('50,000,000');
   expect(after).toBe(before);
+});
+
+describe('optional borrower inputs', () => {
+  function renderWith(inputs) {
+    render(
+      <TutorialProvider userId={null}>
+        <DealInputForm
+          inputs={inputs}
+          onChange={() => {}}
+          schema={mod.FORM_SCHEMA}
+          modules={getAvailableModules()}
+          activeModule="equipment_finance"
+          onModuleChange={() => {}}
+          pipelineDeals={[]}
+          sofr={0.0389}
+        />
+      </TutorialProvider>,
+    );
+  }
+
+  test('start closed on a blank deal and say what they add', () => {
+    renderWith(mod.INITIAL_INPUTS);
+    const toggle = screen.getByRole('button', { name: /More inputs/ });
+    expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    expect(toggle).toHaveTextContent('9 fields');
+    expect(toggle).toHaveTextContent(/trend, cash-flow coverage, rate shock, liquidity/);
+    expect(screen.queryByText('Cash Taxes')).not.toBeInTheDocument();
+    // Core inputs stay in view.
+    expect(screen.getByText('Existing Debt')).toBeInTheDocument();
+    expect(screen.getByText('Actual Annual DS')).toBeInTheDocument();
+  });
+
+  test('open by themselves when one holds a value, so no number is out of sight', () => {
+    renderWith({ ...mod.INITIAL_INPUTS, cashTaxes: 400000 });
+    const toggle = screen.getByRole('button', { name: /More inputs/ });
+    expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    expect(toggle).toHaveTextContent('1 of 9 filled');
+    expect(screen.getByText('Cash Taxes')).toBeInTheDocument();
+  });
+});
+
+test('a missing badge waits until the analyst leaves the field empty', () => {
+  mockDemo = false;
+  render(
+    <TutorialProvider userId={null}>
+      <DealInputForm
+        inputs={{ ...mod.INITIAL_INPUTS, annualRevenue: 0, ebitda: 0 }}
+        onChange={() => {}}
+        schema={mod.FORM_SCHEMA}
+        modules={getAvailableModules()}
+        activeModule="equipment_finance"
+        onModuleChange={() => {}}
+        pipelineDeals={[]}
+        sofr={0.0389}
+      />
+    </TutorialProvider>,
+  );
+  expect(screen.queryByText('Missing, required for screening')).not.toBeInTheDocument();
+  fireEvent.blur(screen.getByPlaceholderText('50,000,000'));
+  expect(screen.getAllByText('Missing, required for screening')).toHaveLength(1);
 });
