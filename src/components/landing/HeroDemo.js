@@ -18,16 +18,13 @@
 
 import React from 'react';
 import { useLoopingSteps } from '../../hooks/useReveal';
+import { GRANITE } from './siteFacts';
 
 const GOLD = '#D4A843';
 
-// Field counts match what extraction actually returns for these documents.
-const DOCUMENTS = [
-  { name: '01_credit-application.pdf', type: 'Credit application', fields: 12 },
-  { name: '02_financial-statements.pdf', type: 'Financial statements', fields: 11 },
-  { name: '03_equipment-quote.pdf', type: 'Equipment quote', fields: 8 },
-  { name: '04_broker-email.txt', type: 'Deal sheet', fields: 18 },
-];
+// Field counts and the score come from siteFacts.js, which is checked
+// against what extraction and scoring actually return for these documents.
+const DOCUMENTS = GRANITE.documents;
 
 // Step map. Index into the durations array below.
 //  0        empty, waiting
@@ -183,7 +180,7 @@ export default function HeroDemo() {
                 className="px-2 py-1 rounded-md text-[11px] font-bold font-mono tabular-nums text-gray-900"
                 style={{ backgroundColor: 'rgba(212,168,67,0.16)' }}
               >
-                80/100
+                {GRANITE.score}/100
               </span>
             </div>
           </div>
@@ -198,7 +195,7 @@ export default function HeroDemo() {
         />
       </div>
       <div className="mt-2 text-[11px] text-gray-400 text-center" aria-hidden="true">
-        Four documents, read together. Real output from the sample deal set.
+        Four documents, read together. Actual output on a sample deal.
       </div>
     </div>
   );

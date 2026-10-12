@@ -1,211 +1,111 @@
-import React from 'react';
-import TrancheLogo from './TrancheLogo';
+import React, { useEffect } from 'react';
 import HeroDemo from './landing/HeroDemo';
-import StepsScroller from './landing/StepsScroller';
 import Reveal, { RevealGroup } from './landing/Reveal';
-import { useScrolledPast, useActiveSection } from '../hooks/useReveal';
+import SiteShell, { GOLD, CREAM, RULE } from './landing/SiteChrome';
+import { MergePanel, BuildPanel, VerdictPanel, ScorecardPanel, DriftPanel } from './landing/ProductPanels';
+import { MONITORING_COMING } from './landing/siteFacts';
+import { useActiveSection } from '../hooks/useReveal';
 
-// ── Brand color ──────────────────────────────────────────────
-const GOLD = '#D4A843';
-// Warm putty. Biased toward the gold rather than a neutral grey, so the
-// margin around the sheet reads as chosen rather than as unpainted.
-const GROUND = '#E3DED2';
-const GOLD_LIGHT = '#F5EDD6';
+// One idea per section: a headline, a line, one readable piece of the
+// product. Depth lives on the Methodology page, which each section can link
+// to. Every claim here has to match what is live. Figures come from
+// landing/siteFacts.js and are checked by its test.
 
-// Two things Tranche does that the alternatives do not: read a whole
-// document set across three asset classes, and hand back a memo a
-// committee can actually use. Those lead. The rest are one line each,
-// because six equal cards say six equal things and get read as none.
-const FEATURE_LEAD = [
-  {
-    title: 'Screen three asset classes',
-    description: 'Equipment, accounts receivable, and inventory. Each with its own scoring model and form schema.',
-    icon: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-        <polygon points="12 2 2 7 12 12 22 7 12 2" />
-        <polyline points="2 17 12 22 22 17" />
-        <polyline points="2 12 12 17 22 12" />
-      </svg>
-    ),
-  },
-  {
-    title: 'Produce the committee memo',
-    description: 'Transaction summary, sources and uses, factor scores, and the documents behind every number.',
-    icon: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-        <polyline points="14 2 14 8 20 8" />
-        <line x1="16" y1="13" x2="8" y2="13" />
-        <line x1="16" y1="17" x2="8" y2="17" />
-      </svg>
-    ),
-  },
-];
-
-const FEATURE_MORE = [
-  {
-    title: 'Score a deal in two minutes',
-    description: 'Pass, flag or fail with a composite score.',
-    icon: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-        <polyline points="22 4 12 14.01 9 11.01" />
-      </svg>
-    ),
-  },
-  {
-    title: 'Set your own thresholds',
-    description: 'DSCR floors, leverage ceilings, and concentration limits.',
-    icon: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-        <circle cx="12" cy="12" r="3" />
-        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
-      </svg>
-    ),
-  },
-  {
-    title: 'Track deals through to funded',
-    description: 'Stages, documents, roles, and an audit trail on every change.',
-    icon: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-        <rect x="3" y="3" width="7" height="7" rx="1" />
-        <rect x="14" y="3" width="7" height="7" rx="1" />
-        <rect x="3" y="14" width="7" height="7" rx="1" />
-        <rect x="14" y="14" width="7" height="7" rx="1" />
-      </svg>
-    ),
-  },
-  {
-    title: 'Connect your CRM',
-    description: 'REST API and webhooks. Deals flow in, scores flow back.',
-    icon: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-        <polyline points="16 18 22 12 16 6" />
-        <polyline points="8 6 2 12 8 18" />
-      </svg>
-    ),
-  },
-];
-
+// Limits are plan terms, arranged by hand. Nothing here is a feature the
+// product does not have. Larger teams get a line under the cards, not a
+// third card with nothing behind it.
 const PRICING = [
   {
     name: 'Analyst',
     price: '$200',
     period: '/mo',
     who: 'For individual analysts',
-    features: ['1 user', 'All asset classes', 'Pass/flag/fail screening', 'Deal pipeline', 'CSV & PDF export', '50 active deals'],
-    cta: 'Request a trial',
+    features: ['1 user', 'All asset classes', 'Pass/flag/fail screening', 'Deal pipeline', 'CSV and PDF export', '50 active deals'],
   },
   {
     name: 'Team',
     price: '$500',
     period: '/mo',
-    who: 'For credit teams of 2-10',
-    features: ['Up to 10 users', 'Everything in Analyst', 'Unlimited deals', 'Firm-branded memos', 'Shared pipeline & audit trail', 'Custom scoring weights', 'API & webhook integrations'],
-    cta: 'Request a trial',
-    highlight: true,
-  },
-  {
-    name: 'Enterprise',
-    price: '$1,500',
-    period: '/mo',
-    who: 'For lenders with custom workflows',
-    features: ['Up to 50 users', 'Everything in Team', 'Custom scoring models', 'SSO integration', 'Dedicated support & SLA'],
-    cta: 'Schedule a demo',
+    who: 'For credit teams of 2 to 10',
+    features: ['Up to 10 users', 'Everything in Analyst', 'Unlimited deals', 'Firm-branded memos', 'Shared pipeline and audit trail', 'API and webhooks'],
+    primary: true,
   },
 ];
 
-export default function LandingPage({ onGetStarted, onSignIn }) {
-  // Drives the nav from transparent-over-hero to solid once you scroll.
-  const scrolled = useScrolledPast(24);
+const SETUP_STEPS = [
+  { n: '1', title: 'Upload your pipeline', desc: 'Existing deals by CSV, scored in bulk.' },
+  { n: '2', title: 'Set your thresholds', desc: 'DSCR, leverage, LTV and concentration limits.' },
+  { n: '3', title: 'Invite the team', desc: 'Invite codes, with roles already set.' },
+];
 
-  // The how-it-works section is a tall pinned scroller, so its top is a
-  // run-up rather than its content. Jumping to the element itself lands on
-  // blank page. Aim a sixth of the way in, which is the middle of step one.
-  const scrollToHowItWorks = () => {
-    const el = document.getElementById('how-it-works');
-    if (!el) return;
-    const rect = el.getBoundingClientRect();
-    const travel = rect.height - window.innerHeight;
-    const top = rect.top + window.scrollY + Math.max(0, travel) / 6;
-    window.scrollTo({ top: Math.round(top), behavior: 'smooth' });
+const SECURITY = ['Row-level data isolation', 'Role-based access', 'Audit trail on deal changes'];
+
+function MethodLink({ to, children }) {
+  return (
+    <a
+      href={`/methodology#${to}`}
+      className="inline-flex items-center gap-1.5 text-[14px] font-medium text-gray-900 border-b border-gray-300 hover:border-gray-900 transition-colors"
+    >
+      {children}
+      <span aria-hidden="true">&rarr;</span>
+    </a>
+  );
+}
+
+/**
+ * Copy on one side, the product on the other. Copy is first in the markup,
+ * so on a phone it sits above the visual. `flip` swaps the sides on desktop
+ * so consecutive sections do not all lean the same way.
+ */
+function ProductSection({ id, title, line, small, link, flip, tint, children }) {
+  return (
+    <section id={id} className="scroll-mt-20" style={tint ? { backgroundColor: '#FAFAF8' } : undefined}>
+      <div className="max-w-[1180px] mx-auto px-4 sm:px-8 py-20 md:py-28">
+        <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
+          <Reveal className={flip ? 'lg:order-2' : ''}>
+            <h2 className="text-3xl md:text-[40px] font-bold text-gray-900 mb-4 tracking-tight leading-[1.1] text-balance">
+              {title}
+            </h2>
+            <p className="text-lg text-gray-500 leading-relaxed max-w-[46ch]">{line}</p>
+            {small && <div className="mt-5 text-[14px] text-gray-500 leading-relaxed max-w-[46ch]">{small}</div>}
+            {link && <div className="mt-6">{link}</div>}
+          </Reveal>
+          <Reveal delay={120} className="min-w-0">
+            {children}
+          </Reveal>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+export default function LandingPage({ onGetStarted, onSignIn }) {
+  // 88px clears the nav at either of its two heights.
+  const activeSection = useActiveSection(['product', 'pricing'], 88);
+
+  // Arriving from the Methodology page on /#pricing: the section does not
+  // exist yet when the browser first tries the hash, because the auth check
+  // renders before this page does.
+  useEffect(() => {
+    const id = window.location.hash.slice(1);
+    if (id) document.getElementById(id)?.scrollIntoView();
+  }, []);
+
+  const scrollToSection = (id) => {
+    const el = document.getElementById(id);
+    if (!el) return false;
+    el.scrollIntoView({ behavior: 'smooth' });
+    return true;
   };
 
-  // 88px clears the nav at either of its two heights.
-  const activeSection = useActiveSection(['how-it-works', 'features', 'pricing'], 88);
-
   return (
-    <div className="min-h-screen" style={{ backgroundColor: GROUND }}>
-      {/* Nav */}
-      <nav
-        className="sticky top-0 z-50 transition-all duration-300"
-        style={{
-          backgroundColor: GROUND,
-        }}
-      >
-        <div
-          className="max-w-[1240px] mx-auto px-8 flex items-center justify-between transition-all duration-300"
-          style={{ height: scrolled ? 64 : 76 }}
-        >
-          <span className="flex items-center gap-2.5 text-xl font-extrabold text-gray-900 tracking-tight">
-            <TrancheLogo size={32} />
-            Tranche
-          </span>
-          <div className="hidden md:flex items-center gap-7">
-            {[
-              { id: 'features', label: 'Features' },
-              { id: 'how-it-works', label: 'How it works', go: scrollToHowItWorks },
-              { id: 'pricing', label: 'Pricing' },
-            ].map((item) => {
-              const isActive = activeSection === item.id;
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => (item.go ? item.go() : document.getElementById(item.id)?.scrollIntoView({ behavior: 'smooth' }))}
-                  aria-current={isActive ? 'true' : undefined}
-                  className={`relative text-[15px] transition-colors ${isActive ? 'text-gray-900 font-medium' : 'text-gray-500 hover:text-gray-900'}`}
-                >
-                  {item.label}
-                  {/* The weight change alone shifts the label a hair and
-                      nudges its neighbours. The underline is what actually
-                      reads as "you are here"; it grows from the centre so
-                      the transition has a direction. */}
-                  <span
-                    aria-hidden="true"
-                    className="absolute left-0 right-0 -bottom-1.5 h-[2px] rounded-full origin-center transition-transform duration-300"
-                    style={{ backgroundColor: GOLD, transform: `scaleX(${isActive ? 1 : 0})` }}
-                  />
-                </button>
-              );
-            })}
-            {/* Demo leaves the page, so it is never "current". */}
-            <a href="?demo=1" className="text-[15px] text-gray-500 hover:text-gray-900 transition-colors">Demo</a>
-          </div>
-          <div className="flex items-center gap-2">
-            <button onClick={onSignIn} className="px-3 py-2 rounded-lg text-[15px] font-medium text-gray-600 hover:text-gray-900 transition-colors">Sign in</button>
-            <button onClick={onGetStarted} className="px-5 py-2.5 rounded-lg text-[15px] font-semibold text-white hover:opacity-90 transition-all" style={{ backgroundColor: GOLD }}>Get started</button>
-          </div>
-        </div>
-      </nav>
-
-      {/* The sheet. Everything below sits on it. */}
-      <div className="px-3 sm:px-5 xl:px-7 2xl:px-9 pb-3 sm:pb-5 xl:pb-7 2xl:pb-9">
-        <div
-          className="bg-white rounded-[20px] sm:rounded-[28px] overflow-hidden"
-          style={{
-            // Layered rather than one blur: a hairline to define the edge
-            // against the putty, a tight shadow for contact, and two wide
-            // soft ones for lift. Tinted warm (22,21,15) instead of black,
-            // so the shadow belongs to this ground rather than sitting on it.
-            boxShadow:
-              '0 0 0 1px rgba(22,21,15,0.075), 0 1px 2px rgba(22,21,15,0.05), 0 10px 30px -4px rgba(22,21,15,0.07), 0 44px 88px -32px rgba(22,21,15,0.16)',
-          }}
-        >
+    <SiteShell current={activeSection} onSection={scrollToSection} onGetStarted={onGetStarted} onSignIn={onSignIn}>
 
       {/* Hero */}
       <section className="relative overflow-hidden">
         {/* Warm ground, plus a faint rule grid fading out toward the middle.
-            Without it the hero is a white field with text floating in it. */}
+            Without it the hero is a white field with text floating in it.
+            This is the only decorative grid on the page. */}
         <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-b from-amber-50/50 via-white to-white" />
         <div
           aria-hidden="true"
@@ -217,10 +117,9 @@ export default function LandingPage({ onGetStarted, onSignIn }) {
             WebkitMaskImage: 'radial-gradient(ellipse 80% 60% at 50% 40%, transparent 20%, #000 100%)',
           }}
         />
-        <div className="relative max-w-[1180px] mx-auto px-8 pt-24 md:pt-32 pb-24 md:pb-28">
+        <div className="relative max-w-[1180px] mx-auto px-4 sm:px-8 pt-20 md:pt-32 pb-20 md:pb-28">
           <div className="grid lg:grid-cols-[1.05fr_0.95fr] gap-14 lg:gap-16 items-center">
 
-            {/* Copy */}
             <div className="text-center lg:text-left">
               <Reveal>
                 <p className="text-[15px] font-semibold tracking-wide mb-5" style={{ color: GOLD }}>
@@ -228,17 +127,17 @@ export default function LandingPage({ onGetStarted, onSignIn }) {
                 </p>
               </Reveal>
               <Reveal delay={80}>
-                <h1 className="text-[42px] sm:text-[54px] md:text-[64px] font-extrabold text-gray-900 leading-[1.04] mb-7 tracking-[-0.025em] text-balance">
-                  Screen equipment, AR, and inventory deals in minutes, not hours.
+                <h1 className="text-[40px] sm:text-[54px] md:text-[62px] font-extrabold text-gray-900 leading-[1.04] mb-7 tracking-[-0.025em] text-balance">
+                  Screen deals from the documents you receive.
                 </h1>
               </Reveal>
               <Reveal delay={160}>
                 <p className="text-lg text-gray-500 mb-9 leading-relaxed max-w-xl mx-auto lg:mx-0">
-                  A deal arrives as documents that disagree with each other. Tranche reads them together, shows you where they disagree, scores the deal against your credit policy, and produces the memo.
+                  Upload the deal file. Tranche reads it, shows where the documents disagree and scores the deal against your thresholds.
                 </p>
               </Reveal>
               <Reveal delay={240}>
-                <div className="flex items-center justify-center lg:justify-start gap-4 mb-4 flex-wrap">
+                <div className="flex items-center justify-center lg:justify-start gap-4 mb-5 flex-wrap">
                   <button onClick={onGetStarted} className="px-7 py-3.5 rounded-lg text-[16px] font-semibold text-white shadow-lg hover:opacity-90 hover:-translate-y-0.5 transition-all" style={{ backgroundColor: GOLD, boxShadow: '0 4px 24px rgba(212, 168, 67, 0.3)' }}>
                     Request a trial
                   </button>
@@ -246,12 +145,15 @@ export default function LandingPage({ onGetStarted, onSignIn }) {
                     View demo
                   </a>
                 </div>
-                <p className="text-sm text-gray-500">Try the live demo on sample deals. No account needed.</p>
+                <p className="text-sm text-gray-500 max-w-xl mx-auto lg:mx-0">
+                  For credit analysts, deal teams and committee members at non-bank lenders.
+                  The demo runs on sample deals. No account needed.
+                </p>
               </Reveal>
             </div>
 
             {/* The product, doing its job */}
-            <Reveal delay={300}>
+            <Reveal delay={300} className="min-w-0">
               <HeroDemo />
             </Reveal>
 
@@ -259,202 +161,128 @@ export default function LandingPage({ onGetStarted, onSignIn }) {
         </div>
       </section>
 
-      {/* Who it moves between */}
-      <section className="max-w-[1180px] mx-auto px-8 pt-4 pb-16">
-        <Reveal>
-          <p className="text-center text-[13px] font-semibold uppercase tracking-wider text-gray-400 mb-10">
-            One deal, three desks
-          </p>
-        </Reveal>
-        <div className="relative max-w-4xl mx-auto">
-          {/* The line the deal travels along. */}
-          <div
-            aria-hidden="true"
-            className="hidden md:block absolute top-[26px] left-[16%] right-[16%] h-px"
-            style={{ background: 'linear-gradient(90deg, transparent, #e5e0d4 15%, #e5e0d4 85%, transparent)' }}
-          />
-          <RevealGroup className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-4 relative">
-            {[
-              { role: 'Credit analyst', does: 'Screens the file', gets: 'Verdict in two minutes' },
-              { role: 'Deal team', does: 'Moves it through stages', gets: 'Pipeline with an audit trail' },
-              { role: 'Credit committee', does: 'Makes the call', gets: 'A memo that names its sources' },
-            ].map((p) => (
-              <div key={p.role} className="text-center">
-                <div className="flex justify-center mb-4">
-                  <span
-                    className="w-[52px] h-[52px] rounded-full bg-white border flex items-center justify-center"
-                    style={{ borderColor: '#e5e0d4' }}
-                  >
-                    <span className="w-2 h-2 rounded-full" style={{ backgroundColor: GOLD }} />
-                  </span>
-                </div>
-                <div className="text-[15px] font-semibold text-gray-900 mb-1">{p.role}</div>
-                <div className="text-[13.5px] text-gray-500 mb-2">{p.does}</div>
-                <div className="text-[13px] text-gray-400">{p.gets}</div>
+      <ProductSection
+        id="product"
+        tint
+        flip
+        title="Read the whole file at once."
+        line="Upload the documents you were sent. Every field shows its source. Disagreements are shown, not resolved silently."
+        small="What Tranche reads only prefills the form. You review it before anything is scored."
+      >
+        <MergePanel />
+      </ProductSection>
+
+      <ProductSection
+        title="Statement lines in. EBITDA built."
+        line="Enter the lines from the financials. Tranche builds EBITDA, debt and debt service, and shows each formula. You confirm every judgment."
+        link={<MethodLink to="build">How the numbers are built</MethodLink>}
+      >
+        <BuildPanel />
+      </ProductSection>
+
+      <ProductSection
+        tint
+        flip
+        title="Pass, flag or fail against your thresholds."
+        line="Seven weighted factors, a verdict with its reasons, and a committee memo that names its sources."
+        small="Collateral valued at liquidation. Cash flow stressed. Every estimate marked as one."
+        link={<MethodLink to="scored">What is scored</MethodLink>}
+      >
+        <VerdictPanel />
+      </ProductSection>
+
+      <ProductSection
+        title="Run on nine public borrowers."
+        line="Every verdict is published with its reasons, including one the model gets wrong."
+        small="These are large public companies, not lower-middle-market borrowers. The run shows how the model reasons. It does not prove the model."
+        link={<MethodLink to="test">Read the method</MethodLink>}
+      >
+        <ScorecardPanel />
+      </ProductSection>
+
+      <ProductSection
+        tint
+        flip
+        title="Monitor what you funded."
+        line="Covenants are seeded from the underwrite. Tests are recorded and tracked against what you underwrote."
+        small={(
+          <>
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-gray-400">Coming</span>
+            <ul className="mt-2 flex flex-wrap gap-2">
+              {MONITORING_COMING.map((item) => (
+                <li key={item} className="text-[13px] text-gray-500 border border-dashed border-gray-300 rounded-full px-3 py-1">
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+      >
+        <DriftPanel />
+      </ProductSection>
+
+      {/* Setup, with the security claims as a quiet row under it. */}
+      <section>
+        <div className="max-w-[1180px] mx-auto px-4 sm:px-8 py-20 md:py-28">
+          <Reveal>
+            <h2 className="text-3xl md:text-[40px] font-bold text-gray-900 mb-4 tracking-tight text-center">Set up in one sitting.</h2>
+            <p className="text-lg text-gray-500 text-center mb-12 max-w-xl mx-auto">
+              No rollout and no implementation partner. Three steps.
+            </p>
+          </Reveal>
+          <RevealGroup className="grid grid-cols-1 md:grid-cols-3 gap-5 max-w-4xl mx-auto">
+            {SETUP_STEPS.map((s) => (
+              <div key={s.n} className="rounded-xl border border-gray-200 p-6 h-full">
+                <div className="text-[13px] font-semibold font-mono tabular-nums text-gray-400 mb-3">{s.n}</div>
+                <h3 className="text-[16px] font-semibold text-gray-900 mb-1">{s.title}</h3>
+                <p className="text-[14px] text-gray-500 leading-relaxed">{s.desc}</p>
               </div>
             ))}
           </RevealGroup>
-        </div>
-      </section>
-
-      {/* Features */}
-      <section id="features" className="scroll-mt-20 relative overflow-hidden" style={{ backgroundColor: '#FAFAF8' }}>
-        <div className="absolute inset-0 opacity-[0.025]" style={{ backgroundImage: 'radial-gradient(circle, #000 1px, transparent 1px)', backgroundSize: '32px 32px' }} />
-        <div className="relative max-w-[1180px] mx-auto px-8 py-24 md:py-32">
           <Reveal>
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3 text-center tracking-tight">Purpose-built for ABL teams</h2>
-            <p className="text-gray-500 text-center mb-12 text-lg">No consultants. No 6-month implementation. Start screening today.</p>
-          </Reveal>
-          {/* Reveal is applied per card rather than through RevealGroup:
-              the wrapper becomes the grid item, so the column spans have
-              to live on it or the leads never widen. */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {FEATURE_LEAD.map((f, i) => (
-              <Reveal key={f.title} delay={i * 70} className="md:col-span-2 h-full">
-                <div className="bg-white rounded-2xl border border-gray-200/80 p-7 md:p-8 hover:border-gray-300 hover:shadow-sm hover:-translate-y-0.5 transition-all h-full">
-                  <div
-                    className="w-11 h-11 rounded-xl flex items-center justify-center mb-5"
-                    style={{ backgroundColor: GOLD_LIGHT, color: GOLD }}
-                  >
-                    {f.icon}
-                  </div>
-                  <h3 className="text-[20px] font-semibold text-gray-900 mb-2 tracking-tight">{f.title}</h3>
-                  <p className="text-[15px] text-gray-500 leading-relaxed max-w-[42ch]">{f.description}</p>
-                </div>
-              </Reveal>
-            ))}
-            {FEATURE_MORE.map((f, i) => (
-              <Reveal key={f.title} delay={140 + i * 70} className="h-full">
-                <div className="bg-white rounded-xl border border-gray-200/80 p-5 hover:border-gray-300 hover:shadow-sm hover:-translate-y-0.5 transition-all h-full">
-                  <div
-                    className="w-8 h-8 rounded-lg flex items-center justify-center mb-3.5"
-                    style={{ backgroundColor: GOLD_LIGHT, color: GOLD }}
-                  >
-                    <span className="scale-[0.8] flex">{f.icon}</span>
-                  </div>
-                  <h3 className="text-[15px] font-semibold text-gray-900 mb-1">{f.title}</h3>
-                  <p className="text-[13.5px] text-gray-500 leading-relaxed">{f.description}</p>
-                </div>
-              </Reveal>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* How It Works */}
-      <StepsScroller />
-
-      {/* Time to value */}
-      <section className="relative overflow-hidden" style={{ backgroundColor: '#FAFAF8' }}>
-        <div
-          aria-hidden="true"
-          className="absolute inset-0 opacity-[0.035]"
-          style={{
-            backgroundImage: 'linear-gradient(#000 1px, transparent 1px), linear-gradient(90deg, #000 1px, transparent 1px)',
-            backgroundSize: '64px 64px',
-            maskImage: 'radial-gradient(ellipse 80% 70% at 50% 50%, transparent 20%, #000 100%)',
-            WebkitMaskImage: 'radial-gradient(ellipse 80% 70% at 50% 50%, transparent 20%, #000 100%)',
-          }}
-        />
-        <div className="relative max-w-[1000px] mx-auto px-8 py-24 md:py-28">
-          <div className="grid lg:grid-cols-[0.9fr_1.1fr] gap-12 lg:gap-16 items-start">
-
-            <Reveal>
-              <p className="text-[13px] font-semibold uppercase tracking-wider mb-4" style={{ color: GOLD }}>
-                Setup
-              </p>
-              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4 tracking-tight text-balance">
-                Live in under twenty minutes
-              </h2>
-              <p className="text-gray-500 text-lg leading-relaxed mb-6">
-                No rollout, no consultants, no implementation partner. Four things,
-                in one sitting.
-              </p>
-              <p className="text-[15px] text-gray-500 leading-relaxed">
-                Already tracking deals in a CRM? Salesforce, HubSpot and anything else
-                connect through the API. Deals flow in, scores flow back.
-              </p>
-            </Reveal>
-
-            <div className="relative">
-              {/* The rail the steps hang from. */}
-              <div
-                aria-hidden="true"
-                className="absolute left-[27px] top-3 bottom-6 w-px"
-                style={{ backgroundColor: '#e5e0d4' }}
-              />
-              <RevealGroup className="space-y-7">
-                {[
-                  { time: '10', unit: 'min', title: 'Upload your pipeline', desc: 'Existing deals by CSV, scored in bulk.' },
-                  { time: '5', unit: 'min', title: 'Set your credit policy', desc: 'DSCR, leverage and concentration thresholds.' },
-                  { time: '2', unit: 'min', title: 'Invite the team', desc: 'Invite codes, with roles already configured.' },
-                  { time: 'Live', unit: '', title: 'Dashboard is up', desc: 'Score distribution and pipeline analytics.' },
-                ].map((item) => (
-                  <div key={item.title} className="flex gap-5 items-start relative">
-                    <div
-                      className="w-14 h-14 rounded-full bg-white border flex flex-col items-center justify-center flex-shrink-0 relative z-10"
-                      style={{ borderColor: '#e5e0d4' }}
-                    >
-                      <span className="text-[17px] font-bold leading-none tabular-nums" style={{ color: GOLD }}>
-                        {item.time}
-                      </span>
-                      {item.unit && <span className="text-[9.5px] font-semibold text-gray-400 mt-0.5">{item.unit}</span>}
-                    </div>
-                    <div className="pt-2.5">
-                      <h3 className="text-[15.5px] font-semibold text-gray-900 mb-0.5">{item.title}</h3>
-                      <p className="text-[14px] text-gray-500 leading-relaxed">{item.desc}</p>
-                    </div>
-                  </div>
-                ))}
-              </RevealGroup>
+            <p className="text-[15px] text-gray-500 leading-relaxed text-center max-w-2xl mx-auto mt-10">
+              Already tracking deals in a CRM? Tranche has an API and webhooks. Send deals in from Salesforce,
+              HubSpot or any system that can call a web address. Scores and stage changes come back.
+            </p>
+            <div className="flex items-center justify-center gap-x-8 gap-y-3 flex-wrap mt-10 pt-8 border-t max-w-3xl mx-auto" style={{ borderColor: RULE }}>
+              {SECURITY.map((label) => (
+                <span key={label} className="flex items-center gap-2 text-[13px] text-gray-500">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-gray-400" aria-hidden="true">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                  {label}
+                </span>
+              ))}
             </div>
-
-          </div>
+          </Reveal>
         </div>
       </section>
 
       {/* Pricing */}
-      <section id="pricing" className="scroll-mt-20 bg-white">
-        <div className="max-w-[1180px] mx-auto px-8 py-24 md:py-32">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3 text-center tracking-tight">Simple pricing</h2>
+      <section id="pricing" className="scroll-mt-20" style={{ backgroundColor: '#FAFAF8' }}>
+        <div className="max-w-[1180px] mx-auto px-4 sm:px-8 py-20 md:py-28">
+          <h2 className="text-3xl md:text-[40px] font-bold text-gray-900 mb-4 text-center tracking-tight">Pricing</h2>
           <p className="text-gray-500 text-center mb-12 text-lg">Priced per organization, not per seat.</p>
-          <RevealGroup className="grid grid-cols-1 md:grid-cols-3 gap-5 max-w-4xl mx-auto">
+          <RevealGroup className="grid grid-cols-1 md:grid-cols-2 gap-5 max-w-2xl mx-auto">
             {PRICING.map((plan) => (
-              <div
-                key={plan.name}
-                className={`rounded-xl p-6 flex flex-col h-full ${
-                  plan.highlight
-                    ? 'bg-gray-900 text-white relative ring-2'
-                    : 'bg-white border border-gray-200'
-                }`}
-                style={plan.highlight ? { ringColor: GOLD } : undefined}
-              >
-                {plan.highlight && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full text-[11px] font-bold text-white uppercase tracking-wider" style={{ backgroundColor: GOLD }}>
-                    Most Popular
-                  </div>
-                )}
-                <h3 className={`text-lg font-bold mb-0.5 ${plan.highlight ? 'text-white' : 'text-gray-900'}`}>{plan.name}</h3>
-                <p className={`text-sm mb-4 ${plan.highlight ? 'text-gray-400' : 'text-gray-500'}`}>{plan.who}</p>
+              <div key={plan.name} className="rounded-xl p-6 flex flex-col h-full bg-white border border-gray-200">
+                <h3 className="text-lg font-bold mb-0.5 text-gray-900">{plan.name}</h3>
+                <p className="text-sm mb-4 text-gray-500">{plan.who}</p>
                 <div className="flex items-baseline gap-1 mb-5">
-                  <span className={`text-3xl font-extrabold ${plan.highlight ? 'text-white' : 'text-gray-900'}`}>{plan.price}</span>
-                  <span className={`text-base ${plan.highlight ? 'text-gray-400' : 'text-gray-500'}`}>{plan.period}</span>
+                  <span className="text-3xl font-extrabold text-gray-900">{plan.price}</span>
+                  <span className="text-base text-gray-500">{plan.period}</span>
                 </div>
                 <button
                   onClick={onGetStarted}
-                  className={`w-full py-3 rounded-lg text-[15px] font-semibold transition-all mb-5 ${
-                    plan.highlight
-                      ? 'text-gray-900 hover:opacity-90'
-                      : 'text-white hover:opacity-90'
-                  }`}
-                  style={{ backgroundColor: plan.highlight ? GOLD : '#111827' }}
+                  className={`w-full py-3 rounded-lg text-[15px] font-semibold transition-all mb-5 hover:opacity-90 ${plan.primary ? 'text-white' : 'text-gray-900 border border-gray-300 bg-white'}`}
+                  style={plan.primary ? { backgroundColor: GOLD } : undefined}
                 >
-                  {plan.cta}
+                  Request a trial
                 </button>
                 <ul className="space-y-2.5 flex-1">
                   {plan.features.map((f) => (
-                    <li key={f} className={`flex items-start gap-2.5 text-[14px] ${plan.highlight ? 'text-gray-300' : 'text-gray-600'}`}>
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="flex-shrink-0 mt-0.5" strokeWidth="2" style={{ color: plan.highlight ? GOLD : '#9CA3AF' }}>
+                    <li key={f} className="flex items-start gap-2.5 text-[14px] text-gray-600">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" className="flex-shrink-0 mt-0.5 text-gray-400" strokeWidth="2" aria-hidden="true">
                         <polyline points="20 6 9 17 4 12" />
                       </svg>
                       {f}
@@ -465,45 +293,41 @@ export default function LandingPage({ onGetStarted, onSignIn }) {
             ))}
           </RevealGroup>
           <p className="text-center text-[15px] text-gray-500 mt-10 max-w-lg mx-auto">
-            Every plan starts with a trial. Plans are arranged directly with us,
-            so there is nothing to check out and no contract to sign first.
+            Every plan starts with a trial. Plans are arranged directly with us, so there is nothing to check out first.
+            Larger team or custom needs?{' '}
+            <a href="mailto:team@gettranche.app" className="text-gray-900 border-b border-gray-300 hover:border-gray-900 transition-colors">Talk to us</a>.
           </p>
         </div>
       </section>
 
       {/* Close */}
-      <section id="contact" className="relative overflow-hidden" style={{ backgroundColor: '#12110E' }}>
-        <div
-          aria-hidden="true"
-          className="absolute inset-0"
-          style={{ background: 'radial-gradient(70% 90% at 50% 0%, rgba(212,168,67,0.10), transparent 70%)' }}
-        />
-        <div className="relative max-w-[1080px] mx-auto px-8 py-24 text-center">
+      <section id="contact" style={{ backgroundColor: CREAM }}>
+        <div className="max-w-[1080px] mx-auto px-4 sm:px-8 py-20 md:py-24 text-center">
           <Reveal>
-            <h2 className="text-3xl md:text-[40px] font-bold text-white mb-4 tracking-tight">
-              Screen your first deal today
+            <h2 className="text-3xl md:text-[40px] font-bold text-gray-900 mb-4 tracking-tight">
+              Screen your first deal.
             </h2>
-            <p className="text-gray-400 mb-9 text-lg max-w-lg mx-auto text-balance">
-              Try it on sample deals now, or send us yours and we will set you up.
+            <p className="text-gray-500 mb-9 text-lg max-w-lg mx-auto text-balance">
+              Try it on sample deals now, or request a trial and we will set you up.
             </p>
             <div className="flex items-center justify-center gap-3 flex-wrap">
               <button
                 onClick={onGetStarted}
-                className="px-7 py-3.5 rounded-lg text-[16px] font-semibold text-gray-900 hover:opacity-90 hover:-translate-y-0.5 transition-all"
+                className="px-7 py-3.5 rounded-lg text-[16px] font-semibold text-white hover:opacity-90 hover:-translate-y-0.5 transition-all"
                 style={{ backgroundColor: GOLD, boxShadow: '0 4px 24px rgba(212,168,67,0.25)' }}
               >
                 Request a trial
               </button>
               <a
                 href="?demo=1"
-                className="px-7 py-3.5 rounded-lg text-[16px] font-semibold text-gray-200 border border-gray-700 hover:border-gray-500 hover:-translate-y-0.5 transition-all"
+                className="px-7 py-3.5 rounded-lg text-[16px] font-semibold text-gray-700 border border-gray-300 hover:border-gray-400 hover:-translate-y-0.5 transition-all bg-white"
               >
                 Open the demo
               </a>
             </div>
             <p className="text-[15px] text-gray-500 mt-7">
               Or email{' '}
-              <a href="mailto:team@gettranche.app" className="text-gray-300 hover:text-white transition-colors border-b border-gray-600">
+              <a href="mailto:team@gettranche.app" className="text-gray-900 border-b border-gray-300 hover:border-gray-900 transition-colors">
                 team@gettranche.app
               </a>
               . We reply within a business day.
@@ -512,38 +336,6 @@ export default function LandingPage({ onGetStarted, onSignIn }) {
         </div>
       </section>
 
-      {/* Footer. The three security claims used to have a band of their own
-          between the CTA and here, which made the page say goodbye four times.
-          They are quieter and better placed as a footer row. */}
-      <footer style={{ backgroundColor: '#12110E' }} className="border-t border-gray-800/60">
-        <div className="max-w-[1080px] mx-auto px-8 py-9">
-          <div className="flex items-center justify-center gap-x-8 gap-y-3 flex-wrap pb-7 mb-7 border-b border-gray-800/60">
-            {['Row-level data isolation', 'Role-based access', 'Audit trail on deal changes'].map((label) => (
-              <span key={label} className="flex items-center gap-2 text-[13px] text-gray-500">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={GOLD} strokeWidth="2" aria-hidden="true">
-                  <polyline points="20 6 9 17 4 12" />
-                </svg>
-                {label}
-              </span>
-            ))}
-          </div>
-          <div className="flex items-center justify-between gap-4 flex-wrap">
-            <span className="flex items-center gap-2 text-sm font-bold text-gray-400 tracking-tight">
-              <TrancheLogo size={20} framed={false} />
-              Tranche
-            </span>
-            <div className="flex items-center gap-5">
-              <a href="/privacy.html" className="text-xs text-gray-500 hover:text-gray-300 transition-colors">Privacy</a>
-              <a href="/terms.html" className="text-xs text-gray-500 hover:text-gray-300 transition-colors">Terms</a>
-              <a href="mailto:team@gettranche.app" className="text-xs text-gray-500 hover:text-gray-300 transition-colors">Contact</a>
-              <span className="text-xs text-gray-600">&copy; {new Date().getFullYear()}</span>
-            </div>
-          </div>
-        </div>
-      </footer>
-
-        </div>
-      </div>
-    </div>
+    </SiteShell>
   );
 }

@@ -7,7 +7,8 @@
     }
   },
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/$1" }
+    { "source": "/api/(.*)", "destination": "/api/$1" },
+    { "source": "/methodology", "destination": "/index.html" }
   ],
   "crons": [
     { "path": "/api/v1?resource=health", "schedule": "0 11 * * *" }

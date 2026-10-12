@@ -1,92 +1,70 @@
 // ============================================================
-// StepsScroller — the three steps, explored by hover.
+// ProductPanels — the product, shown still.
 //
-// This was a scroll-pinned section: the page held still for nearly three
-// screens while the panel advanced. It demonstrated the product, but it
-// took the scroll away from the reader to do it, and a reader who wants to
-// move on should be able to.
+// These were the three panels of a hover-driven steps section. Hover does
+// not exist on a phone, and a panel the reader has to operate is a panel
+// most readers never see. Each one now sits beside the section it
+// illustrates, always visible.
 //
-// Now it is an ordinary section. Hovering a step shows its panel, and it
-// works by click and keyboard too, so nothing depends on having a pointer.
+// They are drawings of the product, not the product: the real components
+// pull in the scoring modules. Every figure comes from siteFacts.js, which
+// siteFacts.test.js checks against the real modules and the demo data.
 // ============================================================
 
-import React, { useState } from 'react';
+import React from 'react';
+import { GRANITE, PRAIRIE, DRIFT, SCORECARD, fmt } from './siteFacts';
+import { GOLD } from './SiteChrome';
 
-const GOLD = '#D4A843';
+const VERDICT_TONE = {
+  PASS: 'border-emerald-200 bg-emerald-50 text-emerald-800',
+  FLAG: 'border-amber-200 bg-amber-50 text-amber-800',
+  FAIL: 'border-rose-200 bg-rose-50 text-rose-800',
+};
 
-const STEPS = [
-  {
-    n: '1',
-    title: 'Upload the file',
-    desc: 'Application, financials, quote, cover email. Up to four at once. Each is classified and read in parallel.',
-    panelTitle: 'Four documents, read together',
-  },
-  {
-    n: '2',
-    title: 'Review the merge',
-    desc: 'Fields populate from the document best placed to know. Where documents disagree, both values are shown with their sources.',
-    panelTitle: 'Merged, with the disagreements named',
-  },
-  {
-    n: '3',
-    title: 'Score and export',
-    desc: 'Pass, flag or fail against your thresholds, with a committee memo that opens on the ask and closes by naming its sources.',
-    panelTitle: 'Scored against your thresholds',
-  },
-];
-
-// ---- Panels ----
-
-function DocumentsPanel() {
-  const docs = [
-    ['01_credit-application.pdf', 'Credit application', '12'],
-    ['02_financial-statements.pdf', 'Financial statements', '11'],
-    ['03_equipment-quote.pdf', 'Equipment quote', '8'],
-    ['04_broker-email.txt', 'Deal sheet', '18'],
-  ];
+export function VerdictBadge({ verdict }) {
   return (
-    <div className="space-y-1.5">
-      {docs.map(([name, type, fields]) => (
-        <div key={name} className="flex items-center justify-between gap-3 rounded-lg bg-gray-50 px-3 py-2">
-          <div className="min-w-0">
-            <div className="text-[11.5px] font-mono font-medium text-gray-900">{name}</div>
-            <div className="text-[10.5px] text-gray-500">{type}</div>
-          </div>
-          <div className="flex items-center gap-2.5 flex-shrink-0">
-            <span className="text-[10.5px] text-gray-400 font-mono tabular-nums">{fields} fields</span>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                 strokeWidth="3" className="text-emerald-600" aria-hidden="true">
-              <polyline points="20 6 9 17 4 12" />
-            </svg>
-          </div>
-        </div>
-      ))}
-    </div>
+    <span className={`inline-flex items-center px-2 py-0.5 rounded-md border text-[10.5px] font-bold tracking-wide ${VERDICT_TONE[verdict]}`}>
+      {verdict}
+    </span>
   );
 }
 
-function MergePanel() {
-  // Identity first, then money, then the asset. A memo reads in that order,
-  // and burying the borrower's name under three figures made the table look
-  // arbitrary. Filenames lost their numeric prefix so the column fits
-  // without truncating to an ellipsis.
-  const rows = [
-    { field: 'Company', value: 'Granite Ridge Materials LLC', src: 'credit-application.pdf', numeric: false },
-    { field: 'Revenue', value: '38,400,000', src: 'financial-statements.pdf', numeric: true },
-    { field: 'EBITDA', value: '7,400,000', src: 'financial-statements.pdf', numeric: true },
-    { field: 'Equipment cost', value: '6,275,000', src: 'equipment-quote.pdf', numeric: true },
-  ];
+/**
+ * The card every panel sits in. Wide tables scroll sideways inside it, so
+ * the page itself never scrolls horizontally on a phone.
+ */
+export function PanelFrame({ title, tag, caption, children }) {
   return (
-    <div>
+    <figure className="relative m-0 min-w-0">
+      <div className="rounded-2xl border border-gray-200 bg-white shadow-xl shadow-gray-200/50 overflow-hidden">
+        <div className="flex items-center justify-between gap-3 px-4 h-[40px] border-b border-gray-100">
+          <span className="text-[11.5px] font-semibold text-gray-900 truncate">{title}</span>
+          {tag && (
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-gray-500 border border-gray-200 rounded px-1.5 py-0.5 flex-shrink-0">
+              {tag}
+            </span>
+          )}
+        </div>
+        <div className="p-4 overflow-x-auto">{children}</div>
+      </div>
+      {caption && <figcaption className="mt-3 text-[12px] text-gray-400 text-center">{caption}</figcaption>}
+    </figure>
+  );
+}
+
+export function MergePanel() {
+  const c = GRANITE.ebitdaConflict;
+  return (
+    <PanelFrame title="Merged, with the disagreements named" caption="Actual output on a sample deal.">
       <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 mb-4">
         <div className="text-[11.5px] font-semibold text-amber-900 mb-1">
-          3 fields where the documents disagree
+          {GRANITE.conflictCount} fields where the documents disagree
         </div>
         <div className="text-[11px] leading-snug text-gray-700">
           <span className="font-semibold text-gray-900">EBITDA:</span>{' '}
-          <span className="font-mono tabular-nums text-gray-900">7,400,000</span>{' '}
+          <span className="font-mono tabular-nums text-gray-900">{fmt(c.chosen)}</span>{' '}
           <span className="text-gray-500">from the financials. The broker email says</span>{' '}
-          <span className="font-mono tabular-nums">7,900,000</span>.
+          <span className="font-mono tabular-nums">{fmt(c.alternative)}</span>.
         </div>
       </div>
 
@@ -99,218 +77,191 @@ function MergePanel() {
           </tr>
         </thead>
         <tbody>
-          {rows.map((r) => (
+          {GRANITE.merged.map((r) => (
             <tr key={r.field} className="border-t border-gray-100">
               <td className="py-2 text-gray-700 whitespace-nowrap">{r.field}</td>
               <td className={`py-2 pl-3 text-right text-gray-900 ${r.numeric ? 'font-mono tabular-nums' : 'font-medium'}`}>
-                {r.value}
+                {r.numeric ? fmt(r.value) : r.value}
               </td>
-              <td className="py-2 pl-3 text-right text-gray-400 font-mono text-[10px] whitespace-nowrap">
-                {r.src}
-              </td>
+              <td className="py-2 pl-3 text-right text-gray-400 font-mono text-[10px] whitespace-nowrap">{r.src}</td>
             </tr>
           ))}
         </tbody>
       </table>
-    </div>
+    </PanelFrame>
   );
 }
 
-function VerdictPanel() {
-  // Each factor carries what it was measured against and what it is worth.
-  // A score of 35 with no target and no weight is a number the reader has to
-  // take on trust, which is the opposite of the point.
-  const factors = [
-    { label: 'DSCR', value: '2.26x', target: 'target ≥ 1.25x', score: 93, weight: '25%' },
-    { label: 'Leverage', value: '2.6x', target: 'target ≤ 3.5x', score: 82, weight: '20%' },
-    { label: 'Industry', value: 'Mining', target: 'higher-risk sector', score: 35, weight: '15%' },
-    { label: 'LTV', value: '85%', target: 'target ≤ 85%', score: 77, weight: '10%' },
-  ];
+export function BuildPanel() {
   return (
-    <div>
-      <div className="flex items-center justify-between gap-3 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2.5 mb-4">
-        <div>
-          <div className="text-[13px] font-bold text-emerald-800">PASS</div>
-          <div className="text-[11px] text-emerald-700">Meets screening criteria</div>
+    <PanelFrame title={PRAIRIE.company} tag="Demo data" caption={`Line items typed from the ${PRAIRIE.document}.`}>
+      <div className="space-y-3 min-w-[300px]">
+        {PRAIRIE.built.map((b) => (
+          <div key={b.key} className="rounded-lg border border-gray-200 px-3 py-2.5">
+            <div className="flex items-center justify-between gap-3 mb-1.5">
+              <span className="flex items-center gap-2 text-[12px] font-semibold text-gray-900">
+                {b.label}
+                <span className="text-[9px] font-semibold uppercase tracking-wider text-white bg-gray-900 px-1.5 py-0.5 rounded">Built</span>
+              </span>
+              <span className="text-[13px] font-bold font-mono tabular-nums text-gray-900">{fmt(b.value)}</span>
+            </div>
+            {b.terms.map((t) => (
+              <div key={`${t.sign}${t.label}`} className="flex items-baseline justify-between gap-3 text-[11px] leading-relaxed">
+                <span className="text-gray-600">
+                  <span className="inline-block w-3 font-mono text-gray-400">{t.sign === '-' ? '−' : '+'}</span>
+                  {t.label}
+                </span>
+                <span className="flex items-baseline gap-2 flex-shrink-0">
+                  <span className="font-mono tabular-nums text-gray-800">{fmt(t.value)}</span>
+                  <span className="font-mono text-[10px] text-gray-400 w-8 text-right">p. {t.page}</span>
+                </span>
+              </div>
+            ))}
+            {b.note && <div className="text-[10.5px] text-gray-500 mt-1.5">{b.note}</div>}
+          </div>
+        ))}
+
+        <div className="flex items-baseline justify-between gap-3 text-[11px] px-1">
+          <span className="text-gray-600">
+            Maintenance capex{' '}
+            <span className="text-[9.5px] font-semibold uppercase tracking-wider text-amber-800 bg-amber-50 border border-amber-200 px-1 py-0.5 rounded">Estimate</span>
+          </span>
+          <span className="font-mono tabular-nums text-gray-800">{fmt(PRAIRIE.maintenanceCapex)}</span>
         </div>
-        <div className="text-[24px] font-bold font-mono tabular-nums text-gray-900 leading-none">
-          80<span className="text-[12px] text-gray-400">/100</span>
+
+        <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] text-amber-900">
+          <span className="font-semibold">{PRAIRIE.judgmentCount} judgments proposed, none confirmed.</span>{' '}
+          The deal cannot be saved until each one is.
         </div>
       </div>
+    </PanelFrame>
+  );
+}
 
-      <table className="w-full text-[11px]">
+export function VerdictPanel() {
+  return (
+    <PanelFrame title="Scored against your thresholds" caption="Actual output on a sample deal.">
+      <div className="min-w-[440px]">
+        <div className={`flex items-center justify-between gap-3 rounded-lg border px-3 py-2.5 mb-4 ${VERDICT_TONE[GRANITE.verdict]}`}>
+          <div>
+            <div className="text-[13px] font-bold">{GRANITE.verdict}</div>
+            <div className="text-[11px]">{GRANITE.company}</div>
+          </div>
+          <div className="text-[24px] font-bold font-mono tabular-nums text-gray-900 leading-none">
+            {GRANITE.score}<span className="text-[12px] text-gray-400">/100</span>
+          </div>
+        </div>
+
+        <table className="w-full text-[11px]">
+          <thead>
+            <tr className="text-[9.5px] uppercase tracking-wider text-gray-400">
+              <th className="text-left font-semibold pb-2">Factor</th>
+              <th className="text-left font-semibold pb-2 pl-3">Reading</th>
+              <th className="text-left font-semibold pb-2 pl-3">Target</th>
+              <th className="text-right font-semibold pb-2 pl-3">Weight</th>
+              <th className="text-right font-semibold pb-2 pl-3">Score</th>
+            </tr>
+          </thead>
+          <tbody>
+            {GRANITE.factors.map((f) => (
+              <tr key={f.key} className="border-t border-gray-100">
+                <td className="py-1.5 text-gray-800 font-medium whitespace-nowrap">{f.label}</td>
+                <td className="py-1.5 pl-3 text-gray-900 whitespace-nowrap">{f.value}</td>
+                <td className={`py-1.5 pl-3 whitespace-nowrap ${f.met ? 'text-gray-400' : 'text-amber-700'}`}>{f.target}</td>
+                <td className="py-1.5 pl-3 text-right font-mono tabular-nums text-gray-400">{f.weight}%</td>
+                <td className="py-1.5 pl-3 text-right">
+                  <span className="inline-flex items-center gap-2 justify-end">
+                    <span className="w-10 h-1.5 rounded-full bg-gray-100 overflow-hidden inline-block">
+                      <span
+                        className="h-full rounded-full block"
+                        style={{ width: `${f.score}%`, backgroundColor: f.met ? GOLD : '#d97706' }}
+                      />
+                    </span>
+                    <span className="font-mono tabular-nums text-gray-900 font-semibold w-6 text-right">{f.score}</span>
+                  </span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+
+        <p className="text-[10.5px] text-gray-600 mt-3 leading-relaxed border-t border-gray-100 pt-3">
+          Liquidation LTV {GRANITE.liquidationLtvPct}%.{' '}
+          <span className="text-amber-800">
+            Estimate: uses the general {GRANITE.liquidationHaircutPct}% haircut, with no resale data for this equipment type.
+          </span>
+        </p>
+      </div>
+    </PanelFrame>
+  );
+}
+
+export function DriftPanel() {
+  return (
+    <PanelFrame title="Underwrote against current" tag="Demo data" caption="Sample facilities from the live demo.">
+      <table className="w-full text-[11px] min-w-[420px]">
         <thead>
           <tr className="text-[9.5px] uppercase tracking-wider text-gray-400">
-            <th className="text-left font-semibold pb-2">Factor</th>
-            <th className="text-left font-semibold pb-2 pl-3">Value</th>
-            <th className="text-left font-semibold pb-2 pl-3">Measured against</th>
-            <th className="text-right font-semibold pb-2 pl-3">Weight</th>
-            <th className="text-right font-semibold pb-2 pl-3">Score</th>
+            <th className="text-left font-semibold pb-2">Facility</th>
+            <th className="text-left font-semibold pb-2 pl-3">Covenant</th>
+            <th className="text-right font-semibold pb-2 pl-3">Underwrote</th>
+            <th className="text-right font-semibold pb-2 pl-3">Current</th>
+            <th className="text-right font-semibold pb-2 pl-3">Drift</th>
           </tr>
         </thead>
         <tbody>
-          {factors.map((f) => (
-            <tr key={f.label} className="border-t border-gray-100">
-              <td className="py-2 text-gray-800 font-medium whitespace-nowrap">{f.label}</td>
-              <td className="py-2 pl-3 font-mono tabular-nums text-gray-900 whitespace-nowrap">{f.value}</td>
-              <td className={`py-2 pl-3 whitespace-nowrap ${f.score < 50 ? 'text-amber-700' : 'text-gray-400'}`}>
-                {f.target}
-              </td>
-              <td className="py-2 pl-3 text-right font-mono tabular-nums text-gray-400">{f.weight}</td>
-              <td className="py-2 pl-3 text-right">
-                <span className="inline-flex items-center gap-2 justify-end">
-                  <span className="w-10 h-1.5 rounded-full bg-gray-100 overflow-hidden inline-block">
-                    <span
-                      className="h-full rounded-full block"
-                      style={{ width: `${f.score}%`, backgroundColor: f.score < 50 ? '#d97706' : GOLD }}
-                    />
-                  </span>
-                  <span className="font-mono tabular-nums text-gray-900 font-semibold w-5 text-right">{f.score}</span>
-                </span>
-              </td>
+          {DRIFT.map((r) => (
+            <tr key={`${r.facility}${r.covenant}`} className="border-t border-gray-100">
+              <td className="py-2 text-gray-800 font-medium whitespace-nowrap">{r.facility}</td>
+              <td className="py-2 pl-3 text-gray-600">{r.covenant}</td>
+              <td className="py-2 pl-3 text-right font-mono tabular-nums text-gray-500">{r.underwrote}</td>
+              <td className="py-2 pl-3 text-right font-mono tabular-nums text-gray-900">{r.current}</td>
+              <td className={`py-2 pl-3 text-right font-mono tabular-nums font-semibold ${r.worse ? 'text-rose-600' : 'text-emerald-600'}`}>{r.drift}</td>
             </tr>
           ))}
         </tbody>
       </table>
-
-      <p className="text-[10.5px] text-gray-500 mt-4 leading-relaxed border-t border-gray-100 pt-3">
-        Industry carries 15% of the composite because sector cyclicality drives
-        recovery in a downturn. Mining scores low, and the deal still passes.
-        That is what the weighting is for.
+      <p className="text-[10.5px] text-gray-500 mt-3 leading-relaxed border-t border-gray-100 pt-3">
+        Summit is still inside its 1.25x covenant. It is also a long way from what was underwritten.
       </p>
-    </div>
+    </PanelFrame>
   );
 }
 
-const PANELS = [DocumentsPanel, MergePanel, VerdictPanel];
-
-export default function StepsScroller() {
-  const [active, setActive] = useState(0);
-
+/** `detailed` adds the filing and the reason, for the Methodology page. */
+export function ScorecardPanel({ detailed = false }) {
   return (
-    <section id="how-it-works" className="bg-white relative overflow-hidden">
-      <div
-        aria-hidden="true"
-        className="absolute inset-0 opacity-[0.035]"
-        style={{
-          backgroundImage: 'linear-gradient(#000 1px, transparent 1px), linear-gradient(90deg, #000 1px, transparent 1px)',
-          backgroundSize: '64px 64px',
-          maskImage: 'radial-gradient(ellipse 85% 65% at 50% 50%, transparent 25%, #000 100%)',
-          WebkitMaskImage: 'radial-gradient(ellipse 85% 65% at 50% 50%, transparent 25%, #000 100%)',
-        }}
-      />
-
-      <div className="relative max-w-[1180px] mx-auto px-8 py-24 md:py-32">
-        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3 text-center tracking-tight">
-          Screen a deal in 3 steps
-        </h2>
-        <p className="text-gray-500 text-center mb-14 text-lg">
-          Upload what you were sent. Review what it read. Export the memo.
-        </p>
-
-        <div className="grid lg:grid-cols-[0.8fr_1.2fr] gap-10 lg:gap-14 items-start">
-
-          {/* Steps */}
-          <div className="space-y-1.5">
-            {STEPS.map((s, i) => {
-              const isActive = i === active;
-              return (
-                <button
-                  key={s.n}
-                  type="button"
-                  onMouseEnter={() => setActive(i)}
-                  onFocus={() => setActive(i)}
-                  onClick={() => setActive(i)}
-                  aria-current={isActive ? 'step' : undefined}
-                  className="flex gap-4 text-left w-full rounded-xl p-4 transition-all duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-gray-300"
-                  style={{
-                    backgroundColor: isActive ? '#FAF8F2' : 'transparent',
-                    boxShadow: `inset 2px 0 0 ${isActive ? GOLD : 'transparent'}`,
-                  }}
-                >
-                  <span
-                    className="w-7 h-7 rounded-full flex items-center justify-center text-[12px] font-bold flex-shrink-0 transition-colors duration-300 mt-0.5"
-                    style={{
-                      backgroundColor: isActive ? GOLD : '#f1f0ed',
-                      color: isActive ? '#fff' : '#9ca3af',
-                    }}
-                  >
-                    {s.n}
-                  </span>
-                  <div>
-                    <h3
-                      className="text-[16px] font-semibold mb-1 transition-colors duration-300"
-                      style={{ color: isActive ? '#111827' : '#6b7280' }}
-                    >
-                      {s.title}
-                    </h3>
-                    <p
-                      className="text-[14px] leading-relaxed transition-colors duration-300"
-                      style={{ color: isActive ? '#4b5563' : '#9ca3af' }}
-                    >
-                      {s.desc}
-                    </p>
-                  </div>
-                </button>
-              );
-            })}
-            <p className="text-[12px] text-gray-400 pl-4 pt-2">Hover a step to see it.</p>
-          </div>
-
-          {/* Panel */}
-          <div className="relative">
-            <div
-              aria-hidden="true"
-              className="absolute -inset-5 rounded-[26px] opacity-50 blur-2xl"
-              style={{ background: 'radial-gradient(60% 60% at 50% 40%, rgba(212,168,67,0.13), transparent 70%)' }}
-            />
-            <div className="relative rounded-2xl border border-gray-200 bg-white shadow-xl shadow-gray-200/50 overflow-hidden">
-              <div className="border-b border-gray-100 relative h-[40px]">
-                {STEPS.map((s, i) => (
-                  <span
-                    key={s.n}
-                    className="absolute inset-0 flex items-center px-4 text-[11.5px] font-semibold text-gray-900"
-                    style={{
-                      opacity: i === active ? 1 : 0,
-                      transition: i === active
-                        ? 'opacity 220ms ease-out 110ms'
-                        : 'opacity 100ms ease-in',
-                    }}
-                  >
-                    {s.panelTitle}
-                  </span>
-                ))}
-              </div>
-              <div className="relative p-4" style={{ minHeight: 336 }}>
-                {PANELS.map((Panel, i) => {
-                  const isActive = i === active;
-                  return (
-                    <div
-                      key={i}
-                      aria-hidden={!isActive}
-                      style={{
-                        position: i === 0 ? 'relative' : 'absolute',
-                        inset: i === 0 ? undefined : 16,
-                        opacity: isActive ? 1 : 0,
-                        pointerEvents: isActive ? 'auto' : 'none',
-                        // Out fast, in after it has gone. Cross-fading two
-                        // dense tables at the same time overlaps their rows
-                        // and both become unreadable mid-transition.
-                        transition: isActive
-                          ? 'opacity 220ms ease-out 110ms'
-                          : 'opacity 100ms ease-in',
-                      }}
-                    >
-                      <Panel />
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-
-        </div>
-      </div>
-    </section>
+    <PanelFrame
+      title="Nine public borrowers, equipment finance"
+      caption={detailed ? undefined : 'Run on figures from each 10-K, with a hypothetical loan.'}
+    >
+      <table className={`w-full text-[11px] ${detailed ? 'min-w-[640px]' : 'min-w-[300px]'}`}>
+        <thead>
+          <tr className="text-[9.5px] uppercase tracking-wider text-gray-400">
+            <th className="text-left font-semibold pb-2">Borrower</th>
+            {detailed && <th className="text-left font-semibold pb-2 pl-3">Filing</th>}
+            <th className="text-left font-semibold pb-2 pl-3">Verdict</th>
+            <th className="text-right font-semibold pb-2 pl-3">Score</th>
+            {detailed && <th className="text-left font-semibold pb-2 pl-4">Why</th>}
+          </tr>
+        </thead>
+        <tbody>
+          {SCORECARD.map((r) => (
+            <tr key={r.name} className="border-t border-gray-100 align-top">
+              <td className="py-2 text-gray-800 font-medium whitespace-nowrap">
+                {r.name}
+                {r.wrong && !detailed && <span className="text-amber-700 font-normal"> · model is wrong here</span>}
+              </td>
+              {detailed && <td className="py-2 pl-3 text-gray-500 whitespace-nowrap">{r.filing}</td>}
+              <td className="py-2 pl-3"><VerdictBadge verdict={r.verdict} /></td>
+              <td className="py-2 pl-3 text-right font-mono tabular-nums text-gray-900">{r.score}</td>
+              {detailed && (
+                <td className={`py-2 pl-4 leading-relaxed ${r.wrong ? 'text-amber-800' : 'text-gray-600'}`}>{r.reason}</td>
+              )}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </PanelFrame>
   );
 }
