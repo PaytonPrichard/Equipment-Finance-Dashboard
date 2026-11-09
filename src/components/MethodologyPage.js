@@ -39,7 +39,7 @@ const HAIRCUT_BASIS = {
 
 function Section({ id, title, children }) {
   return (
-    <section id={id} className="scroll-mt-24 pb-12 mb-12 border-b last:border-b-0 last:mb-0" style={{ borderColor: RULE }}>
+    <section id={id} className="scroll-mt-16 py-12 first:pt-0 border-b last:border-b-0" style={{ borderColor: RULE }}>
       <h2 className="text-2xl md:text-[28px] font-bold text-gray-900 tracking-tight mb-4">{title}</h2>
       <div className="space-y-4 text-[16px] text-gray-600 leading-relaxed [&>p]:max-w-[68ch] [&>ul]:max-w-[68ch]">{children}</div>
     </section>
