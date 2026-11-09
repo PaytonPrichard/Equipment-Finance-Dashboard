@@ -321,3 +321,31 @@ Step 3 is complete. Step 4 next: memo section "How the numbers were built", serv
 - Not done: richer webhook payload (verdict, DSCR, leverage). The verdict depends on each user's own criteria today, so a firm-level verdict for webhooks needs a decision first.
 
 **For Workstream C (landing copy):** "Already tracking deals in a CRM? Tranche has an API and webhooks. Send deals in from Salesforce, HubSpot or any system that can call a web address. Scores, verdicts and stage changes come back. Setup is a one-time job for whoever runs your CRM." Drop "verdicts" until webhook payloads carry them.
+
+## 2026-10-12: Landing page refresh and Methodology page (Workstream C)
+
+**What changed**
+- Landing page rewritten to one idea per section: read the file, build the numbers, score against your thresholds, the public-borrower run, monitoring, setup, pricing. Cut the features grid, the "three desks" strip, the hover-driven steps section and the dark close and footer. The page is light throughout.
+- New public page at `/methodology`: what is scored, thresholds with where each comes from, how the numbers are built, public benchmarks, the public-borrower run, and dated known limits. There is no router. `App.js` renders it on the path, and `vercel.json` rewrites `/methodology` to `index.html`.
+- `src/components/landing/siteFacts.js` holds every figure the two pages print. `siteFacts.test.js` recomputes each one from the scoring modules, the demo data and the committed real-deals report, so a scoring change that makes a page wrong fails a test.
+- `StepsScroller.js` became `ProductPanels.js`: the same panels, static, plus new ones for the statement build, monitoring drift and the scorecard. Nav and footer moved to `landing/SiteChrome.js`, shared by both pages.
+- Corrected on the page: Granite Ridge is 78 PASS, not 80. Its LTV factor scores 65, not 77. Liquidation LTV (113%) is now shown and marked as resting on the general haircut.
+- Pricing: two tiers and a "Talk to us" line. Removed the Enterprise card, SSO, custom scoring models, SLA, "Custom scoring weights" and the "Most Popular" badge.
+- Real-deals report rerun on current main (`reports/2026-10-12.md`). Identical to 2026-10-11 apart from the date.
+
+**What Joel decided**
+- Hero says what is true today: documents are read and compared, statement lines are typed in. No "builds the numbers from the file".
+- No document cap on the page. No time claims ("minutes, not hours", "two minutes", setup minute counts).
+- "Your thresholds", never "your firm's policy", until criteria are firm-level (AUDIT P1-17).
+- The public-borrower run is shown as verdicts with reasons. No expected-verdict column and no match count. H&E stays as the case the model gets wrong.
+- Methodology publishes what the open demo already shows, plus sources and limits. Not the scoring curves or rate spread tables.
+- One CTA label everywhere: Request a trial.
+- No document-handling line until Joel confirms retention terms with the model provider. No encryption claim (AUDIT P1-19).
+- Monitoring "Coming" list: breach alerts, borrowing base certificates, document reading after close, covenant amendments.
+
+**Open**
+- Demo video: record on Loom. An embed needs a `frame-src` entry in the CSP in `vercel.json`. `HeroDemo` stays in the hero until then.
+- Check `/methodology` on the Vercel preview before merging. The rewrite is untested outside local dev.
+- The page `<title>` in `public/index.html` still says "Fund faster". Not changed here.
+- `src/lib/encryption.js` (dead code, AUDIT P1-19) still needs deleting.
+- `scripts/real-deals` fixture discussion text quotes scores that no longer match the tables (Rush 85, H&E 84, Hertz 47).

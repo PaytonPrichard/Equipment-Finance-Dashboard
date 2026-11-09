@@ -86,6 +86,7 @@ const AuditLogViewer = lazy(() => import('./components/AuditLogViewer'));
 const TeamManagement = lazy(() => import('./components/TeamManagement'));
 const PipelineDashboard = lazy(() => import('./components/PipelineDashboard'));
 const InfoGuide = lazy(() => import('./components/InfoGuide'));
+const MethodologyPage = lazy(() => import('./components/MethodologyPage'));
 const SettingsPanel = lazy(() => import('./components/SettingsPanel'));
 const DueDiligenceChecklist = lazy(() => import('./components/DueDiligenceChecklist'));
 const ComparableDeals = lazy(() => import('./components/ComparableDeals'));
@@ -220,6 +221,21 @@ export default function App() {
   // Password recovery flow — show update password form
   if (passwordRecovery) {
     return <LoginPage passwordRecovery />;
+  }
+
+  // /methodology is a public page, the same for visitors and signed-in
+  // users. There is no router: its buttons move the URL back to / and set
+  // the same state the landing page's buttons set.
+  if (window.location.pathname.replace(/\/$/, '') === '/methodology') {
+    const leaveFor = (open) => () => { window.history.pushState({}, '', '/'); open(true); };
+    return (
+      <Suspense fallback={null}>
+        <MethodologyPage
+          onGetStarted={leaveFor(setShowRequestAccess)}
+          onSignIn={leaveFor((v) => { setLoginMode('signin'); setShowLogin(v); })}
+        />
+      </Suspense>
+    );
   }
 
   if (!session) {
