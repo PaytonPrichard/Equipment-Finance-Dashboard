@@ -409,10 +409,10 @@ describe('Equipment Finance residual coverage at maturity (residual-2026-10.md)'
     expect(r.residualCoverage).toBeCloseTo(41.5 / 15, 10);
   });
 
-  test('FMV Aircraft, 120 months: straight line to 15% at 25 yrs is 66%, x 0.70 = 46.2% vs 17%, 2.72x', () => {
+  test('FMV Aircraft, 120 months: straight line to 15% at 25 yrs is 66%, x 0.70 = 46.2% vs 20%, 2.31x', () => {
     const r = m({ equipmentType: 'Aircraft/Helicopters', financingType: 'FMV', loanTerm: 120 });
     expect(r.residualMaturityValue).toBeCloseTo(462000, 6);
-    expect(r.residualCoverage).toBeCloseTo(0.462 / 0.17, 10);
+    expect(r.residualCoverage).toBeCloseTo(0.462 / 0.20, 10);
   });
 
   test('types with no public curve are not checked', () => {

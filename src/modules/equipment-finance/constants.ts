@@ -227,7 +227,7 @@ export const FMV_RESIDUAL_PCT: Record<EquipmentType, number> = {
   'Vehicles/Fleet': 0.25,
   'Rail Cars': 0.20,
   'Marine Vessels': 0.15,
-  'Aircraft/Helicopters': 0.17,
+  'Aircraft/Helicopters': 0.20,
   'Medical Equipment': 0.10,
   'IT/Data Center': 0.05,
   'Construction Equipment': 0.15,

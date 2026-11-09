@@ -116,7 +116,7 @@ The haircut is the share of cost a lender should not expect back in an auction s
 
 **Assumption:** Residual values reflect general remarketing expectations. IT/Data Center equipment depreciates fastest due to technological obsolescence. Vehicles retain value relatively well due to active secondary markets. Agricultural Equipment and Engines/Generators inherit the residual of the type each was split from. Not separately sourced. The residual is a flat share of cost at any term.
 
-**Open discrepancy.** The code (`FMV_RESIDUAL_PCT`) uses 17% for Aircraft/Helicopters, and has since the platform build. This table says 20%. Residual coverage below is computed on the code's 17%. Joel to decide which is right.
+**Resolved 2026-11-09.** The code (`FMV_RESIDUAL_PCT`) used 17% for Aircraft/Helicopters from the platform build. Joel set it to 20% to match this table.
 
 **Residual coverage at maturity.** Tested 2026-10-12 (`residual-2026-10.md`).
 - **Formula:** projected forced-sale value at lease maturity / residual value.

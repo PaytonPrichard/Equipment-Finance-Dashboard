@@ -56,7 +56,7 @@ Every BEA and aircraft value gets the used liquidation haircut (30%). The Iowa S
 - **At typical terms, Tranche's residuals are low, not high.** Lessors book 30-70% (trucks), about 36% (Cat) and about 56% (Deere) at lease end. Tranche uses 15-25%. On collateral, a low residual is conservative. But it means FMV payments run higher than a lessor would set them, so Tranche **understates DSCR on FMV deals**.
 - **The risk is at long terms.** A flat residual ignores the term. Vehicles at 25% fall below 1.0x past about 65 months (5.4 years), and construction at 15% past about 110 months (9.1 years). Solved from the curves: 0.8275^t x 0.70 = 0.25 and 0.845^t x 0.70 = 0.15. That is the case the check now catches.
 - **Data is thinnest where FMV is most common.** Medical and IT/Data Center default to FMV, and no public curve was found for them. They are left unchecked and say so.
-- **Aircraft discrepancy.** The code uses 17% and the spec table says 20%. Coverage here uses 17%. Open for Joel.
+- **Aircraft discrepancy.** The code used 17% and the spec table said 20%. Coverage here uses 17%. Resolved 2026-11-09: code set to 20% to match the spec, so current aircraft FMV coverage is 17/20 of the figures above (2.72x becomes 2.31x at 120 months).
 
 ## 4. What changed (Joel, 2026-10-12)
 
