@@ -33,11 +33,14 @@ export function SiteNav({ current, onSection, onGetStarted, onSignIn }) {
   const scrolled = useScrolledPast(24);
 
   return (
-    <nav className="sticky top-0 z-50" style={{ backgroundColor: GROUND }}>
-      <div
-        className="max-w-[1240px] mx-auto px-4 sm:px-8 flex items-center justify-between transition-all duration-300"
-        style={{ height: scrolled ? 64 : 76 }}
-      >
+    // Fixed height. Shrinking the bar on scroll moved everything under it,
+    // scroll anchoring moved the page back, and the bar grew again: the page
+    // bounced near the threshold. Only paint changes on scroll, never size.
+    <nav
+      className="sticky top-0 z-50 transition-shadow duration-300"
+      style={{ backgroundColor: GROUND, boxShadow: scrolled ? '0 1px 0 rgba(22,21,15,0.08)' : 'none' }}
+    >
+      <div className="max-w-[1240px] mx-auto px-4 sm:px-8 h-16 flex items-center justify-between">
         <a href="/" className="flex items-center gap-2.5 text-xl font-extrabold text-gray-900 tracking-tight">
           <TrancheLogo size={32} />
           Tranche

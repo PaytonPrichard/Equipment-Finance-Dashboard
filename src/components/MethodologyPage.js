@@ -39,9 +39,9 @@ const HAIRCUT_BASIS = {
 
 function Section({ id, title, children }) {
   return (
-    <section id={id} className="scroll-mt-24 pb-16 mb-16 border-b last:border-b-0 last:mb-0" style={{ borderColor: RULE }}>
-      <h2 className="text-2xl md:text-[28px] font-bold text-gray-900 tracking-tight mb-5">{title}</h2>
-      <div className="space-y-4 text-[16px] text-gray-600 leading-relaxed">{children}</div>
+    <section id={id} className="scroll-mt-24 pb-12 mb-12 border-b last:border-b-0 last:mb-0" style={{ borderColor: RULE }}>
+      <h2 className="text-2xl md:text-[28px] font-bold text-gray-900 tracking-tight mb-4">{title}</h2>
+      <div className="space-y-4 text-[16px] text-gray-600 leading-relaxed [&>p]:max-w-[68ch] [&>ul]:max-w-[68ch]">{children}</div>
     </section>
   );
 }
@@ -88,7 +88,7 @@ export default function MethodologyPage({ onGetStarted, onSignIn }) {
   return (
     <SiteShell current="methodology" onGetStarted={onGetStarted} onSignIn={onSignIn}>
 
-      <header className="max-w-[1080px] mx-auto px-4 sm:px-8 pt-16 md:pt-24 pb-12 md:pb-16">
+      <header className="max-w-[1080px] mx-auto px-4 sm:px-8 pt-14 md:pt-20 pb-10 md:pb-12">
         <p className="text-[15px] font-semibold tracking-wide mb-4" style={{ color: GOLD }}>Methodology</p>
         <h1 className="text-[36px] sm:text-[48px] font-extrabold text-gray-900 leading-[1.06] tracking-[-0.02em] mb-5 text-balance max-w-3xl">
           How Tranche reaches a verdict.
@@ -102,7 +102,7 @@ export default function MethodologyPage({ onGetStarted, onSignIn }) {
 
         {/* In-page nav. A sticky column on desktop, a scrolling row on a phone. */}
         <nav aria-label="On this page" className="sticky top-[64px] lg:top-24 z-10 lg:self-start -mx-4 sm:-mx-8 lg:mx-0 mb-10 lg:mb-0 bg-white/95 backdrop-blur border-b lg:border-b-0" style={{ borderColor: RULE }}>
-          <ul className="flex lg:flex-col gap-1 overflow-x-auto px-4 sm:px-8 lg:px-0 py-2 lg:py-0">
+          <ul className="flex lg:flex-col gap-1 lg:gap-0.5 overflow-x-auto px-4 sm:px-8 lg:px-0 py-2 lg:py-0 lg:border-l" style={{ borderColor: RULE }}>
             {SECTIONS.map((s) => {
               const isActive = active === s.id;
               return (
@@ -110,8 +110,8 @@ export default function MethodologyPage({ onGetStarted, onSignIn }) {
                   <a
                     href={`#${s.id}`}
                     aria-current={isActive ? 'true' : undefined}
-                    className={`block text-[14px] px-3 py-1.5 rounded-lg whitespace-nowrap transition-colors ${isActive ? 'text-gray-900 font-medium' : 'text-gray-500 hover:text-gray-900'}`}
-                    style={isActive ? { backgroundColor: CREAM } : undefined}
+                    className={`block text-[14px] px-3 lg:pl-4 py-1.5 rounded-lg lg:rounded-none lg:-ml-px lg:border-l-2 whitespace-nowrap transition-colors ${isActive ? 'text-gray-900 font-medium' : 'text-gray-500 hover:text-gray-900 lg:border-transparent'}`}
+                    style={isActive ? { backgroundColor: CREAM, borderColor: GOLD } : undefined}
                   >
                     {s.label}
                   </a>
