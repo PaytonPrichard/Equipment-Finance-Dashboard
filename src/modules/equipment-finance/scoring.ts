@@ -42,6 +42,7 @@ import {
   FINANCING_TYPES,
   FACTOR_TARGETS,
   getLiquidationHaircut,
+  getMaturityValue,
 } from './constants';
 
 interface SuggestedStructure {
@@ -54,7 +55,7 @@ interface SuggestedStructure {
   sizingFlag?: string;
 }
 
-type ExportCriteria = { minDscr?: number; maxTermCoverage?: number; maxRevenueConcentration?: number; maxLiquidationLtv?: number } | null | undefined;
+type ExportCriteria = { minDscr?: number; maxTermCoverage?: number; maxRevenueConcentration?: number; maxLiquidationLtv?: number; minResidualCoverage?: number } | null | undefined;
 
 // ------- Rate Calculation -------
 
@@ -161,6 +162,17 @@ export function calculateMetrics(
   const liquidationValue = equipmentValue * (1 - haircut.rate);
   const liquidationLtv = liquidationValue > 0 ? netFinanced / liquidationValue : 0;
 
+  // Residual coverage: projected forced-sale value at lease maturity over the
+  // residual the lease leaves unamortized. Null for EFA, and for types with
+  // no public value curve (left unchecked, and the notes say so).
+  const maturity =
+    financingType !== 'EFA' && residualValue > 0
+      ? getMaturityValue(equipmentType, loanTerm || 0)
+      : null;
+  const residualMaturityValue = maturity ? equipmentValue * maturity.pct : null;
+  const residualCoverage =
+    maturity && residualMaturityValue != null ? residualMaturityValue / residualValue : null;
+
   const termYears = (loanTerm || 0) / 12;
   const termCoverage = usefulLife > 0 ? (termYears / usefulLife) * 100 : 0;
 
@@ -191,6 +203,10 @@ export function calculateMetrics(
     liquidationLtv,
     liquidationHaircut: haircut.rate,
     liquidationHaircutBasis: haircut.basis,
+    residualMaturityValue,
+    residualCoverage,
+    residualCoverageBasis: maturity ? maturity.basis : null,
+    residualCoverageSource: maturity ? maturity.source : null,
     debtServiceEstimated,
     // Term deals are priced fixed at screening, so a rate shock does not reach them.
     newFloatingPrincipal: 0,
@@ -389,6 +405,11 @@ export function generateCommentary(
     comments.push(
       `FMV lease structure reduces periodic payments by ${formatCurrency(metrics.residualValue)} (estimated residual). Lessor retains residual value risk. Assess remarketing outlook for ${inputs.equipmentType}.`,
     );
+    if (metrics.residualCoverage != null && metrics.residualCoverage < 1.0) {
+      comments.push(
+        `Projected forced-sale value at maturity covers ${metrics.residualCoverage.toFixed(2)}x of the residual. The lessor would recover less than the residual on return.`,
+      );
+    }
   } else if (ft === 'TRAC') {
     comments.push(
       `TRAC lease with lessee-guaranteed residual of ${formatCurrency(metrics.residualValue)}. Residual guarantee mitigates lessor risk but shifts value risk to lessee.`,
@@ -604,6 +625,15 @@ export function generateExportSummary(
   lines.push(`Annual DS (Exist):${formatCurrencyFull(metrics.existingDebtService)}${metrics.debtServiceEstimated ? ' (estimated)' : ''}`);
   if (metrics.residualValue > 0) {
     lines.push(`Residual Value:   ${formatCurrencyFull(metrics.residualValue)} (${ft})`);
+    if (metrics.residualCoverage != null) {
+      const resLimit =
+        criteria && typeof criteria.minResidualCoverage === 'number'
+          ? criteria.minResidualCoverage
+          : DEFAULT_CRITERIA.minResidualCoverage;
+      lines.push(`Residual Cover:   ${formatRatio(metrics.residualCoverage)}  (forced-sale value at maturity${metrics.residualCoverageBasis === 'estimated' ? ', estimated' : ''}${ft === 'TRAC' ? '; lessee-guaranteed, information only' : resLimit > 0 ? `; min ${resLimit.toFixed(2)}x` : ''})`);
+    } else {
+      lines.push(`Residual Cover:   not checked (no public value data for ${inputs.equipmentType} at this term)`);
+    }
   }
   const amort = generateAmortizationSchedule(metrics.financedPrincipal, metrics.rate, inputs.loanTerm);
   if (!Array.isArray(amort) && amort.totalInterest > 0) {

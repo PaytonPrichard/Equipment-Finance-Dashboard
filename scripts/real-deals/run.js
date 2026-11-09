@@ -132,7 +132,7 @@ function caseSection(r) {
   const m = r.metrics;
   out.push('', '### Tranche output', '');
   out.push(`**${r.actual.toUpperCase()}**, composite score ${r.risk.composite}. ${r.outcome === 'match' ? 'Matches' : r.outcome === 'acceptable' ? 'Does not match the primary call, but is one Joel marked acceptable in' : '**Does not match**'} the expectation.`);
-  out.push('', `Rate ${(m.rate * 100).toFixed(2)}% all-in. DSCR ${x(m.dscr)}. Leverage ${lev(m.leverage)}. LTV ${(m.ltv * 100).toFixed(0)}% on cost, ${(m.liquidationLtv * 100).toFixed(0)}% liquidation (${(m.liquidationHaircut * 100).toFixed(0)}% ${m.liquidationHaircutBasis} haircut). Term coverage ${m.termCoverage.toFixed(0)}%. Revenue concentration ${m.revenueConcentration.toFixed(1)}%. EBITDA margin ${m.ebitdaMargin.toFixed(1)}%.`);
+  out.push('', `Rate ${(m.rate * 100).toFixed(2)}% all-in. DSCR ${x(m.dscr)}. Leverage ${lev(m.leverage)}. LTV ${(m.ltv * 100).toFixed(0)}% on cost, ${(m.liquidationLtv * 100).toFixed(0)}% liquidation (${(m.liquidationHaircut * 100).toFixed(0)}% ${m.liquidationHaircutBasis} haircut). ${m.residualValue > 0 ? `Residual coverage ${m.residualCoverage != null ? x(m.residualCoverage) + ' at maturity' : 'not checked'}. ` : ''}Term coverage ${m.termCoverage.toFixed(0)}%. Revenue concentration ${m.revenueConcentration.toFixed(1)}%. EBITDA margin ${m.ebitdaMargin.toFixed(1)}%.`);
   out.push('', '| Factor | Weight | Score | Reading | Target | Met |', '|---|---|---|---|---|---|');
   for (const f of r.factors) {
     out.push(`| ${f.label} | ${(f.weight * 100).toFixed(0)}% | ${f.score == null ? 'NM' : Math.round(f.score)} | ${f.caption} | ${f.target} | ${f.passed ? 'yes' : 'no'} |`);

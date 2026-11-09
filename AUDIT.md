@@ -246,6 +246,10 @@ Found 2026-10-09 by the first real-deals run. H&E (FY2024) screens PASS at 84. J
 
 Found 2026-10-09 (H&E). By its 10-K filing date H&E had agreed to be acquired, and Joel flags a pending change of control on its own. Tranche has no field for it, so the screen cannot reflect it. **Fix.** An event-risk input (change of control, material litigation, going-concern language, covenant waiver) that adds a FLAG reason naming the event. Extraction could pre-fill it from filings, with the analyst confirming.
 
+### P1-23. FMV and TRAC residuals ignore the lease term
+
+Found 2026-10-12 (`scripts/real-deals/benchmarks/residual-2026-10.md`). `FMV_RESIDUAL_PCT` is a flat share of cost at any term. At typical terms it sits well below what lessors book: PACCAR 30-70% at 3-5 year truck leases, Cat about 36%, Deere about 56%. That raises FMV payments, so DSCR on FMV deals is understated. At long terms it can exceed the equipment's projected value, which residual coverage now flags. **Fix.** Derive the residual from the value curve at the actual term, where a curve exists. Credit call for Joel: whether to move residuals toward lessor-booked levels or keep a conservative discount. **Also open:** the spec says 20% for Aircraft/Helicopters, the code uses 17%.
+
 ---
 
 ## P2 — Smells and Polish

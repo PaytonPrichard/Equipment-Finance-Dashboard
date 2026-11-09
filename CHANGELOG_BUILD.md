@@ -1,5 +1,31 @@
 # Build changelog
 
+## 2026-10-12: Residual coverage at lease maturity (Workstream B)
+
+**What changed**
+- New metric for FMV and TRAC leases: projected forced-sale value at maturity divided by the residual. The projected value comes from a public curve per type: BEA for trucks, construction and heavy machinery (proxy), Iowa State auction values for ag, and Air Lease's policy for aircraft.
+- FMV coverage below 1.0x flags. The limit is configurable as "Min residual coverage (FMV)" in the credit box. TRAC coverage is information only.
+- Types with no curve are not checked, and a note says so. Estimated curves are named in the notes.
+- Shown in the screening view (debt service header), the verdict, the memo key metrics, the export summary and the real-deals report.
+- Spec: section 4 FMV and TRAC, term coverage, model limits. Also added the missing Ag and Engines rows to the FMV table.
+- Evidence: `scripts/real-deals/benchmarks/residual-2026-10.md`, with 12 cited extracts in `residual-sources/`.
+- Expectation committed first (d1cc21c).
+
+**What the data said.** At typical terms, Tranche's residuals are below what lessors book, which understates DSCR on FMV deals. At long terms, a flat residual exceeds the projected value. Vehicles at 25% fall below 1.0x past about 65 months (5.4 years).
+
+**Credit review fixes.** Corrected the crossover terms. Used aircraft get a note that coverage assumes new at lease start. The export summary now says when a term runs past the curve rather than claiming no data. The memo row and the screening view mark estimated and TRAC.
+
+**What Joel decided**
+- Forced-sale basis.
+- A flag, not a scored factor. Limit 1.0x.
+- TRAC information only.
+- Check only: residuals unchanged. Term-dependent residuals are backlogged (AUDIT P1-23).
+- Types with no data are left unchecked, not given an assumed curve.
+
+**Real-deals rerun** (`reports/2026-10-12.md`): no score or verdict moved. All four lease cases are TRAC, at 1.36x to 1.98x.
+
+**Open for Joel.** The Aircraft FMV residual is 17% in code and 20% in the spec.
+
 ## 2026-10-07: Real-deals harness (Workstream B)
 
 **What changed.** Added `scripts/real-deals/`, a harness that pulls borrower financials from SEC EDGAR XBRL, combines them with Joel's hypothetical deal terms, and runs them through the real equipment finance scoring code. It writes a dated report that compares Tranche's verdict with Joel's expectation, written beforehand. Fixtures are set up for DXP Enterprises, Titan Machinery, H&E Equipment Services and Hertz. XBRL figures are fetched. Manual figures, deal terms and expectations are still empty.

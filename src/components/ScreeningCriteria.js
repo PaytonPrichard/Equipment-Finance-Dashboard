@@ -295,6 +295,13 @@ export default function ScreeningCriteria({ activeModule, onCriteriaChange }) {
                   tip="Fails above this. Off by default (0)."
                 />
                 <CriteriaInput
+                  label="Min residual coverage (FMV)"
+                  value={criteria.minResidualCoverage}
+                  onChange={(v) => updateField('minResidualCoverage', v)}
+                  suffix="x" step={0.05} max={5}
+                  tip="Forced-sale value at maturity vs the FMV residual. Flags below this. 0 disables."
+                />
+                <CriteriaInput
                   label="Max Term Coverage"
                   value={criteria.maxTermCoverage}
                   onChange={(v) => updateField('maxTermCoverage', v)}

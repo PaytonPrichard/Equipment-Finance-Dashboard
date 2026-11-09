@@ -211,4 +211,64 @@ describe('Screening Criteria', () => {
       expect(ar.reasons.some((r) => /Liquidation/.test(r.text))).toBe(false);
     });
   });
+
+  describe('residual coverage', () => {
+    const lease = (residualCoverage, extra = {}) => ({
+      ...passMetrics, liquidationLtv: 1.0, liquidationHaircut: 0.2, liquidationHaircutBasis: 'data',
+      residualValue: 250000, residualCoverage, residualCoverageBasis: 'data', residualCoverageSource: 'test curve', ...extra,
+    });
+    const inputs = (financingType, equipmentType = 'Vehicles/Fleet') => ({ ...passInputs, financingType, equipmentType });
+    const run = (m, ft = 'FMV', criteria = baseCriteria, type) =>
+      evaluateScreening(criteria, m, passScore, inputs(ft, type), 'equipment_finance');
+
+    test('FMV flags below 1.00x by default, silent at 1.00x', () => {
+      expect(DEFAULT_CRITERIA.minResidualCoverage).toBe(1.0);
+      expect(run(lease(1.0)).verdict).toBe('pass');
+      const under = run(lease(0.744));
+      expect(under.verdict).toBe('flag');
+      expect(under.reasons).toContainEqual({ level: 'flag', text: 'Residual coverage 0.74x is below minimum (1.00x). Forced-sale value at maturity is under the residual' });
+    });
+
+    test('0 disables the check, and a saved floor survives validateCriteria', () => {
+      expect(run(lease(0.5), 'FMV', { ...baseCriteria, minResidualCoverage: 0 }).verdict).toBe('pass');
+      expect(validateCriteria({ minResidualCoverage: 1.2 }).minResidualCoverage).toBe(1.2);
+      expect(validateCriteria({}).minResidualCoverage).toBe(1.0);
+    });
+
+    test('TRAC never flags; coverage is a note, information only', () => {
+      const r = run(lease(0.5), 'TRAC');
+      expect(r.verdict).toBe('pass');
+      expect(r.notes).toContain('TRAC residual coverage 0.50x at maturity. Lessee-guaranteed, information only.');
+    });
+
+    test('an unchecked type is called out', () => {
+      const r = run(lease(null, { residualCoverageBasis: null, residualCoverageSource: null }), 'FMV', baseCriteria, 'Medical Equipment');
+      expect(r.verdict).toBe('pass');
+      expect(r.notes).toContain('Residual not checked: no public value data for Medical Equipment at this term.');
+    });
+
+    test('a used aircraft is told its coverage assumes new at lease start', () => {
+      const m = lease(2.7, { residualCoverageBasis: 'estimated', residualCoverageSource: 'Air Lease depreciation policy' });
+      const used = evaluateScreening(baseCriteria, m, passScore, { ...inputs('FMV', 'Aircraft/Helicopters'), equipmentCondition: 'Used' }, 'equipment_finance');
+      expect(used.notes).toContain('Residual coverage assumes the aircraft is new at lease start. Overstated for a used aircraft.');
+      const fresh = evaluateScreening(baseCriteria, m, passScore, { ...inputs('FMV', 'Aircraft/Helicopters'), equipmentCondition: 'New' }, 'equipment_finance');
+      expect(fresh.notes.some((n) => /new at lease start/.test(n))).toBe(false);
+      const truck = evaluateScreening(baseCriteria, m, passScore, { ...inputs('FMV'), equipmentCondition: 'Used' }, 'equipment_finance');
+      expect(truck.notes.some((n) => /new at lease start/.test(n))).toBe(false);
+    });
+
+    test('an estimated curve is called out', () => {
+      const r = run(lease(1.5, { residualCoverageBasis: 'estimated', residualCoverageSource: 'BEA trucks' }));
+      expect(r.notes).toContain('Residual coverage uses an estimated value curve (BEA trucks), not sale data.');
+    });
+
+    test('EFA (no residual) and other modules get no residual reason or note', () => {
+      const efa = run({ ...passMetrics, residualValue: 0, residualCoverage: null }, 'EFA');
+      expect(efa.notes.some((n) => /Residual/.test(n))).toBe(false);
+      const ar = evaluateScreening(baseCriteria, lease(0.5), passScore, inputs('FMV'), 'accounts_receivable');
+      expect(ar.reasons.some((x) => /Residual/.test(x.text))).toBe(false);
+      expect(ar.notes.some((n) => /Residual/.test(n))).toBe(false);
+    });
+  });
 });
+
